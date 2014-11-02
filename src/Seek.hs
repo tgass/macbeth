@@ -120,7 +120,7 @@ parseRows str = zip rows lines
                    lines = splitOn " " str
 
 parseColumn :: String -> [(Column, Maybe Piece)]
-parseColumn line = zip [c | c <- [A .. H]] [readPiece c | c <- line]
+parseColumn line = zip [A .. H] [readPiece c | c <- line]
 
 parseSquares :: (Row, String) -> [(Square, Maybe Piece)]
 parseSquares (r, line) = fmap (\cc -> ((Square (fst cc) r ), snd cc)) (parseColumn line)
