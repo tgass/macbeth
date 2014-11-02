@@ -11,7 +11,7 @@ executable XChess
                    network -any, conduit -any, conduit-extra -any, text -any,
                    transformers -any, resourcet -any, bytestring -any, split -any,
                    attoparsec -any, filepath -any, containers -any, split -any
-    main-is: XChess.hs
+    main-is: Board.hs
     buildable: True
     hs-source-dirs: src
     ghc-options: -O3 -threaded

@@ -1,4 +1,5 @@
-module Board (
+module Main (
+  main,
   drawAll
 ) where
 
@@ -10,30 +11,27 @@ main = start chessBoardFrame
 
 chessBoardFrame :: IO ()
 chessBoardFrame = do
-       selectedField <- variable [ value := (Square A One) ]
-       position <- variable [ value := []]
+       selSq <- variable [ value := (Square A One) ]
+       position <- variable [value := initBoard]
        f <- frame [ text := "XChess"
                    ,on paint := drawAll position
                    ]
-       p <- panel f [ on paint := paintPanel selectedField
+       p <- panel f [ on paint := paintPanel selSq
                     ]
-       p' <- panel p [ on mouse := onMouse selectedField p ]
+       p' <- panel p [ on mouse := setSelectedField selSq p ]
        set f [layout := space 320 320]
        set p [layout := space 320 320]
        set p' [layout := space 320 320]
 
-paintPanel field dc view = do
-                  f <- get field value
-                  let pointX' = pointX $ (toPos f)
-                      pointY' = pointY $ (toPos f)
+paintPanel selSq dc view = do
+                  val <- get selSq value
+                  let pointX' = pointX $ toPos val
+                      pointY' = pointY $ toPos val
                   set dc [penColor := rgb 255 0 (0 :: Int) ]
                   drawRect dc (Rect pointX' pointY' (40+1) (40+1)) []
 
-onMouse f p mouse = case mouse of
-                   MouseMotion pt mod -> do let f' = toField pt
-                                            set f [ value :~ \x -> toField pt]
-                                            repaint p
-                   MouseLeftDown pt mod -> putStr $ show $ toField pt
+setSelectedField selSq p mouse = case mouse of
+                   MouseMotion pt mod -> set selSq [ value :~ \x -> toField pt] >> repaint p
                    otherwise -> return ()
 
 drawAll position dc view = get position value >>= \p -> drawBoard dc view >> mapM_ (drawPiece dc view) p
@@ -59,8 +57,6 @@ intToCol :: Int -> Column
 intToCol = toEnum
 
 board = bitmap $ root ++ "board_empty.gif"
-
-board' = "-----rk- pp-bb-qp ----p--- ---pP-p- ---PP-Q- --PB---- P--B---P -----RK-"
 
 piece (Piece King Black) = bitmap $ root ++ "bk.gif"
 piece (Piece Queen Black) = bitmap $ root ++ "bq.gif"
