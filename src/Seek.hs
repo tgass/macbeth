@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+  {-# LANGUAGE OverloadedStrings #-}
 
 module Seek (
   Seek (..),
@@ -116,7 +116,7 @@ parsePosition str = fmap (\(s,p) -> (s, fromJust p)) $ filter (\(s,p) -> isJust 
 
 parseRows :: String -> [(Row, String)]
 parseRows str = zip rows lines
-             where rows = reverse [r | r <- [One .. Eight]]
+             where rows = reverse [One .. Eight]
                    lines = splitOn " " str
 
 parseColumn :: String -> [(Column, Maybe Piece)]

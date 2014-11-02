@@ -1,6 +1,8 @@
-module Main (
+module Board (
   main,
-  drawAll
+  drawAll,
+  paintSelectedSquare,
+  setSelectedField
 ) where
 
 import Seek
@@ -16,14 +18,14 @@ chessBoardFrame = do
        f <- frame [ text := "XChess"
                    ,on paint := drawAll position
                    ]
-       p <- panel f [ on paint := paintPanel selSq
+       p <- panel f [ on paint := paintSelectedSquare selSq
                     ]
        p' <- panel p [ on mouse := setSelectedField selSq p ]
        set f [layout := space 320 320]
        set p [layout := space 320 320]
        set p' [layout := space 320 320]
 
-paintPanel selSq dc view = do
+paintSelectedSquare selSq dc view = do
                   val <- get selSq value
                   let pointX' = pointX $ toPos val
                       pointY' = pointY $ toPos val
@@ -34,9 +36,11 @@ setSelectedField selSq p mouse = case mouse of
                                  MouseMotion pt mod -> set selSq [ value :~ \x -> toField pt] >> repaint p
                                  otherwise -> return ()
 
-drawAll position dc view = drawBoard dc view >> get position value >>= \p -> mapM_ (drawPiece dc view) p
-                  where drawPiece dc view (square, p) = drawBitmap dc (piece p) (toPos square) True []
-                        drawBoard dc view = drawBitmap dc board (point 0 0) False []
+drawAll position dc view = drawBoard dc view >>
+                           get position value >>= \pos ->
+                           mapM_ (drawPiece dc view) pos
+                           where drawPiece dc view (square, p) = drawBitmap dc (piece p) (toPos square) True []
+                                 drawBoard dc view = drawBitmap dc board (point 0 0) False []
 
 toField :: Point -> Square
 toField p = Square (intToCol ((pointX p) `div` 40)) (intToRow((pointY p) `div` 40))
