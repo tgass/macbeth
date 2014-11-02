@@ -31,10 +31,10 @@ paintPanel selSq dc view = do
                   drawRect dc (Rect pointX' pointY' (40+1) (40+1)) []
 
 setSelectedField selSq p mouse = case mouse of
-                   MouseMotion pt mod -> set selSq [ value :~ \x -> toField pt] >> repaint p
-                   otherwise -> return ()
+                                 MouseMotion pt mod -> set selSq [ value :~ \x -> toField pt] >> repaint p
+                                 otherwise -> return ()
 
-drawAll position dc view = get position value >>= \p -> drawBoard dc view >> mapM_ (drawPiece dc view) p
+drawAll position dc view = drawBoard dc view >> get position value >>= \p -> mapM_ (drawPiece dc view) p
                   where drawPiece dc view (square, p) = drawBitmap dc (piece p) (toPos square) True []
                         drawBoard dc view = drawBitmap dc board (point 0 0) False []
 
