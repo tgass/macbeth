@@ -87,3 +87,4 @@ emitCommand :: TextCtrl () -> Handle -> IO ()
 emitCommand e h = get e text >>= \command ->
                   set e [text := ""] >>
                   hPutStrLn h command
+

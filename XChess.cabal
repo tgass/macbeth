@@ -10,10 +10,11 @@ executable XChess
     build-depends: base >=4.2 && <5, wxcore -any, wx -any,
                    network -any, conduit -any, conduit-extra -any, text -any,
                    transformers -any, resourcet -any, bytestring -any, split -any,
-                   attoparsec -any, filepath -any, containers -any, split -any
-    main-is: Board.hs
+                   attoparsec -any, filepath -any, containers -any, split -any,
+                   mtl -any
+    main-is: ConduitPlayground.hs
     buildable: True
-    hs-source-dirs: src
+    hs-source-dirs: src, src/parsers
     ghc-options: -O3 -threaded
 
 
