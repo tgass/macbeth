@@ -3,10 +3,12 @@
 module Main where
 
 import Board
-import FicsConnection
+import FicsConnection2 (ficsConnection, CommandMessage (..))
 import Seek
+import SeekParser
+import PositionParser
 
-import Control.Concurrent (newEmptyMVar)
+import Control.Concurrent (MVar, newEmptyMVar, putMVar, takeMVar)
 import qualified Data.ByteString.Char8 as BS
 import Data.Maybe (catMaybes)
 import qualified Data.Set as Set
@@ -16,11 +18,13 @@ import System.IO (Handle, hPutStrLn)
 
 main = start gui
 
+ficsEventId = wxID_HIGHEST + 51
+
 gui = do
     -- main frame
     f  <- frame []
     mv <- newEmptyMVar
-    h <- getFicsHandle f mv
+    h <- ficsConnection $ handler f mv
 
     -- split main frame in panel left / right
     s <- splitterWindow f []
@@ -39,8 +43,10 @@ gui = do
 
     -- tab1 : Sought list
     slp <- panel nb []
-    sl  <- listCtrl slp [columns := [("handle", AlignLeft, -1), ("rating", AlignRight, -1), ("game type", AlignRight, -1)]]
-
+    sl  <- listCtrl slp [columns := [ ("handle", AlignLeft, -1)
+                                    , ("rating", AlignLeft, -1)
+                                    , ("game type", AlignRight, -1)]
+                                    ]
 
     -- tab2 : console
     cp <- panel nb []
@@ -48,40 +54,80 @@ gui = do
     ce <- entry cp []
     set ce [on enterKey := emitCommand ce h]
 
-    -- register event handling
-    registerFicsEvents f h mv [updateConsole ct, updateSeekList sl, updateBoard left boardVar]
+    -- tab3 : Games list
+    glp <- panel nb []
+    gl  <- listCtrl glp [columns := [ ("player 1", AlignLeft, -1)
+                                    , ("rating", AlignLeft, -1)
+                                    , ("player 2", AlignLeft, -1)
+                                    , ("rating", AlignLeft, -1)
+                                    , ("game type", AlignLeft, -1)]
+                                    ]
+
 
     set f [layout := container s $ fill $ vsplit s 15 400
                       (container left $ space 320 320)
                       (container right $
                          column 0
                          [ tabs nb
-                            [ tab "Sought list" $ container slp $ fill $ widget sl
-                            , tab "Console" $ container cp $ (column 5 [
-                                                 floatLeft $ expand $ hstretch $ widget ct
-                                                ,expand $ hstretch $ widget ce]) ]
+                            [ tab "Sought" $ container slp $ fill $ widget sl
+                            , tab "Games" $ container glp $ fill $ widget gl
+                            , tab "Console" $ container cp $
+                                            ( column 5  [ floatLeft $ expand $ hstretch $ widget ct
+                                                        , expand $ hstretch $ widget ce])
+                            ]
                          ]
                        )
           , clientSize := sz 600 320
           ]
+    registerFicsEvents f (action h mv ct sl left boardVar)
     return ()
 
-updateBoard :: Panel () -> Var(Position) -> [BS.ByteString] -> IO ()
-updateBoard p boardVar lines = case reverse positions of
+
+
+handler :: Frame () -> MVar CommandMessage -> CommandMessage -> IO ()
+handler f mv cmd = do putMVar mv cmd >> commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId >>=
+                        \ev -> evtHandlerAddPendingEvent f ev
+
+
+registerFicsEvents :: Frame () -> IO () -> IO ()
+registerFicsEvents f action = evtHandlerOnMenuCommand f ficsEventId action
+
+action :: Handle -> MVar CommandMessage -> TextCtrl () -> ListCtrl() -> Panel () -> Var (Position) -> IO ()
+action h mvar ct sl b bVar = takeMVar mvar >>= \cmd -> case cmd of
+                      SoughtMsg _ msg -> updateSeekList sl msg >> appendText ct (BS.unpack msg ++ "\n") >> return ()
+                      ObserveMsg _ pos -> updateBoard b bVar pos
+                      GamesMsg _ msg -> appendText ct (BS.unpack msg ++ "\n") >> return ()
+                      PositionMessage pos -> updateBoard b bVar pos
+                      TextMessage text -> appendText ct (BS.unpack text ++ "\n") >> return ()
+                      LoginMessage     -> hPutStrLn h "Schoon"
+                      PasswordMessage  -> hPutStrLn h "efgeon"
+                      LoggedInMessage  -> hPutStrLn h "iset block 1"
+                      _                -> return ()
+
+
+
+updateBoard :: Panel () -> Var (Position) -> Position -> IO ()
+updateBoard p boardVar position = case reverse position of
                                  [] -> return ()
-                                 (Move(pos):ms) -> set boardVar [value := pos] >> repaint p
-                               where
-                                  positions = catMaybes $ fmap parseMove lines
+                                 pos -> set boardVar [value := pos] >> repaint p
 
-updateConsole :: TextCtrl () -> [BS.ByteString] -> IO ()
-updateConsole t lines = appendText t (BS.unpack $ BS.unlines $ filter (/= "fics% ") lines)
 
-updateSeekList :: ListCtrl() -> [BS.ByteString] -> IO ()
-updateSeekList l lines = case seeks of
+updateSeekList :: ListCtrl() -> BS.ByteString -> IO ()
+updateSeekList l msg = case seeks of
                             [] -> return ()
                             (xs) -> do set l [items := [[handle, show rating, show gt] | (Seek _ rating handle gt _ _ _ _ _) <- seeks]]
                          where
-                            seeks = catMaybes $ fmap parseSeek lines
+                            seeks = parseSeeks msg
+
+onSoughtListEvent list eventList = case eventList of
+      ListItemSelected idx    -> do
+                                  listCtrlGetItemText list idx >>= logMessage . (++) "item selected: "
+                                  set list [items :=
+                                    [[handle, show rating, show gt] | (Seek _ rating handle gt _ _ _ _ _) <- []]]
+
+      ListItemDeselected idx  -> logMessage ("item de-selected: " ++ show idx)
+      other                   -> logMessage ("list control event.")
+
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
 emitCommand e h = get e text >>= \command ->

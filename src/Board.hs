@@ -1,5 +1,5 @@
 module Board (
-  main,
+  --main,
   drawAll,
   paintSelectedSquare,
   setSelectedField
@@ -7,6 +7,9 @@ module Board (
 
 import Seek
 import Graphics.UI.WX
+
+import Data.List.Split (splitOn)
+import Data.Maybe (isJust, fromJust)
 
 main :: IO ()
 main = start chessBoardFrame
@@ -77,9 +80,8 @@ piece (Piece Pawn White) = bitmap $ root ++ "wp.gif"
 
 root = "/Users/tilmann/Documents/leksah/XChess/gif/"
 
-initBoard :: [(Square, Piece)]
-initBoard = parsePosition "-----rk- pp-bb-qp ----p--- ---pP-p- ---PP-Q- --PB---- P--B---P -----RK-"
-
+initBoard :: Position
+initBoard = []
 
 
 
