@@ -3,7 +3,8 @@
 module Main where
 
 import Board
-import FicsConnection2 (ficsConnection, CommandMessage (..))
+import FicsConnection2 (ficsConnection)
+import CommandMsgParser
 import Seek
 import SeekParser
 import PositionParser
@@ -84,15 +85,16 @@ gui = do
 
 
 
-handler :: Frame () -> MVar CommandMessage -> CommandMessage -> IO ()
-handler f mv cmd = do putMVar mv cmd >> commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId >>=
+handler :: Frame () -> MVar CommandMsg -> CommandMsg -> IO ()
+handler f mv cmd = do putMVar mv cmd >>
+                        commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId >>=
                         \ev -> evtHandlerAddPendingEvent f ev
 
 
 registerFicsEvents :: Frame () -> IO () -> IO ()
 registerFicsEvents f action = evtHandlerOnMenuCommand f ficsEventId action
 
-action :: Handle -> MVar CommandMessage -> TextCtrl () -> ListCtrl() -> Panel () -> Var (Position) -> IO ()
+action :: Handle -> MVar CommandMsg -> TextCtrl () -> ListCtrl() -> Panel () -> Var (Position) -> IO ()
 action h mvar ct sl b bVar = takeMVar mvar >>= \cmd -> case cmd of
                       SoughtMsg _ msg -> updateSeekList sl msg >> appendText ct (BS.unpack msg ++ "\n") >> return ()
                       ObserveMsg _ pos -> updateBoard b bVar pos

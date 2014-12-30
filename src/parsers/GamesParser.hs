@@ -116,7 +116,7 @@ parseGame = do
                        GameSettings isPrivate gameType isRated
 
 
-parseRating :: Parser Rating
+  parseRating :: Parser Rating
 parseRating = (decimal >>= \r -> return $ Rating r) <|>
                string "++++" *> pure Guest <|>
                string "----" *> pure Unrated

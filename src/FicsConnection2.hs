@@ -2,13 +2,12 @@
 
 module FicsConnection2 (
   main,
-  ficsConnection,
-  CommandMessage (..),
-  parseLogin
+  ficsConnection
 ) where
 
 import Seek
 import PositionParser
+import CommandMsgParser
 
 import Control.Applicative ((<*>), (*>), (<*), (<$>), (<|>), pure)
 import Control.Concurrent (MVar, takeMVar, putMVar)
@@ -29,23 +28,6 @@ import Network (connectTo, PortID (..))
 import System.IO
 
 
-
-data CommandMessage =  ObserveMsg { head :: CommandHead
-                                  , position :: Position }
-                      | GamesMsg { head :: CommandHead
-                                  , message :: BS.ByteString }
-                      | SoughtMsg { head :: CommandHead
-                                  , message :: BS.ByteString }
-                      | AcknoledgeMessage { head :: CommandHead }
-                      | PositionMessage { position :: Position }
-                      | LoginMessage
-                      | PasswordMessage
-                      | LoggedInMessage
-                      | PromptMessage
-                      | TextMessage { message :: BS.ByteString } deriving (Show)
-
-data CommandHead = CommandHead { commandId :: Int } deriving (Show)
-
 main :: IO ()
 main = do
   h <- ficsConnection handler
@@ -59,10 +41,10 @@ loop h = do
         _ -> hPutStrLn h line >> loop h
 
 
-handler :: CommandMessage -> IO ()
+handler :: CommandMsg -> IO ()
 handler msg = putStrLn $ show msg
 
-ficsConnection :: (CommandMessage -> IO ()) -> IO (Handle)
+ficsConnection :: (CommandMsg -> IO ()) -> IO (Handle)
 ficsConnection handler = runResourceT $ do
                           (releaseSock, hsock) <- allocate
                                     (connectTo "freechess.org" $ PortNumber $ fromIntegral 5000) hClose
@@ -72,13 +54,13 @@ ficsConnection handler = runResourceT $ do
                           return hsock
 
 
-sink :: (CommandMessage -> IO ()) -> Sink CommandMessage IO ()
+sink :: (CommandMsg -> IO ()) -> Sink CommandMsg IO ()
 sink handler = awaitForever $ \command -> liftIO $ handler command
 
 
-parseC :: Monad m => Conduit BS.ByteString m CommandMessage
+parseC :: Monad m => Conduit BS.ByteString m CommandMsg
 parseC = awaitForever $ \str -> do
-                                  case parseCommandMessage str of
+                                  case parseCommandMsg str of
                                      Left _    -> yield (TextMessage str) >> parseC
                                      Right msg -> yield msg >> parseC
 
@@ -111,110 +93,3 @@ loggingC = awaitForever $ \str -> do
                             liftIO $ putStrLn $ show str
                             yield str
 
-
-{-
-
-<BLOCK_START><command identifier><BLOCK_SEPARATOR>
-
-This will be followed by:
-
-<command code><BLOCK_SEPARATOR><command output><BLOCK_END>
-
-#define BLOCK_START 21 /* '\U' */
-#define BLOCK_SEPARATOR 22 /* '\V' */
-#define BLOCK_END 23 /* '\W' */
-#define BLOCK_POSE_START 24 /* \X */
-#define BLOCK_POSE_END 25 /* \Y */
-
--}
-
-{-
-CommandMessage {commandId = 3, commandCode = 80, message = "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"}
--}
-
-parseCommandMessage :: BS.ByteString -> Either String CommandMessage
-parseCommandMessage str = parseOnly parser str
-                          where parser = choice [ observeMsg
-                                                , gamesMsg
-                                                , soughtMsg
-                                                , parseAcknoledge
-                                                , parsePrompt
-                                                , parseMove
-                                                , parseLogin
-                                                , parsePassword
-                                                , parseLoggedIn]
-
-obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
-
-
-observeMsg :: Parser CommandMessage
-observeMsg = do
-                head <- commandHead 80
-                position <- obsBody
-                takeTill (== chr 23)
-                char $ chr 23
-                return $ ObserveMsg head position
-
-obsBody :: Parser Position
-obsBody = do
-                takeTill (== '>')
-                char '>'
-                space
-                p <- A.take 71
-                return $ parsePosition $ BS.unpack p
-
-
-gamesMsg :: Parser CommandMessage
-gamesMsg = do
-                head <- commandHead 43
-                message <- takeTill (== chr 23)
-                char $ chr 23
-                return $ GamesMsg head message
-
-
-soughtMsg :: Parser CommandMessage
-soughtMsg = do
-                head <- commandHead 157
-                message <- takeTill (== chr 23)
-                char $ chr 23
-                return $ SoughtMsg head message
-
-
-parseMove :: Parser CommandMessage
-parseMove = do
-              "<12>"
-              space
-              p <- A.take 71
-              return $ PositionMessage $ parsePosition $ BS.unpack p
-
-parseLogin :: Parser CommandMessage
-parseLogin = "login: " >> return LoginMessage
-
-
-parsePassword :: Parser CommandMessage
-parsePassword = "password: " >> return PasswordMessage
-
-
-parseLoggedIn :: Parser CommandMessage
-parseLoggedIn = "**** Starting FICS session as Schoon ****" >> return LoggedInMessage
-
-
-parsePrompt :: Parser CommandMessage
-parsePrompt = "fics% " >> return PromptMessage
-
-
-parseAcknoledge :: Parser CommandMessage
-parseAcknoledge = do
-                    head <- commandHead 159
-                    char $ chr 23
-                    return $ AcknoledgeMessage head
-
-
-commandHead :: Int -> Parser CommandHead
-commandHead code = do
-                char $ chr 21
-                id <- decimal
-                char $ chr 22
-                string $ BS.pack $ show code
-                char $ chr 22
-                return $ CommandHead id
