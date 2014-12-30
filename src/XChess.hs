@@ -96,7 +96,7 @@ registerFicsEvents f action = evtHandlerOnMenuCommand f ficsEventId action
 
 action :: Handle -> MVar CommandMsg -> TextCtrl () -> ListCtrl() -> Panel () -> Var (Position) -> IO ()
 action h mvar ct sl b bVar = takeMVar mvar >>= \cmd -> case cmd of
-                      SoughtMsg _ msg -> updateSeekList sl msg >> appendText ct (BS.unpack msg ++ "\n") >> return ()
+                      SoughtMsg _ soughtList -> updateSeekList sl soughtList >> appendText ct (show soughtList ++ "\n") >> return ()
                       ObserveMsg _ pos -> updateBoard b bVar pos
                       GamesMsg _ msg -> appendText ct (BS.unpack msg ++ "\n") >> return ()
                       PositionMessage pos -> updateBoard b bVar pos
@@ -114,12 +114,11 @@ updateBoard p boardVar position = case reverse position of
                                  pos -> set boardVar [value := pos] >> repaint p
 
 
-updateSeekList :: ListCtrl() -> BS.ByteString -> IO ()
-updateSeekList l msg = case seeks of
+updateSeekList :: ListCtrl() -> [Seek] -> IO ()
+updateSeekList l seeks = case seeks of
                             [] -> return ()
                             (xs) -> do set l [items := [[handle, show rating, show gt] | (Seek _ rating handle gt _ _ _ _ _) <- seeks]]
-                         where
-                            seeks = parseSeeks msg
+
 
 onSoughtListEvent list eventList = case eventList of
       ListItemSelected idx    -> do

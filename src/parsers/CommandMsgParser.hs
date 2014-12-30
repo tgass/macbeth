@@ -28,6 +28,7 @@ module CommandMsgParser (
 
 import Seek
 import PositionParser
+import SeekParser
 
 import Control.Applicative ((<*>), (*>), (<*), (<$>), (<|>), pure)
 
@@ -49,7 +50,7 @@ data CommandMsg =  ObserveMsg { head :: CommandHead
                       | GamesMsg { head :: CommandHead
                                   , message :: BS.ByteString }
                       | SoughtMsg { head :: CommandHead
-                                  , message :: BS.ByteString }
+                                  , soughtLis :: [Seek] }
                       | AcknoledgeMessage { head :: CommandHead }
                       | PositionMessage { position :: Position }
                       | LoginMessage
@@ -103,9 +104,9 @@ gamesMsg = do
 soughtMsg :: Parser CommandMsg
 soughtMsg = do
                 head <- commandHead 157
-                message <- takeTill (== chr 23)
+                sL <- soughtList
                 char $ chr 23
-                return $ SoughtMsg head message
+                return $ SoughtMsg head sL
 
 
 parseMove :: Parser CommandMsg

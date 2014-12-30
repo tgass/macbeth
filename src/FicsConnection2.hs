@@ -84,8 +84,3 @@ blockY :: Monad m => Conduit BS.ByteString m Char
 blockY = awaitForever $ \str -> CL.sourceList $ BS.unpack str
 
 
-loggingC :: Conduit BS.ByteString IO BS.ByteString
-loggingC = awaitForever $ \str -> do
-                            liftIO $ putStrLn $ show str
-                            yield str
-
