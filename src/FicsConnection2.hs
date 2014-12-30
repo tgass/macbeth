@@ -23,6 +23,7 @@ import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.List as CL
 import qualified Data.List as List (filter)
 import Data.Maybe (fromMaybe)
+import Data.Word
 
 import Network (connectTo, PortID (..))
 import System.IO
@@ -50,7 +51,7 @@ ficsConnection handler = runResourceT $ do
                                     (connectTo "freechess.org" $ PortNumber $ fromIntegral 5000) hClose
                           liftIO $ hSetBuffering hsock LineBuffering
                           resourceForkIO $ liftIO $
-                            CB.sourceHandle hsock $$ linesC =$ blockC Nothing =$ parseC =$ sink handler
+                            CB.sourceHandle hsock $$ blockY =$ blockX (False, BS.empty) =$ parseC =$ sink handler
                           return hsock
 
 
@@ -65,27 +66,22 @@ parseC = awaitForever $ \str -> do
                                      Right msg -> yield msg >> parseC
 
 
-blockC :: Monad m => Maybe BS.ByteString -> Conduit BS.ByteString m BS.ByteString
-blockC partial = awaitForever $ \str' -> do
-                                let str = if BS.index str' 0 == '\r' then (BS.tail str') `BS.append` "\n" else str'
-                                case ord $ BS.index str 0 of
-                                  21 -> blockC $ Just str
-                                  23 -> yield ((fromMaybe "" partial) `BS.append` str) >> blockC Nothing
-                                  _  -> case partial of
-                                        Just p -> blockC $ Just (p `BS.append` str)
-                                        Nothing  -> yield str >> blockC Nothing
+blockX :: Monad m => (Bool, BS.ByteString) -> Conduit Char m BS.ByteString
+blockX (block, p) = awaitForever $ \c -> do
+                                    case p of
+                                      "login:" -> yield "login: " >> blockX (False, BS.empty)
+                                      "password:" -> yield "password: " >> blockX (False, BS.empty)
+                                      _ -> case ord c of
+                                            21 -> blockX (True, BS.singleton c)
+                                            23 -> yield (p `BS.append` (BS.singleton c)) >> blockX (False, BS.empty)
+                                            10 -> if block then blockX (block, (p `BS.append` BS.singleton c))
+                                                           else yield p >> blockX (block, BS.empty)
+                                            13 -> blockX (block, p) -- ignores \r
+                                            _  -> blockX (block, p `BS.append` (BS.singleton c))
 
 
-linesC :: Monad m => Conduit BS.ByteString m BS.ByteString
-linesC = awaitForever $ \str -> CL.sourceList $ filter (flip notElem ["", "\r"]) $ tokenise "\n\r" str
-
-{-
- * Strips only \n, but leaves as a result \r in front of all lines.
- * \r serves as marker for line breakes as tokenise does not always split complete lines
--}
-tokenise :: BS.ByteString -> BS.ByteString -> [BS.ByteString]
-tokenise x y = h : if BS.null t then [] else tokenise x (BS.drop (BS.length x - 1) t)
-               where (h,t) = BS.breakSubstring x y
+blockY :: Monad m => Conduit BS.ByteString m Char
+blockY = awaitForever $ \str -> CL.sourceList $ BS.unpack str
 
 
 loggingC :: Conduit BS.ByteString IO BS.ByteString
