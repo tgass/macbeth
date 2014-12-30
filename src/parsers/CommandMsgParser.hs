@@ -22,13 +22,16 @@ CommandMessage {commandId = 3, commandCode = 80, message = "You are now observin
 {-# LANGUAGE OverloadedStrings #-}
 
 module CommandMsgParser (
- CommandMsg (..),
  parseCommandMsg
 ) where
 
-import Seek
-import PositionParser
+import Api
+import CommandMsg
+
 import SeekParser
+import GamesParser
+import MoveParser2
+import GameResultParser
 
 import Control.Applicative ((<*>), (*>), (<*), (<$>), (<|>), pure)
 
@@ -45,76 +48,82 @@ import Data.Maybe (fromMaybe)
 import Network (connectTo, PortID (..))
 import System.IO
 
-data CommandMsg =  ObserveMsg { head :: CommandHead
-                                  , position :: Position }
-                      | GamesMsg { head :: CommandHead
-                                  , message :: BS.ByteString }
-                      | SoughtMsg { head :: CommandHead
-                                  , soughtLis :: [Seek] }
-                      | AcknoledgeMessage { head :: CommandHead }
-                      | PositionMessage { position :: Position }
-                      | LoginMessage
-                      | PasswordMessage
-                      | LoggedInMessage
-                      | PromptMessage
-                      | TextMessage { message :: BS.ByteString } deriving (Show)
+type Position = [(Square, Piece)]
 
-data CommandHead = CommandHead { commandId :: Int } deriving (Show)
+
 
 parseCommandMsg :: BS.ByteString -> Either String CommandMsg
-parseCommandMsg str = parseOnly parser str
-                          where parser = choice [ observeMsg
-                                                , gamesMsg
-                                                , soughtMsg
-                                                , parseAcknoledge
-                                                , parsePrompt
-                                                , parseMove
-                                                , parseLogin
-                                                , parsePassword
-                                                , parseLoggedIn]
+parseCommandMsg str = parseOnly parser str where
+  parser = choice [ observeMsg
+                  , gamesMsg
+                  , soughtMsg
+                  , acceptGameMsg
+                  , matchMsg
+                  , parseGameResult
+                  , parseAcknoledge
+                  , parsePrompt
+                  , parseMoveMsg
+                  , parseLogin
+                  , parseSettingsDone
+                  , parsePassword
+                  , parseLoggedIn]
 
-obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
 
 
 observeMsg :: Parser CommandMsg
 observeMsg = do
-                head <- commandHead 80
-                position <- obsBody
-                takeTill (== chr 23)
-                char $ chr 23
-                return $ ObserveMsg head position
+  head <- commandHead 80
+  move <- obsBody
+  takeTill (== chr 23)
+  char $ chr 23
+  return $ ObserveMsg head move
 
-obsBody :: Parser Position
+obsBody :: Parser Move
 obsBody = do
-                takeTill (== '>')
-                char '>'
-                space
-                p <- A.take 71
-                return $ parsePosition $ BS.unpack p
-
+  takeTill (== '<')
+  move <- parseMove
+  return move
 
 gamesMsg :: Parser CommandMsg
 gamesMsg = do
-                head <- commandHead 43
-                message <- takeTill (== chr 23)
-                char $ chr 23
-                return $ GamesMsg head message
+  head <- commandHead 43
+  gL <- paresGamesList
+  char $ chr 23
+  return $ GamesMsg head gL
+
+
+acceptGameMsg :: Parser CommandMsg
+acceptGameMsg = do
+  head <- commandHead 11
+  move <- obsBody
+  takeTill (== chr 23)
+  char $ chr 23
+  return $ AcceptMsg move
+
+
+-- | ie: {Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}
+matchMsg :: Parser CommandMsg
+matchMsg = do
+  "{Game "
+  id <- decimal
+  space
+  takeTill (=='}')
+  "}"
+  return $ MatchMsg id
+
 
 
 soughtMsg :: Parser CommandMsg
 soughtMsg = do
-                head <- commandHead 157
-                sL <- soughtList
-                char $ chr 23
-                return $ SoughtMsg head sL
+  head <- commandHead 157
+  sL <- soughtList'
+  char $ chr 23
+  return $ SoughtMsg head sL
 
 
-parseMove :: Parser CommandMsg
-parseMove = do
-              "<12>"
-              space
-              p <- A.take 71
-              return $ PositionMessage $ parsePosition $ BS.unpack p
+parseMoveMsg :: Parser CommandMsg
+parseMoveMsg = parseMove >>= \move -> return $ MoveMsg move
+
 
 parseLogin :: Parser CommandMsg
 parseLogin = "login: " >> return LoginMessage
@@ -125,7 +134,11 @@ parsePassword = "password: " >> return PasswordMessage
 
 
 parseLoggedIn :: Parser CommandMsg
-parseLoggedIn = "**** Starting FICS session as Schoon ****" >> return LoggedInMessage
+parseLoggedIn = do
+  "**** Starting FICS session as "
+  name <- manyTill anyChar space
+  "****"
+  return LoggedInMessage
 
 
 parsePrompt :: Parser CommandMsg
@@ -134,16 +147,21 @@ parsePrompt = "fics% " >> return PromptMessage
 
 parseAcknoledge :: Parser CommandMsg
 parseAcknoledge = do
-                    head <- commandHead 159
-                    char $ chr 23
-                    return $ AcknoledgeMessage head
+  head <- commandHead 519
+  char $ chr 23
+  return $ AcknoledgeMessage head
 
+parseSettingsDone = (char $ chr 23) >> return SettingsDoneMsg
 
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
-                char $ chr 21
-                id <- decimal
-                char $ chr 22
-                string $ BS.pack $ show code
-                char $ chr 22
-                return $ CommandHead id
+  char $ chr 21
+  id <- decimal
+  char $ chr 22
+  string $ BS.pack $ show code
+  char $ chr 22
+  return $ CommandHead id
+
+
+-- test data
+obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"

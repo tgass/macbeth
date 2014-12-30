@@ -4,20 +4,17 @@ module PositionParser (
   parsePosition
 ) where
 
-import Seek
+import Api
 
 import Data.Char (chr)
 import Data.List.Split (splitOn)
 import Data.Maybe (isJust, fromJust)
-import Data.Attoparsec.Char8
+import Data.Attoparsec.ByteString.Char8
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.Attoparsec.Char8 as A (take)
+import qualified Data.Attoparsec.ByteString.Char8 as A (take)
 
-{-
- *
- * parse position
- *
--}
+
+
 parsePosition :: String -> [(Square, Piece)]
 parsePosition str = fmap (\(s,p) -> (s, fromJust p)) $ filter (\(s,p) -> isJust p) squares
                 where rows = parseRows str

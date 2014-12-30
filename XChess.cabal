@@ -3,18 +3,16 @@ version: 0.0.1
 cabal-version: >=1.6
 build-type: Simple
 license: AllRightsReserved
-license-file: ""
-data-dir: ""
 
 executable XChess
     build-depends: base >=4.2 && <5, wxcore -any, wx -any,
                    network -any, conduit -any, conduit-extra -any, text -any,
                    transformers -any, resourcet -any, bytestring -any, split -any,
                    attoparsec -any, filepath -any, containers -any, split -any,
-                   mtl -any
+                   mtl -any, stm -any
     main-is: XChess.hs
     buildable: True
-    hs-source-dirs: src, src/parsers
+    hs-source-dirs: src src/parsers src/api
     ghc-options: -O3 -threaded
 
 

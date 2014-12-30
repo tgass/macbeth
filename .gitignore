@@ -1,0 +1,7 @@
+.DS_Store
+.cabal-sandbox/
+LICENSE
+Setup.hs
+cabal.sandbox.config
+dist/
+src/.DS_Store

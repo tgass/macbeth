@@ -1,12 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module FicsConnection2 (
-  main,
   ficsConnection
 ) where
 
-import Seek
-import PositionParser
+import CommandMsg
 import CommandMsgParser
 
 import Control.Applicative ((<*>), (*>), (<*), (<$>), (<|>), pure)
@@ -47,8 +45,7 @@ handler msg = putStrLn $ show msg
 
 ficsConnection :: (CommandMsg -> IO ()) -> IO (Handle)
 ficsConnection handler = runResourceT $ do
-                          (releaseSock, hsock) <- allocate
-                                    (connectTo "freechess.org" $ PortNumber $ fromIntegral 5000) hClose
+                          (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber $ fromIntegral 5000) hClose
                           liftIO $ hSetBuffering hsock LineBuffering
                           resourceForkIO $ liftIO $
                             CB.sourceHandle hsock $$ blockY =$ blockX (False, BS.empty) =$ parseC =$ sink handler

@@ -2,49 +2,49 @@
 
 module Main where
 
-import Board
-import FicsConnection2 (ficsConnection)
-import CommandMsgParser
+import Api
 import Seek
-import SeekParser
-import PositionParser
+import Game
+import AppState
+import WxObservedGame
 
-import Control.Concurrent (MVar, newEmptyMVar, putMVar, takeMVar)
+
+import FicsConnection2 (ficsConnection)
+import CommandMsg
+
+
+import Control.Concurrent (MVar, newEmptyMVar, newMVar, putMVar, takeMVar)
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Map as Map
 import Data.Maybe (catMaybes)
 import qualified Data.Set as Set
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO (Handle, hPutStrLn)
 
+type Position = [(Square, Piece)]
+
 main = start gui
 
 ficsEventId = wxID_HIGHEST + 51
 
+
 gui = do
+    appState <- newMVar $ AppState Map.empty
+
     -- main frame
     f  <- frame []
     mv <- newEmptyMVar
     h <- ficsConnection $ handler f mv
 
-    -- split main frame in panel left / right
-    s <- splitterWindow f []
-
-
-
-    -- left panel: board
-    boardVar <- variable [ value := [] ]
-    left <- panel s [on paint := drawAll boardVar]
-
-
-
-    -- right panel: notebook
-    right <- panel s []
+    -- right panel
+    right <- panel f []
     nb <- notebook right []
 
     -- tab1 : Sought list
     slp <- panel nb []
-    sl  <- listCtrl slp [columns := [ ("handle", AlignLeft, -1)
+    sl  <- listCtrl slp [columns := [ ("#", AlignLeft, -1)
+                                    , ("handle", AlignLeft, -1)
                                     , ("rating", AlignLeft, -1)
                                     , ("game type", AlignRight, -1)]
                                     ]
@@ -57,17 +57,16 @@ gui = do
 
     -- tab3 : Games list
     glp <- panel nb []
-    gl  <- listCtrl glp [columns := [ ("player 1", AlignLeft, -1)
+    gl  <- listCtrl glp [columns := [("#", AlignLeft, -1)
+                                    , ("player 1", AlignLeft, -1)
                                     , ("rating", AlignLeft, -1)
                                     , ("player 2", AlignLeft, -1)
                                     , ("rating", AlignLeft, -1)
-                                    , ("game type", AlignLeft, -1)]
                                     ]
+                        ]
+    set gl [on listEvent := onGamesListEvent gl h]
 
-
-    set f [layout := container s $ fill $ vsplit s 15 400
-                      (container left $ space 320 320)
-                      (container right $
+    set f [layout := (container right $
                          column 0
                          [ tabs nb
                             [ tab "Sought" $ container slp $ fill $ widget sl
@@ -78,11 +77,15 @@ gui = do
                             ]
                          ]
                        )
-          , clientSize := sz 600 320
+          , clientSize := sz 800 400
           ]
-    registerFicsEvents f (action h mv ct sl left boardVar)
+    registerFicsEvents f (action h mv ct
+      (observeGame appState)
+      (updateSeekList sl)
+      (updateBoard appState)
+      (updateGamesList gl)
+      (processGameResult appState))
     return ()
-
 
 
 handler :: Frame () -> MVar CommandMsg -> CommandMsg -> IO ()
@@ -94,44 +97,94 @@ handler f mv cmd = do putMVar mv cmd >>
 registerFicsEvents :: Frame () -> IO () -> IO ()
 registerFicsEvents f action = evtHandlerOnMenuCommand f ficsEventId action
 
-action :: Handle -> MVar CommandMsg -> TextCtrl () -> ListCtrl() -> Panel () -> Var (Position) -> IO ()
-action h mvar ct sl b bVar = takeMVar mvar >>= \cmd -> case cmd of
-                      SoughtMsg _ soughtList -> updateSeekList sl soughtList >> appendText ct (show soughtList ++ "\n") >> return ()
-                      ObserveMsg _ pos -> updateBoard b bVar pos
-                      GamesMsg _ msg -> appendText ct (BS.unpack msg ++ "\n") >> return ()
-                      PositionMessage pos -> updateBoard b bVar pos
-                      TextMessage text -> appendText ct (BS.unpack text ++ "\n") >> return ()
-                      LoginMessage     -> hPutStrLn h "Schoon"
-                      PasswordMessage  -> hPutStrLn h "efgeon"
-                      LoggedInMessage  -> hPutStrLn h "iset block 1"
-                      _                -> return ()
+
+action :: Handle -> MVar CommandMsg -> TextCtrl () ->
+  (Move -> IO ()) ->
+  ([Seek] -> IO()) ->
+  (Move -> IO ()) ->
+  ([Game] -> IO ()) ->
+  (Int -> IO ()) ->
+  IO ()
+action h mvar ct observeGame updateSeekList updateBoard updateGamesList processGameResult = takeMVar mvar >>= \cmd -> case cmd of
+  SoughtMsg _ soughtList -> updateSeekList soughtList
+  ObserveMsg _ move -> observeGame move >> return ()
+  GamesMsg _ games-> updateGamesList games
+  AcceptMsg move -> appendText ct (show move ++ "\n")
+  g@(MatchMsg id) -> appendText ct $ show g ++ "\n"
+  MoveMsg move -> updateBoard move >> appendText ct (show move ++ "\n")
+  g@(GameResultMsg id _) -> processGameResult id >> appendText ct (show g)
+  TextMessage text -> appendText ct (BS.unpack text ++ "\n")
+  LoginMessage     -> hPutStrLn h "guest"
+  PasswordMessage  -> hPutStrLn h "efgeon"
+  LoggedInMessage  -> hPutStrLn h "set seek 0" >>
+                      hPutStrLn h "set style 12" >>
+                      hPutStrLn h "iset norwap 1" >>
+                      hPutStrLn h "iset block 1"
+  SettingsDoneMsg  -> hPutStrLn h "4 games" >> hPutStrLn h "5 sought"
+  _                -> return ()
 
 
 
-updateBoard :: Panel () -> Var (Position) -> Position -> IO ()
-updateBoard p boardVar position = case reverse position of
-                                 [] -> return ()
-                                 pos -> set boardVar [value := pos] >> repaint p
+observeGame :: MVar AppState -> Move -> IO ()
+observeGame mvar move = do
+  appState <- takeMVar mvar
+  let gamesMap = observedGames appState
+      gameNumber' = Api.gameId move
+  case gameNumber' `Map.lookup` gamesMap of
+    Just _ -> return ()
+    _ -> do
+      f <- frame []
+      newGame <- createObservedGame f move
+      putMVar mvar $ addNewGame appState gameNumber' newGame
+      windowShow f
+      return ()
+
+
+updateBoard :: MVar AppState -> Move -> IO ()
+updateBoard mvar move = do
+  appState <- takeMVar mvar
+  let observedGames' = observedGames appState
+      gameNumber' = Api.gameId move
+  case gameNumber' `Map.lookup` observedGames' of
+    Just game@(ObservedGame _ _ updateGame _) -> do
+      updateGame move
+      putMVar mvar $ appState { observedGames = Map.insert gameNumber' (game `addMove` move) observedGames' }
+    _ -> return ()
+
+
+
+processGameResult :: MVar AppState -> Int -> IO ()
+processGameResult vAppState id = do
+  appState <- takeMVar vAppState
+  case id `Map.lookup` (observedGames appState) of
+    Just (ObservedGame _ _ _  endGame) -> do
+      endGame
+      putMVar vAppState $ removeObservedGame appState id
+    _ -> return ()
+
 
 
 updateSeekList :: ListCtrl() -> [Seek] -> IO ()
-updateSeekList l seeks = case seeks of
-                            [] -> return ()
-                            (xs) -> do set l [items := [[handle, show rating, show gt] | (Seek _ rating handle gt _ _ _ _ _) <- seeks]]
+updateSeekList l seeks = do set l [items := [[show id, name, show rat, show gt] | (Seek id rat name _ _ _ gt _ _) <- seeks]]
 
 
-onSoughtListEvent list eventList = case eventList of
-      ListItemSelected idx    -> do
-                                  listCtrlGetItemText list idx >>= logMessage . (++) "item selected: "
-                                  set list [items :=
-                                    [[handle, show rating, show gt] | (Seek _ rating handle gt _ _ _ _ _) <- []]]
 
-      ListItemDeselected idx  -> logMessage ("item de-selected: " ++ show idx)
-      other                   -> logMessage ("list control event.")
+updateGamesList :: ListCtrl() -> [Game] -> IO ()
+updateGamesList l games = do set l [items := [[show id, n1, show r1, n2, show r2] | (Game id _ r1 n1 r2 n2 _) <- games]]
+
+
+
+onGamesListEvent :: t -> Handle -> EventList -> IO ()
+onGamesListEvent list h eventList = case eventList of
+  ListItemActivated idx    -> hPutStrLn h $ "4 observe " ++ show idx
+  _                        -> return ()
+
 
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
 emitCommand e h = get e text >>= \command ->
                   set e [text := ""] >>
                   hPutStrLn h command
+
+
 
