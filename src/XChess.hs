@@ -77,7 +77,6 @@ gui = do
                             ]
                          ]
                        )
-          , clientSize := sz 800 400
           ]
     registerFicsEvents f (action h mv ct
       (observeGame appState)

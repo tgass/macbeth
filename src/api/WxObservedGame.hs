@@ -38,12 +38,12 @@ addMove g m = g {moves = m : moves g}
 createObservedGame :: Frame () -> Move -> IO ObservedGame
 createObservedGame f move = do
   p_back <- panel f []
-  board <- createBoard p_back move
+  board <- createBoard p_back (Api.position move)
 
   vClock <- variable [ value := move ]
 
   -- panels
-  let p_board =_panel board
+  let p_board = _panel board
   (p_white, t_white) <- createStatusPanel p_back vClock White
   (p_black, t_black) <- createStatusPanel p_back vClock Black
 
@@ -63,7 +63,7 @@ createObservedGame f move = do
   refit p_back
 
   let endGame' = set t_white [enabled := False] >> set t_black [enabled := False]
-  let updateGame' m = setMove board m >> varSet vClock m >> repaint p_back
+  let updateGame' m = setPosition board (Api.position m) >> varSet vClock m >> repaint p_back
 
   return $ ObservedGame [move] Nothing updateGame' endGame'
 

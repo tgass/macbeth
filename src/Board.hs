@@ -19,7 +19,7 @@ import Data.Maybe (isJust, fromJust)
 
 data Board = Board { _panel :: Panel ()
                    , invertColor :: IO (Api.Color)
-                   , setMove :: Move -> IO ()}
+                   , setPosition :: Position -> IO ()}
 
 data BoardState = BoardState { _position :: Position
                              , color :: Api.Color
@@ -32,15 +32,15 @@ data DraggedPiece = DraggedPiece { _point :: Point
                                  , _square :: Square } deriving (Show)
 
 
-createBoard :: Panel () -> Move -> IO (Board)
-createBoard p_parent move = do
-  let boardState = BoardState (Api.position move) White (Square A One) Nothing
+createBoard :: Panel () -> Position -> IO (Board)
+createBoard p_parent position = do
+  let boardState = BoardState position White (Square A One) Nothing
   vState <- variable [ value := boardState ]
   p_board <- panel p_parent []
   set p_board [ on paint := drawAll p_board vState ]
   windowOnMouse p_board True $ onMouseEvent vState p_board
-  let setMove' = (\m -> varGet vState >>= \state -> varSet vState $ state {_position = Api.position m} )
-  return $ Board p_board (invertColor' vState) setMove'
+  let setPosition' = (\p -> varGet vState >>= \state -> varSet vState $ state {_position = p} )
+  return $ Board p_board (invertColor' vState) setPosition'
 
 
 invertColor' :: Var BoardState -> IO (Api.Color)
