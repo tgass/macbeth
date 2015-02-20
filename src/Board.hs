@@ -18,7 +18,7 @@ import Data.Maybe (isJust, fromJust)
 
 
 data Board = Board { _panel :: Panel ()
-                   , invertColor :: IO (Api.Color)
+                   , invertColor :: IO Api.Color
                    , setPosition :: Position -> IO ()}
 
 data BoardState = BoardState { _position :: Position
@@ -32,18 +32,18 @@ data DraggedPiece = DraggedPiece { _point :: Point
                                  , _square :: Square } deriving (Show)
 
 
-createBoard :: Panel () -> Position -> IO (Board)
+createBoard :: Panel () -> Position -> IO Board
 createBoard p_parent position = do
   let boardState = BoardState position White (Square A One) Nothing
   vState <- variable [ value := boardState ]
   p_board <- panel p_parent []
   set p_board [ on paint := drawAll p_board vState ]
   windowOnMouse p_board True $ onMouseEvent vState p_board
-  let setPosition' = (\p -> varGet vState >>= \state -> varSet vState $ state {_position = p} )
+  let setPosition' p = varGet vState >>= \state -> varSet vState $ state {_position = p}
   return $ Board p_board (invertColor' vState) setPosition'
 
 
-invertColor' :: Var BoardState -> IO (Api.Color)
+invertColor' :: Var BoardState -> IO Api.Color
 invertColor' vState = do
   state <- varGet vState
   let color' = Api.invert $ Board.color state
@@ -73,7 +73,7 @@ paintSelectedSquare selSq color scale dc view = do
 
 
 
-drawDraggedPiece :: Panel () -> Double -> Maybe (DraggedPiece) -> DC a -> t -> IO ()
+drawDraggedPiece :: Panel () -> Double -> Maybe DraggedPiece -> DC a -> t -> IO ()
 drawDraggedPiece p scale mDraggedPiece dc view = do
   case mDraggedPiece of
     Nothing -> return ()
@@ -122,8 +122,8 @@ movePiece pos sq (DraggedPiece _ dp_piece dp_sq) = foo $ sq `lookup` pos
   where
     foo :: Maybe Piece -> Position
     foo Nothing = pos ++ [(sq, dp_piece)]
-    foo (Just (Piece _ c')) = if (pColor dp_piece) == c' then pos ++ [(dp_sq, dp_piece)]
-                                                         else (removePiece pos sq) ++ [(sq, dp_piece)]
+    foo (Just (Piece _ c')) = if pColor dp_piece == c' then pos ++ [(dp_sq, dp_piece)]
+                                                       else removePiece pos sq ++ [(sq, dp_piece)]
 
 
 calcScale :: Size -> Double
@@ -138,7 +138,7 @@ drawPiece dc view color (square, p) = drawBitmap dc (piece p) (toPos square colo
 
 scalePoint :: Double -> Point -> Point
 scalePoint scale p = point (foo (pointX p) scale) (foo (pointY p) scale)
-  where foo x s = max 0 $ min 319 $ floor ((fromIntegral x) / s)
+  where foo x s = max 0 $ min 319 $ floor (fromIntegral x / s)
 
 
 
@@ -148,11 +148,11 @@ drawBoard dc view = drawBitmap dc board (point 0 0) False []
 
 
 toField :: Point -> Api.Color -> Square
-toField p color = Square (intToCol color ((pointX p) `div` 40)) (intToRow color ((pointY p) `div` 40))
+toField p color = Square (intToCol color (pointX p `div` 40)) (intToRow color (pointY p `div` 40))
 
 
 toPos :: Square -> Api.Color -> Point
-toPos (Square c r) color = point ((colToInt color c) * 40) ((rowToInt color r) * 40)
+toPos (Square c r) color = point (colToInt color c * 40) (rowToInt color r * 40)
 
 
 rowToInt :: Api.Color -> Row -> Int
