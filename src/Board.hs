@@ -24,7 +24,9 @@ data Board = Board { _panel :: Panel ()
 data BoardState = BoardState { _position :: Position
                              , color :: Api.Color
                              , selSquare :: Square
-                             , draggedPiece :: Maybe DraggedPiece} deriving (Show)
+                             , draggedPiece :: Maybe DraggedPiece
+                             , isReadOnly :: Bool
+                             } deriving (Show)
 
 
 data DraggedPiece = DraggedPiece { _point :: Point
@@ -34,7 +36,7 @@ data DraggedPiece = DraggedPiece { _point :: Point
 
 createBoard :: Panel () -> Position -> IO Board
 createBoard p_parent position = do
-  let boardState = BoardState position White (Square A One) Nothing
+  let boardState = BoardState position White (Square A One) Nothing True
   vState <- variable [ value := boardState ]
   p_board <- panel p_parent []
   set p_board [ on paint := drawAll p_board vState ]
@@ -59,8 +61,11 @@ drawAll panel vState dc view = do
   dcSetUserScale dc scale scale
   drawBoard dc view
   mapM_ (drawPiece dc view (Board.color state)) (_position state)
-  paintSelectedSquare (selSquare state) (Board.color state) scale dc view
-  drawDraggedPiece panel scale (draggedPiece state) dc view
+  if not $ isReadOnly state
+    then do
+      paintSelectedSquare (selSquare state) (Board.color state) scale dc view
+      drawDraggedPiece panel scale (draggedPiece state) dc view
+    else return ()
 
 
 
@@ -93,7 +98,7 @@ onMouseEvent vState p mouse = do
       varSet vState $ state {selSquare = square'}
     MouseLeftDown pt mods -> do
       let square' = toField (scalePoint scale pt) (Board.color state)
-      let piece = getPiece (_position state) square' (Board.color state)
+      let piece = if not $ isReadOnly state then getPiece (_position state) square' (Board.color state) else Nothing
       case piece of
         Just p -> do
           varSet vState state { _position = removePiece (_position state) square'
