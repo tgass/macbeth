@@ -132,10 +132,10 @@ observeGame mvar move = do
   case gameNumber' `Map.lookup` gamesMap of
     Just _ -> return ()
     _ -> do
-      f <- frame []
-      newGame <- createObservedGame f move
+      vMove <- variable [ value := move ]
+      newGame <- createObservedGame vMove
       putMVar mvar $ addNewGame appState gameNumber' newGame
-      windowShow f
+--      windowShow $ _frame newGame
       return ()
 
 
@@ -145,8 +145,9 @@ updateBoard mvar move = do
   let observedGames' = observedGames appState
       gameNumber' = Api.gameId move
   case gameNumber' `Map.lookup` observedGames' of
-    Just game@(ObservedGame _ _ updateGame _) -> do
-      updateGame move
+    Just game@(ObservedGame _ _ updateGame _ vMove) -> do
+      varSet vMove move
+      updateGame
       putMVar mvar $ appState { observedGames = Map.insert gameNumber' (game `addMove` move) observedGames' }
     _ -> return ()
 
@@ -156,7 +157,7 @@ processGameResult :: MVar AppState -> Int -> IO ()
 processGameResult vAppState id = do
   appState <- takeMVar vAppState
   case id `Map.lookup` (observedGames appState) of
-    Just (ObservedGame _ _ _  endGame) -> do
+    Just (ObservedGame _ _ _  endGame _) -> do
       endGame
       putMVar vAppState $ removeObservedGame appState id
     _ -> return ()

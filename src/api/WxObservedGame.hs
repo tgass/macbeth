@@ -11,21 +11,23 @@ import Board
 import Utils (formatTime)
 
 import Graphics.UI.WX
-import Graphics.UI.WXCore (notebookAddPage, windowOnMouse)
+import Graphics.UI.WXCore (notebookAddPage, windowOnMouse, windowShow)
 
 import Control.Applicative (liftA)
 import Control.Monad.IO.Class (liftIO)
 
 data ObservedGame = ObservedGame { moves :: [Move]
                                  , result :: Maybe GameResult
-                                 , updateGame :: Move -> IO ()
-                                 , endGame :: IO () }
+                                 , updateGame :: IO ()
+                                 , endGame :: IO ()
+                                 , mMove :: Var Move }
 
 main = start gui
 
 gui = do
   f <- frame []
-  og <- createObservedGame f dummyMove
+  vMove <- variable [ value := dummyMove ]
+  og <- createObservedGame vMove
   set f []
 
 
@@ -35,9 +37,11 @@ addMove g m = g {moves = m : moves g}
 
 
 
-createObservedGame :: Frame () -> Move -> IO ObservedGame
-createObservedGame f move = do
+createObservedGame :: Var Move -> IO ObservedGame
+createObservedGame vMove = do
+  f <- frame []
   p_back <- panel f []
+  move <- varGet vMove
   board <- createBoard p_back (Api.position move)
 
   vClock <- variable [ value := move ]
@@ -63,9 +67,11 @@ createObservedGame f move = do
   refit p_back
 
   let endGame' = set t_white [enabled := False] >> set t_black [enabled := False]
-  let updateGame' m = setPosition board (Api.position m) >> varSet vClock m >> repaint p_back
+  let updateGame' = varGet vMove >>= \m -> setPosition board (Api.position m) >> varSet vClock m >> repaint p_back
 
-  return $ ObservedGame [move] Nothing updateGame' endGame'
+  windowShow f
+
+  return $ ObservedGame [move] Nothing updateGame' endGame' vMove
 
 
 
