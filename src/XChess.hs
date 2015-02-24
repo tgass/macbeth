@@ -10,7 +10,7 @@ import FicsConnection2 (ficsConnection)
 import CommandMsg
 
 import Control.Applicative (liftA)
-import Control.Concurrent (MVar, newEmptyMVar, putMVar, takeMVar, forkIO)
+import Control.Concurrent
 import Control.Concurrent.Chan
 
 import qualified Data.ByteString.Char8 as BS
@@ -119,7 +119,9 @@ createToolsFrame h chan = do
         _                -> return ()
 
 
-    forkIO $ loop chan vCmd f
+    threadId <- forkIO $ loop chan vCmd f
+
+    windowOnDestroy f $ killThread threadId
     return ()
 
 

@@ -36,12 +36,11 @@ gui = do
 
 createObservedGame :: Move -> Chan CommandMsg -> IO ()
 createObservedGame move chan = do
-  f <- frame []
   vCmd <- newEmptyMVar
 
+  f <- frame []
   p_back <- panel f []
   board <- createBoard p_back (Api.position move)
-
   vClock <- variable [ value := move ]
 
   -- panels
@@ -84,7 +83,10 @@ createObservedGame move chan = do
 
   windowShow f
 
-  forkIO $ loop chan vCmd f
+  threadId <- forkIO $ loop chan vCmd f
+  windowOnDestroy f $ killThread threadId
+
+
   return ()
 
 
