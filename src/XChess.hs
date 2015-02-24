@@ -23,20 +23,21 @@ import System.IO (Handle, hPutStrLn)
 type Position = [(Square, Piece)]
 
 
-
+main :: IO ()
 main = do
   chan <- newChan
-  h <- ficsConnection $ \cmd -> do
-    writeChan chan cmd
-  start $ gui h chan
+  h <- ficsConnection $ writeChan chan
+  start $ createToolsFrame h chan
 
 
 
+ficsEventId :: Int
 ficsEventId = wxID_HIGHEST + 51
 
 
 
-gui h chan = do
+createToolsFrame :: Handle -> Chan CommandMsg -> IO ()
+createToolsFrame h chan = do
     vCmd <- newEmptyMVar
 
     -- main frame
@@ -55,11 +56,13 @@ gui h chan = do
                                     , ("game type", AlignRight, -1)]
                                     ]
 
+
     -- tab2 : console
     cp <- panel nb []
     ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH) [font := fontFixed]
     ce <- entry cp []
     set ce [on enterKey := emitCommand ce h]
+
 
     -- tab3 : Games list
     glp <- panel nb []
@@ -70,7 +73,6 @@ gui h chan = do
                                     , ("rating", AlignLeft, -1)
                                     ]
                         ]
-    set gl [on listEvent := onGamesListEvent gl h]
 
     set f [layout := (container right $
                          column 0
@@ -93,6 +95,7 @@ gui h chan = do
 
         GamesMsg _ games -> do
           set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ r1 n1 r2 n2 _) <- games]]
+          set gl [on listEvent := onGamesListEvent games gl h]
 
         ObserveMsg _ move -> do
           chan' <- dupChan chan
@@ -131,9 +134,9 @@ loop chan vCmd f = do
 
 
 
-onGamesListEvent :: t -> Handle -> EventList -> IO ()
-onGamesListEvent list h eventList = case eventList of
-  ListItemActivated idx -> hPutStrLn h $ "4 observe " ++ show idx
+onGamesListEvent :: [Game] -> ListCtrl () -> Handle -> EventList -> IO ()
+onGamesListEvent games list h eventList = case eventList of
+  ListItemActivated idx -> hPutStrLn h $ "4 observe " ++ show (Game.id $ games !! idx)
   _ -> return ()
 
 
