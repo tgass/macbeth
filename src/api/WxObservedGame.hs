@@ -1,8 +1,6 @@
 module WxObservedGame (
 --module Main (
-  ObservedGame(..),
   createObservedGame,
-  addMove
 --  ,main
 ) where
 
@@ -11,37 +9,37 @@ import Board
 import Utils (formatTime)
 
 import Graphics.UI.WX
-import Graphics.UI.WXCore (notebookAddPage, windowOnMouse, windowShow)
+import Graphics.UI.WXCore
+
+import Control.Concurrent
+import Control.Concurrent.Chan
 
 import Control.Applicative (liftA)
 import Control.Monad.IO.Class (liftIO)
+import Control.Concurrent.Chan
+import CommandMsg
 
-data ObservedGame = ObservedGame { moves :: [Move]
-                                 , result :: Maybe GameResult
-                                 , updateGame :: IO ()
-                                 , endGame :: IO ()
-                                 , mMove :: Var Move }
+
+ficsEventId = wxID_HIGHEST + 53
+
+
 
 main = start gui
 
 gui = do
   f <- frame []
   vMove <- variable [ value := dummyMove ]
-  og <- createObservedGame vMove
+  --og <- createObservedGame vMove
   set f []
 
 
 
-addMove :: ObservedGame -> Move -> ObservedGame
-addMove g m = g {moves = m : moves g}
-
-
-
-createObservedGame :: Var Move -> IO ObservedGame
-createObservedGame vMove = do
+createObservedGame :: Move -> Chan CommandMsg -> IO ()
+createObservedGame move chan = do
   f <- frame []
+  vCmd <- newEmptyMVar
+
   p_back <- panel f []
-  move <- varGet vMove
   board <- createBoard p_back (Api.position move)
 
   vClock <- variable [ value := move ]
@@ -66,16 +64,42 @@ createObservedGame vMove = do
 
   refit p_back
 
-  let endGame' = set t_white [enabled := False] >> set t_black [enabled := False]
-  let updateGame' = varGet vMove >>= \m -> setPosition board (Api.position m) >> varSet vClock m >> repaint p_back
+  evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
+    case cmd of
+
+      MoveMsg move' -> if Api.gameId move' == Api.gameId move
+                         then do
+                           setPosition board (Api.position move')
+                           varSet vClock move'
+                         else return ()
+
+      GameResultMsg id _ -> if id == Api.gameId move
+                              then do
+                                set t_white [enabled := False]
+                                set t_black [enabled := False]
+                              else return ()
+
+      _ -> return ()
+
 
   windowShow f
 
-  return $ ObservedGame [move] Nothing updateGame' endGame' vMove
+  forkIO $ loop chan vCmd f
+  return ()
 
 
 
-createStatusPanel :: Panel () -> Var Move  -> Api.Color -> IO (Panel (), Timer)
+loop :: Chan CommandMsg -> MVar CommandMsg -> Frame () -> IO ()
+loop chan vCmd f = do
+  cmd <- readChan chan
+  putMVar vCmd cmd
+  ev <- commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId
+  evtHandlerAddPendingEvent f ev
+  loop chan vCmd f
+
+
+
+createStatusPanel :: Panel () -> Var Move  -> Api.Color -> IO (Panel (), Graphics.UI.WX.Timer)
 createStatusPanel p_back vMove color = do
   p_status <- panel p_back []
   p_color <- panel p_status [ bgcolor := if color == White then white else black]
@@ -140,7 +164,7 @@ dummyMove = Move {
                    ],
     turn = Black,
     doublePawnPush = Nothing,
-    gameId = 1,
+    Api.gameId = 1,
     nameW = "foobar",
     nameB = "barbaz",
     relation = Observing,

@@ -5,37 +5,43 @@ module Main where
 import Api
 import Seek
 import Game
-import AppState
 import WxObservedGame
-
-
 import FicsConnection2 (ficsConnection)
 import CommandMsg
 
+import Control.Applicative (liftA)
+import Control.Concurrent (MVar, newEmptyMVar, putMVar, takeMVar, forkIO)
+import Control.Concurrent.Chan
 
-import Control.Concurrent (MVar, newEmptyMVar, newMVar, putMVar, takeMVar)
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.Map as Map
-import Data.Maybe (catMaybes)
-import qualified Data.Set as Set
+
 import Graphics.UI.WX
 import Graphics.UI.WXCore
+
 import System.IO (Handle, hPutStrLn)
 
 type Position = [(Square, Piece)]
 
-main = start gui
+
+
+main = do
+  chan <- newChan
+  h <- ficsConnection $ \cmd -> do
+    writeChan chan cmd
+  start $ gui h chan
+
+
 
 ficsEventId = wxID_HIGHEST + 51
 
 
-gui = do
-    appState <- newMVar $ AppState Map.empty
+
+gui h chan = do
+    vCmd <- newEmptyMVar
 
     -- main frame
     f  <- frame []
     mv <- newEmptyMVar
-    h <- ficsConnection $ handler f mv
 
     -- right panel
     right <- panel f []
@@ -76,115 +82,64 @@ gui = do
                                                         , expand $ hstretch $ widget ce])
                             ]
                          ]
-                       )
+                     )
           ]
-    registerFicsEvents f (action h mv ct
-      (observeGame appState)
-      (updateSeekList sl)
-      (updateBoard appState)
-      (updateGamesList gl)
-      (processGameResult appState))
+
+    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
+      putStrLn $ show cmd
+      case cmd of
+        SoughtMsg _ seeks -> do
+          set sl [items := [[show id, name, show rat, show gt] | (Seek id rat name _ _ _ gt _ _) <- seeks]]
+
+        GamesMsg _ games -> do
+          set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ r1 n1 r2 n2 _) <- games]]
+
+        ObserveMsg _ move -> do
+          chan' <- dupChan chan
+          createObservedGame move chan'
+          return ()
+
+        LoginMessage     -> hPutStrLn h "guest"
+
+        PasswordMessage  -> hPutStrLn h "efgeon"
+
+        LoggedInMessage  -> hPutStrLn h "set seek 0" >>
+                            hPutStrLn h "set style 12" >>
+                            hPutStrLn h "iset nowrap 1" >>
+                            hPutStrLn h "iset block 1"
+
+        SettingsDoneMsg  -> hPutStrLn h "5 sought" >>
+                            hPutStrLn h "4 games"
+
+        TextMessage text -> appendText ct (BS.unpack text ++ "\n")
+
+        _                -> return ()
+
+
+    forkIO $ loop chan vCmd f
     return ()
 
 
-handler :: Frame () -> MVar CommandMsg -> CommandMsg -> IO ()
-handler f mv cmd = do putMVar mv cmd >>
-                        commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId >>=
-                        \ev -> evtHandlerAddPendingEvent f ev
 
-
-registerFicsEvents :: Frame () -> IO () -> IO ()
-registerFicsEvents f action = evtHandlerOnMenuCommand f ficsEventId action
-
-
-action :: Handle -> MVar CommandMsg -> TextCtrl () ->
-  (Move -> IO ()) ->
-  ([Seek] -> IO()) ->
-  (Move -> IO ()) ->
-  ([Game] -> IO ()) ->
-  (Int -> IO ()) ->
-  IO ()
-action h mvar ct observeGame updateSeekList updateBoard updateGamesList processGameResult = takeMVar mvar >>= \cmd -> case cmd of
-  SoughtMsg _ soughtList -> updateSeekList soughtList
-  ObserveMsg _ move -> observeGame move >> return ()
-  GamesMsg _ games-> updateGamesList games
-  AcceptMsg move -> appendText ct (show move ++ "\n")
-  g@(MatchMsg id) -> appendText ct $ show g ++ "\n"
-  MoveMsg move -> updateBoard move >> appendText ct (show move ++ "\n")
-  g@(GameResultMsg id _) -> processGameResult id >> appendText ct (show g)
-  TextMessage text -> appendText ct (BS.unpack text ++ "\n")
-  LoginMessage     -> hPutStrLn h "guest"
-  PasswordMessage  -> hPutStrLn h "efgeon"
-  LoggedInMessage  -> hPutStrLn h "set seek 0" >>
-                      hPutStrLn h "set style 12" >>
-                      hPutStrLn h "iset norwap 1" >>
-                      hPutStrLn h "iset block 1"
-  SettingsDoneMsg  -> hPutStrLn h "4 games" >> hPutStrLn h "5 sought"
-  _                -> return ()
-
-
-
-observeGame :: MVar AppState -> Move -> IO ()
-observeGame mvar move = do
-  appState <- takeMVar mvar
-  let gamesMap = observedGames appState
-      gameNumber' = Api.gameId move
-  case gameNumber' `Map.lookup` gamesMap of
-    Just _ -> return ()
-    _ -> do
-      vMove <- variable [ value := move ]
-      newGame <- createObservedGame vMove
-      putMVar mvar $ addNewGame appState gameNumber' newGame
---      windowShow $ _frame newGame
-      return ()
-
-
-updateBoard :: MVar AppState -> Move -> IO ()
-updateBoard mvar move = do
-  appState <- takeMVar mvar
-  let observedGames' = observedGames appState
-      gameNumber' = Api.gameId move
-  case gameNumber' `Map.lookup` observedGames' of
-    Just game@(ObservedGame _ _ updateGame _ vMove) -> do
-      varSet vMove move
-      updateGame
-      putMVar mvar $ appState { observedGames = Map.insert gameNumber' (game `addMove` move) observedGames' }
-    _ -> return ()
-
-
-
-processGameResult :: MVar AppState -> Int -> IO ()
-processGameResult vAppState id = do
-  appState <- takeMVar vAppState
-  case id `Map.lookup` (observedGames appState) of
-    Just (ObservedGame _ _ _  endGame _) -> do
-      endGame
-      putMVar vAppState $ removeObservedGame appState id
-    _ -> return ()
-
-
-
-updateSeekList :: ListCtrl() -> [Seek] -> IO ()
-updateSeekList l seeks = do set l [items := [[show id, name, show rat, show gt] | (Seek id rat name _ _ _ gt _ _) <- seeks]]
-
-
-
-updateGamesList :: ListCtrl() -> [Game] -> IO ()
-updateGamesList l games = do set l [items := [[show id, n1, show r1, n2, show r2] | (Game id _ r1 n1 r2 n2 _) <- games]]
+loop :: Chan CommandMsg -> MVar CommandMsg -> Frame () -> IO ()
+loop chan vCmd f = do
+  cmd <- readChan chan
+  putMVar vCmd cmd
+  ev <- commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId
+  evtHandlerAddPendingEvent f ev
+  loop chan vCmd f
 
 
 
 onGamesListEvent :: t -> Handle -> EventList -> IO ()
 onGamesListEvent list h eventList = case eventList of
-  ListItemActivated idx    -> hPutStrLn h $ "4 observe " ++ show idx
-  _                        -> return ()
+  ListItemActivated idx -> hPutStrLn h $ "4 observe " ++ show idx
+  _ -> return ()
 
 
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
-emitCommand e h = get e text >>= \command ->
-                  set e [text := ""] >>
-                  hPutStrLn h command
-
-
-
+emitCommand e h = do
+  cmd <- get e text
+  set e [text := ""]
+  hPutStrLn h cmd

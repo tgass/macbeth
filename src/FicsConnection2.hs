@@ -8,7 +8,7 @@ import CommandMsg
 import CommandMsgParser
 
 import Control.Applicative ((<*>), (*>), (<*), (<$>), (<|>), pure)
-import Control.Concurrent (MVar, takeMVar, putMVar)
+import Control.Concurrent (MVar, takeMVar, putMVar, forkIO)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Resource
 
