@@ -41,7 +41,10 @@ createBoard p_parent position = do
   p_board <- panel p_parent []
   set p_board [ on paint := drawAll p_board vState ]
   windowOnMouse p_board True $ onMouseEvent vState p_board
-  let setPosition' p = varGet vState >>= \state -> varSet vState $ state {_position = p}
+  let setPosition' p = do
+                        state <- varGet vState
+                        varSet vState $ state {_position = p}
+                        repaint p_board
   return $ Board p_board (invertColor' vState) setPosition'
 
 
