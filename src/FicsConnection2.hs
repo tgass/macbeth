@@ -41,7 +41,7 @@ loop h = do
 
 
 handler :: CommandMsg -> IO ()
-handler msg = putStrLn $ show msg
+handler = putStrLn . show
 
 ficsConnection :: (CommandMsg -> IO ()) -> IO (Handle)
 ficsConnection handler = runResourceT $ do
@@ -53,7 +53,8 @@ ficsConnection handler = runResourceT $ do
 
 
 sink :: (CommandMsg -> IO ()) -> Sink CommandMsg IO ()
-sink handler = awaitForever $ \command -> liftIO $ handler command
+sink handler = awaitForever $ liftIO . handler
+
 
 
 parseC :: Monad m => Conduit BS.ByteString m CommandMsg
@@ -78,6 +79,6 @@ blockX (block, p) = awaitForever $ \c -> do
 
 
 blockY :: Monad m => Conduit BS.ByteString m Char
-blockY = awaitForever $ \str -> CL.sourceList $ BS.unpack str
+blockY = awaitForever $ CL.sourceList . BS.unpack
 
 
