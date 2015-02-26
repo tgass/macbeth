@@ -12,7 +12,7 @@ executable XChess
                    mtl -any, stm -any
     main-is: XChess.hs
     buildable: True
-    hs-source-dirs: src src/parsers src/api
+    hs-source-dirs: src src/parsers src/api src/wx
     ghc-options: -O3 -threaded
 
 
