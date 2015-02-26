@@ -70,6 +70,8 @@ createObservedGame h move chan = do
                               set t_black [enabled := False]
                             else return ()
 
+
+
       _ -> return ()
 
 

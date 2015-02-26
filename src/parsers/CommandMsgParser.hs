@@ -54,23 +54,29 @@ type Position = [(Square, Piece)]
 
 parseCommandMsg :: BS.ByteString -> Either String CommandMsg
 parseCommandMsg str = parseOnly parser str where
-  parser = choice [ observeMsg
+  parser = choice [
+                    parseMoveMsg
+
+                  , observeMsg
                   , gamesMsg
                   , soughtMsg
+
                   , acceptGameMsg
                   , matchMsg
+
                   , parseGameResult
-                  , parseAcknoledge
-                  , parsePrompt
-                  , parseMoveMsg
+
                   , parseLogin
+                  , parseAcknoledge
                   , parseSettingsDone
                   , parsePassword
                   , parseGuestLogin
                   , parseUnkownUsername
                   , parseInvalidPassword
-                  , parseLoggedIn]
+                  , parseLoggedIn
+                  , parsePrompt
 
+                  ]
 
 
 observeMsg :: Parser CommandMsg
@@ -112,7 +118,7 @@ matchMsg = do
   "{Game "
   id <- decimal
   space
-  takeTill (=='}')
+  takeTill (== '}')
   "}"
   return $ MatchMsg id
 
@@ -124,6 +130,16 @@ soughtMsg = do
   sL <- soughtList'
   char $ chr 23
   return $ SoughtMsg head sL
+
+
+{-
+-- play responses
+-}
+
+-- "\NAK3\SYN158\SYNThat seek is not available.\n\ETB"
+-- "\NAK3\SYN158\SYNIssuing match request since the seek was set to manual.\nIssuing: GuestYJTB (----) juanhomie (----) unrated blitz 5 10.\n\ETB"
+
+
 
 
 parseMoveMsg :: Parser CommandMsg

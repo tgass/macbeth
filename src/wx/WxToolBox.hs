@@ -86,6 +86,7 @@ createToolBox h chan = do
       case cmd of
         SoughtMsg _ seeks -> do
           set sl [items := [[show id, name, show rat, show gt] | (Seek id rat name _ _ _ gt _ _) <- seeks]]
+          -- set sl [on listEvent := onSeekListEvent seeks sl h]
 
         GamesMsg _ games -> do
           set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ r1 n1 r2 n2 _) <- games]]
@@ -95,6 +96,11 @@ createToolBox h chan = do
           chan' <- dupChan chan
           createObservedGame h move chan'
           return ()
+
+--        MatchMsg id      ->
+--          chan' <- dupChan chan
+--          createObservedGame h move chan'
+--          return ()
 
         SettingsDoneMsg  -> hPutStrLn h "5 sought" >>
                             hPutStrLn h "4 games"
@@ -124,6 +130,13 @@ loop chan vCmd f = do
 onGamesListEvent :: [Game] -> ListCtrl () -> Handle -> EventList -> IO ()
 onGamesListEvent games list h eventList = case eventList of
   ListItemActivated idx -> hPutStrLn h $ "4 observe " ++ show (Game.id $ games !! idx)
+  _ -> return ()
+
+
+
+onSeekListEvent :: [Seek] -> ListCtrl () -> Handle -> EventList -> IO ()
+onSeekListEvent seeks list h eventList = case eventList of
+  ListItemActivated idx -> hPutStrLn h $ "4 play " ++ show (Seek.id $ seeks !! idx)
   _ -> return ()
 
 
