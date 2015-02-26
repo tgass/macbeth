@@ -28,7 +28,9 @@ data CommandMsg =  ObserveMsg { head :: CommandHead
                       | LoginMessage
                       | PasswordMessage
                       | GuestLoginMsg { name :: String }
+                      | UnkownUsernameMsg { name :: String }
                       | LoggedInMessage
+                      | InvalidPasswordMsg
                       | PromptMessage
                       | SettingsDoneMsg
                       | TextMessage { message :: BS.ByteString } deriving (Show)

@@ -67,6 +67,8 @@ parseCommandMsg str = parseOnly parser str where
                   , parseSettingsDone
                   , parsePassword
                   , parseGuestLogin
+                  , parseUnkownUsername
+                  , parseInvalidPassword
                   , parseLoggedIn]
 
 
@@ -79,11 +81,13 @@ observeMsg = do
   char $ chr 23
   return $ ObserveMsg head move
 
+
 obsBody :: Parser Move
 obsBody = do
   takeTill (== '<')
   move <- parseMove
   return move
+
 
 gamesMsg :: Parser CommandMsg
 gamesMsg = do
@@ -133,6 +137,7 @@ parseLogin = "login: " >> return LoginMessage
 parsePassword :: Parser CommandMsg
 parsePassword = "password: " >> return PasswordMessage
 
+
 parseGuestLogin :: Parser CommandMsg
 parseGuestLogin = do
   "Press return to enter the server as \""
@@ -141,12 +146,24 @@ parseGuestLogin = do
   return $ GuestLoginMsg name
 
 
+parseUnkownUsername :: Parser CommandMsg
+parseUnkownUsername = do
+  "\""
+  name <- manyTill anyChar "\""
+  " is not a registered name.  You may use this name to play unrated games."
+  return $ UnkownUsernameMsg name
+
+
 parseLoggedIn :: Parser CommandMsg
 parseLoggedIn = do
   "**** Starting FICS session as "
   name <- manyTill anyChar space
   "****"
   return LoggedInMessage
+
+
+parseInvalidPassword :: Parser CommandMsg
+parseInvalidPassword = "**** Invalid password! ****" >> return InvalidPasswordMsg
 
 
 parsePrompt :: Parser CommandMsg
