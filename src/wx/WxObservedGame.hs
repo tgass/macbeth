@@ -6,7 +6,8 @@ module WxObservedGame (
 
 import Api
 import Board
-import Utils (formatTime)
+import CommandMsg
+import Utils (formatTime, dummyMove)
 
 import Graphics.UI.WX
 import Graphics.UI.WXCore
@@ -17,25 +18,16 @@ import Control.Concurrent.Chan
 import Control.Applicative (liftA)
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent.Chan
-import CommandMsg
+import System.IO (Handle, hPutStrLn)
+
 
 
 ficsEventId = wxID_HIGHEST + 53
 
 
 
-main = start gui
-
-gui = do
-  f <- frame []
-  vMove <- variable [ value := dummyMove ]
-  --og <- createObservedGame vMove
-  set f []
-
-
-
-createObservedGame :: Move -> Chan CommandMsg -> IO ()
-createObservedGame move chan = do
+createObservedGame :: Handle -> Move -> Chan CommandMsg -> IO ()
+createObservedGame h move chan = do
   vCmd <- newEmptyMVar
 
   f <- frame []
@@ -67,16 +59,16 @@ createObservedGame move chan = do
     case cmd of
 
       MoveMsg move' -> if Api.gameId move' == Api.gameId move
-                         then do
-                           setPosition board (Api.position move')
-                           varSet vClock move'
-                         else return ()
+                       then do
+                         setPosition board (Api.position move')
+                         varSet vClock move'
+                       else return ()
 
       GameResultMsg id _ -> if id == Api.gameId move
-                              then do
-                                set t_white [enabled := False]
-                                set t_black [enabled := False]
-                              else return ()
+                            then do
+                              set t_white [enabled := False]
+                              set t_black [enabled := False]
+                            else return ()
 
       _ -> return ()
 
@@ -84,8 +76,8 @@ createObservedGame move chan = do
   windowShow f
 
   threadId <- forkIO $ loop chan vCmd f
-  windowOnDestroy f $ killThread threadId
-
+  windowOnDestroy f $ do killThread threadId
+                         hPutStrLn h $ "5 unobserve " ++ (show $ Api.gameId move)
 
   return ()
 
@@ -156,24 +148,4 @@ layoutBoard board white black color = (grid 0 0 [ [hfill $ widget (if color == W
                                                 , [fill $ minsize (Size 320 320) $ widget board]
                                                 , [hfill $ widget (if color == White then white else black)]])
 
-dummyMove = Move {
-    Api.position = [ (Square A One, Piece Rook White)
-                   , (Square A Two, Piece Pawn White)
-                   , (Square B Two, Piece Pawn White)
-                   , (Square C Two, Piece Pawn White)
-                   , (Square E Eight, Piece King Black)
-                   , (Square D Eight, Piece Queen Black)
-                   ],
-    turn = Black,
-    doublePawnPush = Nothing,
-    Api.gameId = 1,
-    nameW = "foobar",
-    nameB = "barbaz",
-    relation = Observing,
-    moveNumber = 1,
-    moveVerbose = "foo",
-    timeTaken = "1:16",
-    remainingTimeW = 113,
-    remainingTimeB = 112,
-    movePretty = "a4"
-  }
+

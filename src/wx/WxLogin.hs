@@ -17,8 +17,8 @@ login h chan = do
   f <- frame []
   p <- panel f []
 
-  e_name <- textEntry p [text := "", alignment := AlignRight]
-  e_pw <- textCtrlEx p (wxTE_PASSWORD) [text := "", alignment := AlignRight]
+  e_name <- textEntry p [ alignment := AlignRight]
+  e_pw <- textCtrlEx p (wxTE_PASSWORD) [ alignment := AlignRight]
 
 
   let foobar = do

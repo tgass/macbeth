@@ -68,7 +68,7 @@ createToolBox h chan = do
                                     ]
                         ]
 
-    set f [layout := (container right $
+    set f [layout := minsize (Size 400 600) $ (container right $
                          column 0
                          [ tabs nb
                             [ tab "Sought" $ container slp $ fill $ widget sl
@@ -93,7 +93,7 @@ createToolBox h chan = do
 
         ObserveMsg _ move -> do
           chan' <- dupChan chan
-          createObservedGame move chan'
+          createObservedGame h move chan'
           return ()
 
         SettingsDoneMsg  -> hPutStrLn h "5 sought" >>

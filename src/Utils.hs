@@ -1,7 +1,9 @@
 module Utils (
-  formatTime
+  formatTime,
+  dummyMove
 ) where
 
+import Api
 
 import Control.Monad.State
 
@@ -21,3 +23,26 @@ format :: Int -> String
 format i
   | i < 10 = "0" ++ show i
   | otherwise = show i
+
+
+dummyMove = Move {
+    Api.position = [ (Square A One, Piece Rook White)
+                   , (Square A Two, Piece Pawn White)
+                   , (Square B Two, Piece Pawn White)
+                   , (Square C Two, Piece Pawn White)
+                   , (Square E Eight, Piece King Black)
+                   , (Square D Eight, Piece Queen Black)
+                   ],
+    turn = Black,
+    doublePawnPush = Nothing,
+    Api.gameId = 1,
+    nameW = "foobar",
+    nameB = "barbaz",
+    relation = Observing,
+    moveNumber = 1,
+    moveVerbose = "foo",
+    timeTaken = "1:16",
+    remainingTimeW = 113,
+    remainingTimeB = 112,
+    movePretty = "a4"
+  }
