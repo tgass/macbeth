@@ -6,6 +6,7 @@ import System.IO (Handle, hPutStrLn)
 import Control.Concurrent.Chan
 import Control.Concurrent.MVar
 import Graphics.UI.WX
+import Graphics.UI.WXCore
 
 import WxToolBox
 import CommandMsg
@@ -17,7 +18,7 @@ login h chan = do
   p <- panel f []
 
   e_name <- textEntry p [text := "", alignment := AlignRight]
-  e_pw <- textEntry p [text := "", alignment := AlignRight]
+  e_pw <- textCtrlEx p (wxTE_PASSWORD) [text := "", alignment := AlignRight]
 
 
   let foobar = do
@@ -26,8 +27,7 @@ login h chan = do
                   loginLoop name pw f h chan
 
   b_ok <- button p [text := "Login", on command := foobar ]
-
-  b_can <- button p [text := "Quit", on command := infoDialog f "Info" "Pressed 'Cancel'"]
+  b_can <- button p [text := "Quit", on command := close f]
 
   set f [ defaultButton := b_ok
         , layout := container p $ margin 10 $
