@@ -27,6 +27,7 @@ data CommandMsg =  ObserveMsg { head :: CommandHead
                       | MoveMsg { move :: Move}
                       | LoginMessage
                       | PasswordMessage
+                      | GuestLoginMsg { name :: String }
                       | LoggedInMessage
                       | PromptMessage
                       | SettingsDoneMsg

@@ -96,15 +96,6 @@ createToolBox h chan = do
           createObservedGame move chan'
           return ()
 
-        LoginMessage     -> hPutStrLn h "guest"
-
-        PasswordMessage  -> hPutStrLn h "efgeon"
-
-        LoggedInMessage  -> hPutStrLn h "set seek 0" >>
-                            hPutStrLn h "set style 12" >>
-                            hPutStrLn h "iset nowrap 1" >>
-                            hPutStrLn h "iset block 1"
-
         SettingsDoneMsg  -> hPutStrLn h "5 sought" >>
                             hPutStrLn h "4 games"
 

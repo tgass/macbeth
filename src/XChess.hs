@@ -1,14 +1,14 @@
 module Main where
 
-import FicsConnection2 (ficsConnection)
-import Graphics.UI.WX
-import WxToolBox
 import Control.Concurrent.Chan
+import FicsConnection2 (ficsConnection)
+import WxLogin
+
+import Graphics.UI.WX
 
 
 main :: IO ()
 main = do
   chan <- newChan
   h <- ficsConnection $ writeChan chan
-  start $ createToolBox h chan
-
+  start $ login h chan

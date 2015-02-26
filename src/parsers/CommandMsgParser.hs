@@ -66,6 +66,7 @@ parseCommandMsg str = parseOnly parser str where
                   , parseLogin
                   , parseSettingsDone
                   , parsePassword
+                  , parseGuestLogin
                   , parseLoggedIn]
 
 
@@ -132,6 +133,13 @@ parseLogin = "login: " >> return LoginMessage
 parsePassword :: Parser CommandMsg
 parsePassword = "password: " >> return PasswordMessage
 
+parseGuestLogin :: Parser CommandMsg
+parseGuestLogin = do
+  "Press return to enter the server as \""
+  name <- manyTill anyChar "\""
+  ":"
+  return $ GuestLoginMsg name
+
 
 parseLoggedIn :: Parser CommandMsg
 parseLoggedIn = do
@@ -165,3 +173,4 @@ commandHead code = do
 
 -- test data
 obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
+guestLogin = BS.pack $ "Press return to enter the server as \"FOOBAR\":"
