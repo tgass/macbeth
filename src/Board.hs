@@ -15,6 +15,7 @@ import Control.Applicative (liftA)
 import Control.Concurrent.STM.TVar
 import Data.List.Split (splitOn)
 import Data.Maybe (isJust, fromJust)
+import System.IO
 
 
 data Board = Board { _panel :: Panel ()
@@ -34,13 +35,13 @@ data DraggedPiece = DraggedPiece { _point :: Point
                                  , _square :: Square } deriving (Show)
 
 
-createBoard :: Panel () -> Position -> Api.Color -> IO Board
-createBoard p_parent position color = do
-  let boardState = BoardState position color (Square A One) Nothing False
+createBoard :: Handle -> Panel () -> Position -> Api.Color -> Bool -> IO Board
+createBoard h p_parent position color interactive = do
+  let boardState = BoardState position color (Square A One) Nothing interactive
   vState <- variable [ value := boardState ]
   p_board <- panel p_parent []
   set p_board [ on paint := drawAll p_board vState ]
-  windowOnMouse p_board True $ onMouseEvent vState p_board
+  windowOnMouse p_board True $ onMouseEvent h vState p_board
   let setPosition' p i = do
                         state <- varGet vState
                         varSet vState $ state {_position = p, isInteractive = i}
@@ -91,8 +92,8 @@ drawDraggedPiece p scale mDraggedPiece dc view = do
 
 
 
-onMouseEvent :: Var BoardState -> Panel() -> EventMouse -> IO ()
-onMouseEvent vState p mouse = do
+onMouseEvent :: Handle -> Var BoardState -> Panel() -> EventMouse -> IO ()
+onMouseEvent h vState p mouse = do
   state <- varGet vState
   scale <- calcScale `liftA` get p size
   case mouse of
@@ -123,6 +124,10 @@ onMouseEvent vState p mouse = do
   where
     setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
     setNewPoint pt (DraggedPiece pt' p s) = Just $ DraggedPiece pt p s
+
+
+emitMove :: Square -> Square -> String
+emitMove s1 s2 = undefined
 
 
 movePiece :: Position -> Square -> DraggedPiece -> Position

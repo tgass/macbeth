@@ -30,7 +30,7 @@ createObservedGame h move color chan = do
 
   f <- frame []
   p_back <- panel f []
-  board <- createBoard p_back (Api.position move) color
+  board <- createBoard h p_back (Api.position move) color (relation move == MyMove)
   vClock <- variable [ value := move ]
 
   -- panels
