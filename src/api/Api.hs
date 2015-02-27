@@ -23,6 +23,8 @@ module Api (
 ) where
 
 
+import Data.Char (toLower)
+
 data Color = Black | White deriving (Eq, Show)
 
 invert :: Color -> Color
@@ -32,7 +34,7 @@ invert Black = White
 data Rating = Rating {r :: Int} | Unrated | Guest
 
 instance Show Rating where
-  show (Rating r) = show r
+  show (Rating r) = Prelude.show r
   show Guest = "Guest"
   show Unrated = "Unrated"
 
@@ -47,7 +49,10 @@ data PType = Pawn | Rook | Knight | Bishop | Queen | King deriving (Show, Eq)
 
 data Piece = Piece PType Color deriving (Show, Eq)
 
-data Square = Square Column Row deriving (Show, Ord, Eq)
+data Square = Square Column Row deriving (Ord, Eq)
+
+instance Show Square where
+  show (Square s y) = fmap toLower (show s) ++ show (fromEnum y + 1)
 
 type Position = [(Square, Piece)]
 

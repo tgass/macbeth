@@ -115,6 +115,7 @@ onMouseEvent h vState p mouse = do
           let clicked_sq = toField (scalePoint scale click_pt) (Board.color state)
           let newPosition = movePiece (_position state) clicked_sq dp
           varSet vState state { _position = newPosition, draggedPiece = Nothing}
+          hPutStrLn h $ "6 " ++ emitMove piece dp_sq clicked_sq
         _ -> return ()
     MouseLeftDrag pt mode -> do
       let square' = toField (scalePoint scale pt) (Board.color state)
@@ -126,8 +127,10 @@ onMouseEvent h vState p mouse = do
     setNewPoint pt (DraggedPiece pt' p s) = Just $ DraggedPiece pt p s
 
 
-emitMove :: Square -> Square -> String
-emitMove s1 s2 = undefined
+emitMove :: Piece -> Square -> Square -> String
+emit (Piece King White) (Square E One) (Square G One) = "O-O"
+emit (Piece King White) (Square E One) (Square C One) = "O-O-O"
+emitMove _ s1 s2 = show s1 ++ show s2
 
 
 movePiece :: Position -> Square -> DraggedPiece -> Position
