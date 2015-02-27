@@ -1,9 +1,11 @@
 module Utils (
   formatTime,
-  dummyMove
+  dummyMove,
+  emptyMove
 ) where
 
 import Api
+import FicsConnection2
 
 import Control.Monad.State
 
@@ -25,6 +27,24 @@ format i
   | otherwise = show i
 
 
+
+
+emptyMove id = Move {
+    Api.position = [],
+    turn = White,
+    doublePawnPush = Nothing,
+    Api.gameId = id,
+    nameW = "",
+    nameB = "",
+    relation = MyMove,
+    moveNumber = 1,
+    moveVerbose = "none",
+    timeTaken = "0",
+    remainingTimeW = 0,
+    remainingTimeB = 0,
+    movePretty = "none"
+  }
+
 dummyMove = Move {
     Api.position = [ (Square A One, Piece Rook White)
                    , (Square A Two, Piece Pawn White)
@@ -39,10 +59,10 @@ dummyMove = Move {
     nameW = "foobar",
     nameB = "barbaz",
     relation = Observing,
-    moveNumber = 1,
-    moveVerbose = "foo",
-    timeTaken = "1:16",
-    remainingTimeW = 113,
-    remainingTimeB = 112,
-    movePretty = "a4"
+    moveNumber = 0,
+    moveVerbose = "none",
+    timeTaken = "0",
+    remainingTimeW = 0,
+    remainingTimeB = 0,
+    movePretty = "none"
   }

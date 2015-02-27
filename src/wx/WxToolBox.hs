@@ -5,11 +5,12 @@ module WxToolBox (
 ) where
 
 import Api
-import Seek
-import Game
-import WxObservedGame
-import FicsConnection2 (ficsConnection)
 import CommandMsg
+import FicsConnection2 (ficsConnection)
+import Game
+import Seek
+import Utils
+import WxObservedGame
 
 import Control.Applicative (liftA)
 import Control.Concurrent
@@ -97,10 +98,15 @@ createToolBox h chan = do
           createObservedGame h move chan'
           return ()
 
---        MatchMsg id      ->
---          chan' <- dupChan chan
---          createObservedGame h move chan'
---          return ()
+        MatchMsg id      -> do
+          chan' <- dupChan chan
+          createObservedGame h (Utils.emptyMove id) chan'
+          return ()
+
+        AcceptMsg move    -> do
+          chan' <- dupChan chan
+          createObservedGame h move chan'
+          return ()
 
         SettingsDoneMsg  -> hPutStrLn h "5 sought" >>
                             hPutStrLn h "4 games"

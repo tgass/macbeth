@@ -103,7 +103,7 @@ namePlayer Black = nameB
 
 
 
-data Relation = MyMove | OponentsMove | Observing | Other deriving (Show)
+data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
 
 data GameResult = WhiteWins | BlackWins | Draw deriving (Show)
 

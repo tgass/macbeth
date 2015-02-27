@@ -20,16 +20,20 @@ parsePosition str = fmap (\(s,p) -> (s, fromJust p)) $ filter (\(s,p) -> isJust 
                 where rows = parseRows str
                       squares = concat $ fmap parseSquares rows
 
+
 parseRows :: String -> [(Row, String)]
 parseRows str = zip rows lines
              where rows = reverse [One .. Eight]
                    lines = splitOn " " str
 
+
 parseColumn :: String -> [(Column, Maybe Piece)]
 parseColumn line = zip [A .. H] [readPiece c | c <- line]
 
+
 parseSquares :: (Row, String) -> [(Square, Maybe Piece)]
 parseSquares (r, line) = fmap (\cc -> ((Square (fst cc) r ), snd cc)) (parseColumn line)
+
 
 readPiece :: Char -> Maybe Piece
 readPiece 'P' = Just(Piece Pawn White)

@@ -19,13 +19,13 @@ import Data.Maybe (isJust, fromJust)
 
 data Board = Board { _panel :: Panel ()
                    , invertColor :: IO Api.Color
-                   , setPosition :: Position -> IO ()}
+                   , setPosition :: Position -> Bool -> IO ()}
 
 data BoardState = BoardState { _position :: Position
                              , color :: Api.Color
                              , selSquare :: Square
                              , draggedPiece :: Maybe DraggedPiece
-                             , isReadOnly :: Bool
+                             , isInteractive :: Bool
                              } deriving (Show)
 
 
@@ -36,14 +36,14 @@ data DraggedPiece = DraggedPiece { _point :: Point
 
 createBoard :: Panel () -> Position -> IO Board
 createBoard p_parent position = do
-  let boardState = BoardState position White (Square A One) Nothing True
+  let boardState = BoardState position White (Square A One) Nothing False
   vState <- variable [ value := boardState ]
   p_board <- panel p_parent []
   set p_board [ on paint := drawAll p_board vState ]
   windowOnMouse p_board True $ onMouseEvent vState p_board
-  let setPosition' p = do
+  let setPosition' p i = do
                         state <- varGet vState
-                        varSet vState $ state {_position = p}
+                        varSet vState $ state {_position = p, isInteractive = i}
                         repaint p_board
   return $ Board p_board (invertColor' vState) setPosition'
 
@@ -64,7 +64,7 @@ drawAll panel vState dc view = do
   dcSetUserScale dc scale scale
   drawBoard dc view
   mapM_ (drawPiece dc view (Board.color state)) (_position state)
-  if not $ isReadOnly state
+  if isInteractive state
     then do
       paintSelectedSquare (selSquare state) (Board.color state) scale dc view
       drawDraggedPiece panel scale (draggedPiece state) dc view
@@ -101,7 +101,7 @@ onMouseEvent vState p mouse = do
       varSet vState $ state {selSquare = square'}
     MouseLeftDown pt mods -> do
       let square' = toField (scalePoint scale pt) (Board.color state)
-      let piece = if not $ isReadOnly state then getPiece (_position state) square' (Board.color state) else Nothing
+      let piece = if isInteractive state then getPiece (_position state) square' (Board.color state) else Nothing
       case piece of
         Just p -> do
           varSet vState state { _position = removePiece (_position state) square'

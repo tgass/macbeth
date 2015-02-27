@@ -60,7 +60,9 @@ createObservedGame h move chan = do
 
       MoveMsg move' -> if Api.gameId move' == Api.gameId move
                        then do
-                         setPosition board (Api.position move')
+                         setPosition board (Api.position move') (relation move' == MyMove)
+                         set t_white [enabled := True]
+                         set t_black [enabled := True]
                          varSet vClock move'
                        else return ()
 
@@ -69,8 +71,6 @@ createObservedGame h move chan = do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                             else return ()
-
-
 
       _ -> return ()
 
@@ -99,9 +99,13 @@ createStatusPanel :: Panel () -> Var Move  -> Api.Color -> IO (Panel (), Graphic
 createStatusPanel p_back vMove color = do
   p_status <- panel p_back []
   p_color <- panel p_status [ bgcolor := if color == White then white else black]
+  is_enabled <- ((/= "none") . movePretty) `liftA` varGet vMove
+
   st_playerName <- createPlayerName p_status =<< namePlayer color `liftA` varGet vMove
   st_clock <- createClock p_status =<< remainingTime color `liftA` varGet vMove
-  t <- timer p_back [ interval := 1000, on command := updateTime color vMove st_clock]
+  t <- timer p_back [ interval := 1000
+                    , on command := updateTime color vMove st_clock
+                    , enabled := is_enabled ]
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st_clock
                                   , widget st_playerName] ]
