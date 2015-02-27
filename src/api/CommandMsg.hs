@@ -6,6 +6,7 @@ module CommandMsg (
 import Api
 import Game
 import Seek
+import Move
 
 import qualified Data.ByteString.Char8 as BS
 

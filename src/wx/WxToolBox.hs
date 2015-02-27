@@ -5,6 +5,7 @@ module WxToolBox (
 ) where
 
 import Api
+import Move
 import CommandMsg
 import FicsConnection2 (ficsConnection)
 import Game
@@ -101,7 +102,7 @@ createToolBox h name chan = do
         MatchMsg id n1 n2   -> do
           cmd <- readChan chan
           case cmd of
-            MoveMsg move' -> if Api.gameId move' == id
+            MoveMsg move' -> if Move.gameId move' == id
                              then do
                                 chan' <- dupChan chan
                                 createObservedGame h move' (if n1 == name then White else Black) chan'
@@ -111,7 +112,7 @@ createToolBox h name chan = do
 
         AcceptMsg move    -> do
           chan' <- dupChan chan
-          createObservedGame h move (if (Api.nameW move) == name then White else Black) chan'
+          createObservedGame h move (if (Move.nameW move) == name then White else Black) chan'
           return ()
 
         SettingsDoneMsg  -> hPutStrLn h "5 sought" >>

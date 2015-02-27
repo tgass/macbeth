@@ -26,6 +26,7 @@ module CommandMsgParser (
 ) where
 
 import Api
+import Move
 import CommandMsg
 
 import SeekParser

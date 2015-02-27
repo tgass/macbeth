@@ -14,11 +14,6 @@ module Api (
   removePiece,
   getPiece,
   Rating (..),
-  Move (..),
-  remainingTime,
-  decreaseRemainingTime,
-  namePlayer,
-  Relation (..),
   GameResult (..)
 ) where
 
@@ -72,43 +67,6 @@ getPiece pos sq color = sq `lookup` pos >>= checkColor color
     checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 
 
-data Move = Move { position :: [(Square, Piece)]
-                 , turn :: Color
-                 , doublePawnPush :: Maybe Int
-                 , gameId :: Int
-                 , nameW :: String
-                 , nameB :: String
-                 , relation :: Relation
-                 , moveNumber :: Int
-                 , moveVerbose :: String
-                 , timeTaken :: String
-                 , remainingTimeW :: Int
-                 , remainingTimeB :: Int
-                 , movePretty :: String
-                 }
-
-instance Show Move where
-  show m = "Move { gameId=" ++ (show $ gameId m) ++ ", nameW=" ++ (nameW m) ++ ", move=" ++ movePretty m ++ "}"
-
-
-
-remainingTime :: Api.Color -> Move -> Int
-remainingTime Black = remainingTimeB
-remainingTime White = remainingTimeW
-
-
-decreaseRemainingTime :: Api.Color -> Move -> Move
-decreaseRemainingTime Black move = move {remainingTimeB = remainingTimeB move - 1}
-decreaseRemainingTime White move = move {remainingTimeW = remainingTimeW move - 1}
-
-
-namePlayer :: Api.Color -> Move -> String
-namePlayer White = nameW
-namePlayer Black = nameB
-
-
-
-data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
 
 data GameResult = WhiteWins | BlackWins | Draw deriving (Show)
 

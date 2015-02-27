@@ -70,6 +70,7 @@ module MoveParser2 (
 
 import Api
 import PositionParser
+import Move
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8

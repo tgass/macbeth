@@ -130,6 +130,8 @@ onMouseEvent h vState p mouse = do
 emitMove :: Piece -> Square -> Square -> String
 emit (Piece King White) (Square E One) (Square G One) = "O-O"
 emit (Piece King White) (Square E One) (Square C One) = "O-O-O"
+emit (Piece King Black) (Square E Eight) (Square G Eight) = "O-O"
+emit (Piece King Black) (Square E Eight) (Square C Eight) = "O-O-O"
 emitMove _ s1 s2 = show s1 ++ show s2
 
 

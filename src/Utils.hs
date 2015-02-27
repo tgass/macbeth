@@ -1,6 +1,5 @@
 module Utils (
-  formatTime,
-  dummyMove
+  formatTime
 ) where
 
 import Api
@@ -24,27 +23,3 @@ format :: Int -> String
 format i
   | i < 10 = "0" ++ show i
   | otherwise = show i
-
-
-
-dummyMove = Move {
-    Api.position = [ (Square A One, Piece Rook White)
-                   , (Square A Two, Piece Pawn White)
-                   , (Square B Two, Piece Pawn White)
-                   , (Square C Two, Piece Pawn White)
-                   , (Square E Eight, Piece King Black)
-                   , (Square D Eight, Piece Queen Black)
-                   ],
-    turn = Black,
-    doublePawnPush = Nothing,
-    Api.gameId = 1,
-    nameW = "foobar",
-    nameB = "barbaz",
-    relation = Observing,
-    moveNumber = 0,
-    moveVerbose = "none",
-    timeTaken = "0",
-    remainingTimeW = 0,
-    remainingTimeB = 0,
-    movePretty = "none"
-  }

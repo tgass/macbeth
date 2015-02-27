@@ -5,9 +5,10 @@ module WxObservedGame (
 ) where
 
 import Api
+import Move
 import Board
 import CommandMsg
-import Utils (formatTime, dummyMove)
+import Utils (formatTime)
 
 import Graphics.UI.WX
 import Graphics.UI.WXCore
@@ -30,7 +31,7 @@ createObservedGame h move color chan = do
 
   f <- frame []
   p_back <- panel f []
-  board <- createBoard h p_back (Api.position move) color (relation move == MyMove)
+  board <- createBoard h p_back (Move.position move) color (relation move == MyMove)
   vClock <- variable [ value := move ]
 
   -- panels
@@ -57,25 +58,25 @@ createObservedGame h move color chan = do
     putStrLn $ show cmd
     case cmd of
 
-      MoveMsg move' -> if Api.gameId move' == Api.gameId move
+      MoveMsg move' -> if Move.gameId move' == Move.gameId move
                        then do
-                         setPosition board (Api.position move') (relation move' == MyMove)
+                         setPosition board (Move.position move') (relation move' == MyMove)
                          set t_white [enabled := True]
                          set t_black [enabled := True]
                          varSet vClock move'
                        else return ()
 
 
-      ConfirmMoveMsg move' -> if Api.gameId move' == Api.gameId move
+      ConfirmMoveMsg move' -> if Move.gameId move' == Move.gameId move
                                then do
-                                 setPosition board (Api.position move') (relation move' == MyMove)
+                                 setPosition board (Move.position move') (relation move' == MyMove)
                                  set t_white [enabled := True]
                                  set t_black [enabled := True]
                                  varSet vClock move'
                                else return ()
 
 
-      GameResultMsg id _ -> if id == Api.gameId move
+      GameResultMsg id _ -> if id == Move.gameId move
                             then do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
@@ -88,7 +89,7 @@ createObservedGame h move color chan = do
 
   threadId <- forkIO $ loop chan vCmd f
   windowOnDestroy f $ do killThread threadId
-                         hPutStrLn h $ "5 unobserve " ++ (show $ Api.gameId move)
+                         hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
 
   return ()
 
@@ -138,7 +139,7 @@ updateTime color vClock st = do
   set st [text := formatTime $ remainingTime color move]
   where
     changeRemainingTime color move = if color == turn move
-      then Api.decreaseRemainingTime color move else move
+      then Move.decreaseRemainingTime color move else move
 
 
 
