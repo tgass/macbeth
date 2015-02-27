@@ -50,7 +50,7 @@ createObservedGame h move color chan = do
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
   -- layout
-  set p_back [layout := layoutBoardF White]
+  set p_back [layout := layoutBoardF color]
 
   refit p_back
 
