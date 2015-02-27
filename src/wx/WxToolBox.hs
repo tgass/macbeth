@@ -99,9 +99,15 @@ createToolBox h name chan = do
           return ()
 
         MatchMsg id n1 n2   -> do
-          chan' <- dupChan chan
-          createObservedGame h (Utils.emptyMove id n1 n2 name) (if n1 == name then White else Black) chan'
-          return ()
+          cmd <- readChan chan
+          case cmd of
+            MoveMsg move' -> if Api.gameId move' == id
+                             then do
+                                chan' <- dupChan chan
+                                createObservedGame h move' (if n1 == name then White else Black) chan'
+                                return ()
+                             else return ()
+            _ -> return ()
 
         AcceptMsg move    -> do
           chan' <- dupChan chan

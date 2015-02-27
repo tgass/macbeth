@@ -1,7 +1,6 @@
 module Utils (
   formatTime,
-  dummyMove,
-  emptyMove
+  dummyMove
 ) where
 
 import Api
@@ -27,23 +26,6 @@ format i
   | otherwise = show i
 
 
-
-
-emptyMove id n1 n2 playerName = Move {
-    Api.position = [],
-    turn = White,
-    doublePawnPush = Nothing,
-    Api.gameId = id,
-    nameW = n1,
-    nameB = n2,
-    relation = if n1 == playerName then MyMove else OponentsMove,
-    moveNumber = 0,
-    moveVerbose = "none",
-    timeTaken = "0",
-    remainingTimeW = 0,
-    remainingTimeB = 0,
-    movePretty = "none"
-  }
 
 dummyMove = Move {
     Api.position = [ (Square A One, Piece Rook White)

@@ -54,6 +54,7 @@ createObservedGame h move color chan = do
   refit p_back
 
   evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
+    putStrLn $ show cmd
     case cmd of
 
       MoveMsg move' -> if Api.gameId move' == Api.gameId move
