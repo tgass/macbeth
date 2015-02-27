@@ -17,7 +17,7 @@ login h chan = do
   f <- frame []
   p <- panel f []
 
-  e_name <- textEntry p [ alignment := AlignRight]
+  e_name <- textEntry p [ text := "guest", alignment := AlignRight]
   e_pw <- textCtrlEx p (wxTE_PASSWORD) [ alignment := AlignRight]
 
 
@@ -45,6 +45,7 @@ login h chan = do
 loginLoop :: String -> String -> Frame () -> Handle -> Chan CommandMsg -> IO ()
 loginLoop name pw f h chan = do
     cmd <- readChan chan
+    putStrLn $ show cmd
     case cmd of
       LoginMessage     -> hPutStrLn h name >>
                           loginLoop name pw f h chan
@@ -52,12 +53,12 @@ loginLoop name pw f h chan = do
       PasswordMessage  -> hPutStrLn h pw >>
                           loginLoop name pw f h chan
 
-      LoggedInMessage  -> hPutStrLn h "set seek 0" >>
-                          hPutStrLn h "set style 12" >>
-                          hPutStrLn h "iset nowrap 1" >>
-                          hPutStrLn h "iset block 1" >>
-                          close f >>
-                          dupChan chan >>= createToolBox h
+      LoggedInMessage name' -> hPutStrLn h "set seek 0" >>
+                               hPutStrLn h "set style 12" >>
+                               hPutStrLn h "iset nowrap 1" >>
+                               hPutStrLn h "iset block 1" >>
+                               close f >>
+                               dupChan chan >>= createToolBox h name'
 
       InvalidPasswordMsg  -> return ()
 

@@ -31,8 +31,8 @@ ficsEventId = wxID_HIGHEST + 51
 
 
 
-createToolBox :: Handle -> Chan CommandMsg -> IO ()
-createToolBox h chan = do
+createToolBox :: Handle -> String -> Chan CommandMsg -> IO ()
+createToolBox h name chan = do
     vCmd <- newEmptyMVar
 
     -- main frame
@@ -95,17 +95,17 @@ createToolBox h chan = do
 
         ObserveMsg _ move -> do
           chan' <- dupChan chan
-          createObservedGame h move chan'
+          createObservedGame h move White chan'
           return ()
 
-        MatchMsg id      -> do
+        MatchMsg id n1 n2   -> do
           chan' <- dupChan chan
-          createObservedGame h (Utils.emptyMove id) chan'
+          createObservedGame h (Utils.emptyMove id n1 n2 name) (if n1 == name then White else Black) chan'
           return ()
 
         AcceptMsg move    -> do
           chan' <- dupChan chan
-          createObservedGame h move chan'
+          createObservedGame h move (if (Api.nameW move) == name then White else Black) chan'
           return ()
 
         SettingsDoneMsg  -> hPutStrLn h "5 sought" >>

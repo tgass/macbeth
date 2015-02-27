@@ -29,15 +29,15 @@ format i
 
 
 
-emptyMove id = Move {
+emptyMove id n1 n2 playerName = Move {
     Api.position = [],
     turn = White,
     doublePawnPush = Nothing,
     Api.gameId = id,
-    nameW = "",
-    nameB = "",
-    relation = MyMove,
-    moveNumber = 1,
+    nameW = n1,
+    nameB = n2,
+    relation = if n1 == playerName then MyMove else OponentsMove,
+    moveNumber = 0,
     moveVerbose = "none",
     timeTaken = "0",
     remainingTimeW = 0,

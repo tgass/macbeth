@@ -34,9 +34,9 @@ data DraggedPiece = DraggedPiece { _point :: Point
                                  , _square :: Square } deriving (Show)
 
 
-createBoard :: Panel () -> Position -> IO Board
-createBoard p_parent position = do
-  let boardState = BoardState position White (Square A One) Nothing False
+createBoard :: Panel () -> Position -> Api.Color -> IO Board
+createBoard p_parent position color = do
+  let boardState = BoardState position color (Square A One) Nothing False
   vState <- variable [ value := boardState ]
   p_board <- panel p_parent []
   set p_board [ on paint := drawAll p_board vState ]

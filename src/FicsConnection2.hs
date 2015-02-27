@@ -40,15 +40,28 @@ loop h = do
         _ -> hPutStrLn h line >> loop h
 
 
-handler :: CommandMsg -> IO ()
-handler = putStrLn . show
+handler :: Handle -> CommandMsg -> IO ()
+handler h cmd = case cmd of
+      LoginMessage     -> hPutStrLn h "guest"
 
-ficsConnection :: (CommandMsg -> IO ()) -> IO (Handle)
+      PasswordMessage  -> hPutStrLn h ""
+
+      LoggedInMessage _  -> hPutStrLn h "set seek 0" >>
+                           hPutStrLn h "set style 12" >>
+                           hPutStrLn h "iset nowrap 1" >>
+                           hPutStrLn h "iset block 1"
+      GuestLoginMsg _  -> hPutStrLn h ""
+
+      _ -> putStrLn $ show cmd
+
+
+
+ficsConnection :: (Handle -> CommandMsg -> IO ()) -> IO (Handle)
 ficsConnection handler = runResourceT $ do
                           (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber $ fromIntegral 5000) hClose
                           liftIO $ hSetBuffering hsock LineBuffering
                           resourceForkIO $ liftIO $
-                            CB.sourceHandle hsock $$ blockY =$ blockX (False, BS.empty) =$ parseC =$ sink handler
+                            CB.sourceHandle hsock $$ blockY =$ blockX (False, BS.empty) =$ parseC =$ sink (handler hsock)
                           return hsock
 
 

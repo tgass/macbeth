@@ -10,5 +10,5 @@ import Graphics.UI.WX
 main :: IO ()
 main = do
   chan <- newChan
-  h <- ficsConnection $ writeChan chan
+  h <- ficsConnection $ \h cmd -> writeChan chan cmd
   start $ login h chan

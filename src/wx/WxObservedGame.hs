@@ -21,18 +21,16 @@ import Control.Concurrent.Chan
 import System.IO (Handle, hPutStrLn)
 
 
-
 ficsEventId = wxID_HIGHEST + 53
 
 
-
-createObservedGame :: Handle -> Move -> Chan CommandMsg -> IO ()
-createObservedGame h move chan = do
+createObservedGame :: Handle -> Move -> Api.Color -> Chan CommandMsg -> IO ()
+createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
 
   f <- frame []
   p_back <- panel f []
-  board <- createBoard p_back (Api.position move)
+  board <- createBoard p_back (Api.position move) color
   vClock <- variable [ value := move ]
 
   -- panels
@@ -65,6 +63,16 @@ createObservedGame h move chan = do
                          set t_black [enabled := True]
                          varSet vClock move'
                        else return ()
+
+
+      ConfirmMoveMsg move' -> if Api.gameId move' == Api.gameId move
+                               then do
+                                 setPosition board (Api.position move') (relation move' == MyMove)
+                                 set t_white [enabled := True]
+                                 set t_black [enabled := True]
+                                 varSet vClock move'
+                               else return ()
+
 
       GameResultMsg id _ -> if id == Api.gameId move
                             then do

@@ -47,15 +47,16 @@ import Data.Maybe (fromMaybe)
 
 import Network (connectTo, PortID (..))
 import System.IO
+import Data.List.Split (splitOn)
+
 
 type Position = [(Square, Piece)]
-
-
 
 parseCommandMsg :: BS.ByteString -> Either String CommandMsg
 parseCommandMsg str = parseOnly parser str where
   parser = choice [
                     parseMoveMsg
+                  , confirmMoveMsg
 
                   , observeMsg
                   , gamesMsg
@@ -112,16 +113,29 @@ acceptGameMsg = do
   return $ AcceptMsg move
 
 
+
+-- "\NAK3\SYN1\SYN\a\n<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B 4 1 1 1 1 0 217 GuestJZFG GuestKNSF -1 2 12 39 39 120 120 1 P/e2-e4 (0:00) e4 0 0 0\n\ETB"
+confirmMoveMsg :: Parser CommandMsg
+confirmMoveMsg = do
+  head <- commandHead 1
+  move <- obsBody
+  takeTill (== chr 23)
+  char $ chr 23
+  return $ ConfirmMoveMsg move
+
+
 -- | ie: {Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}
 matchMsg :: Parser CommandMsg
 matchMsg = do
   "{Game "
   id <- decimal
   space
-  takeTill (== '}')
-  "}"
-  return $ MatchMsg id
-
+  "("
+  name1 <- manyTill anyChar space
+  "vs. "
+  name2 <- manyTill anyChar ")"
+  manyTill anyChar "}"
+  return $ MatchMsg id name1 name2
 
 
 soughtMsg :: Parser CommandMsg
@@ -130,16 +144,6 @@ soughtMsg = do
   sL <- soughtList'
   char $ chr 23
   return $ SoughtMsg head sL
-
-
-{-
--- play responses
--}
-
--- "\NAK3\SYN158\SYNThat seek is not available.\n\ETB"
--- "\NAK3\SYN158\SYNIssuing match request since the seek was set to manual.\nIssuing: GuestYJTB (----) juanhomie (----) unrated blitz 5 10.\n\ETB"
-
-
 
 
 parseMoveMsg :: Parser CommandMsg
@@ -170,12 +174,13 @@ parseUnkownUsername = do
   return $ UnkownUsernameMsg name
 
 
+-- | Beware the guest handles: ie GuestXWLW(U)
 parseLoggedIn :: Parser CommandMsg
 parseLoggedIn = do
   "**** Starting FICS session as "
   name <- manyTill anyChar space
   "****"
-  return LoggedInMessage
+  return $ LoggedInMessage (Prelude.head $ splitOn "(" name)
 
 
 parseInvalidPassword :: Parser CommandMsg
@@ -205,5 +210,6 @@ commandHead code = do
 
 
 -- test data
+matchMsgS = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
 obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
 guestLogin = BS.pack $ "Press return to enter the server as \"FOOBAR\":"

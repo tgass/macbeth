@@ -22,14 +22,17 @@ data CommandMsg =  ObserveMsg { head :: CommandHead
                                       , result :: GameResult
                                       }
                       | AcceptMsg { move :: Move}
-                      | MatchMsg { id :: Int}
+                      | MatchMsg { id :: Int
+                                 , nameW :: String
+                                 , nameB :: String }
                       | AcknoledgeMessage { head :: CommandHead }
                       | MoveMsg { move :: Move}
+                      | ConfirmMoveMsg { move :: Move }
                       | LoginMessage
                       | PasswordMessage
                       | GuestLoginMsg { name :: String }
                       | UnkownUsernameMsg { name :: String }
-                      | LoggedInMessage
+                      | LoggedInMessage { name :: String }
                       | InvalidPasswordMsg
                       | PromptMessage
                       | SettingsDoneMsg
