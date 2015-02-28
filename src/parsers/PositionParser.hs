@@ -27,6 +27,14 @@ parseRows str = zip rows lines
                    lines = splitOn " " str
 
 
+{-
+ map (\x -> (x, sqrt x)) xs
+ map (ap (,) sqrt) xs
+ zipWith (,) xs (map sqrt xs)
+ f = zip `ap` map sqrt
+ f = zip <*> map sqrt
+ r = map (id &&& sqrt) xs //Control.Arrow
+-}
 parseColumn :: String -> [(Column, Maybe Piece)]
 parseColumn line = zip [A .. H] [readPiece c | c <- line]
 
