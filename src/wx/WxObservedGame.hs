@@ -58,7 +58,7 @@ createObservedGame h move color chan = do
     putStrLn $ show cmd
     case cmd of
 
-      MoveMsg move' -> if Move.gameId move' == Move.gameId move
+      CommandMsg.Move move' -> if Move.gameId move' == Move.gameId move
                        then do
                          setPosition board (Move.position move') (relation move' == MyMove)
                          set t_white [enabled := True]
@@ -67,7 +67,7 @@ createObservedGame h move color chan = do
                        else return ()
 
 
-      ConfirmMoveMsg move' -> if Move.gameId move' == Move.gameId move
+      ConfirmMove move' -> if Move.gameId move' == Move.gameId move
                                then do
                                  setPosition board (Move.position move') (relation move' == MyMove)
                                  set t_white [enabled := True]
@@ -76,7 +76,7 @@ createObservedGame h move color chan = do
                                else return ()
 
 
-      GameResultMsg id _ -> if id == Move.gameId move
+      GameResult id _ -> if id == Move.gameId move
                             then do
                               set t_white [enabled := False]
                               set t_black [enabled := False]

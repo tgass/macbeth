@@ -30,7 +30,7 @@ parseGameResult = do
   result <- (string "1-0") *> pure WhiteWins <|>
             (string "0-1") *> pure BlackWins <|>
             (string "1/2-1/2") *> pure Draw
-  return $ GameResultMsg gameId result
+  return $ GameResult gameId result
 
 
 dummy = BS.pack "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"

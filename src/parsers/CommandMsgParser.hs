@@ -87,7 +87,7 @@ observeMsg = do
   move <- obsBody
   takeTill (== chr 23)
   char $ chr 23
-  return $ ObserveMsg head move
+  return $ Observe move
 
 
 obsBody :: Parser Move
@@ -102,7 +102,7 @@ gamesMsg = do
   head <- commandHead 43
   gL <- paresGamesList
   char $ chr 23
-  return $ GamesMsg head gL
+  return $ Games gL
 
 
 acceptGameMsg :: Parser CommandMsg
@@ -111,8 +111,16 @@ acceptGameMsg = do
   move <- obsBody
   takeTill (== chr 23)
   char $ chr 23
-  return $ AcceptMsg move
+  return $ Accept move
 
+
+playSuccessMsg :: Parser CommandMsg
+playSuccessMsg = do
+  head <- commandHead 1111111
+  move <- obsBody
+  takeTill (== chr 23)
+  char $ chr 23
+  return $ PlaySuccess move
 
 
 -- "\NAK3\SYN1\SYN\a\n<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B 4 1 1 1 1 0 217 GuestJZFG GuestKNSF -1 2 12 39 39 120 120 1 P/e2-e4 (0:00) e4 0 0 0\n\ETB"
@@ -122,7 +130,7 @@ confirmMoveMsg = do
   move <- obsBody
   takeTill (== chr 23)
   char $ chr 23
-  return $ ConfirmMoveMsg move
+  return $ ConfirmMove move
 
 
 -- | ie: {Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}
@@ -136,7 +144,7 @@ matchMsg = do
   "vs. "
   name2 <- manyTill anyChar ")"
   manyTill anyChar "}"
-  return $ MatchMsg id name1 name2
+  return $ Match id
 
 
 soughtMsg :: Parser CommandMsg
@@ -144,19 +152,19 @@ soughtMsg = do
   head <- commandHead 157
   sL <- soughtList'
   char $ chr 23
-  return $ SoughtMsg head sL
+  return $ Sought sL
 
 
 parseMoveMsg :: Parser CommandMsg
-parseMoveMsg = parseMove >>= \move -> return $ MoveMsg move
+parseMoveMsg = parseMove >>= \move -> return $ CommandMsg.Move move
 
 
 parseLogin :: Parser CommandMsg
-parseLogin = "login: " >> return LoginMessage
+parseLogin = "login: " >> return Login
 
 
 parsePassword :: Parser CommandMsg
-parsePassword = "password: " >> return PasswordMessage
+parsePassword = "password: " >> return Password
 
 
 parseGuestLogin :: Parser CommandMsg
@@ -164,7 +172,7 @@ parseGuestLogin = do
   "Press return to enter the server as \""
   name <- manyTill anyChar "\""
   ":"
-  return $ GuestLoginMsg name
+  return $ GuestLogin name
 
 
 parseUnkownUsername :: Parser CommandMsg
@@ -172,7 +180,7 @@ parseUnkownUsername = do
   "\""
   name <- manyTill anyChar "\""
   " is not a registered name.  You may use this name to play unrated games."
-  return $ UnkownUsernameMsg name
+  return $ UnkownUsername name
 
 
 -- | Beware the guest handles: ie GuestXWLW(U)
@@ -181,24 +189,24 @@ parseLoggedIn = do
   "**** Starting FICS session as "
   name <- manyTill anyChar space
   "****"
-  return $ LoggedInMessage (Prelude.head $ splitOn "(" name)
+  return $ LoggedIn (Prelude.head $ splitOn "(" name)
 
 
 parseInvalidPassword :: Parser CommandMsg
-parseInvalidPassword = "**** Invalid password! ****" >> return InvalidPasswordMsg
+parseInvalidPassword = "**** Invalid password! ****" >> return InvalidPassword
 
 
 parsePrompt :: Parser CommandMsg
-parsePrompt = "fics% " >> return PromptMessage
+parsePrompt = "fics% " >> return Prompt
 
 
 parseAcknoledge :: Parser CommandMsg
 parseAcknoledge = do
   head <- commandHead 519
   char $ chr 23
-  return $ AcknoledgeMessage head
+  return $ Acknoledge
 
-parseSettingsDone = (char $ chr 23) >> return SettingsDoneMsg
+parseSettingsDone = (char $ chr 23) >> return SettingsDone
 
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
@@ -211,6 +219,7 @@ commandHead code = do
 
 
 -- test data
+playMsg = BS.pack "Creating: GuestCCFP (++++) GuestGVJK (++++) unrated blitz 0 20 {Game 132 (GuestCCFP vs. GuestGVJK) Creating unrated blitz match.} <12> rnbqkbnr pppppppp ———— ———— ———— ———— PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 132 GuestCCFP GuestGVJK -1 0 20 39 39 10 10 1 none (0:00) none 1 0 0"
 matchMsgS = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
 obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
 guestLogin = BS.pack $ "Press return to enter the server as \"FOOBAR\":"

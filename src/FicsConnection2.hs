@@ -29,16 +29,16 @@ loop h = getLine >>= hPutStrLn h >> loop h
 
 handler :: Handle -> CommandMsg -> IO ()
 handler h cmd = case cmd of
-      LoginMessage       -> hPutStrLn h "guest"
+      Login      -> hPutStrLn h "guest"
 
-      PasswordMessage    -> hPutStrLn h ""
+      Password    -> hPutStrLn h ""
 
-      LoggedInMessage _  -> hPutStrLn h "set seek 0" >>
+      LoggedIn _  -> hPutStrLn h "set seek 0" >>
                             hPutStrLn h "set style 12" >>
                             hPutStrLn h "iset nowrap 1" >>
                             hPutStrLn h "iset block 1"
 
-      GuestLoginMsg _    -> hPutStrLn h ""
+      GuestLogin _    -> hPutStrLn h ""
 
       _ -> putStrLn $ show cmd
 

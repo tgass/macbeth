@@ -47,25 +47,27 @@ loginLoop name pw f h chan = do
     cmd <- readChan chan
     putStrLn $ show cmd
     case cmd of
-      LoginMessage     -> hPutStrLn h name >>
+      Login            -> hPutStrLn h name >>
                           loginLoop name pw f h chan
 
-      PasswordMessage  -> hPutStrLn h pw >>
+      Password         -> hPutStrLn h pw >>
                           loginLoop name pw f h chan
 
-      LoggedInMessage name' -> hPutStrLn h "set seek 0" >>
-                               hPutStrLn h "set style 12" >>
-                               hPutStrLn h "iset nowrap 1" >>
-                               hPutStrLn h "iset block 1" >>
-                               close f >>
-                               dupChan chan >>= createToolBox h name'
+      LoggedIn name'   -> hPutStrLn h "set seek 0" >>
+                          hPutStrLn h "set style 12" >>
+                          hPutStrLn h "iset nowrap 1" >>
+                          hPutStrLn h "iset block 1" >>
+                          close f >>
+                          dupChan chan >>= createToolBox h name'
 
-      InvalidPasswordMsg  -> return ()
+      InvalidPassword  -> return ()
 
-      UnkownUsernameMsg _ -> hPutStrLn h name >>
-                             loginLoop name pw f h chan
+      UnkownUsername _ -> hPutStrLn h name >>
+                          loginLoop name pw f h chan
 
-      GuestLoginMsg _  -> hPutStrLn h "" >>
+      GuestLogin _     -> hPutStrLn h "" >>
                           loginLoop name pw f h chan
 
       _ -> loginLoop name pw f h chan
+
+

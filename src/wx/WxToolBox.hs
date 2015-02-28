@@ -86,41 +86,41 @@ createToolBox h name chan = do
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
       putStrLn $ show cmd
       case cmd of
-        SoughtMsg _ seeks -> do
+        Sought seeks -> do
           set sl [items := [[show id, name, show rat, show gt] | (Seek id rat name _ _ _ gt _ _) <- seeks]]
-          -- set sl [on listEvent := onSeekListEvent seeks sl h]
+          set sl [on listEvent := onSeekListEvent seeks sl h]
 
-        GamesMsg _ games -> do
+        Games games -> do
           set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ r1 n1 r2 n2 _) <- games]]
           set gl [on listEvent := onGamesListEvent games gl h]
 
-        ObserveMsg _ move -> do
+        Observe move -> do
           chan' <- dupChan chan
           createObservedGame h move White chan'
           return ()
 
-        MatchMsg id n1 n2   -> do
+        Match id   -> do
           cmd <- readChan chan
           case cmd of
-            MoveMsg move' -> if Move.gameId move' == id
+            CommandMsg.Move move' -> if Move.gameId move' == id
                              then do
                                 chan' <- dupChan chan
-                                createObservedGame h move' (if n1 == name then White else Black) chan'
+                                createObservedGame h move' (if (Move.nameW move') == name then White else Black) chan'
                                 return ()
                              else return ()
             _ -> return ()
 
-        AcceptMsg move    -> do
+        Accept move    -> do
           chan' <- dupChan chan
           createObservedGame h move (if (Move.nameW move) == name then White else Black) chan'
           return ()
 
-        SettingsDoneMsg  -> hPutStrLn h "5 sought" >>
+        SettingsDone  -> hPutStrLn h "5 sought" >>
                             hPutStrLn h "4 games"
 
         TextMessage text -> appendText ct (BS.unpack text ++ "\n")
 
-        _                -> return ()
+        cmd                -> appendText ct (show cmd ++ "\n")
 
 
     threadId <- forkIO $ loop chan vCmd f
