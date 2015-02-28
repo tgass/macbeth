@@ -74,7 +74,7 @@ import Move
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
-import qualified Data.Attoparsec.ByteString.Char8 as A (take, takeWhile)
+import qualified Data.Attoparsec.ByteString.Char8 as A (take, )
 import qualified Data.ByteString.Char8 as BS
 
 parseMove :: Parser Move
@@ -99,8 +99,8 @@ parseMove = do
   space
   gameNumber <- decimal
   space
-  pNameW <- manyTill anyChar space
-  pNameB <- manyTill anyChar space
+  nameW <- manyTill anyChar space
+  nameB <- manyTill anyChar space
   rel <- parseRelation
   space
   decimal -- initial time
@@ -125,8 +125,8 @@ parseMove = do
                 turn
                 doublePawnPush
                 gameNumber
-                pNameW
-                pNameB
+                nameW
+                nameB
                 rel
                 moveNumber
                 moveVerbose
@@ -135,16 +135,11 @@ parseMove = do
                 remTimeBlack
                 movePretty
 
+parseTurn = char 'B' *> pure Black <|> char 'W' *> pure White
 
-parseTurn = (char 'B' *> pure Black) <|> (char 'W' *> pure White)
-
-
-parseDoublePawnPush :: Parser (Maybe Int)
-parseDoublePawnPush = (string "-1" *> pure Nothing) <|> (decimal >>= \d -> return $ Just d)
-
+parseDoublePawnPush = string "-1" *> pure Nothing <|> (decimal >>= return . Just)
 
 parseBool = char '1' *> pure True <|> char '0' *> pure False
-
 
 parseRelation =
   "-3" *> pure Other <|>
@@ -155,10 +150,6 @@ parseRelation =
   "0"  *> pure Observing
 
 
+
 move = BS.pack "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 0 0 0 0 4 203 zerowin Hutnik  0 1 0 0 10 13 26 52 Q/e1-h1 (0:00) Qh1# 0 1 818"
-
-
--- konnte nicht geparst werden
-move'= BS.pack "<12> —r-r— ———k- ——R-p- p-pn-pq- ———n- P——PQ BP——P ——R-K                     W -1 0 0 0 0 1 17 Moppelix Masnawi 0 1 0 26 29 -1 5 34 K/g8-g7 (0:00) Kg7 0 1 0"
-
 

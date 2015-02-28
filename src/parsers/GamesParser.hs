@@ -31,11 +31,11 @@ gameP = do
   exampleGame <- option False (string "(Exam." *> pure True)
   setupGame <- option False (string "(Setup" *> pure True)
   many' space
-  p1Rating <- parseRating
+  p1Rating <- rating
   many1 space
   p1Name <- manyTill anyChar space
   many' space
-  p2Rating <- parseRating
+  p2Rating <- rating
   many1 space
   p2Name <- manyTill anyChar (space <|> char ')')
   many' space
@@ -57,9 +57,9 @@ settings' = do
 
 
 
-parseRating :: Parser Rating
-parseRating =
-  (decimal >>= \r -> return $ Rating r) <|>
+rating :: Parser Rating
+rating =
+  (decimal >>= return . Rating) <|>
   string "++++" *> pure Guest <|>
   string "----" *> pure Unrated
 
