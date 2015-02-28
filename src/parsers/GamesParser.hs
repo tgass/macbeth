@@ -6,6 +6,7 @@ module GamesParser (
 
 import Api
 import Game
+import ParseUtils
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
@@ -54,14 +55,6 @@ settings' = do
   ir <- isRated'
   manyTill anyChar "]"
   return $ GameSettings ip Standard ir
-
-
-
-rating :: Parser Rating
-rating =
-  (decimal >>= return . Rating) <|>
-  string "++++" *> pure Guest <|>
-  string "----" *> pure Unrated
 
 
 gameType' :: Parser GameType
