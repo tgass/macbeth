@@ -23,7 +23,7 @@ parsePosition str = fmap (\(s,p) -> (s, fromJust p)) $ filter (\(s,p) -> isJust 
 
 parseRows :: String -> [(Row, String)]
 parseRows str = zip rows lines
-             where rows = reverse [One .. Eight]
+             where rows = [Eight, Seven .. One]
                    lines = splitOn " " str
 
 
