@@ -51,7 +51,6 @@ import System.IO
 import Data.List.Split (splitOn)
 
 
-type Position = [(Square, Piece)]
 
 parseCommandMsg :: BS.ByteString -> Either String CommandMsg
 parseCommandMsg str = parseOnly parser str where
@@ -80,57 +79,32 @@ parseCommandMsg str = parseOnly parser str where
 
                   ]
 
-
-observeMsg :: Parser CommandMsg
-observeMsg = do
-  commandHead 80
-  move <- obsBody
-  takeTill (== chr 23)
-  char $ chr 23
-  return $ Observe move
+soughtMsg :: Parser CommandMsg
+soughtMsg = commandHead 157 >> soughtList' >>= return . Sought
 
 
 gamesMsg :: Parser CommandMsg
-gamesMsg = do
-  commandHead 43
-  gL <- paresGamesList
-  char $ chr 23
-  return $ Games gL
+gamesMsg = commandHead 43 >> paresGamesList >>= return . Games
+
+
+observeMsg :: Parser CommandMsg
+observeMsg = commandHead 80 >> findAndParseMove >>= return . Observe
 
 
 acceptGameMsg :: Parser CommandMsg
-acceptGameMsg = do
-  commandHead 11
-  move <- obsBody
-  takeTill (== chr 23)
-  char $ chr 23
-  return $ Accept move
+acceptGameMsg = commandHead 11 >> findAndParseMove >>= return . Accept
 
 
 playSuccessMsg :: Parser CommandMsg
-playSuccessMsg = do
-  commandHead 1111111
-  move <- obsBody
-  takeTill (== chr 23)
-  char $ chr 23
-  return $ PlaySuccess move
+playSuccessMsg = commandHead 1111111 >> findAndParseMove >>= return . PlaySuccess
 
 
--- "\NAK3\SYN1\SYN\a\n<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B 4 1 1 1 1 0 217 GuestJZFG GuestKNSF -1 2 12 39 39 120 120 1 P/e2-e4 (0:00) e4 0 0 0\n\ETB"
 confirmMoveMsg :: Parser CommandMsg
-confirmMoveMsg = do
-  commandHead 1
-  move <- obsBody
-  takeTill (== chr 23)
-  char $ chr 23
-  return $ ConfirmMove move
+confirmMoveMsg = commandHead 1 >> findAndParseMove >>= return . ConfirmMove
 
 
-obsBody :: Parser Move
-obsBody = do
-  takeTill (== '<')
-  move <- parseMove
-  return move
+findAndParseMove :: Parser Move
+findAndParseMove = takeTill (== '<') >> parseMove >>= return
 
 
 -- | ie: {Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}
@@ -138,21 +112,8 @@ matchMsg :: Parser CommandMsg
 matchMsg = do
   "{Game "
   id <- decimal
-  space
-  "("
-  name1 <- manyTill anyChar space
-  "vs. "
-  name2 <- manyTill anyChar ")"
   manyTill anyChar "}"
   return $ Match id
-
-
-soughtMsg :: Parser CommandMsg
-soughtMsg = do
-  commandHead 157
-  sL <- soughtList'
-  char $ chr 23
-  return $ Sought sL
 
 
 parseMoveMsg :: Parser CommandMsg
@@ -198,10 +159,7 @@ parsePrompt = "fics% " >> return Prompt
 
 
 parseAcknoledge :: Parser CommandMsg
-parseAcknoledge = do
-  head <- commandHead 519
-  char $ chr 23
-  return $ Acknoledge
+parseAcknoledge = commandHead 519 >> (char $ chr 23) >> return Acknoledge
 
 
 parseSettingsDone = (char $ chr 23) >> return SettingsDone
