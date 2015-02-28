@@ -39,32 +39,32 @@ createObservedGame h move color chan = do
   (p_white, t_white) <- createStatusPanel p_back vClock White
   (p_black, t_black) <- createStatusPanel p_back vClock Black
 
+  -- layout helper
   let layoutBoardF = layoutBoard p_board p_white p_black
 
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := turnBoard board p_back layoutBoardF ]
-
-  -- register paint callbacks
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
+
   -- layout
   set p_back [layout := layoutBoardF color]
-
   refit p_back
+
 
   evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
     putStrLn $ show cmd
     case cmd of
 
       CommandMsg.Move move' -> if Move.gameId move' == Move.gameId move
-                       then do
-                         setPosition board (Move.position move') (relation move' == MyMove)
-                         set t_white [enabled := True]
-                         set t_black [enabled := True]
-                         varSet vClock move'
-                       else return ()
+                                 then do
+                                   setPosition board (Move.position move') (relation move' == MyMove)
+                                   set t_white [enabled := True]
+                                   set t_black [enabled := True]
+                                   varSet vClock move'
+                                 else return ()
 
 
       ConfirmMove move' -> if Move.gameId move' == Move.gameId move

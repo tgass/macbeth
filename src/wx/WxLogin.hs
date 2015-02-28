@@ -18,7 +18,7 @@ login h chan = do
   p <- panel f []
 
   e_name <- textEntry p [ text := "guest", alignment := AlignRight]
-  e_pw <- textCtrlEx p (wxTE_PASSWORD) [ alignment := AlignRight]
+  e_pw   <- textCtrlEx p (wxTE_PASSWORD) [ alignment := AlignRight]
 
 
   let foobar = do
@@ -26,7 +26,7 @@ login h chan = do
                   pw <- get e_pw text
                   loginLoop name pw f h chan
 
-  b_ok <- button p [text := "Login", on command := foobar ]
+  b_ok  <- button p [text := "Login", on command := foobar ]
   b_can <- button p [text := "Quit", on command := close f]
 
   set f [ defaultButton := b_ok
@@ -68,6 +68,6 @@ loginLoop name pw f h chan = do
       GuestLogin _     -> hPutStrLn h "" >>
                           loginLoop name pw f h chan
 
-      _ -> loginLoop name pw f h chan
+      _                -> loginLoop name pw f h chan
 
 

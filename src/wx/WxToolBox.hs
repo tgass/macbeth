@@ -116,7 +116,7 @@ createToolBox h name chan = do
           return ()
 
         SettingsDone  -> hPutStrLn h "5 sought" >>
-                            hPutStrLn h "4 games"
+                         hPutStrLn h "4 games"
 
         TextMessage text -> appendText ct (BS.unpack text ++ "\n")
 

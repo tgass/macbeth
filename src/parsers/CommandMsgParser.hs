@@ -83,23 +83,16 @@ parseCommandMsg str = parseOnly parser str where
 
 observeMsg :: Parser CommandMsg
 observeMsg = do
-  head <- commandHead 80
+  commandHead 80
   move <- obsBody
   takeTill (== chr 23)
   char $ chr 23
   return $ Observe move
 
 
-obsBody :: Parser Move
-obsBody = do
-  takeTill (== '<')
-  move <- parseMove
-  return move
-
-
 gamesMsg :: Parser CommandMsg
 gamesMsg = do
-  head <- commandHead 43
+  commandHead 43
   gL <- paresGamesList
   char $ chr 23
   return $ Games gL
@@ -107,7 +100,7 @@ gamesMsg = do
 
 acceptGameMsg :: Parser CommandMsg
 acceptGameMsg = do
-  head <- commandHead 11
+  commandHead 11
   move <- obsBody
   takeTill (== chr 23)
   char $ chr 23
@@ -116,7 +109,7 @@ acceptGameMsg = do
 
 playSuccessMsg :: Parser CommandMsg
 playSuccessMsg = do
-  head <- commandHead 1111111
+  commandHead 1111111
   move <- obsBody
   takeTill (== chr 23)
   char $ chr 23
@@ -126,11 +119,18 @@ playSuccessMsg = do
 -- "\NAK3\SYN1\SYN\a\n<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B 4 1 1 1 1 0 217 GuestJZFG GuestKNSF -1 2 12 39 39 120 120 1 P/e2-e4 (0:00) e4 0 0 0\n\ETB"
 confirmMoveMsg :: Parser CommandMsg
 confirmMoveMsg = do
-  head <- commandHead 1
+  commandHead 1
   move <- obsBody
   takeTill (== chr 23)
   char $ chr 23
   return $ ConfirmMove move
+
+
+obsBody :: Parser Move
+obsBody = do
+  takeTill (== '<')
+  move <- parseMove
+  return move
 
 
 -- | ie: {Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}
@@ -149,14 +149,14 @@ matchMsg = do
 
 soughtMsg :: Parser CommandMsg
 soughtMsg = do
-  head <- commandHead 157
+  commandHead 157
   sL <- soughtList'
   char $ chr 23
   return $ Sought sL
 
 
 parseMoveMsg :: Parser CommandMsg
-parseMoveMsg = parseMove >>= \move -> return $ CommandMsg.Move move
+parseMoveMsg = parseMove >>= return . CommandMsg.Move
 
 
 parseLogin :: Parser CommandMsg
@@ -170,16 +170,14 @@ parsePassword = "password: " >> return Password
 parseGuestLogin :: Parser CommandMsg
 parseGuestLogin = do
   "Press return to enter the server as \""
-  name <- manyTill anyChar "\""
-  ":"
+  name <- manyTill anyChar "\":"
   return $ GuestLogin name
 
 
 parseUnkownUsername :: Parser CommandMsg
 parseUnkownUsername = do
   "\""
-  name <- manyTill anyChar "\""
-  " is not a registered name.  You may use this name to play unrated games."
+  name <- manyTill anyChar "\" is not a registered name."
   return $ UnkownUsername name
 
 
@@ -187,8 +185,7 @@ parseUnkownUsername = do
 parseLoggedIn :: Parser CommandMsg
 parseLoggedIn = do
   "**** Starting FICS session as "
-  name <- manyTill anyChar space
-  "****"
+  name <- manyTill anyChar " ****"
   return $ LoggedIn (Prelude.head $ splitOn "(" name)
 
 
@@ -206,7 +203,9 @@ parseAcknoledge = do
   char $ chr 23
   return $ Acknoledge
 
+
 parseSettingsDone = (char $ chr 23) >> return SettingsDone
+
 
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
