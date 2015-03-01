@@ -11,7 +11,9 @@ import FicsConnection2 (ficsConnection)
 import Game
 import Seek
 import Utils
+
 import WxObservedGame
+import WxChallenge
 
 import Control.Applicative (liftA)
 import Control.Concurrent
@@ -114,6 +116,8 @@ createToolBox h name chan = do
           chan' <- dupChan chan
           createObservedGame h move (if (Move.nameW move) == name then White else Black) chan'
           return ()
+
+        Challenge n1 n2 r1 r2 params -> wxChallenge h
 
         SettingsDone  -> hPutStrLn h "5 sought" >>
                          hPutStrLn h "4 games"

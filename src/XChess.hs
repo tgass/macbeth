@@ -6,7 +6,6 @@ import WxLogin
 
 import Graphics.UI.WX
 
-
 main :: IO ()
 main = do
   chan <- newChan

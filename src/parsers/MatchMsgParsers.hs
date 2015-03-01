@@ -40,11 +40,11 @@ match' :: Parser CommandMsg
 match' = do
   "{Game "
   id <- decimal
-  "("
+  " ("
   manyTill anyChar space
-  " vs. "
-  manyTill anyChar space
-  ") Creating "
+  "vs. "
+  manyTill anyChar ")"
+  " Creating "
   manyTill anyChar "}"
   return $ Match id
 
@@ -53,18 +53,16 @@ challenge :: Parser CommandMsg
 challenge = do
   "Challenge: "
   name1 <- manyTill anyChar space
-  space
   "("
   rating1 <- rating
   ") "
   name2 <- manyTill anyChar space
-  space
   "("
   rating2 <- rating
   ") "
   params <- manyTill anyChar "." --unrated blitz 2 12."
   return $ Challenge name1 rating1 name2 rating2 params
 
-
+challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
 matchMsg = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
 dummy = BS.pack "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
