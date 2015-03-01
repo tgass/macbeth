@@ -117,7 +117,7 @@ createToolBox h name chan = do
           createObservedGame h move (if (Move.nameW move) == name then White else Black) chan'
           return ()
 
-        Challenge n1 n2 r1 r2 params -> wxChallenge h
+        c@(Challenge _ _ _ _ _) -> wxChallenge h c
 
         SettingsDone  -> hPutStrLn h "5 sought" >>
                          hPutStrLn h "4 games"

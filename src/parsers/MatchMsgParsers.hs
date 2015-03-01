@@ -16,11 +16,6 @@ import qualified Data.Attoparsec.ByteString.Char8 as A (take, takeWhile)
 import qualified Data.ByteString.Char8 as BS
 
 
-{-
- - "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
- -  {Game 72 (Pehmotiikeri vs. Fischmob) Neither player has mating material} 1/2-1/2
--}
-
 gameResult :: Parser CommandMsg
 gameResult = do
   "{Game"
@@ -65,4 +60,4 @@ challenge = do
 
 challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
 matchMsg = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
-dummy = BS.pack "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
+gameResult' = BS.pack "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"

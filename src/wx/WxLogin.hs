@@ -36,7 +36,7 @@ login h chan = do
                 [ label "Username:", hfill $ widget e_name]
                ,[ label "Password:", hfill $ widget e_pw]]
             )
-        , floatBottomRight $ row 5 [widget b_ok, widget b_can]]
+            , floatBottomRight $ row 5 [widget b_ok, widget b_can]]
         ]
   return ()
 
