@@ -10,7 +10,7 @@ module Api (
   Square (..),
   Row (..),
   Column (..),
-  Position (..),
+  Position ,
   removePiece,
   getPiece,
   Rating (..),
@@ -29,7 +29,7 @@ invert Black = White
 data Rating = Rating {r :: Int} | Unrated | Guest
 
 instance Show Rating where
-  show (Rating r) = Prelude.show r
+  show (Rating r') = Prelude.show r'
   show Guest = "Guest"
   show Unrated = "Unrated"
 
@@ -57,7 +57,7 @@ pColor (Piece _type _color) = _color
 
 
 removePiece :: Position -> Square -> Position
-removePiece pos sq = filter (\(sq', p) -> sq /= sq') pos
+removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
 
 
 getPiece :: Position -> Square -> Color -> Maybe Piece
