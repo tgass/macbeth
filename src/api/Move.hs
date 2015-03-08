@@ -3,7 +3,8 @@ module Move (
   remainingTime,
   decreaseRemainingTime,
   namePlayer,
-  Relation(..)
+  Relation(..),
+  dummyMove
 ) where
 
 import Api
@@ -24,7 +25,7 @@ data Move = Move { position :: [(Square, Piece)]
                  }
 
 instance Show Move where
-  show m = "Move { gameId=" ++ (show $ gameId m) ++ ", nameW=" ++ (nameW m) ++ ", move=" ++ movePretty m ++ "}"
+  show m = "Move { gameId=" ++ show (gameId m) ++ ", nameW=" ++ nameW m ++ ", move=" ++ movePretty m ++ "}"
 
 
 
@@ -46,6 +47,7 @@ namePlayer White = nameW
 namePlayer Black = nameB
 
 
+dummyMove :: Move
 dummyMove = Move {
     position = [ (Square A One, Piece Rook White)
                    , (Square A Two, Piece Pawn White)

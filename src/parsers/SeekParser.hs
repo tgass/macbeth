@@ -7,9 +7,8 @@ module SeekParser (
 import Api
 import Seek
 
-import Control.Applicative ((<*>), (*>), (<|>), pure)
+import Control.Applicative ((*>), (<|>), pure)
 import Data.Attoparsec.ByteString.Char8
-import qualified Data.Attoparsec.ByteString.Char8 as A (take)
 import qualified Data.ByteString.Char8 as BS
 
 
