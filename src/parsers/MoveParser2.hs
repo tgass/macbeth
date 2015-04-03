@@ -119,7 +119,8 @@ parseMove = do
   space
   moveVerbose <- manyTill anyChar space
   timeTaken <- manyTill anyChar space
-  movePretty <- manyTill anyChar space
+  movePretty <- "none" *> pure Nothing <|>
+                (manyTill anyChar space >>= return . Just)
 
   return $ Move (parsePosition (BS.unpack pos))
                 turn

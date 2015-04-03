@@ -1,5 +1,5 @@
 module WxLogin (
-  login
+  wxLogin
 ) where
 
 import System.IO (Handle, hPutStrLn)
@@ -12,8 +12,8 @@ import WxToolBox
 import CommandMsg
 
 
-login :: Handle -> Chan CommandMsg -> IO ()
-login h chan = do
+wxLogin :: Handle -> Chan CommandMsg -> IO ()
+wxLogin h chan = do
   f <- frame []
   p <- panel f []
 

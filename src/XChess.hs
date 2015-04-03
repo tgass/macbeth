@@ -10,4 +10,4 @@ main :: IO ()
 main = do
   chan <- newChan
   h <- ficsConnection $ \h cmd -> writeChan chan cmd
-  start $ login h chan
+  start $ wxLogin h chan

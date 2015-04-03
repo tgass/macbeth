@@ -10,15 +10,14 @@ import Board
 import CommandMsg
 import Utils (formatTime)
 
-import Graphics.UI.WX
-import Graphics.UI.WXCore
-
 import Control.Concurrent
 import Control.Concurrent.Chan
-
 import Control.Applicative (liftA)
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent.Chan
+import Data.Maybe (isJust)
+import Graphics.UI.WX
+import Graphics.UI.WXCore
 import System.IO (Handle, hPutStrLn)
 
 
@@ -109,7 +108,7 @@ createStatusPanel :: Panel () -> Var Move  -> Api.Color -> IO (Panel (), Graphic
 createStatusPanel p_back vMove color = do
   p_status <- panel p_back []
   p_color <- panel p_status [ bgcolor := if color == White then white else black]
-  is_enabled <- ((/= "none") . movePretty) `liftA` varGet vMove
+  is_enabled <- (isJust . movePretty) `liftA` varGet vMove
 
   st_playerName <- createPlayerName p_status =<< namePlayer color `liftA` varGet vMove
   st_clock <- createClock p_status =<< remainingTime color `liftA` varGet vMove

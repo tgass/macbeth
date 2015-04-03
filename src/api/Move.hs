@@ -4,10 +4,14 @@ module Move (
   decreaseRemainingTime,
   namePlayer,
   Relation(..),
+  isPlayersNewGame,
+  playerColor,
   dummyMove
 ) where
 
 import Api
+
+import Data.Maybe (isNothing)
 
 data Move = Move { position :: [(Square, Piece)]
                  , turn :: Color
@@ -21,11 +25,11 @@ data Move = Move { position :: [(Square, Piece)]
                  , timeTaken :: String
                  , remainingTimeW :: Int
                  , remainingTimeB :: Int
-                 , movePretty :: String
+                 , movePretty :: Maybe String
                  }
 
 instance Show Move where
-  show m = "Move { gameId=" ++ show (gameId m) ++ ", nameW=" ++ nameW m ++ ", move=" ++ movePretty m ++ "}"
+  show m = "Move { gameId=" ++ show (gameId m) ++ ", nameW=" ++ nameW m ++ ", move=" ++ (show $ movePretty m) ++ "}"
 
 
 
@@ -47,6 +51,14 @@ namePlayer White = nameW
 namePlayer Black = nameB
 
 
+isPlayersNewGame :: Move -> Bool
+isPlayersNewGame m = ((relation m == MyMove) || (relation m == OponentsMove)) && (isNothing $ movePretty m)
+
+
+playerColor :: String -> Move -> Api.Color
+playerColor name move = if (Move.nameW move) == name then White else Black
+
+
 dummyMove :: Move
 dummyMove = Move {
     position = [ (Square A One, Piece Rook White)
@@ -61,11 +73,11 @@ dummyMove = Move {
     gameId = 1,
     nameW = "foobar",
     nameB = "barbaz",
-    relation = Observing,
+    relation = MyMove,
     moveNumber = 0,
     moveVerbose = "none",
     timeTaken = "0",
     remainingTimeW = 0,
     remainingTimeB = 0,
-    movePretty = "none"
+    movePretty = Just "f2"
   }
