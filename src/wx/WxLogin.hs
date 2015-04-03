@@ -8,8 +8,9 @@ import Control.Concurrent.MVar
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 
-import WxToolBox
 import CommandMsg
+import WxToolBox
+import WxMenu
 
 
 wxLogin :: Handle -> Chan CommandMsg -> IO ()
@@ -38,18 +39,18 @@ okBtnHandler :: TextCtrl() -> TextCtrl() -> Frame() -> Handle -> Chan CommandMsg
 okBtnHandler e_name e_pw f h chan = do
   name <- get e_name text
   pw <- get e_pw text
-  loginLoop name pw
+  loop name pw
   where
-    loginLoop name pw = do
+    loop name pw = do
        cmd <- readChan chan
        case cmd of
-         Login -> hPutStrLn h name >> loginLoop name pw
-         Password -> hPutStrLn h pw >> loginLoop name pw
+         Login -> hPutStrLn h name >> loop name pw
+         Password -> hPutStrLn h pw >> loop name pw
          LoggedIn name' -> hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
                            close f >>
                            dupChan chan >>= createToolBox h name
          InvalidPassword  -> return ()
-         UnkownUsername _ -> hPutStrLn h name >> loginLoop name pw
-         GuestLogin _     -> hPutStrLn h "" >> loginLoop name pw
-         _                -> loginLoop name pw
+         UnkownUsername _ -> hPutStrLn h name >> loop name pw
+         GuestLogin _     -> hPutStrLn h "" >> loop name pw
+         _                -> loop name pw
 

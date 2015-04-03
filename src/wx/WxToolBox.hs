@@ -14,6 +14,7 @@ import Utils
 
 import WxObservedGame
 import WxChallenge
+import WxMenu
 
 import Control.Applicative (liftA)
 import Control.Concurrent
@@ -42,6 +43,7 @@ createToolBox h name chan = do
     -- main frame
     f  <- frame []
     mv <- newEmptyMVar
+    menu <- wxMenu h
 
     -- right panel
     right <- panel f []
@@ -73,7 +75,7 @@ createToolBox h name chan = do
                                     ]
                         ]
 
-    set f [layout := minsize (Size 400 600) $ (container right $
+    set f [ layout := minsize (Size 400 600) $ (container right $
                          column 0
                          [ tabs nb
                             [ tab "Sought" $ container slp $ fill $ widget sl
@@ -84,6 +86,7 @@ createToolBox h name chan = do
                             ]
                          ]
                      )
+          , menuBar := [menu]
           ]
 
     threadId <- forkIO $ loop chan vCmd f
