@@ -103,8 +103,6 @@ createToolBox h name chan = do
 
         Observe move -> dupChan chan >>= createObservedGame h move White
 
-        Match id -> putStrLn $ "new Match id=" ++ show id
-
         CommandMsg.Move move' -> if isPlayersNewGame move' then
                                    dupChan chan >>= createObservedGame h move' (playerColor name move')
                                  else return ()

@@ -20,13 +20,7 @@ wxLogin h chan = do
   e_name <- textEntry p [ text := "guest", alignment := AlignRight]
   e_pw   <- textCtrlEx p (wxTE_PASSWORD) [ alignment := AlignRight]
 
-
-  let foobar = do
-                  name <- get e_name text
-                  pw <- get e_pw text
-                  loginLoop name pw f h chan
-
-  b_ok  <- button p [text := "Login", on command := foobar ]
+  b_ok  <- button p [text := "Login", on command := okBtnHandler e_name e_pw f h chan ]
   b_can <- button p [text := "Quit", on command := close f]
 
   set f [ defaultButton := b_ok
@@ -38,36 +32,24 @@ wxLogin h chan = do
             )
             , floatBottomRight $ row 5 [widget b_ok, widget b_can]]
         ]
-  return ()
 
 
-
-loginLoop :: String -> String -> Frame () -> Handle -> Chan CommandMsg -> IO ()
-loginLoop name pw f h chan = do
-    cmd <- readChan chan
-    putStrLn $ show cmd
-    case cmd of
-      Login            -> hPutStrLn h name >>
-                          loginLoop name pw f h chan
-
-      Password         -> hPutStrLn h pw >>
-                          loginLoop name pw f h chan
-
-      LoggedIn name'   -> hPutStrLn h "set seek 0" >>
-                          hPutStrLn h "set style 12" >>
-                          hPutStrLn h "iset nowrap 1" >>
-                          hPutStrLn h "iset block 1" >>
-                          close f >>
-                          dupChan chan >>= createToolBox h name'
-
-      InvalidPassword  -> return ()
-
-      UnkownUsername _ -> hPutStrLn h name >>
-                          loginLoop name pw f h chan
-
-      GuestLogin _     -> hPutStrLn h "" >>
-                          loginLoop name pw f h chan
-
-      _                -> loginLoop name pw f h chan
-
+okBtnHandler :: TextCtrl() -> TextCtrl() -> Frame() -> Handle -> Chan CommandMsg -> IO ()
+okBtnHandler e_name e_pw f h chan = do
+  name <- get e_name text
+  pw <- get e_pw text
+  loginLoop name pw
+  where
+    loginLoop name pw = do
+       cmd <- readChan chan
+       case cmd of
+         Login -> hPutStrLn h name >> loginLoop name pw
+         Password -> hPutStrLn h pw >> loginLoop name pw
+         LoggedIn name' -> hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
+                           close f >>
+                           dupChan chan >>= createToolBox h name
+         InvalidPassword  -> return ()
+         UnkownUsername _ -> hPutStrLn h name >> loginLoop name pw
+         GuestLogin _     -> hPutStrLn h "" >> loginLoop name pw
+         _                -> loginLoop name pw
 

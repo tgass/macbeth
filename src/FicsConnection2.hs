@@ -29,9 +29,9 @@ loop h = getLine >>= hPutStrLn h >> loop h
 
 handler :: Handle -> CommandMsg -> IO ()
 handler h cmd = case cmd of
-      Login       -> hPutStrLn h "guest"
-
-      Password    -> hPutStrLn h ""
+--      Login       -> hPutStrLn h "guest"
+--
+--      Password    -> hPutStrLn h ""
 
       LoggedIn _  -> hPutStrLn h "set seek 0" >>
                      hPutStrLn h "set style 12" >>

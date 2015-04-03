@@ -91,13 +91,13 @@ parseMove = do
   space
   parseBool -- castle white long
   space
-  parseBool -- castle black
+  parseBool -- castle black short
   space
-  parseBool
+  parseBool -- castle black long
   space
   decimal -- the number of moves made since the last irreversible move
   space
-  gameNumber <- decimal
+  gameId <- decimal
   space
   nameW <- manyTill anyChar space
   nameB <- manyTill anyChar space
@@ -125,7 +125,7 @@ parseMove = do
   return $ Move (parsePosition (BS.unpack pos))
                 turn
                 doublePawnPush
-                gameNumber
+                gameId
                 nameW
                 nameB
                 rel
@@ -136,11 +136,11 @@ parseMove = do
                 remTimeBlack
                 movePretty
 
-parseTurn = char 'B' *> pure Black <|> char 'W' *> pure White
+parseTurn = "B" *> pure Black <|> "W" *> pure White
 
-parseDoublePawnPush = string "-1" *> pure Nothing <|> (decimal >>= return . Just)
+parseDoublePawnPush = "-1" *> pure Nothing <|> (decimal >>= return . Just)
 
-parseBool = char '1' *> pure True <|> char '0' *> pure False
+parseBool = "1" *> pure True <|> "0" *> pure False
 
 parseRelation =
   "-3" *> pure Other <|>

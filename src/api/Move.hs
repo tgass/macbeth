@@ -1,16 +1,15 @@
 module Move (
   Move(..),
+  Relation(..),
   remainingTime,
   decreaseRemainingTime,
   namePlayer,
-  Relation(..),
   isPlayersNewGame,
   playerColor,
   dummyMove
 ) where
 
 import Api
-
 import Data.Maybe (isNothing)
 
 data Move = Move { position :: [(Square, Piece)]
@@ -30,8 +29,6 @@ data Move = Move { position :: [(Square, Piece)]
 
 instance Show Move where
   show m = "Move { gameId=" ++ show (gameId m) ++ ", nameW=" ++ nameW m ++ ", move=" ++ (show $ movePretty m) ++ "}"
-
-
 
 data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
 
