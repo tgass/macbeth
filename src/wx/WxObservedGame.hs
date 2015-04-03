@@ -86,23 +86,25 @@ createObservedGame h move color chan = do
 
 
   windowShow f
-
   threadId <- forkIO $ loop chan vCmd f
   windowOnDestroy f $ do killThread threadId
+                         -- TODO: Resign if playing
                          hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
-
-  return ()
 
 
 
 loop :: Chan CommandMsg -> MVar CommandMsg -> Frame () -> IO ()
-loop chan vCmd f = do
-  cmd <- readChan chan
-  putMVar vCmd cmd
-  ev <- commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId
-  evtHandlerAddPendingEvent f ev
+loop chan vCmd f = readChan chan >>= putMVar vCmd >>
+  commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId >>= evtHandlerAddPendingEvent f >>
   loop chan vCmd f
 
+
+turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()
+turnBoard board p layoutF = do
+  color <- invertColor board
+  set p [layout := layoutF color]
+  repaint $ _panel board
+  refit p
 
 
 createStatusPanel :: Panel () -> Var Move  -> Api.Color -> IO (Panel (), Graphics.UI.WX.Timer)
@@ -124,15 +126,6 @@ createStatusPanel p_back vMove color = do
   return (p_status, t)
 
 
-
-turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()
-turnBoard board p layoutF = do
-  color <- invertColor board
-  set p [layout := layoutF color]
-  repaint $ _panel board
-  refit p
-
-
 updateTime :: Api.Color -> Var Move -> StaticText () -> IO ()
 updateTime color vClock st = do
   move <- changeRemainingTime color `liftA` varGet vClock
@@ -140,7 +133,7 @@ updateTime color vClock st = do
   set st [text := formatTime $ remainingTime color move]
   where
     changeRemainingTime color move = if color == turn move
-      then Move.decreaseRemainingTime color move else move
+      then decreaseRemainingTime color move else move
 
 
 staticTextFormatted :: Panel () -> String -> IO (StaticText ())
