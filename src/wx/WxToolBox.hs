@@ -44,6 +44,7 @@ createToolBox h name chan = do
     f  <- frame []
     mv <- newEmptyMVar
     menu <- wxMenu h
+    status <- statusField [text := "Logged in as " ++ name]
 
     -- right panel
     right <- panel f []
@@ -87,6 +88,7 @@ createToolBox h name chan = do
                          ]
                      )
           , menuBar := [menu]
+          , statusBar := [status]
           ]
 
     threadId <- forkIO $ loop chan vCmd f

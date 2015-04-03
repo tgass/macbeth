@@ -9,6 +9,7 @@ import Move
 import Board
 import CommandMsg
 import Utils (formatTime)
+import WxUtils
 
 import Control.Concurrent
 import Control.Concurrent.Chan
@@ -106,15 +107,17 @@ loop chan vCmd f = do
 
 createStatusPanel :: Panel () -> Var Move  -> Api.Color -> IO (Panel (), Graphics.UI.WX.Timer)
 createStatusPanel p_back vMove color = do
+  move <- varGet vMove
   p_status <- panel p_back []
-  p_color <- panel p_status [ bgcolor := if color == White then white else black]
-  is_enabled <- (isJust . movePretty) `liftA` varGet vMove
 
-  st_playerName <- createPlayerName p_status =<< namePlayer color `liftA` varGet vMove
-  st_clock <- createClock p_status =<< remainingTime color `liftA` varGet vMove
+  p_color <- panel p_status [bgcolor := toWxColor color]
+  st_clock <- staticTextFormatted p_status (formatTime $ remainingTime color move)
+  st_playerName <- staticTextFormatted p_status (namePlayer color move)
+
   t <- timer p_back [ interval := 1000
                     , on command := updateTime color vMove st_clock
-                    , enabled := is_enabled ]
+                    , enabled := isJust $ movePretty move ]
+
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st_clock
                                   , widget st_playerName] ]
@@ -130,7 +133,6 @@ turnBoard board p layoutF = do
   refit p
 
 
-
 updateTime :: Api.Color -> Var Move -> StaticText () -> IO ()
 updateTime color vClock st = do
   move <- changeRemainingTime color `liftA` varGet vClock
@@ -141,21 +143,11 @@ updateTime color vClock st = do
       then Move.decreaseRemainingTime color move else move
 
 
-
-createPlayerName :: Panel () -> String -> IO (StaticText ())
-createPlayerName p name = staticText p [ text := name
-                                       , fontFace := "Avenir Next Medium"
-                                       , fontSize := 20
-                                       , fontWeight := WeightBold]
-
-
-
-createClock :: Panel () -> Int -> IO (StaticText ())
-createClock p time = staticText p [ text := formatTime time
-                                  , fontFace := "Avenir Next Medium"
-                                  , fontSize := 20
-                                  , fontWeight := WeightBold]
-
+staticTextFormatted :: Panel () -> String -> IO (StaticText ())
+staticTextFormatted p name = staticText p [ text := name
+                                          , fontFace := "Avenir Next Medium"
+                                          , fontSize := 20
+                                          , fontWeight := WeightBold]
 
 
 layoutBoard :: Panel() -> Panel() -> Panel() -> Api.Color -> Layout
