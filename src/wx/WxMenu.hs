@@ -22,7 +22,7 @@ wxMatch h = do
   p <- panel f []
   match <- matchInputs p
 
-  b_ok  <- button p [text := "Challenge", on command := emitMatch h match ]
+  b_ok  <- button p [text := "Challenge", on command := toString match >>= hPutStrLn h >> close f ]
   b_can <- button p [text := "Cancel", on command := close f]
 
   set f [ defaultButton := b_ok
@@ -49,13 +49,13 @@ matchInputs p = do
   return $ Match name time inc rated
 
 
-emitMatch:: Handle -> Match -> IO ()
-emitMatch h m = do
+toString:: Match -> IO String
+toString m = do
   name <- get (name m) text
   time <- get (time m) text
   inc <- get (inc m) text
   rated <- convertIsRated `liftM` get (rated m) enabled
-  hPutStrLn h $ "4 match " ++ name ++ " " ++ time ++ " " ++ inc ++ " " ++ rated
+  return $ "4 match " ++ name ++ " " ++ time ++ " " ++ inc ++ " " ++ rated
     where
       convertIsRated True = "rated"
       convertIsRated False = "unrated"

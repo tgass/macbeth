@@ -45,6 +45,7 @@ createObservedGame h move color chan = do
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := turnBoard board p_back layoutBoardF ]
+  -- TODO: add resign
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
@@ -107,7 +108,7 @@ turnBoard board p layoutF = do
   refit p
 
 
-createStatusPanel :: Panel () -> Var Move  -> Api.Color -> IO (Panel (), Graphics.UI.WX.Timer)
+createStatusPanel :: Panel () -> Var Move -> Api.Color -> IO (Panel (), Graphics.UI.WX.Timer)
 createStatusPanel p_back vMove color = do
   move <- varGet vMove
   p_status <- panel p_back []
@@ -118,6 +119,7 @@ createStatusPanel p_back vMove color = do
 
   t <- timer p_back [ interval := 1000
                     , on command := updateTime color vMove st_clock
+                    -- TODO: disable if game is over (checkmate / Remis)
                     , enabled := isJust $ movePretty move ]
 
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
@@ -137,10 +139,10 @@ updateTime color vClock st = do
 
 
 staticTextFormatted :: Panel () -> String -> IO (StaticText ())
-staticTextFormatted p name = staticText p [ text := name
-                                          , fontFace := "Avenir Next Medium"
-                                          , fontSize := 20
-                                          , fontWeight := WeightBold]
+staticTextFormatted p s = staticText p [ text := s
+                                       , fontFace := "Avenir Next Medium"
+                                       , fontSize := 20
+                                       , fontWeight := WeightBold]
 
 
 layoutBoard :: Panel() -> Panel() -> Panel() -> Api.Color -> Layout

@@ -1,4 +1,5 @@
 .DS_Store
+**/*.swp
 .cabal-sandbox/
 LICENSE
 Setup.hs

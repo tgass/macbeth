@@ -40,13 +40,13 @@ handler h cmd = case cmd of
 
       GuestLogin _ -> hPutStrLn h ""
 
-      _ -> putStrLn $ show cmd
+      _ -> print cmd
 
 
 
-ficsConnection :: (Handle -> CommandMsg -> IO ()) -> IO (Handle)
+ficsConnection :: (Handle -> CommandMsg -> IO ()) -> IO Handle
 ficsConnection handler = runResourceT $ do
-                          (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber $ fromIntegral 5000) hClose
+                          (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
                           liftIO $ hSetBuffering hsock LineBuffering
                           resourceForkIO $ liftIO $
                             CB.sourceHandle hsock $$ toCharC =$ blockC (False, BS.empty) =$ parseC =$ sink (handler hsock)
@@ -65,8 +65,7 @@ parseC = awaitForever $ \str -> case parseCommandMsg str of
 
 
 blockC :: (Bool, BS.ByteString) -> Conduit Char IO BS.ByteString
-blockC (block, p) = awaitForever $ \c -> do
-                                    case p of
+blockC (block, p) = awaitForever $ \c -> case p of
                                       "login:" -> yield "login: " >> blockC (False, BS.empty)
                                       "password:" -> yield "password: " >> blockC (False, BS.empty)
                                       _ -> case ord c of
