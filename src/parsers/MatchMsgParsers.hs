@@ -58,6 +58,8 @@ challenge = do
   params <- manyTill anyChar "." --unrated blitz 2 12."
   return $ Challenge name1 rating1 name2 rating2 params
 
+declinedChallenge = "\"" >> manyTill anyChar "\" declines the match offer." >> return MatchDeclined
+
 challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
 matchMsg = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
 gameResult' = BS.pack "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"

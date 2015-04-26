@@ -22,7 +22,7 @@ import Graphics.UI.WXCore
 import System.IO (Handle, hPutStrLn)
 
 
-ficsEventId = wxID_HIGHEST + 53
+eventId = wxID_HIGHEST + 53
 
 
 createObservedGame :: Handle -> Move -> Api.Color -> Chan CommandMsg -> IO ()
@@ -55,7 +55,7 @@ createObservedGame h move color chan = do
   refit p_back
 
 
-  evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
+  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
     putStrLn $ show cmd
     case cmd of
 
@@ -87,17 +87,11 @@ createObservedGame h move color chan = do
 
 
   windowShow f
-  threadId <- forkIO $ loop chan vCmd f
+  threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ do killThread threadId
                          -- TODO: Resign if playing
                          hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
 
-
-
-loop :: Chan CommandMsg -> MVar CommandMsg -> Frame () -> IO ()
-loop chan vCmd f = readChan chan >>= putMVar vCmd >>
-  commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId >>= evtHandlerAddPendingEvent f >>
-  loop chan vCmd f
 
 
 turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()
