@@ -19,31 +19,6 @@ import Network (connectTo, PortID (..))
 import System.IO
 
 
-main :: IO ()
-main = ficsConnection handler >>= loop
-
-
-loop :: Handle -> IO ()
-loop h = getLine >>= hPutStrLn h >> loop h
-
-
-handler :: Handle -> CommandMsg -> IO ()
-handler h cmd = case cmd of
---      Login       -> hPutStrLn h "guest"
---
---      Password    -> hPutStrLn h ""
-
-      LoggedIn _  -> hPutStrLn h "set seek 0" >>
-                     hPutStrLn h "set style 12" >>
-                     hPutStrLn h "iset nowrap 1" >>
-                     hPutStrLn h "iset block 1"
-
-      GuestLogin _ -> hPutStrLn h ""
-
-      _ -> print cmd
-
-
-
 ficsConnection :: (Handle -> CommandMsg -> IO ()) -> IO Handle
 ficsConnection handler = runResourceT $ do
                           (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
@@ -70,11 +45,11 @@ blockC (block, p) = awaitForever $ \c -> case p of
                                       "password:" -> yield "password: " >> blockC (False, BS.empty)
                                       _ -> case ord c of
                                             21 -> blockC (True, BS.singleton c)
-                                            23 -> yield (p `BS.append` (BS.singleton c)) >> blockC (False, BS.empty)
-                                            10 -> if block then blockC (block, (p `BS.append` BS.singleton c))
+                                            23 -> yield (p `BS.append` BS.singleton c) >> blockC (False, BS.empty)
+                                            10 -> if block then blockC (block, p `BS.append` BS.singleton c)
                                                            else yield p >> blockC (block, BS.empty)
                                             13 -> blockC (block, p) -- ignores \r
-                                            _  -> blockC (block, p `BS.append` (BS.singleton c))
+                                            _  -> blockC (block, p `BS.append` BS.singleton c)
 
 
 toCharC :: Conduit BS.ByteString IO Char

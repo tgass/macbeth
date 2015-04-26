@@ -6,3 +6,5 @@ Setup.hs
 cabal.sandbox.config
 dist/
 src/.DS_Store
+XChess.cabal.lkshw
+XChess.cabal.lkshs
