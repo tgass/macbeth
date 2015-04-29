@@ -45,7 +45,9 @@ createObservedGame h move color chan = do
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := turnBoard board p_back layoutBoardF ]
-  -- TODO: add resign
+  menuItem ctxMenu [ text := "Resign", on command := resign h t_white t_black ]
+  --menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
@@ -56,32 +58,23 @@ createObservedGame h move color chan = do
 
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
-    putStrLn $ show cmd
     case cmd of
-
-      CommandMsg.Move move' -> if Move.gameId move' == Move.gameId move
-                                 then do
+      CommandMsg.Move move' -> when (Move.gameId move' == Move.gameId move) $ do
                                    setPosition board (Move.position move') (relation move' == MyMove)
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
-                                 else return ()
 
-
-      ConfirmMove move' -> if Move.gameId move' == Move.gameId move
-                               then do
+      ConfirmMove move' -> when (Move.gameId move' == Move.gameId move) $ do
                                  setPosition board (Move.position move') (relation move' == MyMove)
                                  set t_white [enabled := True]
                                  set t_black [enabled := True]
                                  varSet vClock move'
-                               else return ()
 
-
-      GameResult id _ -> if id == Move.gameId move
-                            then do
+      GameResult id r -> when (id == Move.gameId move) $ do
+                              putStrLn $ "GameResult" ++ show id ++ " " ++ show r
                               set t_white [enabled := False]
                               set t_black [enabled := False]
-                            else return ()
 
       _ -> return ()
 
@@ -92,7 +85,10 @@ createObservedGame h move color chan = do
                          -- TODO: Resign if playing
                          hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
 
-
+resign :: Handle -> Graphics.UI.WX.Timer -> Graphics.UI.WX.Timer-> IO ()
+resign h t_white t_black = do hPutStrLn h "4 resign"
+                   --           set t_white [enabled := False]
+                     --         set t_black [enabled := False]
 
 turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()
 turnBoard board p layoutF = do

@@ -96,7 +96,6 @@ createToolBox h name chan = do
     windowOnDestroy f $ killThread threadId
 
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
-      putStrLn $ show cmd
       case cmd of
         Sought seeks -> do
           set sl [items := [[show id, name, show rat, show gt] | (Seek id rat name _ _ _ gt _ _) <- seeks]]
@@ -108,9 +107,8 @@ createToolBox h name chan = do
 
         Observe move -> dupChan chan >>= createObservedGame h move White
 
-        CommandMsg.Move move' -> if isPlayersNewGame move' then
+        CommandMsg.Move move' -> when (isPlayersNewGame move') $ do
                                    dupChan chan >>= createObservedGame h move' (playerColor name move')
-                                 else return ()
 
         SettingsDone -> hPutStrLn h "5 sought" >> hPutStrLn h "4 games"
 
