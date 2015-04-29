@@ -112,10 +112,6 @@ createToolBox h name chan = do
                                    dupChan chan >>= createObservedGame h move' (playerColor name move')
                                  else return ()
 
-        Accept move -> dupChan chan >>= createObservedGame h move (playerColor name move)
-
-        c@(Challenge _ _ _ _ _) -> wxChallenge h c
-
         SettingsDone -> hPutStrLn h "5 sought" >> hPutStrLn h "4 games"
 
         TextMessage text -> appendText ct (BS.unpack text ++ "\n")

@@ -9,6 +9,7 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore
 
 import CommandMsg
+import WxBackground
 import WxToolBox
 import WxMenu
 
@@ -48,7 +49,8 @@ okBtnHandler e_name e_pw f h chan = do
          Password -> hPutStrLn h pw >> loop name pw
          LoggedIn name' -> hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
                            close f >>
-                           dupChan chan >>= createToolBox h name'
+                           dupChan chan >>= createToolBox h name' >>
+                           dupChan chan >>= wxBackground h name'
          InvalidPassword  -> return ()
          UnkownUsername _ -> hPutStrLn h name >> loop name pw
          GuestLogin _     -> hPutStrLn h "" >> loop name pw
