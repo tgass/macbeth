@@ -18,13 +18,11 @@ import qualified Data.ByteString.Char8 as BS
 
 gameResult :: Parser CommandMsg
 gameResult = do
+  skipSpace
   "{Game"
   space
   gameId <- decimal
-  space
-  takeTill (== '}')
-  char '}'
-  space
+  manyTill anyChar "} "
   result <- "1-0" *> pure WhiteWins <|>
             "0-1" *> pure BlackWins <|>
             "1/2-1/2" *> pure Draw
@@ -63,4 +61,4 @@ declinedChallenge = "\"" >> manyTill anyChar "\" declines the match offer." >> r
 challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
 matchMsg = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
 gameResult' = BS.pack  "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
-gameResult'' = BS.pack "\NAK4\SYN103\SYN\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done.\n\ETB"
+gameResult'' = BS.pack "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done."

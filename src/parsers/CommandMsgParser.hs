@@ -32,6 +32,7 @@ parseCommandMsg str = parseOnly parser str where
                   , MP.challenge
                   , MP.match'
                   , MP.gameResult
+                  , gameResult
                   , login
                   , password
                   , guestLogin
@@ -43,21 +44,31 @@ parseCommandMsg str = parseOnly parser str where
                   , settingsDone
                   ]
 
-
+sought :: Parser CommandMsg
 sought = commandHead 157 >> soughtList' >>= return . Sought
 
+games :: Parser CommandMsg
 games = commandHead 43 >> paresGamesList >>= return . Games
 
+observe :: Parser CommandMsg
 observe = commandHead 80 >> move'' >>= return . Observe
 
+accept :: Parser CommandMsg
 accept = commandHead 11 >> move'' >>= return . Accept
 
+gameResult :: Parser CommandMsg
+gameResult = commandHead 103 >> MP.gameResult
+
+playSuccess :: Parser CommandMsg
 playSuccess = commandHead 1111111 >> move'' >>= return . PlaySuccess
 
+confirmMove :: Parser CommandMsg
 confirmMove = commandHead 1 >> move'' >>= return . ConfirmMove
 
+move' :: Parser CommandMsg
 move' = parseMove >>= return . CommandMsg.Move
 
+login :: Parser CommandMsg
 login = "login: " >> return Login
 
 password = "password: " >> return Password

@@ -45,8 +45,8 @@ createObservedGame h move color chan = do
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := turnBoard board p_back layoutBoardF ]
-  menuItem ctxMenu [ text := "Resign", on command := resign h t_white t_black ]
-  --menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
+  --TODO menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
 
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
@@ -72,7 +72,6 @@ createObservedGame h move color chan = do
                                  varSet vClock move'
 
       GameResult id r -> when (id == Move.gameId move) $ do
-                              putStrLn $ "GameResult" ++ show id ++ " " ++ show r
                               set t_white [enabled := False]
                               set t_black [enabled := False]
 
@@ -85,10 +84,6 @@ createObservedGame h move color chan = do
                          -- TODO: Resign if playing
                          hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
 
-resign :: Handle -> Graphics.UI.WX.Timer -> Graphics.UI.WX.Timer-> IO ()
-resign h t_white t_black = do hPutStrLn h "4 resign"
-                   --           set t_white [enabled := False]
-                     --         set t_black [enabled := False]
 
 turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()
 turnBoard board p layoutF = do
@@ -109,7 +104,6 @@ createStatusPanel p_back vMove color = do
 
   t <- timer p_back [ interval := 1000
                     , on command := updateTime color vMove st_clock
-                    -- TODO: disable if game is over (checkmate / Remis)
                     , enabled := isJust $ movePretty move ]
 
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
