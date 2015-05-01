@@ -43,19 +43,15 @@ createBoard h p_parent position color interactive = do
   set p_board [ on paint := drawAll p_board vState ]
   windowOnMouse p_board True $ onMouseEvent h vState p_board
   let setPosition' p i = do
-                        state <- varGet vState
-                        varSet vState $ state {_position = p, isInteractive = i}
-                        repaint p_board
+                           state <- varGet vState
+                           varSet vState $ state {_position = p, isInteractive = i}
+                           repaint p_board
+  let invertColor' vState = do
+                               state <- varGet vState
+                               let color' = Api.invert $ Board.color state
+                               varSet vState $ state {Board.color = color' }
+                               return color'
   return $ Board p_board (invertColor' vState) setPosition'
-
-
-invertColor' :: Var BoardState -> IO Api.Color
-invertColor' vState = do
-  state <- varGet vState
-  let color' = Api.invert $ Board.color state
-  varSet vState $ state {Board.color = color' }
-  return color'
-
 
 
 drawAll :: Panel () -> Var BoardState -> DC a -> t -> IO ()
@@ -65,12 +61,9 @@ drawAll panel vState dc view = do
   dcSetUserScale dc scale scale
   drawBoard dc view
   mapM_ (drawPiece dc view (Board.color state)) (_position state)
-  if isInteractive state
-    then do
-      paintSelectedSquare (selSquare state) (Board.color state) scale dc view
-      drawDraggedPiece panel scale (draggedPiece state) dc view
-    else return ()
-
+  when (isInteractive state) $ do
+    paintSelectedSquare (selSquare state) (Board.color state) scale dc view
+    drawDraggedPiece scale (draggedPiece state) dc view
 
 
 paintSelectedSquare :: Square -> Api.Color -> Double -> DC a -> t -> IO ()
@@ -82,13 +75,14 @@ paintSelectedSquare selSq color scale dc view = do
 
 
 
-drawDraggedPiece :: Panel () -> Double -> Maybe DraggedPiece -> DC a -> t -> IO ()
-drawDraggedPiece p scale mDraggedPiece dc view = do
+drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> t -> IO ()
+drawDraggedPiece scale mDraggedPiece dc view = do
   case mDraggedPiece of
     Nothing -> return ()
-    Just (DraggedPiece pt p _) -> drawBitmap dc (piece p) (point (bar $ pointX pt) (bar $ pointY pt)) True []
+    Just (DraggedPiece pt piece _) -> drawBitmap dc (pieceToBitmap piece) (scalePoint pt) True []
     where
-      bar pt' = round $ (fromIntegral pt' - 20 * scale) / scale
+      scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
+      scaleValue value = round $ (fromIntegral value - 20 * scale) / scale
 
 
 
@@ -128,10 +122,10 @@ onMouseEvent h vState p mouse = do
 
 
 emitMove :: Piece -> Square -> Square -> String
-emit (Piece King White) (Square E One) (Square G One) = "O-O"
-emit (Piece King White) (Square E One) (Square C One) = "O-O-O"
-emit (Piece King Black) (Square E Eight) (Square G Eight) = "O-O"
-emit (Piece King Black) (Square E Eight) (Square C Eight) = "O-O-O"
+emitMove (Piece King White) (Square E One) (Square G One) = "O-O"
+emitMove (Piece King White) (Square E One) (Square C One) = "O-O-O"
+emitMove (Piece King Black) (Square E Eight) (Square G Eight) = "O-O"
+emitMove (Piece King Black) (Square E Eight) (Square C Eight) = "O-O-O"
 emitMove _ s1 s2 = show s1 ++ show s2
 
 
@@ -150,7 +144,7 @@ calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
 drawPiece :: DC a -> t -> Api.Color -> (Square, Piece) -> IO ()
-drawPiece dc view color (square, p) = drawBitmap dc (piece p) (toPos square color) True []
+drawPiece dc view color (square, p) = drawBitmap dc (pieceToBitmap p) (toPos square color) True []
 
 
 
@@ -197,19 +191,19 @@ intToCol Black = toEnum . abs . (7-)
 board :: Bitmap ()
 board = bitmap $ root ++ "board_empty.gif"
 
-piece :: Piece -> Bitmap ()
-piece (Piece King Black) = tobitmap "bk.gif"
-piece (Piece Queen Black) = tobitmap "bq.gif"
-piece (Piece Rook Black) = tobitmap "br.gif"
-piece (Piece Knight Black) = tobitmap "bn.gif"
-piece (Piece Bishop Black) = tobitmap "bb.gif"
-piece (Piece Pawn Black) = tobitmap "bp.gif"
-piece (Piece King White) = tobitmap "wk.gif"
-piece (Piece Queen White) = tobitmap "wq.gif"
-piece (Piece Rook White) = tobitmap "wr.gif"
-piece (Piece Knight White) = tobitmap "wn.gif"
-piece (Piece Bishop White) = tobitmap "wb.gif"
-piece (Piece Pawn White) = tobitmap "wp.gif"
+pieceToBitmap :: Piece -> Bitmap ()
+pieceToBitmap (Piece King Black) = tobitmap "bk.gif"
+pieceToBitmap (Piece Queen Black) = tobitmap "bq.gif"
+pieceToBitmap (Piece Rook Black) = tobitmap "br.gif"
+pieceToBitmap (Piece Knight Black) = tobitmap "bn.gif"
+pieceToBitmap (Piece Bishop Black) = tobitmap "bb.gif"
+pieceToBitmap (Piece Pawn Black) = tobitmap "bp.gif"
+pieceToBitmap (Piece King White) = tobitmap "wk.gif"
+pieceToBitmap (Piece Queen White) = tobitmap "wq.gif"
+pieceToBitmap (Piece Rook White) = tobitmap "wr.gif"
+pieceToBitmap (Piece Knight White) = tobitmap "wn.gif"
+pieceToBitmap (Piece Bishop White) = tobitmap "wb.gif"
+pieceToBitmap (Piece Pawn White) = tobitmap "wp.gif"
 
 
 tobitmap gif = bitmap $ root ++ gif
