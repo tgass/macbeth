@@ -19,6 +19,7 @@ data CommandMsg =   Games { gamesList :: [Game] }
                   | PlaySuccess { move :: Move }
                   | Challenge { nameW :: String, ratingW :: Rating, nameB :: String, ratingB :: Rating, params :: String}
                   | MatchDeclined
+                  | DrawOffered
                   | Match { id :: Int }
                   | Move { move :: Move}
                   | ConfirmMove { move :: Move }

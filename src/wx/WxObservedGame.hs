@@ -1,7 +1,5 @@
 module WxObservedGame (
---module Main (
   createObservedGame,
---  ,main
 ) where
 
 import Api
@@ -79,6 +77,10 @@ createObservedGame h move color chan = do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               setInteractive board False
+
+      DrawOffered -> when (relation move == MyMove) $ do
+                     --TODO: Implement offered draw
+                     return ()
 
       _ -> return ()
 
