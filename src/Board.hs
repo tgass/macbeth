@@ -4,18 +4,11 @@ module Board (
 ) where
 
 import Api
-import PositionParser
-
-
-import Graphics.UI.WX
-import Graphics.UI.WXCore (dcSetUserScale, windowOnMouse)
-import Graphics.UI.WXCore.Events (windowOnSize)
 
 import Control.Applicative (liftA)
-import Control.Concurrent.STM.TVar
-import Data.List.Split (splitOn)
-import Data.Maybe (isJust, fromJust)
-import System.IO
+import Graphics.UI.WX
+import Graphics.UI.WXCore (dcSetUserScale, windowOnMouse)
+import System.IO (Handle, hPutStrLn)
 
 
 data Board = Board { _panel :: Panel ()
@@ -216,7 +209,5 @@ tobitmap gif = bitmap $ root ++ gif
 
 
 root = "/Users/tilmann/Documents/leksah/XChess/gif/"
-
-initBoard = parsePosition "———— ———— ——p—— ———— ———— ——k-K ———— ———q"
 
 
