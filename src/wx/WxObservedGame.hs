@@ -15,7 +15,6 @@ import Control.Concurrent
 import Control.Concurrent.Chan
 import Control.Applicative (liftA)
 import Control.Monad.IO.Class (liftIO)
-import Control.Concurrent.Chan
 import Data.Maybe (isJust)
 import Graphics.UI.WX
 import Graphics.UI.WXCore
@@ -45,12 +44,13 @@ createObservedGame h move color chan = do
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := turnBoard board p_back layoutBoardF ]
-  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
-  --TODO menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+  when (relation move /= Observing) $ do
+                 menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+                 menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
+                 return ()
 
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
-
 
   -- layout
   set p_back [layout := layoutBoardF color]
@@ -60,13 +60,17 @@ createObservedGame h move color chan = do
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
     case cmd of
       CommandMsg.Move move' -> when (Move.gameId move' == Move.gameId move) $ do
-                                   setPosition board (Move.position move') (relation move' == MyMove)
+                                   setPosition board (Move.position move')
+                                   setInteractive board (relation move' == MyMove)
+                                   repaintBoard board
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
 
       ConfirmMove move' -> when (Move.gameId move' == Move.gameId move) $ do
-                                 setPosition board (Move.position move') (relation move' == MyMove)
+                                 setPosition board $ Move.position move'
+                                 setInteractive board $ relation move' == MyMove
+                                 repaintBoard board
                                  set t_white [enabled := True]
                                  set t_black [enabled := True]
                                  varSet vClock move'
@@ -74,6 +78,7 @@ createObservedGame h move color chan = do
       GameResult id r -> when (id == Move.gameId move) $ do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
+                              setInteractive board False
 
       _ -> return ()
 
@@ -89,7 +94,7 @@ turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()
 turnBoard board p layoutF = do
   color <- invertColor board
   set p [layout := layoutF color]
-  repaint $ _panel board
+  repaintBoard board
   refit p
 
 

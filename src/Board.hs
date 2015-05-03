@@ -20,7 +20,9 @@ import System.IO
 
 data Board = Board { _panel :: Panel ()
                    , invertColor :: IO Api.Color
-                   , setPosition :: Position -> Bool -> IO ()}
+                   , setPosition :: Position -> IO ()
+                   , setInteractive :: Bool -> IO ()
+                   , repaintBoard :: IO ()}
 
 data BoardState = BoardState { _position :: Position
                              , color :: Api.Color
@@ -42,16 +44,20 @@ createBoard h p_parent position color interactive = do
   p_board <- panel p_parent []
   set p_board [ on paint := drawAll p_board vState ]
   windowOnMouse p_board True $ onMouseEvent h vState p_board
-  let setPosition' p i = do
-                           state <- varGet vState
-                           varSet vState $ state {_position = p, isInteractive = i}
-                           repaint p_board
+  let setPosition' p = do
+                         state <- varGet vState
+                         varSet vState $ state {_position = p}
   let invertColor' vState = do
                                state <- varGet vState
                                let color' = Api.invert $ Board.color state
                                varSet vState $ state {Board.color = color' }
                                return color'
-  return $ Board p_board (invertColor' vState) setPosition'
+  let setInteractive' i = do
+                           state <- varGet vState
+                           varSet vState $ state {isInteractive = i}
+  let repaintBoard = repaint p_board
+  return $ Board p_board (invertColor' vState) setPosition' setInteractive' repaintBoard
+
 
 
 drawAll :: Panel () -> Var BoardState -> DC a -> t -> IO ()
