@@ -5,12 +5,13 @@ module CommandMsgParser (
 ) where
 
 import Api
-import Move
 import CommandMsg
-
-import SeekParser
 import GamesParser
+import Move
 import MoveParser2
+import SeekParser
+import SeekMsgParsers
+
 import qualified MatchMsgParsers as MP
 
 import Control.Applicative ((*>), (<|>), pure)
@@ -23,6 +24,7 @@ import Data.List.Split (splitOn)
 parseCommandMsg :: BS.ByteString -> Either String CommandMsg
 parseCommandMsg str = parseOnly parser str where
   parser = choice [ sought
+                  , clearSeek
                   , games
                   , observe
                   , accept

@@ -6,6 +6,7 @@ module CommandMsg (
 import Api
 import Game
 import Seek
+import Seek2
 import Move
 
 import qualified Data.ByteString.Char8 as BS
@@ -14,6 +15,9 @@ type Position = [(Square, Piece)]
 
 data CommandMsg =   Games { gamesList :: [Game] }
                   | Sought { soughtList :: [Seek] }
+                  | NewSeek { seek :: Seek2 }
+                  | RemoveSeeks { ids :: [Int] }
+                  | ClearSeek
                   | Observe { move :: Move }
                   | Accept { move :: Move}
                   | PlaySuccess { move :: Move }

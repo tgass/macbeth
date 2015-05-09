@@ -12,6 +12,7 @@ import Data.Attoparsec.ByteString.Char8
 import qualified Data.ByteString.Char8 as BS
 
 
+
 soughtList' :: Parser [Seek]
 soughtList' = manyTill parseSeek' lastLine
                 where lastLine = do

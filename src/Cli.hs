@@ -16,7 +16,9 @@ handler h cmd = case cmd of
 --
 --      Password    -> hPutStrLn h ""
 
-      LoggedIn _  -> hPutStrLn h "set seek 0" >>
+      LoggedIn _  -> hPutStrLn h "iset seekinfo 1" >>
+                     hPutStrLn h "iset seekremove 1" >>
+                     hPutStrLn h "set seek 1" >>
                      hPutStrLn h "set style 12" >>
                      hPutStrLn h "iset nowrap 1" >>
                      hPutStrLn h "iset block 1"
