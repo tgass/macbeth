@@ -73,7 +73,7 @@ createObservedGame h move color chan = do
                                  set t_black [enabled := True]
                                  varSet vClock move'
 
-      GameResult id r -> when (id == Move.gameId move) $ do
+      GameResult id _ r -> when (id == Move.gameId move) $ do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               setInteractive board False

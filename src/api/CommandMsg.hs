@@ -25,7 +25,7 @@ data CommandMsg =   Games { gamesList :: [Game] }
                   | Match { id :: Int }
                   | Move { move :: Move}
                   | ConfirmMove { move :: Move }
-                  | GameResult { gameId :: Int, result :: GameResult }
+                  | GameResult { gameId :: Int, reason :: String, result :: GameResult }
                   | Login
                   | Password
                   | GuestLogin { name :: String }
