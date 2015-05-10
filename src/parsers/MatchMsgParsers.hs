@@ -3,7 +3,9 @@
 module MatchMsgParsers (
   gameResult,
   match',
-  challenge
+  challenge,
+  declinedChallenge,
+  drawOffered
 ) where
 
 import Api

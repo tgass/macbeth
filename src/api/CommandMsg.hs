@@ -35,6 +35,7 @@ data CommandMsg =   Games { gamesList :: [Game] }
                   | Prompt
                   | SettingsDone
                   | Acknoledge
+                  | SeekInfoBlock [CommandMsg]
                   | TextMessage { message :: BS.ByteString } deriving (Show)
 
 data CommandHead = CommandHead { commandId :: Int } deriving (Show)

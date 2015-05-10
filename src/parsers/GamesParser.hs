@@ -19,14 +19,14 @@ paresGamesList = many' gameP
 
 gameP :: Parser Game
 gameP = Game
-  <$> (takeTill (=='\n') *> "\n" *> many space *> decimal)
+  <$> (takeTill (== '\n') *> "\n" *> many space *> decimal)
   <*> (many1 space *> option False ("(Exam." *> pure True))
   <*> (option False ("(Setup" *> pure True))
   <*> (many space *> rating)
   <*> (many1 space *> manyTill anyChar space)
   <*> (many space *> rating)
   <*> (many1 space *> manyTill anyChar (space <|> char ')'))
-  <*> (takeTill (=='[') *> "[" *> settings')
+  <*> (takeTill (== '[') *> "[" *> settings')
 
 
 settings' :: Parser GameSettings

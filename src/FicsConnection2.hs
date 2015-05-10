@@ -36,7 +36,9 @@ sink handler = awaitForever $ liftIO . handler
 parseC :: Conduit BS.ByteString IO CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
                                   Left _    -> yield (TextMessage str) >> parseC
-                                  Right msg -> yield msg >> parseC
+                                  Right msg -> case msg of
+                                                SeekInfoBlock bs -> CL.sourceList bs >> parseC
+                                                _ -> yield msg >> parseC
 
 
 blockC :: (Bool, BS.ByteString) -> Conduit Char IO BS.ByteString
