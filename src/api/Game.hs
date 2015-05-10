@@ -7,6 +7,7 @@ import Api
 
 data Game = Game { id :: Int
                  , isExample :: Bool
+                 , isSetup :: Bool
                  , ratingW :: Rating
                  , namePlayerW :: String
                  , ratingPlayer2 :: Rating

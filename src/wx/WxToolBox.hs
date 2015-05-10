@@ -99,7 +99,7 @@ createToolBox h name chan = do
       case cmd of
 
         Games games -> do
-          set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ r1 n1 r2 n2 _) <- games]]
+          set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ _ r1 n1 r2 n2 _) <- games]]
           set gl [on listEvent := onGamesListEvent games h]
 
         Observe move -> dupChan chan >>= createObservedGame h move White
