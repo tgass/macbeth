@@ -9,7 +9,6 @@ import CommandMsg
 import GamesParser
 import Move
 import MoveParser2
-import SeekParser
 import SeekMsgParsers
 
 import qualified MatchMsgParsers as MP
@@ -23,8 +22,7 @@ import Data.List.Split (splitOn)
 
 parseCommandMsg :: BS.ByteString -> Either String CommandMsg
 parseCommandMsg str = parseOnly parser str where
-  parser = choice [ sought
-                  , clearSeek
+  parser = choice [ clearSeek
                   , games
                   , observe
                   , accept
@@ -45,9 +43,6 @@ parseCommandMsg str = parseOnly parser str where
                   , acknoledge
                   , settingsDone
                   ]
-
-sought :: Parser CommandMsg
-sought = commandHead 157 >> soughtList' >>= return . Sought
 
 games :: Parser CommandMsg
 games = commandHead 43 >> paresGamesList >>= return . Games

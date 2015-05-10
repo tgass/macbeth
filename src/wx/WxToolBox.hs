@@ -9,7 +9,7 @@ import Move
 import CommandMsg
 import FicsConnection2 (ficsConnection)
 import Game
-import Seek
+import Seek2
 import Utils
 
 import WxObservedGame
@@ -97,9 +97,6 @@ createToolBox h name chan = do
 
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
       case cmd of
-        Sought seeks -> do
-          set sl [items := [[show id, name, show rat, show gt] | (Seek id rat name _ _ _ gt _ _) <- seeks]]
-          set sl [on listEvent := onSeekListEvent seeks h]
 
         Games games -> do
           set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ r1 n1 r2 n2 _) <- games]]
@@ -132,10 +129,11 @@ onGamesListEvent games h eventList = case eventList of
 
 
 
-onSeekListEvent :: [Seek] -> Handle -> EventList -> IO ()
-onSeekListEvent seeks h eventList = case eventList of
-  ListItemActivated idx -> hPutStrLn h $ "4 play " ++ show (Seek.id $ seeks !! idx)
-  _ -> return ()
+onSeekListEvent :: [Seek2] -> Handle -> EventList -> IO ()
+onSeekListEvent seeks h eventList = undefined
+--case eventList of
+--  ListItemActivated idx -> hPutStrLn h $ "4 play " ++ show (Seek.id $ seeks !! idx)
+--  _ -> return ()
 
 
 

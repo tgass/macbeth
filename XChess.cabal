@@ -11,7 +11,7 @@ executable XChess
                    network -any, conduit -any, conduit-extra -any, text -any,
                    transformers -any, resourcet -any, bytestring -any, split -any,
                    attoparsec -any, filepath -any, containers -any, split -any,
-                   mtl -any, stm -any
+                   mtl -any, stm -any, sodium -any
     main-is: XChess.hs
     buildable: True
     hs-source-dirs: src src/parsers src/api src/wx
