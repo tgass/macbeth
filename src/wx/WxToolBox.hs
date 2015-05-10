@@ -42,7 +42,6 @@ createToolBox h name chan = do
 
     -- main frame
     f  <- frame []
-    mv <- newEmptyMVar
     menu <- wxMenu h
     status <- statusField [text := "Logged in as " ++ name]
 
@@ -104,7 +103,7 @@ createToolBox h name chan = do
 
         Sought seeks -> do
           set sl [items := [[show id, name, show r, show gt] | (Seek2 id name r _ _ _ gt _ _) <- seeks]]
-          -- set gl [on listEvent := onGamesListEvent games h]
+          -- set gl [on listEvent := onSeekListEvent seeks h]
 
         Observe move -> dupChan chan >>= createObservedGame h move White
 
@@ -114,6 +113,8 @@ createToolBox h name chan = do
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
 
         TextMessage text -> appendText ct (BS.unpack text ++ "\n")
+
+        Prompt -> return ()
 
         cmd -> appendText ct (show cmd ++ "\n")
 
@@ -134,10 +135,9 @@ onGamesListEvent games h eventList = case eventList of
 
 
 onSeekListEvent :: [Seek2] -> Handle -> EventList -> IO ()
-onSeekListEvent seeks h eventList = undefined
---case eventList of
---  ListItemActivated idx -> hPutStrLn h $ "4 play " ++ show (Seek.id $ seeks !! idx)
---  _ -> return ()
+onSeekListEvent seeks h eventList = case eventList of
+  ListItemActivated idx -> hPutStrLn h $ "4 play " ++ show (Seek2.id $ seeks !! idx)
+  _ -> return ()
 
 
 
