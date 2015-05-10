@@ -79,48 +79,28 @@ import qualified Data.ByteString.Char8 as BS
 
 parseMove :: Parser Move
 parseMove = do
-  "<12>"
-  space
-  pos <- A.take 71
-  space
-  turn <- parseTurn
-  space
-  doublePawnPush <- parseDoublePawnPush
-  space
-  parseBool -- castle white short
-  space
-  parseBool -- castle white long
-  space
-  parseBool -- castle black short
-  space
-  parseBool -- castle black long
-  space
-  decimal -- the number of moves made since the last irreversible move
-  space
-  gameId <- decimal
-  space
-  nameW <- manyTill anyChar space
+  pos <- "<12>" *> space *> A.take 71
+  turn <- space *> ("B" *> pure Black <|> "W" *> pure White)
+  doublePawnPush <- space *> ("-1" *> pure Nothing <|> (decimal >>= return . Just))
+  space *> parseBool -- castle white short
+  space *> parseBool -- castle white long
+  space *> parseBool -- castle black short
+  space *> parseBool -- castle black long
+  space *> decimal -- the number of moves made since the last irreversible move
+  gameId <- space *> decimal
+  nameW <- space *> manyTill anyChar space
   nameB <- manyTill anyChar space
   rel <- parseRelation
-  space
-  decimal -- initial time
-  space
-  decimal -- inc per move
-  space
-  decimal -- white rel strength
-  space
-  decimal -- black rel strength
-  space
-  remTimeWhite <- decimal
-  space
-  remTimeBlack <- decimal
-  space
-  moveNumber <- decimal
-  space
-  moveVerbose <- manyTill anyChar space
+  space *> decimal -- initial time
+  space *> decimal -- inc per move
+  space *> decimal -- white rel strength
+  space *> decimal -- black rel strength
+  remTimeWhite <- space *> (decimal <|> ("-" *> (decimal >>= pure . negate)))
+  remTimeBlack <- space *> (decimal <|> ("-" *> (decimal >>= pure . negate)))
+  moveNumber <- space *> decimal
+  moveVerbose <- space *> manyTill anyChar space
   timeTaken <- manyTill anyChar space
-  movePretty <- "none" *> pure Nothing <|>
-                (manyTill anyChar space >>= return . Just)
+  movePretty <- "none" *> pure Nothing <|> (manyTill anyChar space >>= return . Just)
 
   return $ Move (parsePosition (BS.unpack pos))
                 turn
@@ -136,10 +116,6 @@ parseMove = do
                 remTimeBlack
                 movePretty
 
-parseTurn = "B" *> pure Black <|> "W" *> pure White
-
-parseDoublePawnPush = "-1" *> pure Nothing <|> (decimal >>= return . Just)
-
 parseBool = "1" *> pure True <|> "0" *> pure False
 
 parseRelation =
@@ -152,5 +128,5 @@ parseRelation =
 
 
 
-move = BS.pack "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 0 0 0 0 4 203 zerowin Hutnik  0 1 0 0 10 13 26 52 Q/e1-h1 (0:00) Qh1# 0 1 818"
+move = BS.pack "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 0 0 0 0 4 203 zerowin Hutnik 0 1 0 0 10 13 26 52 Q/e1-h1 (0:00) Qh1# 0 1 818"
 move' = BS.pack "<12> r------- pppbq--- -----r-k ----b--- -PB-Pp-- P------p --PQ--PN ----RRK- W -1 0 0 0 0 0 181 Danimateit WhatKnight 0 2 6 30 30 -1 89 26 P/g4-h3 (0:06) gxh3 0 1 0"
