@@ -17,48 +17,32 @@ import qualified Data.ByteString.Char8 as BS
 
 
 gameResult :: Parser CommandMsg
-gameResult = do
-  skipSpace
-  "{Game"
-  space
-  gameId <- decimal
-  manyTill anyChar "} "
-  result <- "1-0" *> pure WhiteWins <|>
-            "0-1" *> pure BlackWins <|>
-            "1/2-1/2" *> pure Draw
-  return $ GameResult gameId result
+gameResult = GameResult
+  <$> (skipSpace *> "{Game" *> space *> decimal)
+  <*> (manyTill anyChar "} " *> "1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
 
 
 match' :: Parser CommandMsg
-match' = do
-  "{Game "
-  id <- decimal
-  " ("
-  manyTill anyChar space
-  "vs. "
-  manyTill anyChar ")"
-  " Creating "
-  manyTill anyChar "}"
-  return $ Match id
+match' = Match <$> ("{Game " *> decimal <* (takeTill (== ')') *> ") Creating "))
 
 
 challenge :: Parser CommandMsg
-challenge = do
-  "Challenge: "
-  name1 <- manyTill anyChar space
-  "("
-  rating1 <- rating
-  ") "
-  name2 <- manyTill anyChar space
-  "("
-  rating2 <- rating
-  ") "
-  params <- manyTill anyChar "." --unrated blitz 2 12."
-  return $ Challenge name1 rating1 name2 rating2 params
+challenge = Challenge
+  <$> ("Challenge: " *> manyTill anyChar space)
+  <*> ("(" *> rating)
+  <*> (") " *> manyTill anyChar space)
+  <*> ("(" *> rating)
+  <*> (") " *> manyTill anyChar ".") --unrated blitz 2 12."
 
+
+declinedChallenge :: Parser CommandMsg
 declinedChallenge = "\"" >> manyTill anyChar "\" declines the match offer." >> return MatchDeclined
 
+
+drawOffered :: Parser CommandMsg
 drawOffered = manyTill anyChar space >> "offers you a draw." >> return DrawOffered
+
+
 
 challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
 matchMsg = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
