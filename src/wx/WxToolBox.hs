@@ -102,12 +102,16 @@ createToolBox h name chan = do
           set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ _ r1 n1 r2 n2 _) <- games]]
           set gl [on listEvent := onGamesListEvent games h]
 
+        Sought seeks -> do
+          set sl [items := [[show id, name, show r, show gt] | (Seek2 id name r _ _ _ gt _ _) <- seeks]]
+          -- set gl [on listEvent := onGamesListEvent games h]
+
         Observe move -> dupChan chan >>= createObservedGame h move White
 
         CommandMsg.Move move' -> when (isPlayersNewGame move') $ do
                                    dupChan chan >>= createObservedGame h move' (playerColor name move')
 
-        SettingsDone -> hPutStrLn h "5 sought" >> hPutStrLn h "4 games"
+        SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
 
         TextMessage text -> appendText ct (BS.unpack text ++ "\n")
 

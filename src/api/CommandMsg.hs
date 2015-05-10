@@ -13,9 +13,7 @@ import qualified Data.ByteString.Char8 as BS
 type Position = [(Square, Piece)]
 
 data CommandMsg =   Games { gamesList :: [Game] }
-                  | NewSeek { seek :: Seek2 }
-                  | RemoveSeeks { ids :: [Int] }
-                  | ClearSeek
+                  | Sought { seekList :: [Seek2] }
                   | Observe { move :: Move }
                   | Accept { move :: Move}
                   | PlaySuccess { move :: Move }
@@ -35,7 +33,11 @@ data CommandMsg =   Games { gamesList :: [Game] }
                   | Prompt
                   | SettingsDone
                   | Acknoledge
+                  | TextMessage { message :: BS.ByteString }
+                  {- Internal -}
                   | SeekInfoBlock [CommandMsg]
-                  | TextMessage { message :: BS.ByteString } deriving (Show)
+                  | NewSeek { seek :: Seek2 }
+                  | RemoveSeeks { ids :: [Int] }
+                  | ClearSeek deriving (Show)
 
 data CommandHead = CommandHead { commandId :: Int } deriving (Show)
