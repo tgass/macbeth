@@ -16,7 +16,7 @@ import CommandMsg
 
 
 wxChallenge :: Handle -> CommandMsg -> IO ()
-wxChallenge h c@(Challenge _ _ _ _ _) = do
+wxChallenge h c@(Challenge{}) = do
   f <- frame []
   p <- panel f []
 
