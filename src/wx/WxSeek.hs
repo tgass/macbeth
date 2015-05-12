@@ -1,24 +1,17 @@
-module WxMenu (
-  wxMenu
+module Main (
+  wxSeek,
+  main
 ) where
-
-import WxSeek
 
 import Control.Monad (liftM)
 import Graphics.UI.WX
 import Graphics.UI.WXCore (windowShow)
-import System.IO (Handle, hPutStrLn)
+import System.IO (Handle, hPutStrLn, stdout)
 
+main = start $ wxSeek stdout
 
-wxMenu :: Handle -> IO (Menu())
-wxMenu h = do
-  actions <- menuPane [text := "Actions"]
-  match <- menuItem actions [text := "Match", on command := wxMatch h]
-  seek <- menuItem actions [text := "Seek", on command := (wxSeek h) ]
-  return actions
-
-wxMatch :: Handle -> IO ()
-wxMatch h = do
+wxSeek :: Handle -> IO ()
+wxSeek h = do
   f <- frame []
   p <- panel f []
   match <- matchInputs p
@@ -30,8 +23,7 @@ wxMatch h = do
         , layout := container p $ margin 10 $
             column 5 [
               grid 5 5 [
-                [ label "Player name:", hfill $ widget $ name match]
-               ,[ label "Rated:", hfill $ widget $ rated match]
+                [ label "Rated:", hfill $ widget $ rated match]
                ,[ label "Time:", hfill $ widget $ time match]
                ,[ label "Inc:", hfill $ widget $ inc match]
               ]
@@ -40,32 +32,33 @@ wxMatch h = do
   windowShow f
   return ()
 
-
-matchInputs :: Panel () -> IO WxMatch
-matchInputs p = do
-  name <- textEntry p []
-  time <- textEntry p [ text := "5"]
-  inc <- textEntry p [ text := "0"]
-  rated <- checkBox p []
-  return $ WxMatch name time inc rated
-
-
-toString:: WxMatch -> IO String
+toString:: WxSeek -> IO String
 toString m = do
-  name <- get (name m) text
   time <- get (time m) text
   inc <- get (inc m) text
   rated <- convertIsRated `liftM` get (rated m) enabled
-  return $ "4 match " ++ name ++ " " ++ time ++ " " ++ inc ++ " " ++ rated
+  return $ "4 seek " ++ " " ++ time ++ " " ++ inc ++ " " ++ rated
     where
       convertIsRated True = "rated"
       convertIsRated False = "unrated"
 
+matchInputs :: Panel () -> IO WxSeek
+matchInputs p = do
+  time <- textEntry p [ text := "5"]
+  inc <- textEntry p [ text := "0"]
+  rated <- checkBox p []
+  color <- choice p [tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
+  return $ WxSeek time inc rated color
 
-data WxMatch = WxMatch {
-  name :: TextCtrl (),
+-- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide]
+--                 [wild #] [auto|manual] [formula] [rating-range]
+data WxSeek = WxSeek {
   time :: TextCtrl (),
   inc :: TextCtrl (),
-  rated :: CheckBox ()
+  rated :: CheckBox (),
+  color :: Choice ()
+--  auto :: CheckBox (),
+--  formula :: CheckBox (),
+--  ratingFrom :: TextCtrl (),
+--  ratingTo :: TextCtrl ()
 }
-
