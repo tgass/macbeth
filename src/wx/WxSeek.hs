@@ -1,4 +1,4 @@
-module Main (
+module WxSeek (
   wxSeek,
   main
 ) where

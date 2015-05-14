@@ -51,7 +51,6 @@ rating' = do
   rating <- " " *> pure (Rating r) <|> "E" *> pure (Rating r) <|> "P" *> pure Guest
   return rating
 
-
 clearSeek' = BS.pack "<sc>"
 newSeek' = BS.pack "<s> 7 w=GuestNMZJ ti=01 rt=0P t=15 i=5 r=u tp=standard c=W rr=0-9999 a=t f=t"
 newSeek'' = BS.pack "<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f"

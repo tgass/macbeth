@@ -36,6 +36,7 @@ data CommandMsg =   Games { gamesList :: [Game] }
                   | TextMessage { message :: BS.ByteString }
                   {- Internal -}
                   | SeekInfoBlock [CommandMsg]
+                  | SeekMatchesAlreadyPosted CommandMsg CommandMsg
                   | NewSeek { seek :: Seek2 }
                   | RemoveSeeks { ids :: [Int] }
                   | ClearSeek deriving (Show)
