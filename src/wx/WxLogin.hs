@@ -27,8 +27,8 @@ wxLogin h chan = do
 
   set f [ defaultButton := b_ok
         , layout := container p $ margin 10 $
-            column 5 [boxed "Login to freechess.org" (
-              grid 5 5 [
+            column 10 [boxed "Login to freechess.org" (
+              grid 15 15 [
                 [ label "Username:", hfill $ widget e_name]
                ,[ label "Password:", hfill $ widget e_pw]]
             )
