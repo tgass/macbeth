@@ -61,7 +61,7 @@ accept :: Parser CommandMsg
 accept = Accept <$> (commandHead 11 *> move'')
 
 gameResult :: Parser CommandMsg
-gameResult = commandHead 103 >> MP.gameResult
+gameResult = commandHead 103 *> MP.gameResult
 
 confirmMove :: Parser CommandMsg
 confirmMove = ConfirmMove <$> (commandHead 1 *> move'')
@@ -78,46 +78,42 @@ seekMatchesAlreadyPosted = do
   return $ Boxed [rs, mv]
 
 move' :: Parser CommandMsg
-move' = parseMove >>= return . CommandMsg.Move
+move' = CommandMsg.Move <$> parseMove
 
 login :: Parser CommandMsg
-login = "login: " >> return Login
+login = "login: " *> pure Login
 
 password :: Parser CommandMsg
-password = "password: " >> return Password
+password = "password: " *> pure Password
 
 guestLogin :: Parser CommandMsg
-guestLogin = "Press return to enter the server as \"" >>
-  manyTill anyChar "\":" >>=
-  return . GuestLogin
+guestLogin = GuestLogin <$> ("Press return to enter the server as \"" *> manyTill anyChar "\":")
 
 unknownUsername :: Parser CommandMsg
-unknownUsername = "\"" >>
-  manyTill anyChar "\" is not a registered name." >>=
-  return . UnkownUsername
+unknownUsername = UnkownUsername <$> ("\"" *> manyTill anyChar "\" is not a registered name.")
 
+-- | Beware the guest handles: ie GuestXWLW(U)
 loggedIn :: Parser CommandMsg
-loggedIn = "**** Starting FICS session as " >>
-  manyTill anyChar " ****" >>=
-  return . LoggedIn . Prelude.head . splitOn "(" -- | Beware the guest handles: ie GuestXWLW(U)
+loggedIn = LoggedIn
+  <$> ("**** Starting FICS session as " *> (Prelude.head . splitOn "(") `fmap` manyTill anyChar " ****")
 
 invalidPassword :: Parser CommandMsg
-invalidPassword = "**** Invalid password! ****" >> return InvalidPassword
+invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword
 
 prompt :: Parser CommandMsg
-prompt = "fics% " >> return Prompt
+prompt = "fics% " *> pure Prompt
 
 acknoledge :: Parser CommandMsg
-acknoledge = commandHead 519 >> (char $ chr 23) >> return Acknoledge
+acknoledge = commandHead 519 *> (char $ chr 23) *> pure Acknoledge
 
 settingsDone :: Parser CommandMsg
-settingsDone = (char $ chr 23) >> return SettingsDone
+settingsDone = (char $ chr 23) *> pure SettingsDone
 
 
 {- HELPER -}
 
 move'' :: Parser Move
-move'' = takeTill (== '<') >> parseMove >>= return
+move'' = takeTill (== '<') *> parseMove
 
 
 commandHead :: Int -> Parser CommandHead
