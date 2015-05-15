@@ -53,7 +53,7 @@ type Position = [(Square, Piece)]
 
 
 pColor :: Piece -> Color
-pColor (Piece _type _color) = _color
+pColor (Piece _ _color) = _color
 
 
 removePiece :: Position -> Square -> Position
@@ -67,6 +67,10 @@ getPiece pos sq color = sq `lookup` pos >>= checkColor color
     checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 
 
+data GameResult = WhiteWins | BlackWins | Draw
 
-data GameResult = WhiteWins | BlackWins | Draw deriving (Show)
+instance Show GameResult where
+  show WhiteWins = "1-0"
+  show BlackWins = "0-1"
+  show Draw      = "1/2-1/2"
 
