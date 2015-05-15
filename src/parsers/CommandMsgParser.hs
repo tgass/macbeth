@@ -67,13 +67,15 @@ confirmMove :: Parser CommandMsg
 confirmMove = ConfirmMove <$> (commandHead 1 *> move'')
 
 seekInfoBlock :: Parser CommandMsg
-seekInfoBlock = SeekInfoBlock
+seekInfoBlock = Boxed
   <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ SP.clearSeek, SP.newSeek <* takeTill (== '\n')]) "\n")
 
 seekMatchesAlreadyPosted :: Parser CommandMsg
-seekMatchesAlreadyPosted = SeekMatchesAlreadyPosted
-  <$> (commandHead 115 *> "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks)
-  <*> (takeTill (=='<') *> move')
+seekMatchesAlreadyPosted = do
+  commandHead 115
+  rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks
+  mv <- takeTill (=='<') *> move'
+  return $ Boxed [rs, mv]
 
 move' :: Parser CommandMsg
 move' = parseMove >>= return . CommandMsg.Move

@@ -63,8 +63,7 @@ parseC :: (Monad m) => Conduit BS.ByteString m CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
                                   Left _    -> yield (TextMessage str) >> parseC
                                   Right msg -> case msg of
-                                                SeekInfoBlock bs -> CL.sourceList bs >> parseC
-                                                SeekMatchesAlreadyPosted c1 c2 -> CL.sourceList [c1, c2] >> parseC
+                                                Boxed bs -> CL.sourceList bs >> parseC
                                                 _ -> yield msg >> parseC
 
 
