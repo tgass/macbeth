@@ -12,6 +12,8 @@ import System.IO (Handle, hPutStrLn, stdout)
 
 main = start $ wxSeek stdout
 
+
+--TODO: always unrated if logged in as guest
 wxSeek :: Handle -> IO ()
 wxSeek h = do
   f <- frame []

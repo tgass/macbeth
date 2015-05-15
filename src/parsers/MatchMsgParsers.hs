@@ -39,11 +39,11 @@ challenge = Challenge
 
 
 declinedChallenge :: Parser CommandMsg
-declinedChallenge = "\"" >> manyTill anyChar "\" declines the match offer." >> return MatchDeclined
+declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure MatchDeclined
 
 
 drawOffered :: Parser CommandMsg
-drawOffered = manyTill anyChar space >> "offers you a draw." >> return DrawOffered
+drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered
 
 
 

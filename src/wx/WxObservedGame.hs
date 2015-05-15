@@ -21,10 +21,13 @@ import System.IO (Handle, hPutStrLn)
 
 eventId = wxID_HIGHEST + 53
 
+data GameMoves = GameMoves { moves :: [Move] } deriving (Show)
+
 
 createObservedGame :: Handle -> Move -> Api.Color -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
+  vGameMoves <- newEmptyMVar
 
   f <- frame []
   p_back <- panel f []
