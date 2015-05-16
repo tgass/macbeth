@@ -21,7 +21,6 @@ data CommandMsg =   GameMove { move :: Move}
                   | Accept { move :: Move}
                   | MatchDeclined
                   | DrawOffered
-                  | Match { id :: Int }
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
                   | Login

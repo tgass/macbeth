@@ -2,7 +2,6 @@
 
 module MatchMsgParsers (
   gameResult,
-  match',
   challenge,
   declinedChallenge,
   drawOffered
@@ -25,10 +24,6 @@ gameResult = GameResult
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
 
 
-match' :: Parser CommandMsg
-match' = Match <$> ("{Game " *> decimal <* (takeTill (== ')') *> ") Creating "))
-
-
 challenge :: Parser CommandMsg
 challenge = Challenge
   <$> ("Challenge: " *> manyTill anyChar space)
@@ -44,7 +39,6 @@ declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> p
 
 drawOffered :: Parser CommandMsg
 drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered
-
 
 
 challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."

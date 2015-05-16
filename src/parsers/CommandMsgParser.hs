@@ -26,7 +26,6 @@ parseCommandMsg str = parseOnly parser str where
                   , SP.removeSeeks
 
                   , MP.gameResult
-                  , MP.match'
                   , MP.challenge
                   , MP.declinedChallenge
                   , MP.drawOffered
