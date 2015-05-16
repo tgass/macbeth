@@ -26,7 +26,6 @@ parseCommandMsg str = parseOnly parser str where
                   , SP.newSeek
                   , SP.removeSeeks
 
-                  , gameResult
                   , challenge
                   , declinedChallenge
                   , drawOffered
@@ -34,6 +33,7 @@ parseCommandMsg str = parseOnly parser str where
                   , games
                   , observe
                   , accept
+                  , gameResult
                   , gameResult'
                   , confirmGameMove
                   , seekInfoBlock
@@ -81,10 +81,9 @@ accept = AcceptChallenge <$> (commandHead 11 *> move)
 declinedChallenge :: Parser CommandMsg
 declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure DeclineChallenge
 
---TODO Adjourn challenge
+--TODO Adjourns challenge
 
 
-{-- *** Seek *** -}
 seekInfoBlock :: Parser CommandMsg
 seekInfoBlock = Boxed
   <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ SP.clearSeek, SP.newSeek <* takeTill (== '\n')]) "\n")
@@ -97,15 +96,9 @@ seekMatchesAlreadyPosted = do
   mv <- takeTill (=='<') *> (GameMove <$> move)
   return $ Boxed [rs, mv]
 
-
-{- *** Draw ***-}
 drawOffered :: Parser CommandMsg
 drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered
 
---TODO: Accept / decline draw offer
-
-
-{- *** Game Result ***-}
 gameResult :: Parser CommandMsg
 gameResult = commandHead 103 *> gameResult'
 
@@ -114,7 +107,6 @@ gameResult' = GameResult
   <$> (skipSpace *> "{Game" *> space *> decimal)
   <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
-
 
 
 {- *** LOGIN *** -}

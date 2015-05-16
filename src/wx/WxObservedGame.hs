@@ -72,6 +72,7 @@ createObservedGame h move color chan = do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               setInteractive board False
+                             --TODO: Reinitialize seek list
 
       DrawOffered -> when (relation move == MyMove) $ do
                      --TODO: Implement offered draw
