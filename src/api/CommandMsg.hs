@@ -12,22 +12,22 @@ import qualified Data.ByteString.Char8 as BS
 
 type Position = [(Square, Piece)]
 
-data CommandMsg =   GameMove { move :: Move}
-                  | Games { gamesList :: [Game] }
-                  | Sought { seekList :: [Seek2] }
-                  | Observe { move :: Move }
+data CommandMsg =   GameMove Move
+                  | Games [Game]
+                  | Sought [Seek2]
+                  | Observe Move
 
                   | Challenge { nameW :: String, ratingW :: Rating, nameB :: String, ratingB :: Rating, params :: String}
-                  | Accept { move :: Move}
-                  | MatchDeclined
+                  | AcceptChallenge Move
+                  | DeclineChallenge
                   | DrawOffered
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
                   | Login
                   | Password
-                  | GuestLogin { name :: String }
-                  | UnkownUsername { name :: String }
-                  | LoggedIn { name :: String }
+                  | GuestLogin String
+                  | UnkownUsername String
+                  | LoggedIn String
                   | InvalidPassword
                   | Prompt
                   | SettingsDone

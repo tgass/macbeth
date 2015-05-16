@@ -43,18 +43,18 @@ sink handler = awaitForever $ liftIO . handler
 
 stateC :: Conduit CommandMsg (StateT [Seek2] IO) CommandMsg
 stateC = awaitForever $ \cmd -> case cmd of
-                                 ClearSeek -> (lift $ put []) >> (yield $ Sought {seekList = []}) >> stateC
+                                 ClearSeek -> (lift $ put []) >> (yield $ Sought []) >> stateC
                                  NewSeek s -> do
                                       seeks <- lift $ get
                                       let seeks' = seeks ++ [s]
                                       lift $ put seeks'
-                                      yield $ Sought {seekList = seeks'}
+                                      yield $ Sought seeks'
                                       stateC
                                  RemoveSeeks ids' -> do
                                       seeks <- lift $ get
                                       let seeks' = filter (\s -> not $ Seek2.id s `elem` ids') seeks
                                       lift $ put seeks'
-                                      yield $ Sought {seekList = seeks'}
+                                      yield $ Sought seeks'
                                       stateC
                                  _ -> yield cmd >> stateC
 

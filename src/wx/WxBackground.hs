@@ -23,14 +23,19 @@ wxBackground h name chan = do
   f <- frame [visible := False]
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
-    putStrLn $ show cmd
+    printCmdMsg cmd
     case cmd of
-      Accept move -> dupChan chan >>= createObservedGame h move (playerColor name move)
+      AcceptChallenge move -> dupChan chan >>= createObservedGame h move (playerColor name move)
 
-      c@(Challenge _ _ _ _ _) -> wxChallenge h c
+      c@(Challenge {}) -> wxChallenge h c
 
       _ -> return ()
 
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ killThread threadId
+
+printCmdMsg :: CommandMsg -> IO ()
+printCmdMsg (Sought _) = return ()
+printCmdMsg Prompt = return ()
+printCmdMsg cmd = print cmd

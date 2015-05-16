@@ -9,14 +9,15 @@ import CommandMsg
 import GamesParser
 import Move
 import MoveParser2
+import qualified ParseUtils as Utils
 import qualified SeekMsgParsers as SP
-import qualified MatchMsgParsers as MP
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
-import qualified Data.ByteString.Char8 as BS
 import Data.Char
 import Data.List.Split (splitOn)
+import qualified Data.ByteString.Char8 as BS
+
 
 
 parseCommandMsg :: BS.ByteString -> Either String CommandMsg
@@ -25,19 +26,19 @@ parseCommandMsg str = parseOnly parser str where
                   , SP.newSeek
                   , SP.removeSeeks
 
-                  , MP.gameResult
-                  , MP.challenge
-                  , MP.declinedChallenge
-                  , MP.drawOffered
+                  , gameResult
+                  , challenge
+                  , declinedChallenge
+                  , drawOffered
 
                   , games
                   , observe
                   , accept
-                  , gameResult
-                  , confirmMove
+                  , gameResult'
+                  , confirmGameMove
                   , seekInfoBlock
                   , seekMatchesAlreadyPosted
-                  , move'
+                  , gameMove
 
                   , login
                   , password
@@ -54,17 +55,36 @@ games :: Parser CommandMsg
 games = Games <$> (commandHead 43 *> paresGamesList)
 
 observe :: Parser CommandMsg
-observe = Observe <$> (commandHead 80 *> move'')
+observe = Observe <$> (commandHead 80 *> move)
+
+
+{- *** Moves *** -}
+confirmGameMove :: Parser CommandMsg
+confirmGameMove = GameMove <$> (commandHead 1 *> move)
+
+gameMove :: Parser CommandMsg
+gameMove = GameMove <$> move
+
+
+{- *** Match/Challenge ***-}
+challenge :: Parser CommandMsg
+challenge = Challenge
+  <$> ("Challenge: " *> manyTill anyChar space)
+  <*> ("(" *> Utils.rating)
+  <*> (") " *> manyTill anyChar space)
+  <*> ("(" *> Utils.rating)
+  <*> (") " *> manyTill anyChar ".") --unrated blitz 2 12."
 
 accept :: Parser CommandMsg
-accept = Accept <$> (commandHead 11 *> move'')
+accept = AcceptChallenge <$> (commandHead 11 *> move)
 
-gameResult :: Parser CommandMsg
-gameResult = commandHead 103 *> MP.gameResult
+declinedChallenge :: Parser CommandMsg
+declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure DeclineChallenge
 
-confirmMove :: Parser CommandMsg
-confirmMove = GameMove <$> (commandHead 1 *> move'')
+--TODO Adjourn challenge
 
+
+{-- *** Seek *** -}
 seekInfoBlock :: Parser CommandMsg
 seekInfoBlock = Boxed
   <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ SP.clearSeek, SP.newSeek <* takeTill (== '\n')]) "\n")
@@ -74,11 +94,27 @@ seekMatchesAlreadyPosted = do
   commandHead 115
   option "" "You are unregistered - setting to unrated.\n"
   rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks
-  mv <- takeTill (=='<') *> move'
+  mv <- takeTill (=='<') *> (GameMove <$> move)
   return $ Boxed [rs, mv]
 
-move' :: Parser CommandMsg
-move' = GameMove <$> parseMove
+
+{- *** Draw ***-}
+drawOffered :: Parser CommandMsg
+drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered
+
+--TODO: Accept / decline draw offer
+
+
+{- *** Game Result ***-}
+gameResult :: Parser CommandMsg
+gameResult = commandHead 103 *> gameResult'
+
+gameResult' :: Parser CommandMsg
+gameResult' = GameResult
+  <$> (skipSpace *> "{Game" *> space *> decimal)
+  <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
+  <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
+
 
 
 {- *** LOGIN *** -}
@@ -114,10 +150,6 @@ settingsDone = (char $ chr 23) *> pure SettingsDone
 
 {- HELPER -}
 
-move'' :: Parser Move
-move'' = takeTill (== '<') *> parseMove
-
-
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
   char $ chr 21
@@ -137,3 +169,10 @@ seekInfoBlock' = BS.pack "seekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t
 playMsg = BS.pack "Creating: GuestCCFP (++++) GuestGVJK (++++) unrated blitz 0 20 {Game 132 (GuestCCFP vs. GuestGVJK) Creating unrated blitz match.} <12> rnbqkbnr pppppppp ———— ———— ———— ———— PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 132 GuestCCFP GuestGVJK -1 0 20 39 39 10 10 1 none (0:00) none 1 0 0"
 obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
 guestLoginTxt = BS.pack $ "Press return to enter the server as \"FOOBAR\":"
+
+challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
+matchMsg = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
+gameResult'''' = BS.pack  "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
+gameResult'' = BS.pack "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done."
+gameResult''' = BS.pack "{Game 181 (Danimateit vs. WhatKnight) Danimateit forfeits on time} 0-1"
+drawOffered' = BS.pack "GuestDWXY offers you a draw."
