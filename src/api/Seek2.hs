@@ -16,6 +16,9 @@ data Seek2 = Seek2 { id :: Int
                  , ratingRange :: (Int, Int)
 --                 , startMode :: StartMode
 --                 , checkFormula :: Bool
-} deriving (Show)
+}
+
+instance Show Seek2 where
+  show (Seek2 id _ _ _ _ _ _ _ _) = "Seek2 {id = " ++ show id ++ "}"
 
 data StartMode = Auto | Manual deriving (Show)

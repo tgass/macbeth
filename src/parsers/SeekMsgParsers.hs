@@ -15,10 +15,10 @@ import Data.Attoparsec.ByteString.Char8
 import qualified Data.ByteString.Char8 as BS
 
 clearSeek :: Parser CommandMsg
-clearSeek = "<sc>" >> return ClearSeek
+clearSeek = "<sc>" *> pure ClearSeek
 
 newSeek :: Parser CommandMsg
-newSeek = seek' >>= return . NewSeek
+newSeek = NewSeek <$> seek'
 
 removeSeeks :: Parser CommandMsg
 removeSeeks = RemoveSeeks <$> ("<sr>" *> many1 (space *> decimal))

@@ -60,21 +60,13 @@ createObservedGame h move color chan = do
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
     case cmd of
-      CommandMsg.Move move' -> when (Move.gameId move' == Move.gameId move) $ do
+      GameMove move' -> when (Move.gameId move' == Move.gameId move) $ do
                                    setPosition board (Move.position move')
                                    setInteractive board (relation move' == MyMove)
                                    repaintBoard board
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
-
-      ConfirmMove move' -> when (Move.gameId move' == Move.gameId move) $ do
-                                 setPosition board $ Move.position move'
-                                 setInteractive board $ relation move' == MyMove
-                                 repaintBoard board
-                                 set t_white [enabled := True]
-                                 set t_black [enabled := True]
-                                 varSet vClock move'
 
       GameResult id _ r -> when (id == Move.gameId move) $ do
                               set t_white [enabled := False]

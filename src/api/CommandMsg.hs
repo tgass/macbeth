@@ -12,18 +12,18 @@ import qualified Data.ByteString.Char8 as BS
 
 type Position = [(Square, Piece)]
 
-data CommandMsg =   Games { gamesList :: [Game] }
+data CommandMsg =   GameMove { move :: Move}
+                  | Games { gamesList :: [Game] }
                   | Sought { seekList :: [Seek2] }
                   | Observe { move :: Move }
-                  | Accept { move :: Move}
-                  | PlaySuccess { move :: Move }
+
                   | Challenge { nameW :: String, ratingW :: Rating, nameB :: String, ratingB :: Rating, params :: String}
+                  | Accept { move :: Move}
                   | MatchDeclined
                   | DrawOffered
                   | Match { id :: Int }
-                  | Move { move :: Move}
-                  | ConfirmMove { move :: Move }
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
+
                   | Login
                   | Password
                   | GuestLogin { name :: String }

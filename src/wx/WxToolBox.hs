@@ -107,7 +107,7 @@ createToolBox h name chan = do
 
         Observe move -> dupChan chan >>= createObservedGame h move White
 
-        CommandMsg.Move move' -> when (isPlayersNewGame move') $ do
+        GameMove move' -> when (isPlayersNewGame move') $ do
                                    dupChan chan >>= createObservedGame h move' (playerColor name move')
 
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"

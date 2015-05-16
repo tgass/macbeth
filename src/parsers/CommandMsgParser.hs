@@ -64,7 +64,7 @@ gameResult :: Parser CommandMsg
 gameResult = commandHead 103 *> MP.gameResult
 
 confirmMove :: Parser CommandMsg
-confirmMove = ConfirmMove <$> (commandHead 1 *> move'')
+confirmMove = GameMove <$> (commandHead 1 *> move'')
 
 seekInfoBlock :: Parser CommandMsg
 seekInfoBlock = Boxed
@@ -79,8 +79,10 @@ seekMatchesAlreadyPosted = do
   return $ Boxed [rs, mv]
 
 move' :: Parser CommandMsg
-move' = CommandMsg.Move <$> parseMove
+move' = GameMove <$> parseMove
 
+
+{- *** LOGIN *** -}
 login :: Parser CommandMsg
 login = "login: " *> pure Login
 
@@ -129,6 +131,7 @@ commandHead code = do
 
 {- TEST DATA -}
 
+creatingGame' = BS.pack "Creating: Altivolous (1086) Schoon (1013) rated blitz 5 3"
 seekMatchesAlreadyPosted' = BS.pack "Your seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 364 GuestJYQC GuestNGCB -1 2 12 39 39 120 120 1 none (0:00) none 1 0 0\n"
 seekMatchesAlreadyPosted'' = BS.pack "You are unregistered - setting to unrated.\nYour seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 364 GuestJYQC GuestNGCB -1 2 12 39 39 120 120 1 none (0:00) none 1 0 0\n"
 seekInfoBlock' = BS.pack "seekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n<s> 44 w=masheen ti=02 rt=2628  t=5 i=0 r=u tp=suicide c=? rr=0-9999 a=t f=f\n<s> 51 w=masheen ti=02 rt=2628  t=2 i=12 r=u tp=suicide c=? rr=0-9999 a=t f=f\n<s> 81 w=GuestHZLT ti=01 rt=0P t=2 i=0 r=u tp=lightning c=? rr=0-9999 a=t f=f\n"
