@@ -25,7 +25,7 @@ data Move = Move { position :: [(Square, Piece)]
                  , remainingTimeW :: Int
                  , remainingTimeB :: Int
                  , movePretty :: Maybe String
-                 }
+                 } deriving (Eq)
 
 instance Show Move where
   show m = "Move { gameId=" ++ show (gameId m) ++ ", nameW=" ++ nameW m ++ ", move=" ++ (show $ movePretty m) ++ "}"
