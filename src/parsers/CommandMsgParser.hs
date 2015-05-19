@@ -60,7 +60,7 @@ observe = Observe <$> (commandHead 80 *> move)
 
 {- *** Moves *** -}
 confirmGameMove :: Parser CommandMsg
-confirmGameMove = GameMove <$> (commandHead 1 *> move)
+confirmGameMove = ConfirmMove <$> (commandHead 1 *> move)
 
 gameMove :: Parser CommandMsg
 gameMove = GameMove <$> move

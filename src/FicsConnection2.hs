@@ -4,9 +4,11 @@ module FicsConnection2 (
   ficsConnection
 ) where
 
-import Seek2
+import Api
 import CommandMsg
 import CommandMsgParser
+import Move
+import Seek2
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.State
@@ -56,6 +58,11 @@ stateC = awaitForever $ \cmd -> case cmd of
                                       lift $ put seeks'
                                       yield $ Sought seeks'
                                       stateC
+                                 ConfirmMove move -> case isCheckmate move of
+                                      True -> CL.sourceList [ GameMove move
+                                                            , (GameResult (Move.gameId move) "checkmate" (turnToGameResult $ turn move))] >>
+                                              stateC
+                                      False -> CL.sourceList [GameMove move] >> stateC
                                  _ -> yield cmd >> stateC
 
 

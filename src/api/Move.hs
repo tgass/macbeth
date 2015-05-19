@@ -6,11 +6,12 @@ module Move (
   namePlayer,
   isPlayersNewGame,
   playerColor,
+  isCheckmate,
   dummyMove
 ) where
 
 import Api
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing, fromMaybe)
 
 data Move = Move { position :: [(Square, Piece)]
                  , turn :: Color
@@ -54,6 +55,10 @@ isPlayersNewGame m = ((relation m == MyMove) || (relation m == OponentsMove)) &&
 
 playerColor :: String -> Move -> Api.Color
 playerColor name move = if (Move.nameW move) == name then White else Black
+
+
+isCheckmate :: Move -> Bool
+isCheckmate = fromMaybe False . fmap ((== '#') . head . reverse) . movePretty
 
 
 dummyMove :: Move

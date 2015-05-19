@@ -34,6 +34,7 @@ data CommandMsg =   GameMove Move
                   | Acknoledge
                   | TextMessage { message :: BS.ByteString }
                   {- Internal -}
+                  | ConfirmMove Move
                   | Boxed [CommandMsg]
                   | NewSeek { seek :: Seek2 }
                   | RemoveSeeks { ids :: [Int] }

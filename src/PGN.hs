@@ -1,5 +1,5 @@
 module PGN (
-  moveSection
+  toPGN
 ) where
 
 import Api
@@ -8,8 +8,26 @@ import Move
 import Data.Maybe
 import Data.List
 
+toPGN :: [Move] -> String
+toPGN [] = ""
+toPGN moves@(m:mx) = tagsSection m ++ "\n\n" ++ moveSection moves
+
 moveSection :: [Move] -> String
-moveSection = concat . (intersperse " ") . fmap (toString . toSAN) . filter realMove
+moveSection = unwords . fmap (toString . toSAN) . filter realMove
+
+tagsSection :: Move -> String
+tagsSection m =
+  "[event \"?\"]\n\
+  \[site \"?\"]\n\
+  \[date \"?\"]\n\
+  \[Round \"?\"]\n\
+  \[White \"" ++ nameW m ++ "\"]\n\
+  \[Black \"" ++ nameB m ++ "\"]\n\
+  \[Result \"?\"]\n\
+  \[BlackElo \"?\"]\n\
+  \[WhiteElo \"?\"]\n\
+  \[ECO \"?\"]\n\
+  \[TimeControl \"?\"]"
 
 realMove :: Move -> Bool
 realMove m = isJust $ movePretty m

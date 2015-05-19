@@ -14,7 +14,8 @@ module Api (
   removePiece,
   getPiece,
   Rating (..),
-  GameResult (..)
+  GameResult (..),
+  turnToGameResult
 ) where
 
 
@@ -65,6 +66,10 @@ getPiece pos sq color = sq `lookup` pos >>= checkColor color
   where
     checkColor :: Color -> Piece -> Maybe Piece
     checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
+
+turnToGameResult :: Color -> GameResult
+turnToGameResult Black = WhiteWins
+turnToGameResult White = BlackWins
 
 
 data GameResult = WhiteWins | BlackWins | Draw

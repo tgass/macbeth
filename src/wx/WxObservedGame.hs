@@ -61,7 +61,6 @@ createObservedGame h move color chan = do
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
     case cmd of
-      --TODO: check if checkmated
       GameMove move' -> when (Move.gameId move' == Move.gameId move) $ do
                                    setPosition board (Move.position move')
                                    setInteractive board (relation move' == MyMove)
@@ -69,16 +68,16 @@ createObservedGame h move color chan = do
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
-                                   moves <- modifyMVar vGameMoves (\ mx -> return $ dup $ addMove move' mx)
-                                   putStrLn $ "pgn: " ++ PGN.moveSection moves
+                                   modifyMVar vGameMoves (\mx -> return $ dup $ addMove move' mx)
+                                   return ()
 
       GameResult id _ r -> when (id == Move.gameId move) $ do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               setInteractive board False
                               moves <- readMVar vGameMoves
-                              putStrLn $ PGN.moveSection moves
-                             --TODO: Reinitialize seek list
+                              putStrLn $ "pgn: " ++ PGN.toPGN moves
+                              hPutStrLn h "4 iset seekinfo 1"
 
       DrawOffered -> when (relation move == MyMove) $ do
                      --TODO: Implement offered draw
