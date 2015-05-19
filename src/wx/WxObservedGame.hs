@@ -61,6 +61,7 @@ createObservedGame h move color chan = do
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
     case cmd of
+      -- TODO: BUG: invalid 1st move !!
       GameMove move' -> when (Move.gameId move' == Move.gameId move) $ do
                                    setPosition board (Move.position move')
                                    setInteractive board (relation move' == MyMove)
