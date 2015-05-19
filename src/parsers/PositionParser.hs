@@ -5,7 +5,7 @@ module PositionParser (
 ) where
 
 import Api
-
+import Control.Arrow
 import Data.Char (chr)
 import Data.List.Split (splitOn)
 import Data.Maybe (isJust, fromJust)
@@ -16,7 +16,7 @@ import qualified Data.Attoparsec.ByteString.Char8 as A (take)
 
 
 parsePosition :: String -> [(Square, Piece)]
-parsePosition str = fmap (\(s,p) -> (s, fromJust p)) $ filter (\(s,p) -> isJust p) squares
+parsePosition str = fmap (second fromJust) $ filter (\(s,p) -> isJust p) squares
                 where rows = parseRows str
                       squares = concat $ fmap parseSquares rows
 
@@ -40,7 +40,7 @@ parseColumn line = zip [A .. H] [readPiece c | c <- line]
 
 
 parseSquares :: (Row, String) -> [(Square, Maybe Piece)]
-parseSquares (r, line) = fmap (\cc -> ((Square (fst cc) r ), snd cc)) (parseColumn line)
+parseSquares (r, line) = fmap (\cc -> (Square (fst cc) r, snd cc)) (parseColumn line)
 
 
 readPiece :: Char -> Maybe Piece

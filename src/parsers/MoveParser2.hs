@@ -9,6 +9,7 @@ import PositionParser
 import Move
 
 import Control.Applicative
+import Control.Monad
 import Data.Attoparsec.ByteString.Char8
 import qualified Data.Attoparsec.ByteString.Char8 as A (take, )
 import qualified Data.ByteString.Char8 as BS
@@ -17,7 +18,7 @@ move :: Parser Move
 move = do
   pos <- takeTill (== '<') *> "<12>" *> space *> A.take 71
   turn <- space *> ("B" *> pure Black <|> "W" *> pure White)
-  doublePawnPush <- space *> ("-1" *> pure Nothing <|> (decimal >>= return . Just))
+  doublePawnPush <- space *> ("-1" *> pure Nothing <|> (liftM Just decimal))
   space *> parseBool -- castle white short
   space *> parseBool -- castle white long
   space *> parseBool -- castle black short
@@ -36,7 +37,7 @@ move = do
   moveNumber <- space *> decimal
   moveVerbose <- space *> manyTill anyChar space
   timeTaken <- manyTill anyChar space
-  movePretty <- "none" *> pure Nothing <|> (manyTill anyChar space >>= return . Just)
+  movePretty <- "none" *> pure Nothing <|> liftM Just (manyTill anyChar space)
 
   return $ Move (parsePosition (BS.unpack pos))
                 turn

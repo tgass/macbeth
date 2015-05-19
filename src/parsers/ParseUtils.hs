@@ -7,12 +7,13 @@ module ParseUtils (
 import Api
 
 import Control.Applicative
+import Control.Monad
 import Data.Attoparsec.ByteString.Char8
 import qualified Data.ByteString.Char8 as BS
 
 rating :: Parser Rating
 rating =
-  (decimal >>= return . Rating) <|>
+  liftM Rating decimal <|>
   string "++++" *> pure Guest <|>
   string "----" *> pure Unrated
 

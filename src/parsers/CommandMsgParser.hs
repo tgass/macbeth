@@ -21,7 +21,7 @@ import qualified Data.ByteString.Char8 as BS
 
 
 parseCommandMsg :: BS.ByteString -> Either String CommandMsg
-parseCommandMsg str = parseOnly parser str where
+parseCommandMsg = parseOnly parser where
   parser = choice [ SP.clearSeek
                   , SP.newSeek
                   , SP.removeSeeks
@@ -134,10 +134,10 @@ prompt :: Parser CommandMsg
 prompt = "fics% " *> pure Prompt
 
 acknoledge :: Parser CommandMsg
-acknoledge = commandHead 519 *> (char $ chr 23) *> pure Acknoledge
+acknoledge = commandHead 519 *> char (chr 23) *> pure Acknoledge
 
 settingsDone :: Parser CommandMsg
-settingsDone = (char $ chr 23) *> pure SettingsDone
+settingsDone = char (chr 23) *> pure SettingsDone
 
 
 {- HELPER -}
@@ -160,7 +160,7 @@ seekMatchesAlreadyPosted'' = BS.pack "You are unregistered - setting to unrated.
 seekInfoBlock' = BS.pack "seekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n<s> 44 w=masheen ti=02 rt=2628  t=5 i=0 r=u tp=suicide c=? rr=0-9999 a=t f=f\n<s> 51 w=masheen ti=02 rt=2628  t=2 i=12 r=u tp=suicide c=? rr=0-9999 a=t f=f\n<s> 81 w=GuestHZLT ti=01 rt=0P t=2 i=0 r=u tp=lightning c=? rr=0-9999 a=t f=f\n"
 playMsg = BS.pack "Creating: GuestCCFP (++++) GuestGVJK (++++) unrated blitz 0 20 {Game 132 (GuestCCFP vs. GuestGVJK) Creating unrated blitz match.} <12> rnbqkbnr pppppppp ———— ———— ———— ———— PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 132 GuestCCFP GuestGVJK -1 0 20 39 39 10 10 1 none (0:00) none 1 0 0"
 obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
-guestLoginTxt = BS.pack $ "Press return to enter the server as \"FOOBAR\":"
+guestLoginTxt = BS.pack "Press return to enter the server as \"FOOBAR\":"
 
 challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
 matchMsg = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
