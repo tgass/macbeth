@@ -22,9 +22,6 @@ import System.IO (Handle, hPutStrLn)
 
 eventId = wxID_HIGHEST + 53
 
-data GameMoves = GameMoves { moves :: [Move] } deriving (Show)
-
-
 createObservedGame :: Handle -> Move -> Api.Color -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
@@ -69,7 +66,7 @@ createObservedGame h move color chan = do
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
-                                   modifyMVar vGameMoves (\mx -> return $ dup $ addMove move' mx)
+                                   modifyMVar_ vGameMoves (\mx -> return $ addMove move' mx)
                                    return ()
 
       GameResult id _ r -> when (id == Move.gameId move) $ do
@@ -77,7 +74,8 @@ createObservedGame h move color chan = do
                               set t_black [enabled := False]
                               setInteractive board False
                               moves <- readMVar vGameMoves
-                              putStrLn $ "pgn: " ++ PGN.toPGN moves
+                              -- TODO: put save to pgn in WXbackground
+                              putStrLn $ "pgn: " ++ PGN.toPGN (reverse moves)
                               hPutStrLn h "4 iset seekinfo 1"
 
       DrawOffered -> when (relation move == MyMove) $ do
@@ -90,18 +88,15 @@ createObservedGame h move color chan = do
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ do killThread threadId
                          -- TODO: Resign if playing
-                         -- TODO: Save as PGN
                          hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
 
+
+{- Add new moves in the front, so you can check for duplicates. -}
 addMove :: Move -> [Move] -> [Move]
 addMove m [] = [m]
 addMove m moves@(m':_)
            | m' == m = moves
-           | otherwise = moves ++ [m]
-
-
-dup :: a -> (a, a)
-dup x = (x, x)
+           | otherwise = [m] ++ moves
 
 
 turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()

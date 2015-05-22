@@ -15,7 +15,8 @@ module Api (
   getPiece,
   Rating (..),
   GameResult (..),
-  turnToGameResult
+  turnToGameResult,
+  GameInfo (..)
 ) where
 
 
@@ -71,6 +72,12 @@ turnToGameResult :: Color -> GameResult
 turnToGameResult Black = WhiteWins
 turnToGameResult White = BlackWins
 
+data GameInfo = GameInfo {
+  _nameW :: String,
+  _ratingW :: Rating,
+  _nameB :: String,
+  _ratingB :: Rating
+} deriving (Show)
 
 data GameResult = WhiteWins | BlackWins | Draw
 

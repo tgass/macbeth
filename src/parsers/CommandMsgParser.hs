@@ -26,6 +26,8 @@ parseCommandMsg = parseOnly parser where
                   , SP.newSeek
                   , SP.removeSeeks
 
+                  , newGame
+                  , creatingGame
                   , challenge
                   , declinedChallenge
                   , drawOffered
@@ -67,6 +69,19 @@ gameMove = GameMove <$> move
 
 
 {- *** Match/Challenge ***-}
+
+-- Game 214 (GuestPPFS vs. GuestDSRY) Creating unrated blitz match.}
+newGame :: Parser CommandMsg
+newGame = NewGame <$> ("{Game " *> decimal <* takeTill (== ')') <* ") Creating")
+
+-- Creating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n
+creatingGame :: Parser CommandMsg
+creatingGame = CreatingGame <$> (GameInfo
+  <$> ("Creating: " *> manyTill anyChar space)
+  <*> ("(" *> Utils.rating <* ") ")
+  <*> (manyTill anyChar space)
+  <*> ("(" *> Utils.rating <* takeTill (== '\n')))
+
 challenge :: Parser CommandMsg
 challenge = Challenge
   <$> ("Challenge: " *> manyTill anyChar space)
@@ -92,9 +107,11 @@ seekMatchesAlreadyPosted :: Parser CommandMsg
 seekMatchesAlreadyPosted = do
   commandHead 115
   option "" "You are unregistered - setting to unrated.\n"
-  rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks
+  rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks <* "\n"
+  cM <- prompt *> "\n" *> creatingGame <* takeTill (== '\n') <* "\n"
+  nG <- newGame <* takeTill (== '\n') <* "\n"
   mv <- takeTill (=='<') *> (GameMove <$> move)
-  return $ Boxed [rs, mv]
+  return $ Boxed [rs, cM, nG, mv]
 
 drawOffered :: Parser CommandMsg
 drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered
@@ -154,6 +171,7 @@ commandHead code = do
 
 {- TEST DATA -}
 
+newGame' = BS.pack "{Game 214 (GuestPPFS vs. GuestDSRY) Creating unrated blitz match.}"
 creatingGame' = BS.pack "Creating: Altivolous (1086) Schoon (1013) rated blitz 5 3"
 seekMatchesAlreadyPosted' = BS.pack "Your seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 364 GuestJYQC GuestNGCB -1 2 12 39 39 120 120 1 none (0:00) none 1 0 0\n"
 seekMatchesAlreadyPosted'' = BS.pack "You are unregistered - setting to unrated.\nYour seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 364 GuestJYQC GuestNGCB -1 2 12 39 39 120 120 1 none (0:00) none 1 0 0\n"
@@ -163,7 +181,6 @@ obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRoman
 guestLoginTxt = BS.pack "Press return to enter the server as \"FOOBAR\":"
 
 challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
-matchMsg = BS.pack "{Game 537 (GuestWSHB vs. GuestNDKP) Creating unrated blitz match.}"
 gameResult'''' = BS.pack  "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
 gameResult'' = BS.pack "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done."
 gameResult''' = BS.pack "{Game 181 (Danimateit vs. WhatKnight) Danimateit forfeits on time} 0-1"

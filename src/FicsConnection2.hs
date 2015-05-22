@@ -10,6 +10,7 @@ import CommandMsgParser
 import Move
 import Seek2
 
+import Control.Applicative
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.State
 import Control.Monad.Trans.Resource
@@ -22,6 +23,8 @@ import qualified Data.Conduit.List as CL
 import Network (connectTo, PortID (..))
 import System.IO
 
+data HelperState = HelperState { seeks :: [Seek2], gameId' :: Maybe Int }
+
 
 ficsConnection :: (Handle -> CommandMsg -> IO ()) -> IO Handle
 ficsConnection handler = runResourceT $ do
@@ -31,7 +34,7 @@ ficsConnection handler = runResourceT $ do
                           return hsock
 
 
-chain handler hsock = flip evalStateT [] $ transPipe lift
+chain handler hsock = flip evalStateT (HelperState [] Nothing) $ transPipe lift
                                             (CB.sourceHandle hsock) $$
                                             toCharC =$
                                             blockC (False, BS.empty) =$
@@ -39,30 +42,49 @@ chain handler hsock = flip evalStateT [] $ transPipe lift
                                             stateC =$ sink (handler hsock)
 
 
-sink :: (CommandMsg -> IO ()) -> Sink CommandMsg (StateT [Seek2] IO) ()
+sink :: (CommandMsg -> IO ()) -> Sink CommandMsg (StateT HelperState IO) ()
 sink handler = awaitForever $ liftIO . handler
 
 
-stateC :: Conduit CommandMsg (StateT [Seek2] IO) CommandMsg
+stateC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 stateC = awaitForever $ \cmd -> case cmd of
-                                 ClearSeek -> (lift $ put []) >> (yield $ Sought []) >> stateC
+                                 ClearSeek -> do
+                                      state <- lift get
+                                      lift $ put (state { seeks = [] })
+                                      yield $ Sought []
+                                      stateC
                                  NewSeek s -> do
-                                      seeks <- lift $ get
-                                      let seeks' = seeks ++ [s]
-                                      lift $ put seeks'
+                                      state <- lift get
+                                      let seeks' = seeks state ++ [s]
+                                      lift $ put (state {seeks = seeks'})
                                       yield $ Sought seeks'
                                       stateC
                                  RemoveSeeks ids' -> do
-                                      seeks <- lift $ get
-                                      let seeks' = filter (\s -> not $ Seek2.id s `elem` ids') seeks
-                                      lift $ put seeks'
+                                      state <- lift get
+                                      let seeks' = filter (\s -> not $ Seek2.id s `elem` ids') (seeks state)
+                                      lift $ put (state {seeks = seeks'})
                                       yield $ Sought seeks'
                                       stateC
-                                 ConfirmMove move -> case isCheckmate move of
-                                      True -> CL.sourceList [ GameMove move
-                                                            , (GameResult (Move.gameId move) "checkmate" (turnToGameResult $ turn move))] >>
-                                              stateC
-                                      False -> CL.sourceList [GameMove move] >> stateC
+                                 ConfirmMove move -> if isCheckmate move then do
+                                          CL.sourceList [ GameMove move
+                                                      , (GameResult (Move.gameId move) "checkmate" (turnToGameResult $ turn move))]
+                                          stateC
+                                        else CL.sourceList [GameMove move] >> stateC
+                                 newGame@(NewGame id) -> do
+                                      state <- lift get
+                                      lift $ put (state { gameId' = Just id})
+                                      yield newGame
+                                      stateC
+                                 m@(GameMove move') -> if (isPlayersNewGame move') then do
+                                                      state <- lift get
+                                                      case (StartGame <$> (gameId' state) <*> (pure move')) of
+                                                        (Just startGame) -> do
+                                                                     lift $ put (state {gameId' = Nothing})
+                                                                     yield startGame
+                                                                     stateC
+                                                        _        -> yield m >> stateC
+                                                   else yield m >> stateC
+
                                  _ -> yield cmd >> stateC
 
 

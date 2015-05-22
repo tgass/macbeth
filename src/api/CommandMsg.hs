@@ -17,6 +17,7 @@ data CommandMsg =   GameMove Move
                   | Sought [Seek2]
                   | Observe Move
 
+                  | StartGame { id :: Int, _move :: Move }
                   | Challenge { nameW :: String, ratingW :: Rating, nameB :: String, ratingB :: Rating, params :: String}
                   | AcceptChallenge Move
                   | DeclineChallenge
@@ -34,6 +35,9 @@ data CommandMsg =   GameMove Move
                   | Acknoledge
                   | TextMessage { message :: BS.ByteString }
                   {- Internal -}
+
+                  | NewGame Int
+                  | CreatingGame GameInfo
                   | ConfirmMove Move
                   | Boxed [CommandMsg]
                   | NewSeek { seek :: Seek2 }

@@ -2,6 +2,7 @@ module WxBackground (
   wxBackground
 ) where
 
+import Api
 import Move (playerColor)
 import CommandMsg
 import WxChallenge (wxChallenge)
@@ -25,6 +26,11 @@ wxBackground h name chan = do
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
     printCmdMsg cmd
     case cmd of
+
+      Observe move -> dupChan chan >>= createObservedGame h move White
+
+      StartGame id move -> dupChan chan >>= createObservedGame h move (playerColor name move)
+
       AcceptChallenge move -> dupChan chan >>= createObservedGame h move (playerColor name move)
 
       c@(Challenge {}) -> wxChallenge h c
