@@ -58,7 +58,6 @@ createObservedGame h move color chan = do
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
     case cmd of
-      -- TODO: BUG: invalid 1st move !!
       GameMove move' -> when (Move.gameId move' == Move.gameId move) $ do
                                    setPosition board (Move.position move')
                                    setInteractive board (relation move' == MyMove)
@@ -87,8 +86,11 @@ createObservedGame h move color chan = do
   windowShow f
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ do killThread threadId
-                         -- TODO: Resign if playing
-                         hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
+                         case relation move of
+                           MyMove -> hPutStrLn h $ "5 resign"
+                           OponentsMove -> hPutStrLn h $ "5 resign"
+                           Observing -> hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
+                           _ -> return ()
 
 
 {- Add new moves in the front, so you can check for duplicates. -}
