@@ -25,7 +25,6 @@ eventId = wxID_HIGHEST + 53
 createObservedGame :: Handle -> Move -> Api.Color -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
-  vGameMoves <- newMVar []
 
   f <- frame []
   p_back <- panel f []
@@ -65,17 +64,12 @@ createObservedGame h move color chan = do
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
-                                   modifyMVar_ vGameMoves (\mx -> return $ addMove move' mx)
                                    return ()
 
       GameResult id _ r -> when (id == Move.gameId move) $ do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               setInteractive board False
-                              moves <- readMVar vGameMoves
-                              -- TODO: put save to pgn in WXbackground
-                              putStrLn $ "pgn: " ++ PGN.toPGN (reverse moves)
-                              hPutStrLn h "4 iset seekinfo 1"
 
       DrawOffered -> when (relation move == MyMove) $ do
                      --TODO: Implement offered draw
@@ -91,14 +85,6 @@ createObservedGame h move color chan = do
                            OponentsMove -> hPutStrLn h $ "5 resign"
                            Observing -> hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
                            _ -> return ()
-
-
-{- Add new moves in the front, so you can check for duplicates. -}
-addMove :: Move -> [Move] -> [Move]
-addMove m [] = [m]
-addMove m moves@(m':_)
-           | m' == m = moves
-           | otherwise = [m] ++ moves
 
 
 turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()
