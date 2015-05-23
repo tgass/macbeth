@@ -9,6 +9,7 @@ import CommandMsg
 import Game
 import Seek
 import WxMenu
+import WxUtils
 
 import Control.Concurrent
 import Control.Concurrent.Chan
@@ -42,8 +43,7 @@ createToolBox h name chan = do
                                     , ("handle", AlignLeft, -1)
                                     , ("rating", AlignLeft, -1)
                                     , ("Time (start inc.)", AlignRight, -1)
-                                    , ("game type", AlignRight, -1)
-                                    , ("isRated", AlignLeft, -1)]
+                                    , ("type", AlignRight, -1)]
                                     ]
 
 
@@ -79,7 +79,7 @@ createToolBox h name chan = do
           , statusBar := [status]
           ]
 
-    threadId <- forkIO $ loop chan vCmd f
+    threadId <- forkIO $ (eventLoop ficsEventId) chan vCmd f
 
     windowOnDestroy f $ killThread threadId
 
@@ -90,8 +90,8 @@ createToolBox h name chan = do
           set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ _ r1 n1 r2 n2 _) <- games]]
           set gl [on listEvent := onGamesListEvent games h]
 
-        NewSeek (Seek id name rating time inc isRated gameType color ratingRange) -> do
-          itemAppend sl [show id, name, show rating, (show time ++ " " ++ show inc), show gameType, show isRated]
+        NewSeek seek -> do
+          itemAppend sl $ toList seek
           set sl [on listEvent := onSeekListEvent sl h]
 
         ClearSeek -> itemsDelete sl
@@ -116,12 +116,11 @@ deleteSeek :: ListCtrl () -> Maybe Int -> IO ()
 deleteSeek sl (Just id) = itemDelete sl id
 deleteSeek _ _ = return ()
 
-
-loop :: Chan CommandMsg -> MVar CommandMsg -> Frame () -> IO ()
-loop chan vCmd f = readChan chan >>= putMVar vCmd >>
-  commandEventCreate wxEVT_COMMAND_MENU_SELECTED ficsEventId >>= evtHandlerAddPendingEvent f >>
-  loop chan vCmd f
-
+toList :: Seek -> [String]
+toList (Seek id name rating time inc isRated gameType color ratingRange) =
+  [show id, name, show rating, (show time ++ " " ++ show inc), show gameType ++ " " ++ showIsRated isRated]
+  where showIsRated True = "rated"
+        showIsRated False = "unrated"
 
 onGamesListEvent :: [Game] -> Handle -> EventList -> IO ()
 onGamesListEvent games h eventList = case eventList of
@@ -132,8 +131,8 @@ onGamesListEvent games h eventList = case eventList of
 onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
 onSeekListEvent sl h eventList = case eventList of
   ListItemActivated idx -> do
-                            seeks <- get sl items
-                            hPutStrLn h $ "4 play " ++ show (read (seeks !! idx !! 0) :: Int)
+    seeks <- get sl items
+    hPutStrLn h $ "4 play " ++ show (read (seeks !! idx !! 0) :: Int)
   _ -> return ()
 
 
