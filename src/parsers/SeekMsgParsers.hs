@@ -8,6 +8,7 @@ module SeekMsgParsers (
 
 import Api
 import CommandMsg
+import Game
 import Rating
 import Seek
 
@@ -40,11 +41,19 @@ seek' = Seek
 
 gameType' :: Parser GameType
 gameType' =
-  "untimed" *> pure Untimed <|>
-  "lightning" *> pure Lightning <|>
   "blitz" *> pure Blitz <|>
+  "lightning" *> pure Lightning <|>
+  "untimed" *> pure Untimed <|>
+  "examined" *> pure ExaminedGame <|>
   "standard" *> pure Standard <|>
+  "wild" *> pure Wild <|>
+  "atomic" *> pure Atomic <|>
+  "crazyhouse" *> pure Crazyhouse <|>
+  "bughouse" *> pure Bughouse <|>
+  "losers" *> pure Losers <|>
+  "suicide" *> pure Suicide <|>
   takeTill (== ' ') *> pure NonStandardGame
+
 
 
 rating' :: Parser Rating

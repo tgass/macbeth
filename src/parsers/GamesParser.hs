@@ -32,24 +32,24 @@ gameP = Game
 settings' :: Parser GameSettings
 settings' = GameSettings
   <$> (space *> pure False <|> char 'p' *> pure True)
-  <*> (anyChar *> pure Standard)
+  <*> gameType'
   <*> (char 'u' *> pure False <|> char 'r' *> pure True)
 
 
 gameType' :: Parser GameType
 gameType' =
-  (char 'b' *> pure Blitz) <|>
-  (char 'l' *> pure Lightning) <|>
-  (char 'u' *> pure Untimed) <|>
-  (char 'e' *> pure ExaminedGame) <|>
-  (char 's' *> pure Standard) <|>
-  (char 'w' *> pure Wild) <|>
-  (char 'x' *> pure Atomic) <|>
-  (char 'z' *> pure Crazyhouse) <|>
-  (char 'B' *> pure Bughouse) <|>
-  (char 'L' *> pure Losers) <|>
-  (char 'S' *> pure Suicide) <|>
-  (char 'n' *> pure NonStandardGame)
+  "b" *> pure Blitz <|>
+  "l" *> pure Lightning <|>
+  "u" *> pure Untimed <|>
+  "e" *> pure ExaminedGame <|>
+  "s" *> pure Standard <|>
+  "w" *> pure Wild <|>
+  "x" *> pure Atomic <|>
+  "z" *> pure Crazyhouse <|>
+  "B" *> pure Bughouse <|>
+  "L" *> pure Losers <|>
+  "S" *> pure Suicide <|>
+  "n" *> pure NonStandardGame
 
 
 --test data

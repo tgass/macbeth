@@ -39,6 +39,7 @@ createToolBox h name chan = do
     sl  <- listCtrl slp [columns := [ ("#", AlignLeft, -1)
                                     , ("handle", AlignLeft, -1)
                                     , ("rating", AlignLeft, -1)
+                                    , ("Time (start inc.)", AlignRight, -1)
                                     , ("game type", AlignRight, -1)]
                                     ]
 
@@ -87,7 +88,8 @@ createToolBox h name chan = do
           set gl [on listEvent := onGamesListEvent games h]
 
         Sought seeks -> do
-          set sl [items := [[show id, name, show r, show gt] | (Seek id name r _ _ _ gt _ _) <- seeks]]
+          set sl [items := [[show id, name, show rating, (show time ++ " " ++ show inc), show gameType] |
+            (Seek id name rating time inc isRated gameType color ratingRange) <- seeks]]
           set sl [on listEvent := onSeekListEvent seeks h]
 
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"

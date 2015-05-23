@@ -1,5 +1,6 @@
 module Game (
   Game (..),
+  GameType (..),
   GameSettings (..),
   GameResult (..),
   turnToGameResult,
@@ -8,6 +9,9 @@ module Game (
 
 import Api
 import Rating
+
+data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
+                 Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show)
 
 data Game = Game {
     id :: Int

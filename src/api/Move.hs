@@ -55,7 +55,9 @@ isPlayersNewGame m = ((relation m == MyMove) || (relation m == OponentsMove)) &&
 
 
 playerColor :: String -> Move -> Api.PColor
-playerColor name move = if (Move.nameW move) == name then White else Black
+playerColor name move
+  | Move.nameW move == name = White
+  | otherwise = Black
 
 
 isCheckmate :: Move -> Bool

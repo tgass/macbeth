@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Api (
-  GameType (..),
   PColor (..),
   Piece (..),
   PType (..),
@@ -16,10 +15,6 @@ module Api (
 ) where
 
 import Data.Char (toLower)
-
-
-data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
-                 Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show)
 
 data Column = A | B | C | D | E | F | G | H deriving (Show, Enum, Ord, Eq)
 

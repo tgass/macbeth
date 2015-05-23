@@ -4,6 +4,7 @@ module Seek (
 ) where
 
 import Api
+import Game
 import Rating
 
 data Seek = Seek {
