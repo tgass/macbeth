@@ -61,6 +61,5 @@ addMove m moves@(m':_)
            | otherwise = [m] ++ moves
 
 printCmdMsg :: CommandMsg -> IO ()
-printCmdMsg (Sought _) = return ()
 printCmdMsg Prompt = return ()
 printCmdMsg cmd = print cmd

@@ -49,23 +49,7 @@ sink handler = awaitForever $ liftIO . handler
 
 stateC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 stateC = awaitForever $ \cmd -> case cmd of
-                                 ClearSeek -> do
-                                      state <- lift get
-                                      lift $ put (state { seeks = [] })
-                                      yield $ Sought []
-                                      stateC
-                                 NewSeek s -> do
-                                      state <- lift get
-                                      let seeks' = seeks state ++ [s]
-                                      lift $ put (state {seeks = seeks'})
-                                      yield $ Sought seeks'
-                                      stateC
-                                 RemoveSeeks ids' -> do
-                                      state <- lift get
-                                      let seeks' = filter (\s -> not $ Seek.id s `elem` ids') (seeks state)
-                                      lift $ put (state {seeks = seeks'})
-                                      yield $ Sought seeks'
-                                      stateC
+
                                  ConfirmMove move -> if isCheckmate move then do
                                           CL.sourceList [ GameMove move
                                                       , (GameResult (Move.gameId move) "checkmate" (turnToGameResult $ turn move))]

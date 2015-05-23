@@ -11,7 +11,6 @@ import Seek
 
 data CommandMsg =   GameMove Move
                   | Games [Game]
-                  | Sought [Seek]
                   | Observe Move
 
                   | StartGame { id :: Int, _move :: Move }
@@ -20,6 +19,11 @@ data CommandMsg =   GameMove Move
                   | DeclineChallenge
                   | DrawOffered
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
+
+
+                  | NewSeek { seek :: Seek }
+                  | RemoveSeeks { ids :: [Int] }
+                  | ClearSeek
 
                   | Login
                   | Password
@@ -36,9 +40,6 @@ data CommandMsg =   GameMove Move
                   | NewGame Int
                   | CreatingGame GameInfo
                   | ConfirmMove Move
-                  | Boxed [CommandMsg]
-                  | NewSeek { seek :: Seek }
-                  | RemoveSeeks { ids :: [Int] }
-                  | ClearSeek deriving (Show)
+                  | Boxed [CommandMsg] deriving (Show)
 
 data CommandHead = CommandHead { commandId :: Int } deriving (Show)
