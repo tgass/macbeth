@@ -8,7 +8,7 @@ module SeekMsgParsers (
 
 import Api
 import CommandMsg
-import Seek2
+import Seek
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
@@ -23,8 +23,8 @@ newSeek = NewSeek <$> seek'
 removeSeeks :: Parser CommandMsg
 removeSeeks = RemoveSeeks <$> ("<sr>" *> many1 (space *> decimal))
 
-seek' :: Parser Seek2
-seek' = Seek2
+seek' :: Parser Seek
+seek' = Seek
   <$> ("<s>" *> space *> decimal)
   <*> (space *> "w=" *> manyTill anyChar space)
   <*> ("ti=" *> manyTill anyChar space *> "rt=" *> rating')

@@ -13,10 +13,7 @@ module Api (
   Position ,
   removePiece,
   getPiece,
-  Rating (..),
-  GameResult (..),
-  turnToGameResult,
-  GameInfo (..)
+  Rating (..)
 ) where
 
 
@@ -67,22 +64,4 @@ getPiece pos sq color = sq `lookup` pos >>= checkColor color
   where
     checkColor :: Color -> Piece -> Maybe Piece
     checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
-
-turnToGameResult :: Color -> GameResult
-turnToGameResult Black = WhiteWins
-turnToGameResult White = BlackWins
-
-data GameInfo = GameInfo {
-  _nameW :: String,
-  _ratingW :: Rating,
-  _nameB :: String,
-  _ratingB :: Rating
-} deriving (Show)
-
-data GameResult = WhiteWins | BlackWins | Draw
-
-instance Show GameResult where
-  show WhiteWins = "1-0"
-  show BlackWins = "0-1"
-  show Draw      = "1/2-1/2"
 

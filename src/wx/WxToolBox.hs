@@ -9,7 +9,7 @@ import Move
 import CommandMsg
 import FicsConnection2 (ficsConnection)
 import Game
-import Seek2
+import Seek
 import Utils
 
 import WxObservedGame
@@ -102,7 +102,7 @@ createToolBox h name chan = do
           set gl [on listEvent := onGamesListEvent games h]
 
         Sought seeks -> do
-          set sl [items := [[show id, name, show r, show gt] | (Seek2 id name r _ _ _ gt _ _) <- seeks]]
+          set sl [items := [[show id, name, show r, show gt] | (Seek id name r _ _ _ gt _ _) <- seeks]]
           -- set gl [on listEvent := onSeekListEvent seeks h]
 
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
@@ -129,9 +129,9 @@ onGamesListEvent games h eventList = case eventList of
 
 
 
-onSeekListEvent :: [Seek2] -> Handle -> EventList -> IO ()
+onSeekListEvent :: [Seek] -> Handle -> EventList -> IO ()
 onSeekListEvent seeks h eventList = case eventList of
-  ListItemActivated idx -> hPutStrLn h $ "4 play " ++ show (Seek2.id $ seeks !! idx)
+  ListItemActivated idx -> hPutStrLn h $ "4 play " ++ show (Seek.id $ seeks !! idx)
   _ -> return ()
 
 

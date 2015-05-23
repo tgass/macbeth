@@ -6,6 +6,7 @@ module CommandMsgParser (
 
 import Api
 import CommandMsg
+import Game
 import GamesParser
 import Move
 import MoveParser2

@@ -7,8 +7,9 @@ module FicsConnection2 (
 import Api
 import CommandMsg
 import CommandMsgParser
+import Game
 import Move
-import Seek2
+import Seek
 
 import Control.Applicative
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -23,7 +24,7 @@ import qualified Data.Conduit.List as CL
 import Network (connectTo, PortID (..))
 import System.IO
 
-data HelperState = HelperState { seeks :: [Seek2], gameId' :: Maybe Int }
+data HelperState = HelperState { seeks :: [Seek], gameId' :: Maybe Int }
 
 
 ficsConnection :: (Handle -> CommandMsg -> IO ()) -> IO Handle
@@ -61,7 +62,7 @@ stateC = awaitForever $ \cmd -> case cmd of
                                       stateC
                                  RemoveSeeks ids' -> do
                                       state <- lift get
-                                      let seeks' = filter (\s -> not $ Seek2.id s `elem` ids') (seeks state)
+                                      let seeks' = filter (\s -> not $ Seek.id s `elem` ids') (seeks state)
                                       lift $ put (state {seeks = seeks'})
                                       yield $ Sought seeks'
                                       stateC

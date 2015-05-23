@@ -1,11 +1,11 @@
-module Seek2 (
-  Seek2 (..),
+module Seek (
+  Seek (..),
   StartMode
 ) where
 
 import Api
 
-data Seek2 = Seek2 { id :: Int
+data Seek = Seek { id :: Int
                  , name :: String
                  , rating :: Rating
                  , timeStart :: Int
@@ -18,7 +18,7 @@ data Seek2 = Seek2 { id :: Int
 --                 , checkFormula :: Bool
 }
 
-instance Show Seek2 where
-  show (Seek2 id _ _ _ _ _ _ _ _) = "Seek2 {id = " ++ show id ++ "}"
+instance Show Seek where
+  show (Seek id _ _ _ _ _ _ _ _) = "Seek2 {id = " ++ show id ++ "}"
 
 data StartMode = Auto | Manual deriving (Show)
