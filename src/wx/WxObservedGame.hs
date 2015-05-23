@@ -12,17 +12,15 @@ import WxUtils
 
 import Control.Concurrent
 import Control.Concurrent.Chan
-import Control.Applicative (liftA)
-import Control.Monad.IO.Class (liftIO)
-import Data.Maybe (isJust)
+import Data.Maybe
 import Graphics.UI.WX
 import Graphics.UI.WXCore
-import System.IO (Handle, hPutStrLn)
+import System.IO
 
 
 eventId = wxID_HIGHEST + 53
 
-createObservedGame :: Handle -> Move -> Api.Color -> Chan CommandMsg -> IO ()
+createObservedGame :: Handle -> Move -> Api.PColor -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
 
@@ -87,7 +85,7 @@ createObservedGame h move color chan = do
                            _ -> return ()
 
 
-turnBoard :: Board -> Panel () -> (Api.Color -> Layout) -> IO ()
+turnBoard :: Board -> Panel () -> (Api.PColor -> Layout) -> IO ()
 turnBoard board p layoutF = do
   color <- invertColor board
   set p [layout := layoutF color]
@@ -95,7 +93,7 @@ turnBoard board p layoutF = do
   refit p
 
 
-createStatusPanel :: Panel () -> Var Move -> Api.Color -> IO (Panel (), Graphics.UI.WX.Timer)
+createStatusPanel :: Panel () -> Var Move -> Api.PColor -> IO (Panel (), Graphics.UI.WX.Timer)
 createStatusPanel p_back vMove color = do
   move <- varGet vMove
   p_status <- panel p_back []
@@ -114,9 +112,9 @@ createStatusPanel p_back vMove color = do
   return (p_status, t)
 
 
-updateTime :: Api.Color -> Var Move -> StaticText () -> IO ()
+updateTime :: Api.PColor -> Var Move -> StaticText () -> IO ()
 updateTime color vClock st = do
-  move <- changeRemainingTime color `liftA` varGet vClock
+  move <- changeRemainingTime color `fmap` varGet vClock
   varSet vClock move
   set st [text := formatTime $ remainingTime color move]
   where
@@ -131,7 +129,7 @@ staticTextFormatted p s = staticText p [ text := s
                                        , fontWeight := WeightBold]
 
 
-layoutBoard :: Panel() -> Panel() -> Panel() -> Api.Color -> Layout
+layoutBoard :: Panel() -> Panel() -> Panel() -> Api.PColor -> Layout
 layoutBoard board white black color = (grid 0 0 [ [hfill $ widget (if color == White then black else white)]
                                                 , [fill $ minsize (Size 320 320) $ widget board]
                                                 , [hfill $ widget (if color == White then white else black)]])

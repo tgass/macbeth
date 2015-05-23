@@ -5,12 +5,9 @@ module CommandMsg (
 
 import Api
 import Game
-import Seek
 import Move
-
-import qualified Data.ByteString.Char8 as BS
-
-type Position = [(Square, Piece)]
+import Rating
+import Seek
 
 data CommandMsg =   GameMove Move
                   | Games [Game]
@@ -33,9 +30,9 @@ data CommandMsg =   GameMove Move
                   | Prompt
                   | SettingsDone
                   | Acknoledge
-                  | TextMessage { message :: BS.ByteString }
-                  {- Internal -}
+                  | TextMessage String
 
+                  {- Internal -}
                   | NewGame Int
                   | CreatingGame GameInfo
                   | ConfirmMove Move

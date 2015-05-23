@@ -5,6 +5,7 @@ module ParseUtils (
 ) where
 
 import Api
+import Rating
 
 import Control.Applicative
 import Control.Monad

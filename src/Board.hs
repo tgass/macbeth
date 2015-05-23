@@ -12,13 +12,13 @@ import System.IO (Handle, hPutStrLn)
 
 
 data Board = Board { _panel :: Panel ()
-                   , invertColor :: IO Api.Color
+                   , invertColor :: IO Api.PColor
                    , setPosition :: Position -> IO ()
                    , setInteractive :: Bool -> IO ()
                    , repaintBoard :: IO ()}
 
 data BoardState = BoardState { _position :: Position
-                             , color :: Api.Color
+                             , color :: Api.PColor
                              , selSquare :: Square
                              , draggedPiece :: Maybe DraggedPiece
                              , isInteractive :: Bool
@@ -30,7 +30,7 @@ data DraggedPiece = DraggedPiece { _point :: Point
                                  , _square :: Square } deriving (Show)
 
 
-createBoard :: Handle -> Panel () -> Position -> Api.Color -> Bool -> IO Board
+createBoard :: Handle -> Panel () -> Position -> Api.PColor -> Bool -> IO Board
 createBoard h p_parent position color interactive = do
   let boardState = BoardState position color (Square A One) Nothing interactive
   vState <- variable [ value := boardState ]
@@ -65,7 +65,7 @@ drawAll panel vState dc view = do
     drawDraggedPiece scale (draggedPiece state) dc view
 
 
-paintSelectedSquare :: Square -> Api.Color -> Double -> DC a -> t -> IO ()
+paintSelectedSquare :: Square -> Api.PColor -> Double -> DC a -> t -> IO ()
 paintSelectedSquare selSq color scale dc view = do
   let pointX' = pointX $ toPos selSq color
       pointY' = pointY $ toPos selSq color
@@ -142,7 +142,7 @@ calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
 
-drawPiece :: DC a -> t -> Api.Color -> (Square, Piece) -> IO ()
+drawPiece :: DC a -> t -> Api.PColor -> (Square, Piece) -> IO ()
 drawPiece dc view color (square, p) = drawBitmap dc (pieceToBitmap p) (toPos square color) True []
 
 
@@ -158,30 +158,30 @@ drawBoard dc view = drawBitmap dc board (point 0 0) False []
 
 
 
-toField :: Point -> Api.Color -> Square
+toField :: Point -> Api.PColor -> Square
 toField p color = Square (intToCol color (pointX p `div` 40)) (intToRow color (pointY p `div` 40))
 
 
-toPos :: Square -> Api.Color -> Point
+toPos :: Square -> Api.PColor -> Point
 toPos (Square c r) color = point (colToInt color c * 40) (rowToInt color r * 40)
 
 
-rowToInt :: Api.Color -> Row -> Int
+rowToInt :: Api.PColor -> Row -> Int
 rowToInt White = abs . (7-) . fromEnum
 rowToInt Black = fromEnum
 
 
-colToInt :: Api.Color -> Column -> Int
+colToInt :: Api.PColor -> Column -> Int
 colToInt White = fromEnum
 colToInt Black = abs . (7-) . fromEnum
 
 
-intToRow :: Api.Color -> Int -> Row
+intToRow :: Api.PColor -> Int -> Row
 intToRow White = toEnum . abs . (7-)
 intToRow Black = toEnum
 
 
-intToCol :: Api.Color -> Int -> Column
+intToCol :: Api.PColor -> Int -> Column
 intToCol White = toEnum
 intToCol Black = toEnum . abs . (7-)
 

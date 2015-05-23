@@ -8,6 +8,7 @@ module SeekMsgParsers (
 
 import Api
 import CommandMsg
+import Rating
 import Seek
 
 import Control.Applicative
@@ -38,11 +39,12 @@ seek' = Seek
   <*> (space *> "rr=" *> ((,) <$> decimal <*> ("-" *> decimal)))
 
 gameType' :: Parser GameType
-gameType' = "untimed" *> pure Untimed <|>
-            "lightning" *> pure Lightning <|>
-            "blitz" *> pure Blitz <|>
-            "standard" *> pure Standard <|>
-            takeTill (== ' ') *> pure NonStandardGame
+gameType' =
+  "untimed" *> pure Untimed <|>
+  "lightning" *> pure Lightning <|>
+  "blitz" *> pure Blitz <|>
+  "standard" *> pure Standard <|>
+  takeTill (== ' ') *> pure NonStandardGame
 
 
 rating' :: Parser Rating
@@ -54,5 +56,4 @@ rating' = do
 clearSeek' = BS.pack "<sc>"
 newSeek' = BS.pack "<s> 7 w=GuestNMZJ ti=01 rt=0P t=15 i=5 r=u tp=standard c=W rr=0-9999 a=t f=t"
 newSeek'' = BS.pack "<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f"
--- use: parseOnly removeSeeks removeSeeks'
 removeSeeks' = BS.pack "<sr> 59 3 11"

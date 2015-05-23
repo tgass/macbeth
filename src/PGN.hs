@@ -32,9 +32,9 @@ tagsSection m =
 realMove :: Move -> Bool
 realMove m = isJust $ movePretty m
 
-toSAN :: Move -> (Int, Color, String)
+toSAN :: Move -> (Int, PColor, String)
 toSAN m = (moveNumber m, turn m, fromJust $ movePretty m)
 
-toString :: (Int, Color, String) -> String
+toString :: (Int, PColor, String) -> String
 toString (num, Black, move) = show num ++ "." ++ move
 toString (_, White, move) = move

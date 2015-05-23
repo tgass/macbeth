@@ -15,6 +15,6 @@ eventLoop id chan vCmd f = readChan chan >>= putMVar vCmd >>
   commandEventCreate wxEVT_COMMAND_MENU_SELECTED id >>= evtHandlerAddPendingEvent f >>
   eventLoop id chan vCmd f
 
-toWxColor :: Api.Color -> Graphics.UI.WXCore.Color
+toWxColor :: Api.PColor -> Graphics.UI.WXCore.Color
 toWxColor White = white
 toWxColor Black = black

@@ -2,35 +2,21 @@
 
 module Api (
   GameType (..),
-  Color (..),
-  invert,
+  PColor (..),
   Piece (..),
-  pColor,
   PType (..),
   Square (..),
   Row (..),
   Column (..),
-  Position ,
+  Position,
+  pColor,
+  invert,
   removePiece,
-  getPiece,
-  Rating (..)
+  getPiece
 ) where
-
 
 import Data.Char (toLower)
 
-data Color = Black | White deriving (Eq, Show)
-
-invert :: Color -> Color
-invert White = Black
-invert Black = White
-
-data Rating = Rating {r :: Int} | Unrated | Guest
-
-instance Show Rating where
-  show (Rating r') = Prelude.show r'
-  show Guest = "Guest"
-  show Unrated = "Unrated"
 
 data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
                  Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show)
@@ -41,7 +27,9 @@ data Row = One | Two | Three | Four | Five | Six | Seven | Eight deriving (Eq, O
 
 data PType = Pawn | Rook | Knight | Bishop | Queen | King deriving (Show, Eq)
 
-data Piece = Piece PType Color deriving (Show, Eq)
+data PColor = Black | White deriving (Eq, Show)
+
+data Piece = Piece PType PColor deriving (Show, Eq)
 
 data Square = Square Column Row deriving (Ord, Eq)
 
@@ -51,17 +39,22 @@ instance Show Square where
 type Position = [(Square, Piece)]
 
 
-pColor :: Piece -> Color
-pColor (Piece _ _color) = _color
+pColor :: Piece -> PColor
+pColor (Piece _ color) = color
+
+
+invert :: PColor -> PColor
+invert White = Black
+invert Black = White
 
 
 removePiece :: Position -> Square -> Position
 removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
 
 
-getPiece :: Position -> Square -> Color -> Maybe Piece
+getPiece :: Position -> Square -> PColor -> Maybe Piece
 getPiece pos sq color = sq `lookup` pos >>= checkColor color
   where
-    checkColor :: Color -> Piece -> Maybe Piece
+    checkColor :: PColor -> Piece -> Maybe Piece
     checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 

@@ -77,21 +77,21 @@ stateC = awaitForever $ \cmd -> case cmd of
                                       yield newGame
                                       stateC
                                  m@(GameMove move') -> if (isPlayersNewGame move') then do
-                                                      state <- lift get
-                                                      case (StartGame <$> (gameId' state) <*> (pure move')) of
-                                                        (Just startGame) -> do
+                                                         state <- lift get
+                                                         case (StartGame <$> (gameId' state) <*> (pure move')) of
+                                                           (Just startGame) -> do
                                                                      lift $ put (state {gameId' = Nothing})
                                                                      yield startGame
                                                                      stateC
-                                                        _        -> yield m >> stateC
-                                                   else yield m >> stateC
+                                                           _        -> yield m >> stateC
+                                                       else yield m >> stateC
 
                                  _ -> yield cmd >> stateC
 
 
 parseC :: (Monad m) => Conduit BS.ByteString m CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
-                                  Left _    -> yield (TextMessage str) >> parseC
+                                  Left _    -> yield (TextMessage $ BS.unpack str) >> parseC
                                   Right msg -> case msg of
                                                 Boxed bs -> CL.sourceList bs >> parseC
                                                 _ -> yield msg >> parseC

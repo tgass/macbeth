@@ -13,38 +13,39 @@ module Move (
 import Api
 import Data.Maybe (isNothing, fromMaybe)
 
-data Move = Move { position :: [(Square, Piece)]
-                 , turn :: Color
-                 , doublePawnPush :: Maybe Int
-                 , gameId :: Int
-                 , nameW :: String
-                 , nameB :: String
-                 , relation :: Relation
-                 , moveNumber :: Int
-                 , moveVerbose :: String
-                 , timeTaken :: String
-                 , remainingTimeW :: Int
-                 , remainingTimeB :: Int
-                 , movePretty :: Maybe String
-                 } deriving (Eq)
+data Move = Move {
+    position :: [(Square, Piece)]
+  , turn :: PColor
+  , doublePawnPush :: Maybe Int
+  , gameId :: Int
+  , nameW :: String
+  , nameB :: String
+  , relation :: Relation
+  , moveNumber :: Int
+  , moveVerbose :: String
+  , timeTaken :: String
+  , remainingTimeW :: Int
+  , remainingTimeB :: Int
+  , movePretty :: Maybe String
+  } deriving (Eq)
 
 instance Show Move where
-  show m = "Move { gameId=" ++ show (gameId m) ++ ", nameW=" ++ nameW m ++ ", move=" ++ (show $ movePretty m) ++ "}"
+  show m = "Move { gameId=" ++ show (gameId m) ++ ", move=" ++ (show $ movePretty m) ++ "}"
 
 data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
 
 
-remainingTime :: Api.Color -> Move -> Int
+remainingTime :: Api.PColor -> Move -> Int
 remainingTime Black = remainingTimeB
 remainingTime White = remainingTimeW
 
 
-decreaseRemainingTime :: Api.Color -> Move -> Move
+decreaseRemainingTime :: Api.PColor -> Move -> Move
 decreaseRemainingTime Black move = move {remainingTimeB = remainingTimeB move - 1}
 decreaseRemainingTime White move = move {remainingTimeW = remainingTimeW move - 1}
 
 
-namePlayer :: Api.Color -> Move -> String
+namePlayer :: Api.PColor -> Move -> String
 namePlayer White = nameW
 namePlayer Black = nameB
 
@@ -53,7 +54,7 @@ isPlayersNewGame :: Move -> Bool
 isPlayersNewGame m = ((relation m == MyMove) || (relation m == OponentsMove)) && (isNothing $ movePretty m)
 
 
-playerColor :: String -> Move -> Api.Color
+playerColor :: String -> Move -> Api.PColor
 playerColor name move = if (Move.nameW move) == name then White else Black
 
 

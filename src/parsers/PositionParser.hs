@@ -5,14 +5,9 @@ module PositionParser (
 ) where
 
 import Api
-import Control.Arrow
-import Data.Char (chr)
-import Data.List.Split (splitOn)
-import Data.Maybe (isJust, fromJust)
-import Data.Attoparsec.ByteString.Char8
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.Attoparsec.ByteString.Char8 as A (take)
-
+import Control.Arrow (second)
+import Data.List.Split
+import Data.Maybe
 
 
 parsePosition :: String -> [(Square, Piece)]
@@ -27,14 +22,6 @@ parseRows str = zip rows lines
                    lines = splitOn " " str
 
 
-{-
- map (\x -> (x, sqrt x)) xs
- map (ap (,) sqrt) xs
- zipWith (,) xs (map sqrt xs)
- f = zip `ap` map sqrt
- f = zip <*> map sqrt
- r = map (id &&& sqrt) xs //Control.Arrow
--}
 parseColumn :: String -> [(Column, Maybe Piece)]
 parseColumn line = zip [A .. H] [readPiece c | c <- line]
 

@@ -7,26 +7,28 @@ module Game (
 ) where
 
 import Api
+import Rating
 
-data Game = Game { id :: Int
-                 , isExample :: Bool
-                 , isSetup :: Bool
-                 , ratingW :: Rating
-                 , namePlayerW :: String
-                 , ratingPlayer2 :: Rating
-                 , namePlayerB :: String
-                 , settings :: GameSettings
-                 } deriving (Show)
+data Game = Game {
+    id :: Int
+  , isExample :: Bool
+  , isSetup :: Bool
+  , ratingW :: Rating
+  , nameW :: String
+  , ratingB :: Rating
+  , nameB :: String
+  , settings :: GameSettings } deriving (Show)
 
-data GameSettings = GameSettings { isPrivate :: Bool
-                                 , gameType :: GameType
-                                 , isRated :: Bool} deriving (Show)
+data GameSettings = GameSettings {
+    isPrivate :: Bool
+  , gameType :: GameType
+  , isRated :: Bool} deriving (Show)
 
 data GameInfo = GameInfo {
-  _nameW :: String,
-  _ratingW :: Rating,
-  _nameB :: String,
-  _ratingB :: Rating
+    _nameW :: String
+  , _ratingW :: Rating
+  , _nameB :: String
+  , _ratingB :: Rating
 } deriving (Show)
 
 data GameResult = WhiteWins | BlackWins | Draw
@@ -37,6 +39,6 @@ instance Show GameResult where
   show Draw      = "1/2-1/2"
 
 
-turnToGameResult :: Color -> GameResult
+turnToGameResult :: PColor -> GameResult
 turnToGameResult Black = WhiteWins
 turnToGameResult White = BlackWins

@@ -5,35 +5,20 @@ module WxToolBox (
 ) where
 
 import Api
-import Move
 import CommandMsg
-import FicsConnection2 (ficsConnection)
 import Game
 import Seek
-import Utils
-
-import WxObservedGame
-import WxChallenge
 import WxMenu
 
-import Control.Applicative (liftA)
 import Control.Concurrent
 import Control.Concurrent.Chan
-import Control.Monad (liftM)
-
-import qualified Data.ByteString.Char8 as BS
-
 import Graphics.UI.WX
 import Graphics.UI.WXCore
-
-import System.IO (Handle, hPutStrLn)
-
-type Position = [(Square, Piece)]
+import System.IO
 
 
 ficsEventId :: Int
 ficsEventId = wxID_HIGHEST + 51
-
 
 
 createToolBox :: Handle -> String -> Chan CommandMsg -> IO ()
@@ -103,11 +88,11 @@ createToolBox h name chan = do
 
         Sought seeks -> do
           set sl [items := [[show id, name, show r, show gt] | (Seek id name r _ _ _ gt _ _) <- seeks]]
-          -- set gl [on listEvent := onSeekListEvent seeks h]
+          set sl [on listEvent := onSeekListEvent seeks h]
 
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
 
-        TextMessage text -> appendText ct (BS.unpack text ++ "\n")
+        TextMessage text -> appendText ct $ text ++ "\n"
 
         Prompt -> return ()
 
