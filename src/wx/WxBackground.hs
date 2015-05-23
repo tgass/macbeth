@@ -42,10 +42,11 @@ wxBackground h name chan = do
                           return ()
 
       GameResult id _ r -> do
-                              moves <- readMVar vGameMoves
-                              putStrLn $ "pgn: " ++ PGN.toPGN (reverse moves)
-                              hPutStrLn h "4 iset seekinfo 1"
-
+                            mMoves <- tryTakeMVar vGameMoves
+                            case mMoves of
+                              Just moves -> do putStrLn $ "pgn: " ++ PGN.toPGN (reverse moves)
+                                               hPutStrLn h "4 iset seekinfo 1"
+                              _ -> return ()
       _ -> return ()
 
 
@@ -56,7 +57,7 @@ wxBackground h name chan = do
 addMove :: Move -> [Move] -> [Move]
 addMove m [] = [m]
 addMove m moves@(m':_)
-           | m' == m = moves
+           | (movePretty m') == (movePretty m) = moves
            | otherwise = [m] ++ moves
 
 printCmdMsg :: CommandMsg -> IO ()
