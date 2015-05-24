@@ -41,10 +41,10 @@ wxBackground h name chan = do
                           modifyMVar_ vGameMoves (\mx -> return $ addMove move' mx)
                           return ()
 
-      GameResult id _ r -> do
+      GameResult id reason result -> do
                             mMoves <- tryTakeMVar vGameMoves
                             case mMoves of
-                              Just moves -> do putStrLn $ "pgn: " ++ PGN.toPGN (reverse moves)
+                              Just moves -> do PGN.saveAsPGN (reverse moves) result
                                                hPutStrLn h "4 iset seekinfo 1"
                               _ -> return ()
       _ -> return ()
@@ -53,12 +53,18 @@ wxBackground h name chan = do
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ killThread threadId
 
+
 {- Add new moves in the front, so you can check for duplicates. -}
 addMove :: Move -> [Move] -> [Move]
 addMove m [] = [m]
 addMove m moves@(m':_)
-           | (movePretty m') == (movePretty m) = moves
+           | areEqual m m' = moves
            | otherwise = [m] ++ moves
+
+
+areEqual :: Move -> Move -> Bool
+areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
+
 
 printCmdMsg :: CommandMsg -> IO ()
 printCmdMsg Prompt = return ()

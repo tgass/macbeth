@@ -1,16 +1,25 @@
 module PGN (
-  toPGN
+  saveAsPGN
 ) where
 
 import Api
 import Move
+import Game
 
 import Data.Maybe
 import Data.List
+import System.Directory
+import System.FilePath
 
-toPGN :: [Move] -> String
-toPGN [] = ""
-toPGN moves@(m:mx) = tagsSection m ++ "\n\n" ++ moveSection moves
+saveAsPGN :: [Move] -> GameResult -> IO ()
+saveAsPGN moves result = do
+  rootDir <- getUserDocumentsDirectory
+  createDirectory $ rootDir </> "XChess"
+  appendFile (rootDir </> "XChess" </> "games.pgn") $ toPGN moves result
+
+toPGN :: [Move] -> GameResult -> String
+toPGN [] _ = ""
+toPGN moves@(m:mx) result = tagsSection m ++ "\n\n" ++ moveSection moves ++ " " ++ (show result) ++ "\n\n"
 
 moveSection :: [Move] -> String
 moveSection = unwords . fmap (toString . toSAN) . filter realMove
@@ -21,8 +30,8 @@ tagsSection m =
   \[site \"?\"]\n\
   \[date \"?\"]\n\
   \[Round \"?\"]\n\
-  \[White \"" ++ nameW m ++ "\"]\n\
-  \[Black \"" ++ nameB m ++ "\"]\n\
+  \[White \"" ++ Move.nameW m ++ "\"]\n\
+  \[Black \"" ++ Move.nameB m ++ "\"]\n\
   \[Result \"?\"]\n\
   \[BlackElo \"?\"]\n\
   \[WhiteElo \"?\"]\n\
