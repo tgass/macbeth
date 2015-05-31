@@ -3,7 +3,6 @@ module Game (
   GameType (..),
   GameSettings (..),
   GameResult (..),
-  turnToGameResult,
   GameInfo (..)
 ) where
 
@@ -42,7 +41,3 @@ instance Show GameResult where
   show BlackWins = "0-1"
   show Draw      = "1/2-1/2"
 
-
-turnToGameResult :: PColor -> GameResult
-turnToGameResult Black = WhiteWins
-turnToGameResult White = BlackWins

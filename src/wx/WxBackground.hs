@@ -68,4 +68,6 @@ areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
 
 printCmdMsg :: CommandMsg -> IO ()
 printCmdMsg Prompt = return ()
+printCmdMsg (NewSeek _) = return ()
+printCmdMsg (RemoveSeeks _) = return ()
 printCmdMsg cmd = print cmd

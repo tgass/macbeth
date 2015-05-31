@@ -13,7 +13,7 @@ data CommandMsg =   GameMove Move
                   | Games [Game]
                   | Observe Move
 
-                  | StartGame { id :: Int, _move :: Move }
+                  | StartGame Int Move
                   | Challenge { nameW :: String, ratingW :: Rating, nameB :: String, ratingB :: Rating, params :: String}
                   | AcceptChallenge Move
                   | DeclineChallenge
@@ -21,8 +21,8 @@ data CommandMsg =   GameMove Move
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
 
-                  | NewSeek { seek :: Seek }
-                  | RemoveSeeks { ids :: [Int] }
+                  | NewSeek Seek
+                  | RemoveSeeks [Int]
                   | ClearSeek
 
                   | Login

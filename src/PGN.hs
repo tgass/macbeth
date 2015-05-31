@@ -11,6 +11,7 @@ import Data.List
 import System.Directory
 import System.FilePath
 
+--TODO: Saving in different files depending guest or not
 saveAsPGN :: [Move] -> GameResult -> IO ()
 saveAsPGN moves result = do
   rootDir <- getUserDocumentsDirectory

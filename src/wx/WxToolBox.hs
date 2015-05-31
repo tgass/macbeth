@@ -23,7 +23,8 @@ import System.IO
 ficsEventId :: Int
 ficsEventId = wxID_HIGHEST + 51
 
-
+-- TODO: refresh game list every minute
+-- TODO: icons to create seek and match, (remove wxMenu?)
 createToolBox :: Handle -> String -> Chan CommandMsg -> IO ()
 createToolBox h name chan = do
     vCmd <- newEmptyMVar
@@ -45,6 +46,7 @@ createToolBox h name chan = do
                                     , ("Time (start inc.)", AlignRight, -1)
                                     , ("type", AlignRight, -1)]
                                     ]
+    set sl [on listEvent := onSeekListEvent sl h]
 
 
     -- tab2 : console
@@ -90,9 +92,7 @@ createToolBox h name chan = do
           set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ _ r1 n1 r2 n2 _) <- games]]
           set gl [on listEvent := onGamesListEvent games h]
 
-        NewSeek seek -> do
-          itemAppend sl $ toList seek
-          set sl [on listEvent := onSeekListEvent sl h]
+        NewSeek seek -> itemAppend sl $ toList seek
 
         ClearSeek -> itemsDelete sl
 
@@ -104,13 +104,11 @@ createToolBox h name chan = do
 
         TextMessage text -> appendText ct $ text ++ "\n"
 
-        Prompt -> return ()
+        _ -> return ()
 
-        cmd -> appendText ct (show cmd ++ "\n")
 
 findSeekIdx :: [[String]] -> Int -> Maybe Int
 findSeekIdx seeks gameId = elemIndex gameId $ fmap (read . (!! 0)) seeks
-
 
 deleteSeek :: ListCtrl () -> Maybe Int -> IO ()
 deleteSeek sl (Just id) = itemDelete sl id
@@ -132,7 +130,7 @@ onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
 onSeekListEvent sl h eventList = case eventList of
   ListItemActivated idx -> do
     seeks <- get sl items
-    hPutStrLn h $ "4 play " ++ show (read (seeks !! idx !! 0) :: Int)
+    hPutStrLn h $ "4 play " ++ show (read $ seeks !! idx !! 0 :: Int)
   _ -> return ()
 
 

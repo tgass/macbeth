@@ -60,8 +60,8 @@ matchInputs p = WxSeek
   <*> textEntry p [ text := "0"]
   <*> checkBox p []
   <*> choice p [tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
-  <*> textEntry p []
-  <*> textEntry p []
+  <*> textEntry p [ text := "0"]
+  <*> textEntry p [ text := "9999"]
 
 
 -- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide]

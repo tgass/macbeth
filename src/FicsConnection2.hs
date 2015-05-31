@@ -29,18 +29,18 @@ data HelperState = HelperState { gameId' :: Maybe Int }
 
 ficsConnection :: (Handle -> CommandMsg -> IO ()) -> IO Handle
 ficsConnection handler = runResourceT $ do
-                          (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
-                          liftIO $ hSetBuffering hsock LineBuffering
-                          resourceForkIO $ liftIO $ chain handler hsock
-                          return hsock
+  (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
+  liftIO $ hSetBuffering hsock LineBuffering
+  resourceForkIO $ liftIO $ chain handler hsock
+  return hsock
 
 
 chain handler hsock = flip evalStateT (HelperState Nothing) $ transPipe lift
-                                            (CB.sourceHandle hsock) $$
-                                            toCharC =$
-                                            blockC (False, BS.empty) =$
-                                            parseC =$
-                                            stateC =$ sink (handler hsock)
+  (CB.sourceHandle hsock) $$
+  toCharC =$
+  blockC (False, BS.empty) =$
+  parseC =$
+  stateC =$ sink (handler hsock)
 
 
 sink :: (CommandMsg -> IO ()) -> Sink CommandMsg (StateT HelperState IO) ()
@@ -49,13 +49,10 @@ sink handler = awaitForever $ liftIO . handler
 
 stateC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 stateC = awaitForever $ \cmd -> case cmd of
-
                                  ConfirmMove move -> if isCheckmate move then do
-                                          CL.sourceList [ GameMove move
-                                                        -- TODO: function :: Move -> GameResult
-                                                        , (GameResult (Move.gameId move) "checkmate" (turnToGameResult $ turn move))]
-                                          stateC
-                                        else CL.sourceList [GameMove move] >> stateC
+                                                       CL.sourceList [ GameMove move, toGameResult move]
+                                                       stateC
+                                                     else CL.sourceList [GameMove move] >> stateC
                                  newGame@(NewGame id) -> do
                                       state <- lift get
                                       lift $ put (state { gameId' = Just id})
@@ -97,5 +94,13 @@ blockC (block, p) = awaitForever $ \c -> case p of
 
 toCharC :: (Monad m) => Conduit BS.ByteString m Char
 toCharC = awaitForever $ CL.sourceList . BS.unpack
+
+
+toGameResult :: Move -> CommandMsg
+toGameResult move = GameResult (Move.gameId move) (namePlayer colorTurn move ++ " checkmated") (turnToGameResult colorTurn)
+  where
+    colorTurn = turn move
+    turnToGameResult Black = WhiteWins
+    turnToGameResult White = BlackWins
 
 
