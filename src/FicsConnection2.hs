@@ -24,7 +24,7 @@ import qualified Data.Conduit.List as CL
 import Network (connectTo, PortID (..))
 import System.IO
 
-data HelperState = HelperState { seeks :: [Seek], gameId' :: Maybe Int }
+data HelperState = HelperState { gameId' :: Maybe Int }
 
 
 ficsConnection :: (Handle -> CommandMsg -> IO ()) -> IO Handle
@@ -35,7 +35,7 @@ ficsConnection handler = runResourceT $ do
                           return hsock
 
 
-chain handler hsock = flip evalStateT (HelperState [] Nothing) $ transPipe lift
+chain handler hsock = flip evalStateT (HelperState Nothing) $ transPipe lift
                                             (CB.sourceHandle hsock) $$
                                             toCharC =$
                                             blockC (False, BS.empty) =$
@@ -52,7 +52,8 @@ stateC = awaitForever $ \cmd -> case cmd of
 
                                  ConfirmMove move -> if isCheckmate move then do
                                           CL.sourceList [ GameMove move
-                                                      , (GameResult (Move.gameId move) "checkmate" (turnToGameResult $ turn move))]
+                                                        -- TODO: function :: Move -> GameResult
+                                                        , (GameResult (Move.gameId move) "checkmate" (turnToGameResult $ turn move))]
                                           stateC
                                         else CL.sourceList [GameMove move] >> stateC
                                  newGame@(NewGame id) -> do

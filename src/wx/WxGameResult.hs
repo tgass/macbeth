@@ -10,9 +10,8 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
 
-main :: IO ()
-main = do
-  start $ wxGameResult "Foobar checkmated" WhiteWins undefined stdout
+--main :: IO ()
+--main = start $ wxGameResult "Foobar checkmated" WhiteWins undefined stdout
 
 wxGameResult :: String -> GameResult -> Frame () -> Handle -> IO ()
 wxGameResult reason gameResult f_board h = do

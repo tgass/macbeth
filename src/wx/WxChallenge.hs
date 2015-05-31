@@ -15,12 +15,13 @@ import CommandMsg
 --main = start $ wxChallenge undefined (Challenge "foobar" (Rating 1200) "barbaz" Guest "12 2 blitz")
 
 
+--TODO: Create proper Challenge domain type
 wxChallenge :: Handle -> CommandMsg -> IO ()
 wxChallenge h c@(Challenge{}) = do
   f <- frame []
   p <- panel f []
 
-  b_accept  <- button p [text := "Accept", on command := hPutStrLn h "5 accept" >> close f ]
+  b_accept  <- button p [text := "Accept", on command := hPutStrLn h "5 accept" >> close f]
   b_decline <- button p [text := "Decline", on command := hPutStrLn h "5 decline" >> close f]
   b_adjourn <- button p [text := "Adjourn", on command := hPutStrLn h "5 adjourn" >> close f]
   st_params <- staticText p [ text := toString c
