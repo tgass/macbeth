@@ -42,11 +42,11 @@ wxBackground h name chan = do
                           return ()
 
       GameResult id reason result -> do
-                            mMoves <- tryTakeMVar vGameMoves
-                            case mMoves of
-                              Just moves -> do PGN.saveAsPGN (reverse moves) result
-                                               hPutStrLn h "4 iset seekinfo 1"
-                              _ -> return ()
+                            moves <- takeMVar vGameMoves
+                            putMVar vGameMoves []
+                            PGN.saveAsPGN (reverse moves) result
+                            hPutStrLn h "4 iset seekinfo 1"
+
       _ -> return ()
 
 

@@ -8,6 +8,7 @@ import CommandMsg
 import Move
 import qualified PGN as PGN
 import Utils (formatTime)
+import WxGameResult
 import WxUtils
 
 import Control.Concurrent
@@ -64,10 +65,11 @@ createObservedGame h move color chan = do
                                    varSet vClock move'
                                    return ()
 
-      GameResult id _ r -> when (id == Move.gameId move) $ do
+      GameResult id reason result -> when (id == Move.gameId move) $ do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               setInteractive board False
+                              wxGameResult reason result f h
 
       DrawOffered -> when (relation move == MyMove) $ do
                      --TODO: Implement offered draw

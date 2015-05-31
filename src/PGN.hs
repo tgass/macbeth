@@ -14,7 +14,7 @@ import System.FilePath
 saveAsPGN :: [Move] -> GameResult -> IO ()
 saveAsPGN moves result = do
   rootDir <- getUserDocumentsDirectory
-  createDirectory $ rootDir </> "XChess"
+  createDirectoryIfMissing False $ rootDir </> "XChess"
   appendFile (rootDir </> "XChess" </> "games.pgn") $ toPGN moves result
 
 toPGN :: [Move] -> GameResult -> String
