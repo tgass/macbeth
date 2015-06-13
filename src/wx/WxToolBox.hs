@@ -8,7 +8,8 @@ import Api
 import CommandMsg
 import Game
 import Seek
-import WxMenu
+import WxMatch
+import WxSeek
 import WxUtils
 
 import Control.Concurrent
@@ -24,14 +25,14 @@ ficsEventId :: Int
 ficsEventId = wxID_HIGHEST + 51
 
 -- TODO: refresh game list every minute
--- TODO: icons to create seek and match, (remove wxMenu?)
+-- TODO: 'about' menu item
 createToolBox :: Handle -> String -> Chan CommandMsg -> IO ()
 createToolBox h name chan = do
     vCmd <- newEmptyMVar
 
     -- main frame
     f  <- frame []
-    menu <- wxMenu h
+    --menu <- wxMenu h
     status <- statusField [text := "Logged in as " ++ name]
 
     -- right panel
@@ -47,6 +48,12 @@ createToolBox h name chan = do
                                     , ("type", AlignRight, -1)]
                                     ]
     set sl [on listEvent := onSeekListEvent sl h]
+    listCtrlSetColumnWidths sl 100
+
+    -- toolbar
+    tbar   <- toolBar f []
+    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/Seek.png" [ on command := wxSeek h ]
+    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/Match.png" [ on command := wxMatch h ]
 
 
     -- tab2 : console
@@ -66,7 +73,7 @@ createToolBox h name chan = do
                                     ]
                         ]
 
-    set f [ layout := minsize (Size 400 600) $ (container right $
+    set f [ layout := (container right $
                          column 0
                          [ tabs nb
                             [ tab "Sought" $ container slp $ fill $ widget sl
@@ -77,7 +84,6 @@ createToolBox h name chan = do
                             ]
                          ]
                      )
-          , menuBar := [menu]
           , statusBar := [status]
           ]
 

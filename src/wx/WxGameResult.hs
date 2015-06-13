@@ -13,6 +13,7 @@ import System.IO
 --main :: IO ()
 --main = start $ wxGameResult "Foobar checkmated" WhiteWins undefined stdout
 
+--TODO: no rematch if observing
 wxGameResult :: String -> GameResult -> Frame () -> Handle -> IO ()
 wxGameResult reason gameResult f_board h = do
   f <- frame [ text := "Game finished" ]

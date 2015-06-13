@@ -11,7 +11,6 @@ import Graphics.UI.WXCore
 import CommandMsg
 import WxBackground
 import WxToolBox
-import WxMenu
 
 
 wxLogin :: Handle -> Chan CommandMsg -> IO ()
