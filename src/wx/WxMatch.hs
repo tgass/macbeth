@@ -11,20 +11,20 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore (windowShow)
 import System.IO (Handle, hPutStrLn, stdout)
 
-main = start $ wxMatch stdout
+main = start $ wxMatch stdout False
 
-wxMatch :: Handle -> IO ()
-wxMatch h = do
-  f <- frame []
+wxMatch :: Handle -> Bool -> IO ()
+wxMatch h isGuest = do
+  f <- frameFixed [ text := "Create a match" ]
   p <- panel f []
-  match <- matchInputs p
+  match <- matchInputs p isGuest
 
   b_ok  <- button p [text := "Match", on command := toString match >>= hPutStrLn h >> close f ]
   b_can <- button p [text := "Cancel", on command := close f]
 
   set f [ defaultButton := b_ok
         , layout := container p $ margin 10 $
-            column 10 [ boxed "Create new match" (
+            column 10 [ boxed "" (
               grid 15 15 [
                 [ label "Player name:", hfill $ widget $ name match]
                ,[ label "Rated:", hfill $ widget $ rated match]
@@ -38,12 +38,12 @@ wxMatch h = do
   return ()
 
 
-matchInputs :: Panel () -> IO WxMatch
-matchInputs p = WxMatch
-  <$> textEntry p []
-  <*> textEntry p [ text := "5"]
-  <*> textEntry p [ text := "0"]
-  <*> checkBox p []
+matchInputs :: Panel () -> Bool -> IO WxMatch
+matchInputs p isGuest = WxMatch
+  <$> textEntry p [ ]
+  <*> textEntry p [ text := "5" ]
+  <*> textEntry p [ text := "0" ]
+  <*> checkBox p [ enabled := (not isGuest) ]
   <*> choice p [tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
 
 

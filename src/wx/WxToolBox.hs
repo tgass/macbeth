@@ -52,7 +52,7 @@ createToolBox h name isGuest chan = do
     -- toolbar
     tbar   <- toolBar f []
     toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/Seek.png" [ on command := wxSeek h isGuest ]
-    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/Match.png" [ on command := wxMatch h ]
+    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/Match.png" [ on command := wxMatch h isGuest ]
 
 
     -- tab2 : console
@@ -71,6 +71,7 @@ createToolBox h name isGuest chan = do
                                     , ("rating", AlignLeft, -1)
                                     ]
                         ]
+    listCtrlSetColumnWidths gl 100
 
     set f [ layout := (container right $
                          column 0

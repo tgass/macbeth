@@ -15,7 +15,7 @@ import WxToolBox
 
 wxLogin :: Handle -> Chan CommandMsg -> IO ()
 wxLogin h chan = do
-  f <- frame []
+  f <- frameFixed [ text := "Login to freechess.org" ]
   p <- panel f []
 
   e_name <- textEntry p [ text := "guest", alignment := AlignRight]
@@ -26,7 +26,7 @@ wxLogin h chan = do
 
   set f [ defaultButton := b_ok
         , layout := container p $ margin 10 $
-            column 10 [boxed "Login to freechess.org" (
+            column 10 [boxed "" (
               grid 15 15 [
                 [ label "Username:", hfill $ widget e_name]
                ,[ label "Password:", hfill $ widget e_pw]]
