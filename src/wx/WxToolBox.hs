@@ -26,6 +26,7 @@ ficsEventId :: Int
 ficsEventId = wxID_HIGHEST + 51
 
 -- TODO: refresh game list every minute
+-- TODO: filter sought list (blitz, standard only)
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
