@@ -26,13 +26,12 @@ ficsEventId = wxID_HIGHEST + 51
 
 -- TODO: refresh game list every minute
 -- TODO: 'about' menu item
-createToolBox :: Handle -> String -> Chan CommandMsg -> IO ()
-createToolBox h name chan = do
+createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
+createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
 
     -- main frame
     f  <- frame []
-    --menu <- wxMenu h
     status <- statusField [text := "Logged in as " ++ name]
 
     -- right panel
@@ -52,7 +51,7 @@ createToolBox h name chan = do
 
     -- toolbar
     tbar   <- toolBar f []
-    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/Seek.png" [ on command := wxSeek h ]
+    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/Seek.png" [ on command := wxSeek h isGuest ]
     toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/Match.png" [ on command := wxMatch h ]
 
 
@@ -83,7 +82,7 @@ createToolBox h name chan = do
                                                         , expand $ hstretch $ widget ce])
                             ]
                          ]
-                     )
+            )
           , statusBar := [status]
           ]
 

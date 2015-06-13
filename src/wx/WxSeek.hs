@@ -7,25 +7,24 @@ import Control.Applicative
 import Data.Char (toLower)
 import Data.List (intersperse)
 import Graphics.UI.WX
-import Graphics.UI.WXCore (windowShow)
+import Graphics.UI.WXCore
 import System.IO (Handle, hPutStrLn, stdout)
 
-main = start $ wxSeek stdout
+main = start $ wxSeek stdout True
 
 
---TODO: always unrated if logged in as guest
-wxSeek :: Handle -> IO ()
-wxSeek h = do
-  f <- frame []
+wxSeek :: Handle -> Bool -> IO ()
+wxSeek h isGuest = do
+  f <- frameFixed [ text := "Seek a match" ]
   p <- panel f []
-  match <- matchInputs p
+  match <- matchInputs p isGuest
 
   b_ok  <- button p [text := "Create", on command := toString match >>= hPutStrLn h >> close f ]
   b_can <- button p [text := "Cancel", on command := close f]
 
   set f [ defaultButton := b_ok
         , layout := container p $ margin 10 $
-            column 10 [boxed "Create new seek" (
+            column 10 [boxed "" (
               grid 15 15 [
                 [ label "Time [min.]:", hfill $ widget $ time match, label "Inc [sec.]:", hfill $ widget $ inc match]
               , [ label "Rated:", hfill $ widget $ rated match, label "Color:", hfill $ widget $ WxSeek.color match]
@@ -54,11 +53,11 @@ toString m = (("4 seek " ++) . concat . intersperse " ") `fmap` sequence [
              | otherwise = from ++ "-" ++ to
 
 
-matchInputs :: Panel () -> IO WxSeek
-matchInputs p = WxSeek
+matchInputs :: Panel () -> Bool -> IO WxSeek
+matchInputs p isGuest = WxSeek
   <$> textEntry p [ text := "5"]
   <*> textEntry p [ text := "0"]
-  <*> checkBox p []
+  <*> checkBox p [ enabled := (not isGuest) ]
   <*> choice p [tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
   <*> textEntry p [ text := "0"]
   <*> textEntry p [ text := "9999"]
