@@ -8,6 +8,7 @@ import Api
 import CommandMsg
 import Game
 import Seek
+import WxAbout
 import WxMatch
 import WxSeek
 import WxUtils
@@ -25,7 +26,6 @@ ficsEventId :: Int
 ficsEventId = wxID_HIGHEST + 51
 
 -- TODO: refresh game list every minute
--- TODO: 'about' menu item
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
@@ -51,8 +51,8 @@ createToolBox h name isGuest chan = do
 
     -- toolbar
     tbar   <- toolBar f []
-    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/Seek.png" [ on command := wxSeek h isGuest ]
-    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/Match.png" [ on command := wxMatch h isGuest ]
+    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/volume-up.png" [ on command := wxSeek h isGuest ]
+    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/dot-circle-o.png" [ on command := wxMatch h isGuest ]
 
 
     -- tab2 : console
@@ -73,6 +73,10 @@ createToolBox h name isGuest chan = do
                         ]
     listCtrlSetColumnWidths gl 100
 
+    -- about menu
+    m_help    <- menuHelp      []
+    m_about  <- menuAbout m_help [help := "About XChess", on command := wxAbout ]
+
     set f [ layout := (container right $
                          column 0
                          [ tabs nb
@@ -84,6 +88,7 @@ createToolBox h name isGuest chan = do
                             ]
                          ]
             )
+          , menuBar := [m_help]
           , statusBar := [status]
           ]
 
