@@ -52,7 +52,7 @@ createToolBox h name isGuest chan = do
 
     -- toolbar
     tbar   <- toolBar f []
-    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/volume-up.png" [ on command := wxSeek h isGuest ]
+    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/bullhorn.png" [ on command := wxSeek h isGuest ]
     toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/dot-circle-o.png" [ on command := wxMatch h isGuest ]
 
 

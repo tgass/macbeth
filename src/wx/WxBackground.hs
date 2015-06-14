@@ -18,6 +18,7 @@ import Graphics.UI.WXCore
 
 eventId = wxID_HIGHEST + 71
 
+-- TODO: handling changing/ multiple challenges
 wxBackground :: Handle -> String -> Chan CommandMsg -> IO ()
 wxBackground h name chan = do
   vCmd <- newEmptyMVar

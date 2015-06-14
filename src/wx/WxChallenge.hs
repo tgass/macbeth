@@ -16,6 +16,7 @@ import CommandMsg
 
 
 --TODO: Create proper Challenge domain type
+-- TODO: handling changing/ multiple challenges. Close if new challenge from same player arrives
 wxChallenge :: Handle -> CommandMsg -> IO ()
 wxChallenge h c@(Challenge{}) = do
   f <- frame []
