@@ -13,7 +13,7 @@ import System.IO
 --main :: IO ()
 --main = start $ wxGameResult "Foobar checkmated" WhiteWins undefined stdout
 
-
+--TODO: Handle onclosing window, that Window might already be closed
 wxGameResult :: String -> GameResult -> Bool -> Frame () -> Handle -> IO ()
 wxGameResult reason gameResult isObserving f_board h = do
   f <- frame [ text := "Game finished" ]
