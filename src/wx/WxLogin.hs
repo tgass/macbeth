@@ -38,24 +38,23 @@ wxLogin h chan = do
         ]
 
 
---TODO: handling von guest logins / unknown usernames verbessern
 okBtnHandler :: TextCtrl() -> TextCtrl() -> StatusField -> Frame() -> Handle -> Chan CommandMsg -> IO ()
 okBtnHandler e_name e_pw status f h chan = do
   name <- get e_name text
   pw <- get e_pw text
-  loop name pw
+  loop name pw False
   where
-    loop name pw = do
+    loop name pw isGuest = do
        cmd <- readChan chan
        case cmd of
-         Login -> hPutStrLn h name >> loop name pw
-         Password -> hPutStrLn h pw >> loop name pw
+         Login -> hPutStrLn h name >> loop name pw isGuest
+         Password -> hPutStrLn h pw >> loop name pw isGuest
          LoggedIn name' -> hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
                            close f >>
-                           dupChan chan >>= createToolBox h name' (name == "guest") >>
+                           dupChan chan >>= createToolBox h name' isGuest >>
                            dupChan chan >>= wxBackground h name'
          InvalidPassword  -> set status [text := "Invalid password"] >> return ()
-         UnkownUsername _ -> hPutStrLn h name >> loop name pw
-         GuestLogin _     -> hPutStrLn h "" >> loop name pw
-         _                -> loop name pw
+         UnkownUsername _ -> hPutStrLn h name >> loop name pw isGuest
+         GuestLogin _     -> hPutStrLn h "" >> loop name pw True
+         _                -> loop name pw isGuest
 
