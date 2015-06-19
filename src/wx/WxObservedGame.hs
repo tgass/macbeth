@@ -8,7 +8,6 @@ import CommandMsg
 import Move
 import qualified PGN as PGN
 import Utils (formatTime)
-import WxGameResult
 import WxUtils
 
 import Control.Concurrent
@@ -31,6 +30,9 @@ createObservedGame h move color chan = do
   board <- createBoard h p_back (Move.position move) color (relation move == MyMove)
   vClock <- variable [ value := move ]
 
+  -- status line
+  status <- statusField []
+
   -- panels
   let p_board = _panel board
   (p_white, t_white) <- createStatusPanel p_back vClock White
@@ -51,7 +53,8 @@ createObservedGame h move color chan = do
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
   -- layout
-  set p_back [layout := layoutBoardF color]
+  set p_back [ layout := layoutBoardF color ]
+  set f [ statusBar := [status]]
   refit p_back
 
 
@@ -70,7 +73,7 @@ createObservedGame h move color chan = do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               setInteractive board False
-                              wxGameResult reason result (relation move == Observing) f h
+                              set status [text := (show result ++ ": " ++ reason)]
 
       DrawOffered -> when (relation move == MyMove) $ do
                      --TODO: Implement offered draw
