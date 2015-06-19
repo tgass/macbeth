@@ -41,8 +41,8 @@ remainingTime White = remainingTimeW
 
 
 decreaseRemainingTime :: Api.PColor -> Move -> Move
-decreaseRemainingTime Black move = move {remainingTimeB = remainingTimeB move - 1}
-decreaseRemainingTime White move = move {remainingTimeW = remainingTimeW move - 1}
+decreaseRemainingTime Black move = move {remainingTimeB = max 0 $ remainingTimeB move - 1}
+decreaseRemainingTime White move = move {remainingTimeW = max 0 $ remainingTimeW move - 1}
 
 
 namePlayer :: Api.PColor -> Move -> String

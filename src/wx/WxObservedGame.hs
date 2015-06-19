@@ -20,7 +20,7 @@ import System.IO
 
 eventId = wxID_HIGHEST + 53
 
---TODO: Spielzeit darf nicht negativ werden
+
 createObservedGame :: Handle -> Move -> Api.PColor -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
