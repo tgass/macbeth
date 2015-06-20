@@ -30,7 +30,7 @@ parseCommandMsg = parseOnly parser where
 
                   , newGame
                   , creatingGame
-                  , challenge
+                  , matchRequested
                   , matchUpdated
                   , declinedChallenge
                   , drawOffered
@@ -63,16 +63,11 @@ games = Games <$> (commandHead 43 *> paresGamesList)
 observe :: Parser CommandMsg
 observe = Observe <$> (commandHead 80 *> move)
 
-
-{- *** Moves *** -}
 confirmGameMove :: Parser CommandMsg
 confirmGameMove = ConfirmMove <$> (commandHead 1 *> move)
 
 gameMove :: Parser CommandMsg
 gameMove = GameMove <$> move
-
-
-{- *** Match/Challenge ***-}
 
 -- Game 214 (GuestPPFS vs. GuestDSRY) Creating unrated blitz match.}
 newGame :: Parser CommandMsg
@@ -95,8 +90,8 @@ creatingGame = CreatingGame <$> (GameInfo
   <*> (manyTill anyChar space)
   <*> ("(" *> Utils.rating <* takeTill (== '\n')))
 
-challenge :: Parser CommandMsg
-challenge = MatchRequested <$> (Challenge
+matchRequested :: Parser CommandMsg
+matchRequested = MatchRequested <$> (Challenge
   <$> ("Challenge: " *> manyTill anyChar space)
   <*> ("(" *> Utils.rating)
   <*> (") " *> manyTill anyChar space)
@@ -107,11 +102,11 @@ matchUpdated :: Parser CommandMsg
 matchUpdated = MatchUpdated <$> (manyTill anyChar space) <* "updates the match request."
 
 accept :: Parser CommandMsg
-accept = AcceptChallenge <$> (commandHead 11 *> move)
+accept = MatchAccepted <$> (commandHead 11 *> move)
 
 --TODO Implement UX for DeclineChallenge
 declinedChallenge :: Parser CommandMsg
-declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure DeclineChallenge
+declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure MatchDeclined
 
 --TODO Adjourns challenge
 
@@ -142,8 +137,6 @@ gameResult' = GameResult
   <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
 
-
-{- *** LOGIN *** -}
 login :: Parser CommandMsg
 login = "login: " *> pure Login
 
@@ -175,7 +168,6 @@ settingsDone = char (chr 23) *> pure SettingsDone
 
 
 {- HELPER -}
-
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
   char $ chr 21
@@ -198,7 +190,7 @@ playMsg = BS.pack "Creating: GuestCCFP (++++) GuestGVJK (++++) unrated blitz 0 2
 obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
 guestLoginTxt = BS.pack "Press return to enter the server as \"FOOBAR\":"
 
-challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
+matchRequested' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
 matchUpdated' = BS.pack "GuestQGGQ updates the match request."
 gameResult'''' = BS.pack  "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
 gameResult'' = BS.pack "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done."

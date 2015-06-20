@@ -17,11 +17,10 @@ data CommandMsg =   GameMove Move
                   | StartGame Int Move
                   | MatchRequested Challenge
                   | MatchUpdated String
-                  | AcceptChallenge Move
-                  | DeclineChallenge
+                  | MatchAccepted Move
+                  | MatchDeclined
                   | DrawOffered
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
-
 
                   | NewSeek Seek
                   | RemoveSeeks [Int]

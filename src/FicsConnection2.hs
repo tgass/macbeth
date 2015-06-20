@@ -66,15 +66,16 @@ stateC = awaitForever $ \cmd -> case cmd of
                                                                  otherwise -> yield move''
                                                              else yield move''
 
-                                  Boxed bs -> CL.sourceList bs
-
                                   otherwise -> yield cmd
 
 
 parseC :: Conduit BS.ByteString (StateT HelperState IO) CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
                                   Left _    -> yield $ TextMessage $ BS.unpack str
-                                  Right cmd -> yield cmd
+                                  Right cmd -> case cmd of
+                                    -- ! muss vor dem nächsten Schritt ausgepackt werden
+                                    (Boxed cmdx) -> CL.sourceList cmdx
+                                    otherwise -> yield cmd
 
 
 blockC :: (Bool, BS.ByteString) -> Conduit Char (StateT HelperState IO) BS.ByteString

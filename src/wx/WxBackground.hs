@@ -33,7 +33,7 @@ wxBackground h name chan = do
 
       StartGame id move -> dupChan chan >>= createObservedGame h move (playerColor name move)
 
-      AcceptChallenge move -> dupChan chan >>= createObservedGame h move (playerColor name move)
+      MatchAccepted move -> dupChan chan >>= createObservedGame h move (playerColor name move)
 
       MatchRequested c -> dupChan chan >>= wxChallenge h c
 
