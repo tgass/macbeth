@@ -10,7 +10,7 @@ import Api
 import Rating
 
 data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
-                 Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show)
+                 Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show, Eq)
 
 data Game = Game {
     id :: Int

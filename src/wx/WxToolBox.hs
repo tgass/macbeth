@@ -15,8 +15,8 @@ import WxUtils
 
 import Control.Concurrent
 import Control.Concurrent.Chan
-import Control.Monad
-import Data.List
+import qualified Control.Monad as M (when)
+import Data.List (elemIndex)
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
@@ -26,7 +26,6 @@ ficsEventId :: Int
 ficsEventId = wxID_HIGHEST + 51
 
 -- TODO: refresh game list every minute
--- TODO: filter sought list (blitz, standard only)
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
@@ -104,7 +103,8 @@ createToolBox h name isGuest chan = do
           set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ _ r1 n1 r2 n2 _) <- games]]
           set gl [on listEvent := onGamesListEvent games h]
 
-        NewSeek seek -> itemAppend sl $ toList seek
+        NewSeek seek -> M.when (Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
+                               itemAppend sl $ toList seek
 
         ClearSeek -> itemsDelete sl
 
