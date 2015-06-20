@@ -20,7 +20,8 @@ import System.IO
 
 eventId = wxID_HIGHEST + 53
 
-
+-- TODO: Seek auto match
+-- TODO: forfeits on time doesn't stop game ?!
 createObservedGame :: Handle -> Move -> Api.PColor -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
