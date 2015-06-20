@@ -3,29 +3,26 @@ module WxChallenge (
 ) where
 
 import Api
+import Challenge
+import CommandMsg
+
 import System.IO (Handle, hPutStrLn)
 import Control.Concurrent.Chan
 import Control.Concurrent.MVar
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 
-import CommandMsg
 
-
---main = start $ wxChallenge undefined (Challenge "foobar" (Rating 1200) "barbaz" Guest "12 2 blitz")
-
-
---TODO: Create proper Challenge domain type
 -- TODO: handling changing/ multiple challenges. Close if new challenge from same player arrives
-wxChallenge :: Handle -> CommandMsg -> IO ()
-wxChallenge h c@(Challenge{}) = do
+wxChallenge :: Handle -> Challenge -> IO ()
+wxChallenge h c = do
   f <- frame []
   p <- panel f []
 
   b_accept  <- button p [text := "Accept", on command := hPutStrLn h "5 accept" >> close f]
   b_decline <- button p [text := "Decline", on command := hPutStrLn h "5 decline" >> close f]
   b_adjourn <- button p [text := "Adjourn", on command := hPutStrLn h "5 adjourn" >> close f]
-  st_params <- staticText p [ text := toString c
+  st_params <- staticText p [ text := displayChallenge c
                             , fontFace := "Avenir Next Medium"
                             , fontSize := 16
                             , fontWeight := WeightBold]
@@ -43,8 +40,5 @@ wxChallenge h c@(Challenge{}) = do
   windowOnDestroy f $ hPutStrLn h "5 adjourn"
   return ()
 
-wxChallenge h _ = return ()
 
-toString (Challenge n1 r1 n2 r2 params) = n1 ++ " " ++ show r1 ++ " vs. " ++ n2 ++ " (" ++ show r2 ++ ") " ++ params
-toString _ = ""
-
+--main = start $ wxChallenge undefined (Challenge "foobar" (Rating 1200) "barbaz" Guest "12 2 blitz")

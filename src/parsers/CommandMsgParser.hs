@@ -5,6 +5,7 @@ module CommandMsgParser (
 ) where
 
 import Api
+import Challenge
 import CommandMsg
 import Game
 import GamesParser
@@ -94,12 +95,12 @@ creatingGame = CreatingGame <$> (GameInfo
   <*> ("(" *> Utils.rating <* takeTill (== '\n')))
 
 challenge :: Parser CommandMsg
-challenge = Challenge
+challenge = MatchRequested <$> (Challenge
   <$> ("Challenge: " *> manyTill anyChar space)
   <*> ("(" *> Utils.rating)
   <*> (") " *> manyTill anyChar space)
   <*> ("(" *> Utils.rating)
-  <*> (") " *> manyTill anyChar ".") --unrated blitz 2 12."
+  <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
 
 accept :: Parser CommandMsg
 accept = AcceptChallenge <$> (commandHead 11 *> move)
@@ -193,6 +194,7 @@ obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRoman
 guestLoginTxt = BS.pack "Press return to enter the server as \"FOOBAR\":"
 
 challenge' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
+updateChallenge' = BS.pack "GuestQGGQ updates the match request."
 gameResult'''' = BS.pack  "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
 gameResult'' = BS.pack "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done."
 gameResult''' = BS.pack "{Game 181 (Danimateit vs. WhatKnight) Danimateit forfeits on time} 0-1"

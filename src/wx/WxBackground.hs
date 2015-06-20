@@ -36,7 +36,7 @@ wxBackground h name chan = do
 
       AcceptChallenge move -> dupChan chan >>= createObservedGame h move (playerColor name move)
 
-      c@(Challenge {}) -> wxChallenge h c
+      MatchRequested c -> wxChallenge h c
 
       GameMove move' -> when (relation move' == MyMove || relation move' == OponentsMove) $ do
                           modifyMVar_ vGameMoves (\mx -> return $ addMove move' mx)

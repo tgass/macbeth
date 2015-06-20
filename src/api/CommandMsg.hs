@@ -4,6 +4,7 @@ module CommandMsg (
 ) where
 
 import Api
+import Challenge
 import Game
 import Move
 import Rating
@@ -14,7 +15,7 @@ data CommandMsg =   GameMove Move
                   | Observe Move
 
                   | StartGame Int Move
-                  | Challenge { nameW :: String, ratingW :: Rating, nameB :: String, ratingB :: Rating, params :: String}
+                  | MatchRequested Challenge
                   | AcceptChallenge Move
                   | DeclineChallenge
                   | DrawOffered
