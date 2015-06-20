@@ -22,6 +22,7 @@ eventId = wxID_HIGHEST + 53
 
 -- TODO: Seek auto match
 -- TODO: forfeits on time doesn't stop game ?!
+-- TODO: Implement offered draw
 createObservedGame :: Handle -> Move -> Api.PColor -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
@@ -76,9 +77,7 @@ createObservedGame h move color chan = do
                               setInteractive board False
                               set status [text := (show result ++ ": " ++ reason)]
 
-      DrawOffered -> when (relation move == MyMove) $ do
-                     --TODO: Implement offered draw
-                     return ()
+      DrawOffered -> when (relation move == MyMove) $ return ()
 
       _ -> return ()
 

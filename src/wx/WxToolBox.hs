@@ -21,11 +21,8 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
 
-
-ficsEventId :: Int
 ficsEventId = wxID_HIGHEST + 51
 
--- TODO: refresh game list every minute
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
@@ -54,6 +51,9 @@ createToolBox h name isGuest chan = do
     toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/bullhorn.png" [ on command := wxSeek h isGuest ]
     toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/dot-circle-o.png" [ on command := wxMatch h isGuest ]
 
+
+    -- timer: refresh games list
+    t <- timer f [interval := 60000, on command := hPutStrLn h "4 games" ]
 
     -- tab2 : console
     cp <- panel nb []
