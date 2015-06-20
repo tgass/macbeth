@@ -43,7 +43,8 @@ chain handler hsock = flip evalStateT (HelperState Nothing) $ transPipe lift
   toCharC =$
   blockC (False, BS.empty) =$
   parseC =$
-  stateC =$ sink (handler hsock)
+  stateC =$
+  sink (handler hsock)
 
 
 sink :: (CommandMsg -> IO ()) -> Sink CommandMsg (StateT HelperState IO) ()
@@ -52,36 +53,30 @@ sink handler = awaitForever $ liftIO . handler
 
 stateC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 stateC = awaitForever $ \cmd -> case cmd of
-                                 ConfirmMove move -> if isCheckmate move then do
-                                                       CL.sourceList [ GameMove move, toGameResult move]
-                                                       stateC
-                                                     else CL.sourceList [GameMove move] >> stateC
-                                 newGame@(NewGame id) -> do
-                                      state <- lift get
-                                      lift $ put (state { gameId' = Just id})
-                                      yield newGame
-                                      stateC
-                                 m@(GameMove move') -> if (isPlayersNewGame move') then do
-                                                         state <- lift get
-                                                         case (StartGame <$> (gameId' state) <*> (pure move')) of
-                                                           (Just startGame) -> do
-                                                                     lift $ put (state {gameId' = Nothing})
-                                                                     yield startGame
-                                                                     stateC
-                                                           _        -> yield m >> stateC
-                                                       else yield m >> stateC
+                                  ConfirmMove move -> CL.sourceList $ [GameMove move] ++ (if (isCheckmate move) then [toGameResult move] else [])
 
-                                 _ -> yield cmd >> stateC
+                                  g@(NewGame id) -> lift $ modify (\state -> state { gameId' = Just id})
+
+                                  move''@(GameMove move') -> if (isPlayersNewGame move') then do
+                                                               state <- lift get
+                                                               case gameId' state of
+                                                                 (Just id) -> do
+                                                                   lift $ put (state {gameId' = Nothing})
+                                                                   yield (StartGame id move')
+                                                                 otherwise -> yield move''
+                                                             else yield move''
+
+                                  Boxed bs -> CL.sourceList bs
+
+                                  otherwise -> yield cmd
 
 
 parseC :: Conduit BS.ByteString (StateT HelperState IO) CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
-                                  Left _    -> yield (TextMessage $ BS.unpack str) >> parseC
-                                  Right msg -> case msg of
-                                                Boxed bs -> CL.sourceList bs >> parseC
-                                                _ -> yield msg >> parseC
+                                  Left _    -> yield $ TextMessage $ BS.unpack str
+                                  Right cmd -> yield cmd
 
-g
+
 blockC :: (Bool, BS.ByteString) -> Conduit Char (StateT HelperState IO) BS.ByteString
 blockC (block, p) = awaitForever $ \c -> do
                                     liftIO $ logger c
@@ -107,6 +102,7 @@ toGameResult move = GameResult (Move.gameId move) (namePlayer colorTurn move ++ 
     colorTurn = turn move
     turnToGameResult Black = WhiteWins
     turnToGameResult White = BlackWins
+
 
 logger :: Char -> IO ()
 logger c = do
