@@ -22,6 +22,9 @@ import Data.Conduit
 import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.List as CL
 import Network (connectTo, PortID (..))
+
+import System.Directory
+import System.FilePath
 import System.IO
 
 data HelperState = HelperState { gameId' :: Maybe Int }
@@ -71,16 +74,18 @@ stateC = awaitForever $ \cmd -> case cmd of
                                  _ -> yield cmd >> stateC
 
 
-parseC :: (Monad m) => Conduit BS.ByteString m CommandMsg
+parseC :: Conduit BS.ByteString (StateT HelperState IO) CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
                                   Left _    -> yield (TextMessage $ BS.unpack str) >> parseC
                                   Right msg -> case msg of
                                                 Boxed bs -> CL.sourceList bs >> parseC
                                                 _ -> yield msg >> parseC
 
-
-blockC :: (Monad m) =>  (Bool, BS.ByteString) -> Conduit Char m BS.ByteString
-blockC (block, p) = awaitForever $ \c -> case p of
+g
+blockC :: (Bool, BS.ByteString) -> Conduit Char (StateT HelperState IO) BS.ByteString
+blockC (block, p) = awaitForever $ \c -> do
+                                    liftIO $ logger c
+                                    case p of
                                       "login:" -> yield "login: " >> blockC (False, BS.empty)
                                       "password:" -> yield "password: " >> blockC (False, BS.empty)
                                       _ -> case ord c of
@@ -103,4 +108,9 @@ toGameResult move = GameResult (Move.gameId move) (namePlayer colorTurn move ++ 
     turnToGameResult Black = WhiteWins
     turnToGameResult White = BlackWins
 
+logger :: Char -> IO ()
+logger c = do
+  rootDir <- getUserDocumentsDirectory
+  createDirectoryIfMissing False $ rootDir </> "XChess"
+  appendFile (rootDir </> "XChess" </> "xchess.log") [c]
 
