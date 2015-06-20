@@ -5,17 +5,22 @@ module WxChallenge (
 import Api
 import Challenge
 import CommandMsg
+import WxUtils (eventLoop)
 
-import System.IO (Handle, hPutStrLn)
+import Control.Concurrent
 import Control.Concurrent.Chan
 import Control.Concurrent.MVar
 import Graphics.UI.WX
 import Graphics.UI.WXCore
+import System.IO
 
+eventId = wxID_HIGHEST + 97
 
--- TODO: handling changing/ multiple challenges. Close if new challenge from same player arrives
-wxChallenge :: Handle -> Challenge -> IO ()
-wxChallenge h c = do
+-- TODO: UX: show that challenge was an update
+wxChallenge :: Handle -> Challenge -> Chan CommandMsg  -> IO ()
+wxChallenge h c chan = do
+  vCmd <- newEmptyMVar
+
   f <- frame []
   p <- panel f []
 
@@ -36,9 +41,22 @@ wxChallenge h c = do
             , floatBottomRight $ row 5 [widget b_accept, widget b_decline, widget b_adjourn]]
         ]
 
+  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
+    case cmd of
+
+      MatchUpdated playerName -> when (isUpdate playerName c) $ close f
+
+      _ -> return ()
+
+
   windowShow f
-  windowOnDestroy f $ hPutStrLn h "5 adjourn"
+  threadId <- forkIO $ eventLoop eventId chan vCmd f
+  windowOnDestroy f $ killThread threadId >> hPutStrLn h "5 adjourn"
   return ()
+
+
+isUpdate :: String -> Challenge -> Bool
+isUpdate playerName c = nameW c == playerName || nameB c == playerName
 
 
 --main = start $ wxChallenge undefined (Challenge "foobar" (Rating 1200) "barbaz" Guest "12 2 blitz")

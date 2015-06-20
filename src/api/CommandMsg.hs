@@ -16,6 +16,7 @@ data CommandMsg =   GameMove Move
 
                   | StartGame Int Move
                   | MatchRequested Challenge
+                  | MatchUpdated String
                   | AcceptChallenge Move
                   | DeclineChallenge
                   | DrawOffered

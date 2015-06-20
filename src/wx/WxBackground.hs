@@ -18,7 +18,6 @@ import Graphics.UI.WXCore
 
 eventId = wxID_HIGHEST + 71
 
--- TODO: handling changing/ multiple challenges
 wxBackground :: Handle -> String -> Chan CommandMsg -> IO ()
 wxBackground h name chan = do
   vCmd <- newEmptyMVar
@@ -36,7 +35,7 @@ wxBackground h name chan = do
 
       AcceptChallenge move -> dupChan chan >>= createObservedGame h move (playerColor name move)
 
-      MatchRequested c -> wxChallenge h c
+      MatchRequested c -> dupChan chan >>= wxChallenge h c
 
       GameMove move' -> when (relation move' == MyMove || relation move' == OponentsMove) $ do
                           modifyMVar_ vGameMoves (\mx -> return $ addMove move' mx)
