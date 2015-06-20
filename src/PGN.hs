@@ -8,28 +8,30 @@ import Game
 
 import Data.Maybe
 import Data.List
+import Data.Time
 import System.Directory
 import System.FilePath
 
---TODO: Saving in different files depending guest or not
-saveAsPGN :: [Move] -> GameResult -> IO ()
-saveAsPGN moves result = do
+
+saveAsPGN :: [Move] -> String -> GameResult -> IO ()
+saveAsPGN moves playerName result = do
   rootDir <- getUserDocumentsDirectory
   createDirectoryIfMissing False $ rootDir </> "XChess"
-  appendFile (rootDir </> "XChess" </> "games.pgn") $ toPGN moves result
+  date <- fmap (formatDate . toGregorian . utctDay) getCurrentTime
+  appendFile (rootDir </> "XChess" </> (playerName ++ ".pgn")) $ toPGN moves result date
 
-toPGN :: [Move] -> GameResult -> String
-toPGN [] _ = ""
-toPGN moves@(m:mx) result = tagsSection m ++ "\n\n" ++ moveSection moves ++ " " ++ (show result) ++ "\n\n"
+toPGN :: [Move] -> GameResult -> String -> String
+toPGN [] _ _ = ""
+toPGN moves@(m:mx) result date = tagsSection m date ++ "\n\n" ++ moveSection moves ++ " " ++ (show result) ++ "\n\n"
 
 moveSection :: [Move] -> String
 moveSection = unwords . fmap (toString . toSAN) . filter realMove
 
-tagsSection :: Move -> String
-tagsSection m =
+tagsSection :: Move -> String -> String
+tagsSection m date =
   "[event \"?\"]\n\
   \[site \"?\"]\n\
-  \[date \"?\"]\n\
+  \[date \"" ++ date ++ "\"]\n\
   \[Round \"?\"]\n\
   \[White \"" ++ Move.nameW m ++ "\"]\n\
   \[Black \"" ++ Move.nameB m ++ "\"]\n\
@@ -38,6 +40,9 @@ tagsSection m =
   \[WhiteElo \"?\"]\n\
   \[ECO \"?\"]\n\
   \[TimeControl \"?\"]"
+
+formatDate :: (Integer, Int, Int) -> String
+formatDate (year, month, day) = show year ++ "." ++ show month ++ "." ++ show day
 
 realMove :: Move -> Bool
 realMove m = isJust $ movePretty m
