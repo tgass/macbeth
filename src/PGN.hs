@@ -29,9 +29,9 @@ moveSection = unwords . fmap (toString . toSAN) . filter realMove
 
 tagsSection :: Move -> String -> String
 tagsSection m date =
-  "[event \"?\"]\n\
-  \[site \"?\"]\n\
-  \[date \"" ++ date ++ "\"]\n\
+  "[Event \"?\"]\n\
+  \[Site \"?\"]\n\
+  \[Date \"" ++ date ++ "\"]\n\
   \[Round \"?\"]\n\
   \[White \"" ++ Move.nameW m ++ "\"]\n\
   \[Black \"" ++ Move.nameB m ++ "\"]\n\
