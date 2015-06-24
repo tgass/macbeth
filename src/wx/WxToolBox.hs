@@ -23,6 +23,9 @@ import System.IO
 
 ficsEventId = wxID_HIGHEST + 51
 
+--TODO: Do not update games automatically
+--TODO: Add update games button
+--TODO: Show status: game private, does not exist,...
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
