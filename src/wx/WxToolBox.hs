@@ -23,8 +23,6 @@ import System.IO
 
 ficsEventId = wxID_HIGHEST + 51
 
---TODO: Do not update games automatically
---TODO: Add update games button
 --TODO: Show status: game private, does not exist,...
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
@@ -51,12 +49,8 @@ createToolBox h name isGuest chan = do
 
     -- toolbar
     tbar   <- toolBar f []
-    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/bullhorn.png" [ on command := wxSeek h isGuest ]
-    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/dot-circle-o.png" [ on command := wxMatch h isGuest ]
-
-
-    -- timer: refresh games list
-    t <- timer f [interval := 60000, on command := hPutStrLn h "4 games" ]
+    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/bullhorn.jpg" [ on command := wxSeek h isGuest ]
+    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/dot-circle-o.jpg" [ on command := wxMatch h isGuest ]
 
     -- tab2 : console
     cp <- panel nb []
@@ -76,12 +70,17 @@ createToolBox h name isGuest chan = do
                         ]
     listCtrlSetColumnWidths gl 100
 
+    -- Games list : context menu
+    glCtxMenu <- menuPane []
+    menuItem glCtxMenu [ text := "Refresh", on command := hPutStrLn h "4 games" ]
+
+
     -- about menu
     m_help    <- menuHelp      []
     m_about  <- menuAbout m_help [help := "About XChess", on command := wxAbout ]
 
-    set f [ layout := (container right $
-                         column 0
+    set f [ layout := container right
+                         ( column 0
                          [ tabs nb
                             [ tab "Sought" $ container slp $ fill $ widget sl
                             , tab "Games" $ container glp $ fill $ widget gl
@@ -89,22 +88,23 @@ createToolBox h name isGuest chan = do
                                             ( column 5  [ floatLeft $ expand $ hstretch $ widget ct
                                                         , expand $ hstretch $ widget ce])
                             ]
-                         ]
-            )
+                         ])
           , menuBar := [m_help]
           , statusBar := [status]
           ]
 
-    threadId <- forkIO $ (eventLoop ficsEventId) chan vCmd f
+    threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
 
     windowOnDestroy f $ killThread threadId
 
-    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> do
-      case cmd of
+    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
         Games games -> do
-          set gl [items := [[show id, n1, show r1, n2, show r2] | (Game id _ _ r1 n1 r2 n2 _) <- games]]
+          set gl [items := [[show $ Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g] | g <- games]]
           set gl [on listEvent := onGamesListEvent games h]
+          listItemRightClickEvent gl (\evt -> do
+            pt <- listEventGetPoint evt
+            menuPopup glCtxMenu pt gl)
 
         NewSeek seek -> M.when (Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
                                itemAppend sl $ toList seek
@@ -131,7 +131,7 @@ deleteSeek _ _ = return ()
 
 toList :: Seek -> [String]
 toList (Seek id name rating time inc isRated gameType color ratingRange) =
-  [show id, name, show rating, (show time ++ " " ++ show inc), show gameType ++ " " ++ showIsRated isRated]
+  [show id, name, show rating, show time ++ " " ++ show inc, show gameType ++ " " ++ showIsRated isRated]
   where showIsRated True = "rated"
         showIsRated False = "unrated"
 
@@ -145,10 +145,18 @@ onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
 onSeekListEvent sl h eventList = case eventList of
   ListItemActivated idx -> do
     seeks <- get sl items
-    hPutStrLn h $ "4 play " ++ show (read $ seeks !! idx !! 0 :: Int)
+    hPutStrLn h $ "4 play " ++ show (read $ head (seeks !! idx) :: Int)
   _ -> return ()
 
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
 emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h >> set textCtrl [text := ""]
+
+
+listItemRightClickEvent :: ListCtrl a -> (Graphics.UI.WXCore.ListEvent () -> IO ()) -> IO ()
+listItemRightClickEvent listCtrl eventHandler
+  = windowOnEvent listCtrl [wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK] eventHandler listHandler
+    where
+      listHandler :: Graphics.UI.WXCore.Event () -> IO ()
+      listHandler evt = eventHandler $ objectCast evt
 
