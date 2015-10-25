@@ -6,7 +6,6 @@ import Api
 import Board
 import CommandMsg
 import Move
-import qualified PGN as PGN
 import Utils (formatTime)
 import WxUtils
 
@@ -22,9 +21,7 @@ eventId = wxID_HIGHEST + 53
 
 -- TODO: Seek auto match ?! Bug?
 -- TODO: forfeits on time doesn't stop game ?!
--- TODO: Implement offered draw
--- TODO: Request move take backend
--- TODO: Accept/ decline move takeback request
+-- TODO: Request move take backend, accept/ decline move takeback request
 createObservedGame :: Handle -> Move -> Api.PColor -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
@@ -62,34 +59,39 @@ createObservedGame h move color chan = do
   refit p_back
 
 
-  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
-    case cmd of
-      GameMove move' -> when (Move.gameId move' == Move.gameId move) $ do
+  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
+
+    GameMove move' -> when (Move.gameId move' == Move.gameId move) $ do
                                    setPosition board (Move.position move')
                                    setInteractive board (relation move' == MyMove)
                                    repaintBoard board
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
+                                   set status [text := ""]
                                    return ()
 
-      GameResult id reason result -> when (id == Move.gameId move) $ do
+    GameResult id reason result -> when (id == Move.gameId move) $ do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               setInteractive board False
                               set status [text := (show result ++ ": " ++ reason)]
 
-      DrawOffered -> when (relation move == MyMove) $ return ()
+    DrawOffered -> set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
+                   set p_back [on (charKey 'y') := hPutStrLn h "5 accept" >> unsetKeyHandler p_back] >>
+                   set p_back [on (charKey 'n') := hPutStrLn h "5 decline" >> unsetKeyHandler p_back]
 
-      _ -> return ()
+    DrawDeclined -> set status [text := nameOponent color move ++ " declined your draw offer."]
+
+    _ -> return ()
 
   windowShow f
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ do killThread threadId
                          case relation move of
-                           MyMove -> hPutStrLn h $ "5 resign"
-                           OponentsMove -> hPutStrLn h $ "5 resign"
-                           Observing -> hPutStrLn h $ "5 unobserve " ++ (show $ Move.gameId move)
+                           MyMove -> hPutStrLn h "5 resign"
+                           OponentsMove -> hPutStrLn h "5 resign"
+                           Observing -> hPutStrLn h $ "5 unobserve " ++ show (Move.gameId move)
                            _ -> return ()
 
 
@@ -138,8 +140,11 @@ staticTextFormatted p s = staticText p [ text := s
 
 
 layoutBoard :: Panel() -> Panel() -> Panel() -> Api.PColor -> Layout
-layoutBoard board white black color = (grid 0 0 [ [hfill $ widget (if color == White then black else white)]
-                                                , [fill $ minsize (Size 320 320) $ widget board]
-                                                , [hfill $ widget (if color == White then white else black)]])
+layoutBoard board white black color = grid 0 0 [ [hfill $ widget (if color == White then black else white)]
+                                               , [fill $ minsize (Size 320 320) $ widget board]
+                                               , [hfill $ widget (if color == White then white else black)]]
 
 
+unsetKeyHandler :: Panel () -> IO ()
+unsetKeyHandler p = set p [on (charKey 'y') := return ()] >>
+                    set p [on (charKey 'n') := return ()]

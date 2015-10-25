@@ -22,6 +22,6 @@ data Seek = Seek {
 }
 
 instance Show Seek where
-  show (Seek id _ _ _ _ _ _ _ _) = "Seek {id = " ++ show id ++ "}"
+  show seek = "Seek {id = " ++ show (Seek.id seek) ++ "}"
 
 data StartMode = Auto | Manual deriving (Show)

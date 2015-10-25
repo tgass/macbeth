@@ -4,6 +4,7 @@ module Move (
   remainingTime,
   decreaseRemainingTime,
   namePlayer,
+  nameOponent,
   isPlayersNewGame,
   playerColor,
   isCheckmate,
@@ -48,6 +49,11 @@ decreaseRemainingTime White move = move {remainingTimeW = max 0 $ remainingTimeW
 namePlayer :: Api.PColor -> Move -> String
 namePlayer White = nameW
 namePlayer Black = nameB
+
+
+nameOponent :: Api.PColor -> Move -> String
+nameOponent White = nameB
+nameOponent Black = nameW
 
 
 isPlayersNewGame :: Move -> Bool

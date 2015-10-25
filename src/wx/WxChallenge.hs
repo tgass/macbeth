@@ -41,8 +41,7 @@ wxChallenge h c chan = do
             , floatBottomRight $ row 5 [widget b_accept, widget b_decline, widget b_adjourn]]
         ]
 
-  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> do
-    case cmd of
+  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
       MatchUpdated playerName -> when (isUpdate playerName c) $ close f
 

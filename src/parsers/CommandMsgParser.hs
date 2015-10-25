@@ -34,12 +34,15 @@ parseCommandMsg = parseOnly parser where
                   , matchUpdated
                   , declinedChallenge
                   , drawOffered
+                  , drawDeclined
 
                   , games
                   , playSeek
                   , observe
                   , accept
                   , gameResult
+                  , gameResultMutualDraw
+                  , gameResultAcceptDraw
                   , gameResult'
                   , confirmGameMove
                   , seekInfoBlock
@@ -87,7 +90,7 @@ creatingGame :: Parser CommandMsg
 creatingGame = CreatingGame <$> (GameInfo
   <$> ("Creating: " *> manyTill anyChar space)
   <*> ("(" *> Utils.rating <* ") ")
-  <*> (manyTill anyChar space)
+  <*> manyTill anyChar space
   <*> ("(" *> Utils.rating <* takeTill (== '\n')))
 
 matchRequested :: Parser CommandMsg
@@ -99,7 +102,7 @@ matchRequested = MatchRequested <$> (Challenge
   <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
 
 matchUpdated :: Parser CommandMsg
-matchUpdated = MatchUpdated <$> (manyTill anyChar space) <* "updates the match request."
+matchUpdated = MatchUpdated <$> manyTill anyChar space <* "updates the match request."
 
 accept :: Parser CommandMsg
 accept = MatchAccepted <$> (commandHead 11 *> move)
@@ -128,8 +131,17 @@ seekMatchesAlreadyPosted = do
 drawOffered :: Parser CommandMsg
 drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered
 
+drawDeclined :: Parser CommandMsg
+drawDeclined = manyTill anyChar space *> "declines the draw request." *> pure DrawDeclined
+
 gameResult :: Parser CommandMsg
 gameResult = commandHead 103 *> gameResult'
+
+gameResultMutualDraw :: Parser CommandMsg
+gameResultMutualDraw = commandHead 34 *> gameResult'
+
+gameResultAcceptDraw :: Parser CommandMsg
+gameResultAcceptDraw = commandHead 11 *> takeTill (== '{') *> gameResult'
 
 gameResult' :: Parser CommandMsg
 gameResult' = GameResult
@@ -192,7 +204,10 @@ guestLoginTxt = BS.pack "Press return to enter the server as \"FOOBAR\":"
 
 matchRequested' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
 matchUpdated' = BS.pack "GuestQGGQ updates the match request."
-gameResult'''' = BS.pack  "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
-gameResult'' = BS.pack "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done."
-gameResult''' = BS.pack "{Game 181 (Danimateit vs. WhatKnight) Danimateit forfeits on time} 0-1"
+gameResult1 = BS.pack  "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
+gameResult2 = BS.pack "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done."
+gameResult3 = BS.pack "{Game 181 (Danimateit vs. WhatKnight) Danimateit forfeits on time} 0-1"
+gameResultMutualDraw' = BS.pack "\NAK4\SYN34\SYN\n{Game 196 (GuestCWVD vs. GuestDWTL) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB"
+gameResultAcceptDraw' = BS.pack "\NAK5\SYN11\SYNYou accept the draw request from GuestNMNG.\n\n{Game 202 (GuestDKZD vs. GuestNMNG) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB"
 drawOffered' = BS.pack "GuestDWXY offers you a draw."
+drawDeclined' = BS.pack "GuestXDXP declines the draw request."

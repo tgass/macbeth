@@ -20,6 +20,7 @@ data CommandMsg =   GameMove Move
                   | MatchAccepted Move
                   | MatchDeclined
                   | DrawOffered
+                  | DrawDeclined
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
                   | NewSeek Seek
