@@ -75,13 +75,12 @@ paintSelectedSquare selSq color scale dc view = do
 
 
 drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> t -> IO ()
-drawDraggedPiece scale mDraggedPiece dc view = do
-  case mDraggedPiece of
-    Nothing -> return ()
-    Just (DraggedPiece pt piece _) -> drawBitmap dc (pieceToBitmap piece) (scalePoint pt) True []
-    where
-      scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
-      scaleValue value = round $ (fromIntegral value - 20 * scale) / scale
+drawDraggedPiece scale mDraggedPiece dc view = case mDraggedPiece of
+  Nothing -> return ()
+  Just (DraggedPiece pt piece _) -> drawBitmap dc (pieceToBitmap piece) (scalePoint pt) True []
+  where
+    scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
+    scaleValue value = round $ (fromIntegral value - 20 * scale) / scale
 
 
 
@@ -97,9 +96,8 @@ onMouseEvent h vState p mouse = do
       let square' = toField (scalePoint scale pt) (Board.color state)
       let piece = if isInteractive state then getPiece (_position state) square' (Board.color state) else Nothing
       case piece of
-        Just p -> do
-          varSet vState state { _position = removePiece (_position state) square'
-                              , draggedPiece = Just $ DraggedPiece pt p square'}
+        Just p -> varSet vState state { _position = removePiece (_position state) square'
+                                      , draggedPiece = Just $ DraggedPiece pt p square'}
         _ -> return ()
     MouseLeftUp click_pt mods -> do
       mDraggedPiece <- draggedPiece `liftA` varGet vState
