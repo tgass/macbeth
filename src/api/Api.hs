@@ -9,9 +9,7 @@ module Api (
   Column (..),
   Position,
   pColor,
-  invert,
-  removePiece,
-  getPiece
+  invert
 ) where
 
 import Data.Char (toLower)
@@ -41,15 +39,4 @@ pColor (Piece _ color) = color
 invert :: PColor -> PColor
 invert White = Black
 invert Black = White
-
-
-removePiece :: Position -> Square -> Position
-removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
-
-
-getPiece :: Position -> Square -> PColor -> Maybe Piece
-getPiece pos sq color = sq `lookup` pos >>= checkColor color
-  where
-    checkColor :: PColor -> Piece -> Maybe Piece
-    checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 

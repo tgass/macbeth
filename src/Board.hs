@@ -1,6 +1,7 @@
 module Board (
-  Board (..),
-  createBoard
+  draw,
+  onMouseEvent,
+  BoardState(..)
 ) where
 
 import Api
@@ -10,15 +11,10 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore (dcSetUserScale, windowOnMouse)
 import System.IO (Handle, hPutStrLn)
 
-
-data Board = Board { _panel :: Panel ()
-                   , invertColor :: IO Api.PColor
-                   , setPosition :: Position -> IO ()
-                   , setInteractive :: Bool -> IO ()
-                   , repaintBoard :: IO ()}
-
-data BoardState = BoardState { _position :: Position
-                             , color :: Api.PColor
+data BoardState = BoardState { _panel :: Panel()
+                             , _position :: Position
+                             , playerColor :: Api.PColor
+                             , perspective :: Api.PColor
                              , selSquare :: Square
                              , draggedPiece :: Maybe DraggedPiece
                              , isInteractive :: Bool
@@ -30,48 +26,24 @@ data DraggedPiece = DraggedPiece { _point :: Point
                                  , _square :: Square } deriving (Show)
 
 
-createBoard :: Handle -> Panel () -> Position -> Api.PColor -> Bool -> IO Board
-createBoard h p_parent position color interactive = do
-  let boardState = BoardState position color (Square A One) Nothing interactive
-  vState <- variable [ value := boardState ]
-  p_board <- panel p_parent []
-  set p_board [ on paint := drawAll p_board vState ]
-  windowOnMouse p_board True $ onMouseEvent h vState p_board
-  let setPosition' p = do
-                         state <- varGet vState
-                         varSet vState $ state {_position = p}
-  let invertColor' vState = do
-                               state <- varGet vState
-                               let color' = Api.invert $ Board.color state
-                               varSet vState $ state {Board.color = color' }
-                               return color'
-  let setInteractive' i = do
-                           state <- varGet vState
-                           varSet vState $ state {isInteractive = i}
-  let repaintBoard = repaint p_board
-  return $ Board p_board (invertColor' vState) setPosition' setInteractive' repaintBoard
-
-
-
-drawAll :: Panel () -> Var BoardState -> DC a -> t -> IO ()
-drawAll panel vState dc view = do
+draw :: Var BoardState -> DC a -> t -> IO ()
+draw vState dc view = do
   state <- varGet vState
-  scale <- calcScale `liftA` get panel size
+  scale <- calcScale `liftA` get (_panel state) size
   dcSetUserScale dc scale scale
   drawBoard dc view
-  mapM_ (drawPiece dc view (Board.color state)) (_position state)
+  mapM_ (drawPiece dc view (perspective state)) (_position state)
   when (isInteractive state) $ do
-    paintSelectedSquare (selSquare state) (Board.color state) scale dc view
+    paintSelectedSquare state scale dc view
     drawDraggedPiece scale (draggedPiece state) dc view
 
 
-paintSelectedSquare :: Square -> Api.PColor -> Double -> DC a -> t -> IO ()
-paintSelectedSquare selSq color scale dc view = do
-  let pointX' = pointX $ toPos selSq color
-      pointY' = pointY $ toPos selSq color
+paintSelectedSquare :: BoardState -> Double -> DC a -> t -> IO ()
+paintSelectedSquare state scale dc view = do
+  let pointX' = pointX $ toPos (selSquare state) (perspective state)
+      pointY' = pointY $ toPos (selSquare state) (perspective state)
   set dc [penColor := rgb 255 0 (0 :: Int) ]
   drawRect dc (Rect pointX' pointY' 40 40) []
-
 
 
 drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> t -> IO ()
@@ -83,39 +55,49 @@ drawDraggedPiece scale mDraggedPiece dc view = case mDraggedPiece of
     scaleValue value = round $ (fromIntegral value - 20 * scale) / scale
 
 
-
-onMouseEvent :: Handle -> Var BoardState -> Panel() -> EventMouse -> IO ()
-onMouseEvent h vState p mouse = do
+onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
+onMouseEvent h vState mouse = do
   state <- varGet vState
-  scale <- calcScale `liftA` get p size
+  scale <- calcScale `liftA` get (_panel state) size
+  let toSquare pt = Square (intToCol (perspective state) (pointX (scalePoint scale pt) `div` 40))
+                           (intToRow (perspective state) (pointY (scalePoint scale pt) `div` 40))
+
   case mouse of
-    MouseMotion pt mod -> do
-      let square' = toField (scalePoint scale pt) (Board.color state)
-      varSet vState $ state {selSquare = square'}
-    MouseLeftDown pt mods -> do
-      let square' = toField (scalePoint scale pt) (Board.color state)
-      let piece = if isInteractive state then getPiece (_position state) square' (Board.color state) else Nothing
-      case piece of
-        Just p -> varSet vState state { _position = removePiece (_position state) square'
-                                      , draggedPiece = Just $ DraggedPiece pt p square'}
-        _ -> return ()
-    MouseLeftUp click_pt mods -> do
-      mDraggedPiece <- draggedPiece `liftA` varGet vState
-      case mDraggedPiece of
-        Just dp@(DraggedPiece dp_pt piece dp_sq) -> do
-          let clicked_sq = toField (scalePoint scale click_pt) (Board.color state)
-          let newPosition = movePiece (_position state) clicked_sq dp
-          varSet vState state { _position = newPosition, draggedPiece = Nothing}
-          hPutStrLn h $ "6 " ++ emitMove piece dp_sq clicked_sq
-        _ -> return ()
-    MouseLeftDrag pt mode -> do
-      let square' = toField (scalePoint scale pt) (Board.color state)
-      varSet vState state { selSquare = square', draggedPiece = draggedPiece state >>= setNewPoint pt}
+
+    MouseMotion pt _ -> varSet vState $ state {selSquare = toSquare pt}
+
+    MouseLeftDown pt _ -> do
+      let square' = toSquare pt
+      when (isInteractive state) $
+        maybe (return()) (\p -> varSet vState state { _position = removePiece (_position state) square'
+                                                    , draggedPiece = Just $ DraggedPiece pt p square'})
+                         (getPiece (_position state) square' (playerColor state))
+
+
+    MouseLeftUp click_pt _ -> case draggedPiece state of
+      Just dp@(DraggedPiece dp_pt piece dp_sq) -> do
+        let clicked_sq = toSquare click_pt
+        let newPosition = movePiece (_position state) clicked_sq dp
+        varSet vState state { _position = newPosition, draggedPiece = Nothing}
+        hPutStrLn h $ "6 " ++ emitMove piece dp_sq clicked_sq
+      _ -> return ()
+
+    MouseLeftDrag pt _ -> varSet vState state { selSquare = toSquare pt
+                                              , draggedPiece = draggedPiece state >>= setNewPoint pt}
+
     otherwise -> return ()
-  repaint p
+
+  repaint (_panel state)
+
   where
     setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
     setNewPoint pt (DraggedPiece pt' p s) = Just $ DraggedPiece pt p s
+
+    getPiece :: Position -> Square -> PColor -> Maybe Piece
+    getPiece pos sq color = sq `lookup` pos >>= checkColor color
+      where
+        checkColor :: PColor -> Piece -> Maybe Piece
+        checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 
 
 emitMove :: Piece -> Square -> Square -> String
@@ -135,14 +117,16 @@ movePiece pos sq (DraggedPiece _ dp_piece dp_sq) = foo $ sq `lookup` pos
                                                        else removePiece pos sq ++ [(sq, dp_piece)]
 
 
+removePiece :: Position -> Square -> Position
+removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
+
+
 calcScale :: Size -> Double
 calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
-
 drawPiece :: DC a -> t -> Api.PColor -> (Square, Piece) -> IO ()
 drawPiece dc view color (square, p) = drawBitmap dc (pieceToBitmap p) (toPos square color) True []
-
 
 
 scalePoint :: Double -> Point -> Point
@@ -150,14 +134,8 @@ scalePoint scale p = point (foo (pointX p) scale) (foo (pointY p) scale)
   where foo x s = max 0 $ min 319 $ floor (fromIntegral x / s)
 
 
-
 drawBoard :: DC a -> t -> IO ()
 drawBoard dc view = drawBitmap dc board (point 0 0) False []
-
-
-
-toField :: Point -> Api.PColor -> Square
-toField p color = Square (intToCol color (pointX p `div` 40)) (intToRow color (pointY p `div` 40))
 
 
 toPos :: Square -> Api.PColor -> Point

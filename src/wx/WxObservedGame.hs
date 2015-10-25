@@ -28,14 +28,20 @@ createObservedGame h move color chan = do
 
   f <- frame []
   p_back <- panel f []
-  board <- createBoard h p_back (Move.position move) color (relation move == MyMove)
+
+  -- board
+  p_board <- panel p_back []
+  vBoardState <- variable [ value := BoardState p_board (Move.position move) color color (Square A One) Nothing (relation move == MyMove) ]
+  set p_board [ on paint := Board.draw vBoardState ]
+  windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
+
+  -- clock
   vClock <- variable [ value := move ]
 
   -- status line
   status <- statusField []
 
   -- panels
-  let p_board = _panel board
   (p_white, t_white) <- createStatusPanel p_back vClock White
   (p_black, t_black) <- createStatusPanel p_back vClock Black
 
@@ -44,7 +50,7 @@ createObservedGame h move color chan = do
 
   -- context menu
   ctxMenu <- menuPane []
-  menuItem ctxMenu [ text := "Turn board", on command := turnBoard board p_back layoutBoardF ]
+  menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState p_back layoutBoardF ]
   when (relation move /= Observing) $ do
                  menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
                  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
@@ -62,9 +68,9 @@ createObservedGame h move color chan = do
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
     GameMove move' -> when (Move.gameId move' == Move.gameId move) $ do
-                                   setPosition board (Move.position move')
-                                   setInteractive board (relation move' == MyMove)
-                                   repaintBoard board
+                                   state <- varGet vBoardState
+                                   varSet vBoardState $ state { _position = Move.position move', isInteractive = relation move' == MyMove}
+                                   repaint (_panel state)
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
@@ -72,9 +78,10 @@ createObservedGame h move color chan = do
                                    return ()
 
     GameResult id reason result -> when (id == Move.gameId move) $ do
+                              state <- varGet vBoardState
+                              varSet vBoardState $ state {Board.isInteractive = False}
                               set t_white [enabled := False]
                               set t_black [enabled := False]
-                              setInteractive board False
                               set status [text := (show result ++ ": " ++ reason)]
 
     DrawOffered -> set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
@@ -95,11 +102,13 @@ createObservedGame h move color chan = do
                            _ -> return ()
 
 
-turnBoard :: Board -> Panel () -> (Api.PColor -> Layout) -> IO ()
-turnBoard board p layoutF = do
-  color <- invertColor board
-  set p [layout := layoutF color]
-  repaintBoard board
+turnBoard :: Var Board.BoardState -> Panel () -> (Api.PColor -> Layout) -> IO ()
+turnBoard vState p layoutF = do
+  state <- varGet vState
+  let color' = Api.invert $ Board.perspective state
+  varSet vState $ state {Board.perspective = color' }
+  set p [layout := layoutF color']
+  repaint (Board._panel state)
   refit p
 
 
