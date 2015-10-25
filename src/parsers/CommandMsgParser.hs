@@ -180,6 +180,8 @@ settingsDone = char (chr 23) *> pure SettingsDone
 
 
 {- HELPER -}
+data CommandHead = CommandHead { commandId :: Int } deriving (Show)
+
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
   char $ chr 21

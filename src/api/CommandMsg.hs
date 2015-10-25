@@ -1,6 +1,5 @@
 module CommandMsg (
-  CommandMsg (..),
-  CommandHead (..)
+  CommandMsg (..)
 ) where
 
 import Api
@@ -43,5 +42,3 @@ data CommandMsg =   GameMove Move
                   | CreatingGame GameInfo
                   | ConfirmMove Move
                   | Boxed [CommandMsg] deriving (Show)
-
-data CommandHead = CommandHead { commandId :: Int } deriving (Show)
