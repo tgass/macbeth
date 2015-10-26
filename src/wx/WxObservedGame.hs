@@ -6,6 +6,7 @@ import Api
 import Board
 import CommandMsg
 import Move
+import PGN
 import Utils (formatTime)
 import WxUtils
 
@@ -23,8 +24,9 @@ eventId = wxID_HIGHEST + 53
 -- TODO: forfeits on time doesn't stop game ?!
 -- TODO: Request move take backend, accept/ decline move takeback request
 createObservedGame :: Handle -> Move -> Api.PColor -> Chan CommandMsg -> IO ()
-createObservedGame h move color chan = do
+createObservedGame h    move color chan = do
   vCmd <- newEmptyMVar
+  vGameMoves <- newMVar []
 
   f <- frame []
   p_back <- panel f []
@@ -75,7 +77,7 @@ createObservedGame h move color chan = do
                                    set t_black [enabled := True]
                                    varSet vClock move'
                                    set status [text := ""]
-                                   return ()
+                                   when (isPlayersGame move') $ modifyMVar_ vGameMoves $ return . addMove move'
 
     GameResult id reason result -> when (id == Move.gameId move) $ do
                               state <- varGet vBoardState
@@ -83,6 +85,9 @@ createObservedGame h move color chan = do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               set status [text := (show result ++ ": " ++ reason)]
+                              moves <- takeMVar vGameMoves
+                              PGN.saveAsPGN (reverse moves) "JJ" result
+                              hPutStrLn h "4 iset seekinfo 1"
 
     DrawOffered -> set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
                    set p_back [on (charKey 'y') := hPutStrLn h "5 accept" >> unsetKeyHandler p_back] >>
@@ -157,3 +162,17 @@ layoutBoard board white black color = grid 0 0 [ [hfill $ widget (if color == Wh
 unsetKeyHandler :: Panel () -> IO ()
 unsetKeyHandler p = set p [on (charKey 'y') := return ()] >>
                     set p [on (charKey 'n') := return ()]
+
+
+{- Add new moves in the front, so you can check for duplicates. -}
+addMove :: Move -> [Move] -> [Move]
+addMove m [] = [m]
+addMove m moves@(m':_)
+           | areEqual m m' = moves
+           | otherwise = m : moves
+
+
+areEqual :: Move -> Move -> Bool
+areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
+
+

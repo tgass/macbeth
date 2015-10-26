@@ -31,7 +31,6 @@ instance Show Square where
 
 type Position = [(Square, Piece)]
 
-
 pColor :: Piece -> PColor
 pColor (Piece _ color) = color
 

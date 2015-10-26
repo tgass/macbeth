@@ -28,8 +28,6 @@ parseCommandMsg = parseOnly parser where
                   , SP.newSeek
                   , SP.removeSeeks
 
-                  , newGame
-                  , creatingGame
                   , matchRequested
                   , matchUpdated
                   , declinedChallenge
@@ -41,9 +39,10 @@ parseCommandMsg = parseOnly parser where
                   , observe
                   , accept
                   , gameResult
+                  , gameResult'
                   , gameResultMutualDraw
                   , gameResultAcceptDraw
-                  , gameResult'
+
                   , confirmGameMove
                   , seekInfoBlock
                   , seekMatchesAlreadyPosted
@@ -67,31 +66,17 @@ observe :: Parser CommandMsg
 observe = Observe <$> (commandHead 80 *> move)
 
 confirmGameMove :: Parser CommandMsg
-confirmGameMove = ConfirmMove <$> (commandHead 1 *> move)
+confirmGameMove = GameMove <$> (commandHead 1 *> move)
 
 gameMove :: Parser CommandMsg
 gameMove = GameMove <$> move
-
--- Game 214 (GuestPPFS vs. GuestDSRY) Creating unrated blitz match.}
-newGame :: Parser CommandMsg
-newGame = NewGame <$> ("{Game " *> decimal <* takeTill (== ')') <* ") Creating")
 
 playSeek :: Parser CommandMsg
 playSeek = do
   commandHead 158
   rs <- "\n" *> SP.removeSeeks <* "\n"
-  cg <- prompt *> "\n" *> creatingGame <* "\n"
-  ng <- newGame <* takeTill (== '<')
-  m <- GameMove <$> move
-  return $ Boxed [rs, cg, ng, m]
-
--- Creating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n
-creatingGame :: Parser CommandMsg
-creatingGame = CreatingGame <$> (GameInfo
-  <$> ("Creating: " *> manyTill anyChar space)
-  <*> ("(" *> Utils.rating <* ") ")
-  <*> manyTill anyChar space
-  <*> ("(" *> Utils.rating <* takeTill (== '\n')))
+  mv <- takeTill (=='<') *> (GameMove <$> move)
+  return $ Boxed [rs, mv]
 
 matchRequested :: Parser CommandMsg
 matchRequested = MatchRequested <$> (Challenge
@@ -123,10 +108,8 @@ seekMatchesAlreadyPosted = do
   commandHead 155
   option "" "You are unregistered - setting to unrated.\n"
   rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks <* "\n"
-  cM <- prompt *> "\n" *> creatingGame <* takeTill (== '\n') <* "\n"
-  nG <- newGame <* takeTill (== '\n') <* "\n"
   mv <- takeTill (=='<') *> (GameMove <$> move)
-  return $ Boxed [rs, cM, nG, mv]
+  return $ Boxed [rs, mv]
 
 drawOffered :: Parser CommandMsg
 drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered

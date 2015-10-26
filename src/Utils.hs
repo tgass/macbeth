@@ -3,7 +3,6 @@ module Utils (
 ) where
 
 import Api
-import FicsConnection2
 
 import Control.Monad.State
 

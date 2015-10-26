@@ -13,7 +13,6 @@ data CommandMsg =   GameMove Move
                   | Games [Game]
                   | Observe Move
 
-                  | StartGame Int Move
                   | MatchRequested Challenge
                   | MatchUpdated String
                   | MatchAccepted Move
@@ -38,7 +37,4 @@ data CommandMsg =   GameMove Move
                   | TextMessage String
 
                   {- Internal -}
-                  | NewGame Int
-                  | CreatingGame GameInfo
-                  | ConfirmMove Move
                   | Boxed [CommandMsg] deriving (Show)

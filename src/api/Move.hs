@@ -4,7 +4,9 @@ module Move (
   remainingTime,
   decreaseRemainingTime,
   namePlayer,
+  colorOfPlayer,
   nameOponent,
+  isPlayersGame,
   isPlayersNewGame,
   playerColor,
   isCheckmate,
@@ -31,7 +33,7 @@ data Move = Move {
   } deriving (Eq)
 
 instance Show Move where
-  show m = "Move { gameId=" ++ show (gameId m) ++ ", move=" ++ (show $ movePretty m) ++ "}"
+  show m = "Move { gameId=" ++ show (gameId m) ++ ", move=" ++ show (movePretty m) ++ "}"
 
 data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
 
@@ -51,13 +53,21 @@ namePlayer White = nameW
 namePlayer Black = nameB
 
 
+colorOfPlayer :: Move -> Api.PColor
+colorOfPlayer m = if relation m == MyMove then turn m else Api.invert $ turn m
+
+
 nameOponent :: Api.PColor -> Move -> String
 nameOponent White = nameB
 nameOponent Black = nameW
 
 
+isPlayersGame :: Move -> Bool
+isPlayersGame m = (relation m == MyMove) || (relation m == OponentsMove)
+
+
 isPlayersNewGame :: Move -> Bool
-isPlayersNewGame m = ((relation m == MyMove) || (relation m == OponentsMove)) && (isNothing $ movePretty m)
+isPlayersNewGame m = isPlayersGame m && isNothing (movePretty m)
 
 
 playerColor :: String -> Move -> Api.PColor
@@ -67,7 +77,7 @@ playerColor name move
 
 
 isCheckmate :: Move -> Bool
-isCheckmate = fromMaybe False . fmap ((== '#') . head . reverse) . movePretty
+isCheckmate = maybe False ((== '#') . last) . movePretty
 
 
 dummyMove :: Move

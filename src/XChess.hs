@@ -1,15 +1,14 @@
 module Main where
 
 import Control.Concurrent.Chan
-import FicsConnection2 (ficsConnection)
+import FicsConnection (ficsConnection)
 import WxLogin
 
 import Graphics.UI.WX
 
 main :: IO ()
 main = do
-  chan <- newChan
-  h <- ficsConnection $ \h cmd -> writeChan chan cmd
+  (h, chan) <- ficsConnection
   start $ wxLogin h chan
 
 

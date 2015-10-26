@@ -24,7 +24,6 @@ import System.IO
 ficsEventId = wxID_HIGHEST + 51
 
 --TODO: Show status: game private, does not exist,...
---TODO: copy event stream earlier
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
@@ -85,7 +84,7 @@ createToolBox h name isGuest chan = do
                          [ tabs nb
                             [ tab "Sought" $ container slp $ fill $ widget sl
                             , tab "Games" $ container glp $ fill $ widget gl
-                            , tab "Console" $ container cp $
+                            , tab "Console" $ container cp
                                             ( column 5  [ floatLeft $ expand $ hstretch $ widget ct
                                                         , expand $ hstretch $ widget ce])
                             ]
@@ -103,6 +102,7 @@ createToolBox h name isGuest chan = do
         Games games -> do
           set gl [items := [[show $ Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g] | g <- games]]
           set gl [on listEvent := onGamesListEvent games h]
+          --TODO: aufhübschen
           listItemRightClickEvent gl (\evt -> do
             pt <- listEventGetPoint evt
             menuPopup glCtxMenu pt gl)
