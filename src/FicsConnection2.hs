@@ -53,29 +53,28 @@ sink handler = awaitForever $ liftIO . handler
 
 stateC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 stateC = awaitForever $ \cmd -> case cmd of
-                                  ConfirmMove move -> CL.sourceList $ [GameMove move] ++ (if (isCheckmate move) then [toGameResult move] else [])
+                                  ConfirmMove move -> CL.sourceList $ [GameMove move] ++ [toGameResult move | isCheckmate move]
 
-                                  g@(NewGame id) -> lift $ modify (\state -> state { gameId' = Just id})
+                                  NewGame id -> lift $ modify (\state -> state { gameId' = Just id})
 
-                                  move''@(GameMove move') -> if (isPlayersNewGame move') then do
+                                  move''@(GameMove move') -> if Move.isPlayersNewGame move' then do
                                                                state <- lift get
                                                                case gameId' state of
-                                                                 (Just id) -> do
+                                                                 Just id -> do
                                                                    lift $ put (state {gameId' = Nothing})
                                                                    yield (StartGame id move')
-                                                                 otherwise -> yield move''
+                                                                 _ -> yield move''
                                                              else yield move''
 
-                                  otherwise -> yield cmd
+                                  _ -> yield cmd
 
 
 parseC :: Conduit BS.ByteString (StateT HelperState IO) CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
                                   Left _    -> yield $ TextMessage $ BS.unpack str
                                   Right cmd -> case cmd of
-                                    -- ! muss vor dem nächsten Schritt ausgepackt werden
-                                    (Boxed cmdx) -> CL.sourceList cmdx
-                                    otherwise -> yield cmd
+                                    Boxed cmdx -> CL.sourceList cmdx -- ! muss vor dem nächsten Schritt ausgepackt werden
+                                    _ -> yield cmd
 
 
 blockC :: (Bool, BS.ByteString) -> Conduit Char (StateT HelperState IO) BS.ByteString
@@ -88,7 +87,7 @@ blockC (block, p) = awaitForever $ \c -> do
                                             21 -> blockC (True, BS.singleton c)
                                             23 -> yield (p `BS.append` BS.singleton c) >> blockC (False, BS.empty)
                                             10 -> if block then blockC (block, p `BS.append` BS.singleton c)
-                                                           else yield p >> blockC (block, BS.empty)
+                                                           else when(p /= "") $ yield p >> blockC (block, BS.empty)
                                             13 -> blockC (block, p) -- ignores \r
                                             _  -> blockC (block, p `BS.append` BS.singleton c)
 
