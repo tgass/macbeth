@@ -7,6 +7,7 @@ module Board (
 import Api
 
 import Control.Applicative (liftA)
+import Control.Monad.Trans.Maybe
 import Graphics.UI.WX
 import Graphics.UI.WXCore (dcSetUserScale, windowOnMouse)
 import System.IO (Handle, hPutStrLn)
@@ -56,26 +57,24 @@ drawDraggedPiece scale mDraggedPiece dc view = case mDraggedPiece of
 
 
 onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
-onMouseEvent h vState mouse = do
+onMouseEvent h vState evtMouse = do
   state <- varGet vState
   scale <- calcScale `liftA` get (_panel state) size
   let toSquare pt = Square (intToCol (perspective state) (pointX (scalePoint scale pt) `div` 40))
                            (intToRow (perspective state) (pointY (scalePoint scale pt) `div` 40))
-
-  case mouse of
+  case evtMouse of
 
     MouseMotion pt _ -> varSet vState $ state {selSquare = toSquare pt}
 
-    MouseLeftDown pt _ -> do
-      let square' = toSquare pt
-      when (isInteractive state) $
-        maybe (return()) (\p -> varSet vState state { _position = removePiece (_position state) square'
-                                                    , draggedPiece = Just $ DraggedPiece pt p square'})
-                         (getPiece (_position state) square' (playerColor state))
-
+    MouseLeftDown pt _ -> when (isInteractive state) $ do
+        let square' = toSquare pt
+        case getPiece (_position state) square' (playerColor state) of
+          Just piece -> varSet vState state { _position = removePiece (_position state) square'
+                                            , draggedPiece = Just $ DraggedPiece pt piece square'}
+          _ -> return ()
 
     MouseLeftUp click_pt _ -> case draggedPiece state of
-      Just dp@(DraggedPiece dp_pt piece dp_sq) -> do
+      Just dp@(DraggedPiece _ piece dp_sq) -> do
         let clicked_sq = toSquare click_pt
         let newPosition = movePiece (_position state) clicked_sq dp
         varSet vState state { _position = newPosition, draggedPiece = Nothing}
