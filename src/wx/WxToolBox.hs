@@ -6,12 +6,15 @@ module WxToolBox (
 
 import Api
 import CommandMsg
+import Move
 import Game
 import Seek
 import WxAbout
 import WxMatch
 import WxSeek
 import WxUtils
+import WxObservedGame
+import WxChallenge
 
 import Control.Concurrent
 import Control.Concurrent.Chan
@@ -101,7 +104,7 @@ createToolBox h name isGuest chan = do
 
         Games games -> do
           set status [text := name]
-          set gl [items := [[show $ Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g]
+          set gl [items := [[show $ Game.id g, Game.nameW g, show $ ratingW g, Game.nameB g, show $ ratingB g]
                             | g <- games, not $ isPrivate $ settings g]]
           set gl [on listEvent := onGamesListEvent games h]
           --TODO: aufhübschen
@@ -122,6 +125,14 @@ createToolBox h name isGuest chan = do
           sequence_ $ fmap (deleteSeek sl . findSeekIdx seeks) gameIds
 
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
+
+        Observe move -> dupChan chan >>= createObservedGame h move White
+
+        MatchAccepted move -> dupChan chan >>= createObservedGame h move (colorOfPlayer move)
+
+        GameMove move -> when (isPlayersNewGame move) $ dupChan chan >>= createObservedGame h move (colorOfPlayer move)
+
+        MatchRequested c -> dupChan chan >>= wxChallenge h c
 
         TextMessage text -> appendText ct $ text ++ "\n"
 

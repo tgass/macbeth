@@ -7,7 +7,6 @@ module FicsConnection (
 import CommandMsg
 import CommandMsgParser
 import Move
-import WxSink
 
 import Control.Concurrent.Chan (Chan, newChan, writeChan)
 import Control.Monad (when)
@@ -49,9 +48,7 @@ sink chan = awaitForever $ liftIO . writeChan chan
 
 
 loggingC :: Conduit CommandMsg IO CommandMsg
-loggingC = awaitForever $ \cmd -> do
-  liftIO $ printCmdMsg cmd
-  yield cmd
+loggingC = awaitForever $ \cmd -> liftIO (printCmdMsg cmd) >> yield cmd
 
 
 extractC :: Conduit CommandMsg IO CommandMsg
