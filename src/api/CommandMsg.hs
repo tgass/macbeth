@@ -12,6 +12,7 @@ import Seek
 data CommandMsg =   GameMove Move
                   | Games [Game]
                   | Observe Move
+                  | NoSuchGame
 
                   | MatchRequested Challenge
                   | MatchUpdated String

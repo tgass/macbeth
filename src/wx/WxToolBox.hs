@@ -23,14 +23,14 @@ import System.IO
 
 ficsEventId = wxID_HIGHEST + 51
 
---TODO: Show status: game private, does not exist,...
+--TODO: Show status: game private
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
 
     -- main frame
     f  <- frame []
-    status <- statusField [text := "Logged in as " ++ name]
+    status <- statusField []
 
     -- right panel
     right <- panel f []
@@ -100,12 +100,16 @@ createToolBox h name isGuest chan = do
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
         Games games -> do
+          set status [text := ""]
           set gl [items := [[show $ Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g] | g <- games]]
           set gl [on listEvent := onGamesListEvent games h]
           --TODO: aufhübschen
           listItemRightClickEvent gl (\evt -> do
             pt <- listEventGetPoint evt
             menuPopup glCtxMenu pt gl)
+
+        NoSuchGame -> set status [text := "No such game. Updating games..."] >>
+                      hPutStrLn h "4 games"
 
         NewSeek seek -> M.when (Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
                                itemAppend sl $ toList seek
