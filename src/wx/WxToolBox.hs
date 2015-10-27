@@ -26,7 +26,10 @@ import System.IO
 
 ficsEventId = wxID_HIGHEST + 51
 
+--TODO: remove absolute paths to resources
+--TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 --TODO: make game list sortable, configurable
+--TODO: application icon
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
