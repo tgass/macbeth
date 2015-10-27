@@ -9,7 +9,7 @@ import CommandMsgParser
 import Move
 import WxSink
 
-import Control.Concurrent.Chan (Chan, newChan)
+import Control.Concurrent.Chan (Chan, newChan, writeChan)
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Resource (runResourceT, allocate, resourceForkIO)
@@ -29,23 +29,23 @@ ficsConnection = runResourceT $ do
   chan <- liftIO newChan
   (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
   liftIO $ hSetBuffering hsock LineBuffering
-  resourceForkIO $ liftIO $ chain (wxSink chan) hsock
+  resourceForkIO $ liftIO $ chain hsock chan
   return (hsock, chan)
 
 
-chain :: (Handle -> CommandMsg -> IO ()) -> Handle -> IO ()
-chain handler hsock =
-  CB.sourceHandle hsock $$
+chain :: Handle -> Chan CommandMsg -> IO ()
+chain h chan =
+  CB.sourceHandle h $$
   toCharC =$
   blockC (False, BS.empty) =$
   parseC =$
-  gameResultC =$
+  extractC =$
   loggingC =$
-  sink (handler hsock)
+  sink chan
 
 
-sink :: (CommandMsg -> IO ()) -> Sink CommandMsg IO ()
-sink handler = awaitForever $ liftIO . handler
+sink :: Chan CommandMsg -> Sink CommandMsg IO ()
+sink chan = awaitForever $ liftIO . writeChan chan
 
 
 loggingC :: Conduit CommandMsg IO CommandMsg
@@ -54,9 +54,10 @@ loggingC = awaitForever $ \cmd -> do
   yield cmd
 
 
-gameResultC :: Conduit CommandMsg IO CommandMsg
-gameResultC = awaitForever $ \cmd -> case cmd of
+extractC :: Conduit CommandMsg IO CommandMsg
+extractC = awaitForever $ \cmd -> case cmd of
   m@(GameMove move) -> CL.sourceList $ m : [toGameResult move | isCheckmate move && relation move == OponentsMove]
+  Boxed cmds -> CL.sourceList cmds
   _ -> yield cmd
 
 

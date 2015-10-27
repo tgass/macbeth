@@ -25,8 +25,4 @@ wxSink chan h cmd = case cmd of
   GameMove move' -> (when (isPlayersNewGame move') $ dupChan chan >>= createObservedGame h move' (colorOfPlayer move')) >>
                     writeChan chan cmd
 
-
-
-  Boxed cmds -> sequence_ $ fmap (writeChan chan) cmds
-
   _ -> writeChan chan cmd
