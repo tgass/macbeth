@@ -40,20 +40,21 @@ wxLogin h chan = do
 
 okBtnHandler :: TextCtrl() -> TextCtrl() -> StatusField -> Frame() -> Handle -> Chan CommandMsg -> IO ()
 okBtnHandler e_name e_pw status f h chan = do
+  chan' <- dupChan chan
   name <- get e_name text
   pw <- get e_pw text
-  loop name pw False
+  loop name pw False chan'
   where
-    loop name pw isGuest = do
+    loop name pw isGuest chan' = do
        cmd <- readChan chan
        case cmd of
-         Login -> hPutStrLn h name >> loop name pw isGuest
-         Password -> hPutStrLn h pw >> loop name pw isGuest
+         Login -> hPutStrLn h name >> loop name pw isGuest chan'
+         Password -> hPutStrLn h pw >> loop name pw isGuest chan'
          LoggedIn name' -> hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
                            close f >>
-                           dupChan chan >>= createToolBox h name' isGuest
+                           createToolBox h name' isGuest chan'
          InvalidPassword  -> void $ set status [text := "Invalid password"]
-         UnkownUsername _ -> hPutStrLn h name >> loop name pw isGuest
-         GuestLogin _     -> hPutStrLn h "" >> loop name pw True
-         _                -> loop name pw isGuest
+         UnkownUsername _ -> hPutStrLn h name >> loop name pw isGuest chan'
+         GuestLogin _     -> hPutStrLn h "" >> loop name pw True chan'
+         _                -> loop name pw isGuest chan'
 
