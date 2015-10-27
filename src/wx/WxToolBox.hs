@@ -29,8 +29,8 @@ createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
 
     -- main frame
-    f  <- frame []
-    status <- statusField []
+    f  <- frame [ text := "Lentils"]
+    status <- statusField [ text := name ]
 
     -- right panel
     right <- panel f []
@@ -100,7 +100,7 @@ createToolBox h name isGuest chan = do
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
         Games games -> do
-          set status [text := ""]
+          set status [text := name]
           set gl [items := [[show $ Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g]
                             | g <- games, not $ isPrivate $ settings g]]
           set gl [on listEvent := onGamesListEvent games h]
@@ -109,7 +109,7 @@ createToolBox h name isGuest chan = do
             pt <- listEventGetPoint evt
             menuPopup glCtxMenu pt gl)
 
-        NoSuchGame -> set status [text := "No such game. Updating games..."] >>
+        NoSuchGame -> set status [text := name ++ ": No such game. Updating games..."] >>
                       hPutStrLn h "4 games"
 
         NewSeek seek -> M.when (Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
