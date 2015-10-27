@@ -10,10 +10,12 @@ module Move (
   isPlayersNewGame,
   playerColor,
   isCheckmate,
+  toGameResultTuple,
   dummyMove
 ) where
 
 import Api
+import qualified Game
 import Data.Maybe (isNothing, fromMaybe)
 
 data Move = Move {
@@ -79,6 +81,12 @@ playerColor name move
 isCheckmate :: Move -> Bool
 isCheckmate = maybe False ((== '#') . last) . movePretty
 
+toGameResultTuple :: Move -> (Int, String, Game.GameResult)
+toGameResultTuple move = (Move.gameId move, namePlayer colorTurn move ++ " checkmated", turnToGameResult colorTurn)
+  where
+    colorTurn = turn move
+    turnToGameResult Black = Game.WhiteWins
+    turnToGameResult White = Game.BlackWins
 
 dummyMove :: Move
 dummyMove = Move {

@@ -1,4 +1,4 @@
-module WxChallenge (
+    module WxChallenge (
   wxChallenge
 ) where
 
