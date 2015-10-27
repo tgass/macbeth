@@ -24,7 +24,7 @@ eventId = wxID_HIGHEST + 53
 -- TODO: forfeits on time doesn't stop game ?!
 -- TODO: Request move take backend, accept/ decline move takeback request
 createObservedGame :: Handle -> Move -> Api.PColor -> Chan CommandMsg -> IO ()
-createObservedGame h    move color chan = do
+createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
   vGameMoves <- newMVar []
 

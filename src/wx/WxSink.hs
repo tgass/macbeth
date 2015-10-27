@@ -22,8 +22,10 @@ wxSink chan h cmd = case cmd of
 
   MatchRequested c -> writeChan chan cmd >> dupChan chan >>= wxChallenge h c
 
-  GameMove move' -> when (isPlayersNewGame move') $ dupChan chan >>= createObservedGame h move' (colorOfPlayer move') >>
-                    writeChan chan cmd -- muss nach createObservedGame aufgerufen werden
+  GameMove move' -> (when (isPlayersNewGame move') $ dupChan chan >>= createObservedGame h move' (colorOfPlayer move')) >>
+                    writeChan chan cmd
+
+
 
   Boxed cmds -> sequence_ $ fmap (writeChan chan) cmds
 
