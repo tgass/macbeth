@@ -23,7 +23,7 @@ import System.IO
 
 ficsEventId = wxID_HIGHEST + 51
 
---TODO: Show status: game private
+--TODO: make game list sortable, configurable
 createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
 createToolBox h name isGuest chan = do
     vCmd <- newEmptyMVar
@@ -101,7 +101,8 @@ createToolBox h name isGuest chan = do
 
         Games games -> do
           set status [text := ""]
-          set gl [items := [[show $ Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g] | g <- games]]
+          set gl [items := [[show $ Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g]
+                            | g <- games, not $ isPrivate $ settings g]]
           set gl [on listEvent := onGamesListEvent games h]
           --TODO: aufhübschen
           listItemRightClickEvent gl (\evt -> do
