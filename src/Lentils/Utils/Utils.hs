@@ -1,8 +1,8 @@
-module Utils (
+module Lentils.Utils.Utils (
   formatTime
 ) where
 
-import Api
+import Lentils.Api.Api
 
 import Control.Monad.State
 

@@ -1,9 +1,9 @@
-module Challenge (
+module Lentils.Api.Challenge (
   Challenge (..),
   displayChallenge
 ) where
 
-import Rating
+import Lentils.Api.Rating
 
 data Challenge = Challenge { nameW :: String
                            , ratingW :: Rating

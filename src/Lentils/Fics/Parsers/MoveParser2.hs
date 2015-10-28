@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module MoveParser2 (
+module Lentils.Fics.Parsers.MoveParser2 (
   move
 ) where
 
-import Api
-import PositionParser
-import Move
+import Lentils.Api.Api
+import Lentils.Fics.Parsers.PositionParser
+import Lentils.Api.Move
 
 import Control.Applicative
 import Control.Monad

@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module FicsConnection (
+module Lentils.Fics.FicsConnection (
   ficsConnection
 ) where
 
-import CommandMsg
-import CommandMsgParser
-import Move
+import Lentils.Api.CommandMsg
+import Lentils.Api.Move
+import Lentils.Fics.Parsers.CommandMsgParser
 
 import Control.Concurrent.Chan (Chan, newChan, writeChan)
 import Control.Monad (when)
@@ -83,7 +83,7 @@ toCharC = awaitForever $ CL.sourceList . BS.unpack
 
 toGameResult :: Move -> CommandMsg
 toGameResult move = GameResult id reason result
-  where (id, reason, result) = Move.toGameResultTuple move
+  where (id, reason, result) = Lentils.Api.Move.toGameResultTuple move
 
 --TODO: provide more logging choice
 printCmdMsg :: CommandMsg -> IO ()

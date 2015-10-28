@@ -1,4 +1,4 @@
-module WxAbout (
+module Lentils.Wx.WxAbout (
   wxAbout
 ) where
 

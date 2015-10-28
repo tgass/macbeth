@@ -1,4 +1,4 @@
-module WxLogin (
+module Lentils.Wx.WxLogin (
   wxLogin
 ) where
 
@@ -9,8 +9,8 @@ import Control.Concurrent.MVar
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 
-import CommandMsg
-import WxToolBox
+import Lentils.Api.CommandMsg
+import Lentils.Wx.WxToolBox
 
 
 wxLogin :: Handle -> Chan CommandMsg -> IO ()

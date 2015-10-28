@@ -1,18 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module CommandMsgParser (
+module Lentils.Fics.Parsers.CommandMsgParser (
  parseCommandMsg
 ) where
 
-import Api
-import Challenge
-import CommandMsg
-import Game
-import GamesParser
-import Move
-import MoveParser2
-import qualified ParseUtils as Utils
-import qualified SeekMsgParsers as SP
+import Lentils.Api.Api
+import Lentils.Api.Challenge
+import Lentils.Api.CommandMsg
+import Lentils.Api.Game
+import Lentils.Fics.Parsers.GamesParser
+import Lentils.Api.Move
+import Lentils.Fics.Parsers.MoveParser2
+import qualified Lentils.Fics.Parsers.ParseUtils as Utils
+import qualified Lentils.Fics.Parsers.SeekMsgParsers as SP
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8

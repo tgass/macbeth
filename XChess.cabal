@@ -4,7 +4,7 @@ cabal-version: >=1.6
 build-type: Simple
 license: AllRightsReserved
 license-file: ""
-data-dir: ""
+data-files:
 
 executable XChess
     build-depends: base >=4.2 && <5, wxcore -any, wx -any,
@@ -15,7 +15,7 @@ executable XChess
                    time -any
     main-is: XChess.hs
     buildable: True
-    hs-source-dirs: src src/parsers src/api src/wx
-    ghc-options: -O3 -threaded
+    hs-source-dirs: src
+    ghc-options: -O3 -threaded -W
 
 

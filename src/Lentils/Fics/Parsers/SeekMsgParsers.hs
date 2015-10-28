@@ -1,16 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module SeekMsgParsers (
+module Lentils.Fics.Parsers.SeekMsgParsers (
   clearSeek,
   newSeek,
   removeSeeks
 ) where
 
-import Api
-import CommandMsg
-import Game
-import Rating
-import Seek
+import Lentils.Api.Api
+import Lentils.Api.CommandMsg
+import Lentils.Api.Game
+import Lentils.Api.Rating
+import Lentils.Api.Seek
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8

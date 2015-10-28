@@ -1,4 +1,4 @@
-module Move (
+module Lentils.Api.Move (
   Move(..),
   Relation(..),
   remainingTime,
@@ -14,9 +14,9 @@ module Move (
   dummyMove
 ) where
 
-import Api
-import qualified Game
-import Data.Maybe (isNothing, fromMaybe)
+import Lentils.Api.Api
+import qualified Lentils.Api.Game as Game
+import Data.Maybe (isNothing)
 
 data Move = Move {
     position :: [(Square, Piece)]
@@ -40,26 +40,26 @@ instance Show Move where
 data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
 
 
-remainingTime :: Api.PColor -> Move -> Int
+remainingTime :: Lentils.Api.Api.PColor -> Move -> Int
 remainingTime Black = remainingTimeB
 remainingTime White = remainingTimeW
 
 
-decreaseRemainingTime :: Api.PColor -> Move -> Move
+decreaseRemainingTime :: Lentils.Api.Api.PColor -> Move -> Move
 decreaseRemainingTime Black move = move {remainingTimeB = max 0 $ remainingTimeB move - 1}
 decreaseRemainingTime White move = move {remainingTimeW = max 0 $ remainingTimeW move - 1}
 
 
-namePlayer :: Api.PColor -> Move -> String
+namePlayer :: Lentils.Api.Api.PColor -> Move -> String
 namePlayer White = nameW
 namePlayer Black = nameB
 
 
-colorOfPlayer :: Move -> Api.PColor
-colorOfPlayer m = if relation m == MyMove then turn m else Api.invert $ turn m
+colorOfPlayer :: Move -> Lentils.Api.Api.PColor
+colorOfPlayer m = if relation m == MyMove then turn m else Lentils.Api.Api.invert $ turn m
 
 
-nameOponent :: Api.PColor -> Move -> String
+nameOponent :: Lentils.Api.Api.PColor -> Move -> String
 nameOponent White = nameB
 nameOponent Black = nameW
 
@@ -72,17 +72,17 @@ isPlayersNewGame :: Move -> Bool
 isPlayersNewGame m = isPlayersGame m && isNothing (movePretty m)
 
 
-playerColor :: String -> Move -> Api.PColor
+playerColor :: String -> Move -> Lentils.Api.Api.PColor
 playerColor name move
-  | Move.nameW move == name = White
-  | otherwise = Black
+  | nameW move == name = Lentils.Api.Api.White
+  | otherwise = Lentils.Api.Api.Black
 
 
 isCheckmate :: Move -> Bool
 isCheckmate = maybe False ((== '#') . last) . movePretty
 
 toGameResultTuple :: Move -> (Int, String, Game.GameResult)
-toGameResultTuple move = (Move.gameId move, namePlayer colorTurn move ++ " checkmated", turnToGameResult colorTurn)
+toGameResultTuple move = (gameId move, namePlayer colorTurn move ++ " checkmated", turnToGameResult colorTurn)
   where
     colorTurn = turn move
     turnToGameResult Black = Game.WhiteWins

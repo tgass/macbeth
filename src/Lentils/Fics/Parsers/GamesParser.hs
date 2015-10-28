@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module GamesParser (
+module Lentils.Fics.Parsers.GamesParser (
   paresGamesList
 ) where
 
-import Api
-import Game
-import ParseUtils
+import Lentils.Api.Api
+import Lentils.Api.Game
+import Lentils.Fics.Parsers.ParseUtils
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8

@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ParseUtils (
+module Lentils.Fics.Parsers.ParseUtils (
   rating
 ) where
 
-import Api
-import Rating
+import Lentils.Api.Api
+import Lentils.Api.Rating
 
 import Control.Applicative
 import Control.Monad

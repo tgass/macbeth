@@ -1,4 +1,4 @@
-module WxSeek (
+module Lentils.Wx.WxSeek (
   wxSeek,
   main
 ) where
@@ -27,7 +27,7 @@ wxSeek h isGuest = do
             column 10 [boxed "" (
               grid 15 15 [
                 [ label "Time [min.]:", hfill $ widget $ time match, label "Inc [sec.]:", hfill $ widget $ inc match]
-              , [ label "Rated:", hfill $ widget $ rated match, label "Color:", hfill $ widget $ WxSeek.color match]
+              , [ label "Rated:", hfill $ widget $ rated match, label "Color:", hfill $ widget $ Lentils.Wx.WxSeek.color match]
               , [ label "Rating from", hfill $ widget $ ratingFrom match, label "to", hfill $ widget $ ratingTo match]
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
@@ -41,7 +41,7 @@ toString m = (("4 seek " ++) . concat . intersperse " ") `fmap` sequence [
     get (time m) text
   , get (inc m) text
   , convertIsRated `fmap` get (rated m) enabled
-  , get (WxSeek.color m) selection >>= fmap convertColor . (get $ WxSeek.color m) . item
+  , get (Lentils.Wx.WxSeek.color m) selection >>= fmap convertColor . (get $ Lentils.Wx.WxSeek.color m) . item
   , convertRatingRange <$> get (ratingFrom m) text <*> get (ratingTo m) text]
     where
       convertIsRated True = "rated"

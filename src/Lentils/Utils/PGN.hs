@@ -1,10 +1,10 @@
-module PGN (
+module Lentils.Utils.PGN (
   saveAsPGN
 ) where
 
-import Api
-import Move
-import Game
+import Lentils.Api.Api
+import Lentils.Api.Move
+import Lentils.Api.Game
 
 import Data.Maybe
 import Data.List
@@ -33,8 +33,8 @@ tagsSection m date =
   \[Site \"?\"]\n\
   \[Date \"" ++ date ++ "\"]\n\
   \[Round \"?\"]\n\
-  \[White \"" ++ Move.nameW m ++ "\"]\n\
-  \[Black \"" ++ Move.nameB m ++ "\"]\n\
+  \[White \"" ++ Lentils.Api.Move.nameW m ++ "\"]\n\
+  \[Black \"" ++ Lentils.Api.Move.nameB m ++ "\"]\n\
   \[Result \"?\"]\n\
   \[BlackElo \"?\"]\n\
   \[WhiteElo \"?\"]\n\

@@ -1,11 +1,11 @@
-    module WxChallenge (
+module Lentils.Wx.WxChallenge (
   wxChallenge
 ) where
 
-import Api
-import Challenge
-import CommandMsg
-import WxUtils (eventLoop)
+import Lentils.Api.Api
+import Lentils.Api.Challenge
+import Lentils.Api.CommandMsg
+import Lentils.Wx.WxUtils (eventLoop)
 
 import Control.Concurrent
 import Control.Concurrent.Chan

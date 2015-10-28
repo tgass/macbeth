@@ -1,14 +1,14 @@
-module WxObservedGame (
+module Lentils.Wx.WxObservedGame (
   createObservedGame,
 ) where
 
-import Api
-import Board
-import CommandMsg
-import Move
-import PGN
-import Utils (formatTime)
-import WxUtils
+import Lentils.Api.Api
+import Lentils.Utils.Board
+import Lentils.Api.CommandMsg
+import Lentils.Api.Move
+import Lentils.Utils.PGN
+import Lentils.Utils.Utils (formatTime)
+import Lentils.Wx.WxUtils
 
 import Control.Concurrent
 import Control.Concurrent.Chan
@@ -23,7 +23,7 @@ eventId = wxID_HIGHEST + 53
 -- TODO: Seek auto match ?! Bug?
 -- TODO: forfeits on time doesn't stop game ?!
 -- TODO: Request move take backend, accept/ decline move takeback request
-createObservedGame :: Handle -> Move -> Api.PColor -> Chan CommandMsg -> IO ()
+createObservedGame :: Handle -> Move -> Lentils.Api.Api.PColor -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
   vGameMoves <- newMVar []
@@ -33,9 +33,9 @@ createObservedGame h move color chan = do
 
   -- board
   p_board <- panel p_back []
-  vBoardState <- variable [ value := BoardState p_board (Move.position move) color color (Square A One) Nothing (relation move == MyMove) ]
-  set p_board [ on paint := Board.draw vBoardState ]
-  windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
+  vBoardState <- variable [ value := BoardState p_board (Lentils.Api.Move.position move) color color (Square A One) Nothing (relation move == MyMove) ]
+  set p_board [ on paint := Lentils.Utils.Board.draw vBoardState ]
+  windowOnMouse p_board True $ Lentils.Utils.Board.onMouseEvent h vBoardState
 
   -- clock
   vClock <- variable [ value := move ]
@@ -69,9 +69,9 @@ createObservedGame h move color chan = do
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
-    GameMove move' -> when (Move.gameId move' == Move.gameId move) $ do
+    GameMove move' -> when (Lentils.Api.Move.gameId move' == Lentils.Api.Move.gameId move) $ do
                                    state <- varGet vBoardState
-                                   varSet vBoardState $ state { _position = Move.position move', isInteractive = relation move' == MyMove}
+                                   varSet vBoardState $ state { _position = Lentils.Api.Move.position move', isInteractive = relation move' == MyMove}
                                    repaint (_panel state)
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
@@ -79,14 +79,14 @@ createObservedGame h move color chan = do
                                    set status [text := ""]
                                    when (isPlayersGame move') $ modifyMVar_ vGameMoves $ return . addMove move'
 
-    GameResult id reason result -> when (id == Move.gameId move) $ do
+    GameResult id reason result -> when (id == Lentils.Api.Move.gameId move) $ do
                               state <- varGet vBoardState
-                              varSet vBoardState $ state {Board.isInteractive = False}
+                              varSet vBoardState $ state {Lentils.Utils.Board.isInteractive = False}
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               set status [text := (show result ++ ": " ++ reason)]
                               moves <- takeMVar vGameMoves
-                              PGN.saveAsPGN (reverse moves) "JJ" result
+                              Lentils.Utils.PGN.saveAsPGN (reverse moves) "JJ" result
                               hPutStrLn h "4 iset seekinfo 1"
 
     DrawOffered -> set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
@@ -103,21 +103,21 @@ createObservedGame h move color chan = do
                          case relation move of
                            MyMove -> hPutStrLn h "5 resign"
                            OponentsMove -> hPutStrLn h "5 resign"
-                           Observing -> hPutStrLn h $ "5 unobserve " ++ show (Move.gameId move)
+                           Observing -> hPutStrLn h $ "5 unobserve " ++ show (Lentils.Api.Move.gameId move)
                            _ -> return ()
 
 
-turnBoard :: Var Board.BoardState -> Panel () -> (Api.PColor -> Layout) -> IO ()
+turnBoard :: Var Lentils.Utils.Board.BoardState -> Panel () -> (Lentils.Api.Api.PColor -> Layout) -> IO ()
 turnBoard vState p layoutF = do
   state <- varGet vState
-  let color' = Api.invert $ Board.perspective state
-  varSet vState $ state {Board.perspective = color' }
+  let color' = Lentils.Api.Api.invert $ Lentils.Utils.Board.perspective state
+  varSet vState $ state {Lentils.Utils.Board.perspective = color' }
   set p [layout := layoutF color']
-  repaint (Board._panel state)
+  repaint (Lentils.Utils.Board._panel state)
   refit p
 
 
-createStatusPanel :: Panel () -> Var Move -> Api.PColor -> IO (Panel (), Graphics.UI.WX.Timer)
+createStatusPanel :: Panel () -> Var Move -> Lentils.Api.Api.PColor -> IO (Panel (), Graphics.UI.WX.Timer)
 createStatusPanel p_back vMove color = do
   move <- varGet vMove
   p_status <- panel p_back []
@@ -136,7 +136,7 @@ createStatusPanel p_back vMove color = do
   return (p_status, t)
 
 
-updateTime :: Api.PColor -> Var Move -> StaticText () -> IO ()
+updateTime :: Lentils.Api.Api.PColor -> Var Move -> StaticText () -> IO ()
 updateTime color vClock st = do
   move <- changeRemainingTime color `fmap` varGet vClock
   varSet vClock move
@@ -153,7 +153,7 @@ staticTextFormatted p s = staticText p [ text := s
                                        , fontWeight := WeightBold]
 
 
-layoutBoard :: Panel() -> Panel() -> Panel() -> Api.PColor -> Layout
+layoutBoard :: Panel() -> Panel() -> Panel() -> Lentils.Api.Api.PColor -> Layout
 layoutBoard board white black color = grid 0 0 [ [hfill $ widget (if color == White then black else white)]
                                                , [fill $ minsize (Size 320 320) $ widget board]
                                                , [hfill $ widget (if color == White then white else black)]]

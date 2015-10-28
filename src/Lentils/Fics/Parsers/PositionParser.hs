@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module PositionParser (
+module Lentils.Fics.Parsers.PositionParser (
   parsePosition
 ) where
 
-import Api
+import Lentils.Api.Api
 import Control.Arrow (second)
 import Data.List.Split
 import Data.Maybe

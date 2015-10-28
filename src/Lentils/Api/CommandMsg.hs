@@ -1,13 +1,13 @@
-module CommandMsg (
+module Lentils.Api.CommandMsg (
   CommandMsg (..)
 ) where
 
-import Api
-import Challenge
-import Game
-import Move
-import Rating
-import Seek
+import Lentils.Api.Api
+import Lentils.Api.Challenge
+import Lentils.Api.Game
+import Lentils.Api.Move
+import Lentils.Api.Rating
+import Lentils.Api.Seek
 
 data CommandMsg =   GameMove Move
                   | Games [Game]

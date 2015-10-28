@@ -1,4 +1,4 @@
-module Rating (
+module Lentils.Api.Rating (
   Rating (..)
 ) where
 

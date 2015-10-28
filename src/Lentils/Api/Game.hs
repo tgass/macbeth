@@ -1,4 +1,4 @@
-module Game (
+module Lentils.Api.Game (
   Game (..),
   GameType (..),
   GameSettings (..),
@@ -6,8 +6,8 @@ module Game (
   GameInfo (..)
 ) where
 
-import Api
-import Rating
+import Lentils.Api.Api
+import Lentils.Api.Rating
 
 data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
                  Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show, Eq)

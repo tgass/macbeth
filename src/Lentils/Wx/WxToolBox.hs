@@ -1,20 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module WxToolBox (
+module Lentils.Wx.WxToolBox (
   createToolBox
 ) where
 
-import Api
-import CommandMsg
-import Move
-import Game
-import Seek
-import WxAbout
-import WxMatch
-import WxSeek
-import WxUtils
-import WxObservedGame
-import WxChallenge
+import Lentils.Api.Api
+import Lentils.Api.CommandMsg
+import Lentils.Api.Move
+import Lentils.Api.Game
+import Lentils.Api.Seek
+import Lentils.Wx.WxAbout
+import Lentils.Wx.WxMatch
+import Lentils.Wx.WxSeek
+import Lentils.Wx.WxUtils
+import Lentils.Wx.WxObservedGame
+import Lentils.Wx.WxChallenge
 
 import Control.Concurrent
 import Control.Concurrent.Chan
@@ -107,7 +107,7 @@ createToolBox h name isGuest chan = do
 
         Games games -> do
           set status [text := name]
-          set gl [items := [[show $ Game.id g, Game.nameW g, show $ ratingW g, Game.nameB g, show $ ratingB g]
+          set gl [items := [[show $ Lentils.Api.Game.id g, Lentils.Api.Game.nameW g, show $ ratingW g, Lentils.Api.Game.nameB g, show $ ratingB g]
                             | g <- games, not $ isPrivate $ settings g]]
           set gl [on listEvent := onGamesListEvent games h]
           --TODO: aufhübschen
@@ -118,7 +118,7 @@ createToolBox h name isGuest chan = do
         NoSuchGame -> set status [text := name ++ ": No such game. Updating games..."] >>
                       hPutStrLn h "4 games"
 
-        NewSeek seek -> M.when (Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
+        NewSeek seek -> M.when (Lentils.Api.Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
                                itemAppend sl $ toList seek
 
         ClearSeek -> itemsDelete sl
@@ -157,7 +157,7 @@ toList (Seek id name rating time inc isRated gameType color ratingRange) =
 
 onGamesListEvent :: [Game] -> Handle -> EventList -> IO ()
 onGamesListEvent games h eventList = case eventList of
-  ListItemActivated idx -> hPutStrLn h $ "4 observe " ++ show (Game.id $ games !! idx)
+  ListItemActivated idx -> hPutStrLn h $ "4 observe " ++ show (Lentils.Api.Game.id $ games !! idx)
   _ -> return ()
 
 

@@ -1,10 +1,10 @@
-module Board (
+module Lentils.Utils.Board (
   draw,
   onMouseEvent,
   BoardState(..)
 ) where
 
-import Api
+import Lentils.Api.Api
 
 import Control.Applicative (liftA)
 import Control.Monad.Trans.Maybe
@@ -14,8 +14,8 @@ import System.IO (Handle, hPutStrLn)
 
 data BoardState = BoardState { _panel :: Panel()
                              , _position :: Position
-                             , playerColor :: Api.PColor
-                             , perspective :: Api.PColor
+                             , playerColor :: Lentils.Api.Api.PColor
+                             , perspective :: Lentils.Api.Api.PColor
                              , selSquare :: Square
                              , draggedPiece :: Maybe DraggedPiece
                              , isInteractive :: Bool
@@ -124,7 +124,7 @@ calcScale :: Size -> Double
 calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
-drawPiece :: DC a -> t -> Api.PColor -> (Square, Piece) -> IO ()
+drawPiece :: DC a -> t -> Lentils.Api.Api.PColor -> (Square, Piece) -> IO ()
 drawPiece dc view color (square, p) = drawBitmap dc (pieceToBitmap p) (toPos square color) True []
 
 
@@ -137,26 +137,26 @@ drawBoard :: DC a -> t -> IO ()
 drawBoard dc view = drawBitmap dc board (point 0 0) False []
 
 
-toPos :: Square -> Api.PColor -> Point
+toPos :: Square -> Lentils.Api.Api.PColor -> Point
 toPos (Square c r) color = point (colToInt color c * 40) (rowToInt color r * 40)
 
 
-rowToInt :: Api.PColor -> Row -> Int
+rowToInt :: Lentils.Api.Api.PColor -> Row -> Int
 rowToInt White = abs . (7-) . fromEnum
 rowToInt Black = fromEnum
 
 
-colToInt :: Api.PColor -> Column -> Int
+colToInt :: Lentils.Api.Api.PColor -> Column -> Int
 colToInt White = fromEnum
 colToInt Black = abs . (7-) . fromEnum
 
 
-intToRow :: Api.PColor -> Int -> Row
+intToRow :: Lentils.Api.Api.PColor -> Int -> Row
 intToRow White = toEnum . abs . (7-)
 intToRow Black = toEnum
 
 
-intToCol :: Api.PColor -> Int -> Column
+intToCol :: Lentils.Api.Api.PColor -> Int -> Column
 intToCol White = toEnum
 intToCol Black = toEnum . abs . (7-)
 

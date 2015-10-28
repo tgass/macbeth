@@ -1,11 +1,11 @@
-module Seek (
+module Lentils.Api.Seek (
   Seek (..),
   StartMode
 ) where
 
-import Api
-import Game
-import Rating
+import Lentils.Api.Api
+import Lentils.Api.Game
+import Lentils.Api.Rating
 
 data Seek = Seek {
     id :: Int
@@ -22,6 +22,6 @@ data Seek = Seek {
 }
 
 instance Show Seek where
-  show seek = "Seek {id = " ++ show (Seek.id seek) ++ "}"
+  show seek = "Seek {id = " ++ show (Lentils.Api.Seek.id seek) ++ "}"
 
 data StartMode = Auto | Manual deriving (Show)

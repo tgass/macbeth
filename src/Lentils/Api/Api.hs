@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Api (
+module Lentils.Api.Api (
   PColor (..),
   Piece (..),
   PType (..),
