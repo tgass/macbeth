@@ -1,14 +1,10 @@
 module Main where
 
-import Control.Concurrent.Chan
 import Lentils.Fics.FicsConnection (ficsConnection)
 import Lentils.Wx.WxLogin
-import Control.Monad
 import Graphics.UI.WX
 
 --TODO: fix warnings
---TODO: Rename packages. Wx.WxLogin -> ./wx/WxLogin
---TODO: cleanup ghc, modules: ghc-pkg list -v, ghc-pkg dot
 main :: IO ()
 main = do
   (h, chan) <- ficsConnection

@@ -3,15 +3,15 @@ module Lentils.Wx.WxObservedGame (
 ) where
 
 import Lentils.Api.Api
-import Lentils.Utils.Board
 import Lentils.Api.CommandMsg
 import Lentils.Api.Move
 import Lentils.Utils.PGN
 import Lentils.Utils.Utils (formatTime)
 import Lentils.Wx.WxUtils
+import Lentils.Utils.Board
 
 import Control.Concurrent
-import Control.Concurrent.Chan
+import Control.Concurrent.Chan ()
 import Data.Maybe
 import Graphics.UI.WX
 import Graphics.UI.WXCore

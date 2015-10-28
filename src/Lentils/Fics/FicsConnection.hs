@@ -12,7 +12,6 @@ import Control.Concurrent.Chan (Chan, newChan, writeChan)
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Resource (runResourceT, allocate, resourceForkIO)
-import Data.Attoparsec.ByteString.Char8
 import Data.Char
 import Data.Conduit
 import Network (connectTo, PortID (..))
@@ -26,7 +25,7 @@ import qualified Data.Conduit.List as CL
 ficsConnection :: IO (Handle, Chan CommandMsg)
 ficsConnection = runResourceT $ do
   chan <- liftIO newChan
-  (releaseSock, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
+  (_, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
   liftIO $ hSetBuffering hsock LineBuffering
   resourceForkIO $ liftIO $ chain hsock chan
   return (hsock, chan)
