@@ -7,7 +7,6 @@ import Lentils.Api.Move
 import Lentils.Api.Game
 
 import Data.Maybe
-import Data.List
 import Data.Time
 import System.Directory
 import System.FilePath
@@ -22,7 +21,7 @@ saveAsPGN moves playerName result = do
 
 toPGN :: [Move] -> GameResult -> String -> String
 toPGN [] _ _ = ""
-toPGN moves@(m:mx) result date = tagsSection m date ++ "\n\n" ++ moveSection moves ++ " " ++ (show result) ++ "\n\n"
+toPGN moves@(m:_) result date = tagsSection m date ++ "\n\n" ++ moveSection moves ++ " " ++ (show result) ++ "\n\n"
 
 moveSection :: [Move] -> String
 moveSection = unwords . fmap (toString . toSAN) . filter realMove

@@ -2,8 +2,6 @@ module Lentils.Utils.Utils (
   formatTime
 ) where
 
-import Lentils.Api.Api
-
 import Control.Monad.State
 
 formatTime :: Int -> String
@@ -16,7 +14,7 @@ calc :: Int -> State (Int, Int, Int) Int
 calc seconds
   | seconds >= 3600 = get >>= \(h, m, s) -> put (h+1, m, s) >> calc (seconds - 3600)
   | seconds >= 60 = get >>= \(h, m, s) -> put (h, m+1, s) >> calc (seconds - 60)
-  | otherwise = get >>= \(h, m, s) -> put (h, m, seconds) >> return 0
+  | otherwise = get >>= \(h, m, _) -> put (h, m, seconds) >> return 0
 
 format :: Int -> String
 format i

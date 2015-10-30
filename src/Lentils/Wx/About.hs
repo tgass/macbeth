@@ -13,5 +13,5 @@ wxAbout = do
   return ()
 
 paintAbout :: DC a -> t -> IO ()
-paintAbout dc view = drawBitmap dc (bitmap "/Users/tilmann/Documents/leksah/XChess/gif/about.jpg") (point 0 0) False []
+paintAbout dc _ = drawBitmap dc (bitmap "/Users/tilmann/Documents/leksah/XChess/gif/about.jpg") (point 0 0) False []
 

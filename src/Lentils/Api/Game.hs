@@ -6,7 +6,6 @@ module Lentils.Api.Game (
   GameInfo (..)
 ) where
 
-import Lentils.Api.Api
 import Lentils.Api.Rating
 
 data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
