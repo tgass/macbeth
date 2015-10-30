@@ -1,4 +1,4 @@
-module Lentils.Wx.WxMatch (
+module Lentils.Wx.Match (
   main,
   wxMatch
 ) where
@@ -30,7 +30,7 @@ wxMatch h isGuest = do
                ,[ label "Rated:", hfill $ widget $ rated match]
                ,[ label "Time:", hfill $ widget $ time match]
                ,[ label "Inc:", hfill $ widget $ inc match]
-               ,[ label "Color:", hfill $ widget $ Lentils.Wx.WxMatch.color match]
+               ,[ label "Color:", hfill $ widget $ Lentils.Wx.Match.color match]
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
@@ -54,7 +54,7 @@ toString m = (("4 match " ++) . concat . intersperse " ") `fmap` sequence [
      , convertIsRated `fmap` get (rated m) enabled
      , get (time m) text
      , get (inc m) text
-     , get (Lentils.Wx.WxMatch.color m) selection >>= fmap convertColor . (get $ Lentils.Wx.WxMatch.color m) . item]
+     , get (Lentils.Wx.Match.color m) selection >>= fmap convertColor . (get $ Lentils.Wx.Match.color m) . item]
     where
       convertIsRated True = "rated"
       convertIsRated False = "unrated"

@@ -1,4 +1,4 @@
-module Lentils.Wx.WxObservedGame (
+module Lentils.Wx.ObservedGame (
   createObservedGame,
 ) where
 
@@ -7,7 +7,7 @@ import Lentils.Api.CommandMsg
 import Lentils.Api.Move
 import Lentils.Utils.PGN
 import Lentils.Utils.Utils (formatTime)
-import Lentils.Wx.WxUtils
+import Lentils.Wx.Utils
 import Lentils.Utils.Board
 
 import Control.Concurrent

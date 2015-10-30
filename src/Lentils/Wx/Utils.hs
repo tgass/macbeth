@@ -1,4 +1,4 @@
-module Lentils.Wx.WxUtils (
+module Lentils.Wx.Utils (
   eventLoop,
   toWxColor
 ) where

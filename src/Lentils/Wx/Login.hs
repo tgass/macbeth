@@ -1,4 +1,4 @@
-module Lentils.Wx.WxLogin (
+module Lentils.Wx.Login (
   wxLogin
 ) where
 

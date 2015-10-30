@@ -1,7 +1,7 @@
 module Main where
 
 import Lentils.Fics.FicsConnection
-import Lentils.Wx.WxToolBox
+import Lentils.Wx.ToolBox
 
 import Graphics.UI.WX
 

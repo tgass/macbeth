@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lentils.Wx.WxToolBox (
+module Lentils.Wx.ToolBox (
   wxToolBox
 ) where
 
@@ -10,13 +10,13 @@ import Lentils.Api.Move
 import Lentils.Api.Game
 import Lentils.Api.Seek
 
-import Lentils.Wx.WxAbout
-import Lentils.Wx.WxLogin
-import Lentils.Wx.WxMatch
-import Lentils.Wx.WxSeek
-import Lentils.Wx.WxUtils
-import Lentils.Wx.WxObservedGame
-import Lentils.Wx.WxChallenge
+import Lentils.Wx.About
+import Lentils.Wx.Login
+import Lentils.Wx.Match
+import Lentils.Wx.Seek
+import Lentils.Wx.Utils
+import Lentils.Wx.ObservedGame
+import Lentils.Wx.Challenge
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
@@ -118,7 +118,7 @@ wxToolBox h chan = do
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
         Games games -> do
-          user <- Lentils.Wx.WxToolBox.name `fmap` readMVar vUser
+          user <- Lentils.Wx.ToolBox.name `fmap` readMVar vUser
           set status [text := user ]
           set gl [items := [[show $ Lentils.Api.Game.id g, Lentils.Api.Game.nameW g, show $ ratingW g, Lentils.Api.Game.nameB g, show $ ratingB g]
                             | g <- games, not $ isPrivate $ settings g]]
@@ -128,7 +128,7 @@ wxToolBox h chan = do
             pt <- listEventGetPoint evt
             menuPopup glCtxMenu pt gl)
 
-        NoSuchGame -> Lentils.Wx.WxToolBox.name `fmap` readMVar vUser >>= \user ->
+        NoSuchGame -> Lentils.Wx.ToolBox.name `fmap` readMVar vUser >>= \user ->
                       set status [text := user ++ ": No such game. Updating games..."] >>
                       hPutStrLn h "4 games"
 
@@ -151,7 +151,8 @@ wxToolBox h chan = do
 
         InvalidPassword  -> M.void $ set status [text := "Invalid password."]
 
-        LoggedIn _ -> hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
+        LoggedIn userName -> swapMVar vUser (User userName) >>
+                             hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
 
         -- UnkownUsername _ -> M.void $ set status [text := "Unknown username."]
 
