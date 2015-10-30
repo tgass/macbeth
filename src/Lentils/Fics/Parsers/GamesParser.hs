@@ -4,9 +4,8 @@ module Lentils.Fics.Parsers.GamesParser (
   paresGamesList
 ) where
 
-import Lentils.Api.Api
 import Lentils.Api.Game
-import Lentils.Fics.Parsers.ParseUtils
+import Lentils.Fics.Parsers.RatingParser
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8

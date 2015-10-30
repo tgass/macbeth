@@ -4,14 +4,12 @@ module Lentils.Fics.Parsers.CommandMsgParser (
  parseCommandMsg
 ) where
 
-import Lentils.Api.Api
 import Lentils.Api.Challenge
 import Lentils.Api.CommandMsg
 import Lentils.Api.Game
 import Lentils.Fics.Parsers.GamesParser
-import Lentils.Api.Move
 import Lentils.Fics.Parsers.MoveParser2
-import qualified Lentils.Fics.Parsers.ParseUtils as Utils
+import Lentils.Fics.Parsers.RatingParser
 import qualified Lentils.Fics.Parsers.SeekMsgParsers as SP
 
 import Control.Applicative
@@ -85,9 +83,9 @@ playSeek = do
 matchRequested :: Parser CommandMsg
 matchRequested = MatchRequested <$> (Challenge
   <$> ("Challenge: " *> manyTill anyChar space)
-  <*> ("(" *> Utils.rating)
+  <*> ("(" *> rating)
   <*> (") " *> manyTill anyChar space)
-  <*> ("(" *> Utils.rating)
+  <*> ("(" *> rating)
   <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
 
 matchUpdated :: Parser CommandMsg

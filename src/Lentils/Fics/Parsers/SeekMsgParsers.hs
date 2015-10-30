@@ -56,12 +56,9 @@ gameType' =
   takeTill (== ' ') *> pure NonStandardGame
 
 
-
 rating' :: Parser Rating
-rating' = do
-  r <- decimal
-  rating <- " " *> pure (Rating r) <|> "E" *> pure (Rating r) <|> "P" *> pure Guest
-  return rating
+rating' = Rating <$> decimal >>= \r -> " " *> pure r <|> "E" *> pure r <|> "P" *> pure Guest
+
 
 clearSeek' = BS.pack "<sc>"
 newSeek' = BS.pack "<s> 7 w=GuestNMZJ ti=01 rt=0P t=15 i=5 r=u tp=standard c=W rr=0-9999 a=t f=t"

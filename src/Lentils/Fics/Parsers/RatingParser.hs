@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lentils.Fics.Parsers.ParseUtils (
+module Lentils.Fics.Parsers.RatingParser (
   rating
 ) where
 
