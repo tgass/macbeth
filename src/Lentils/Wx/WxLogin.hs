@@ -2,29 +2,25 @@ module Lentils.Wx.WxLogin (
   wxLogin
 ) where
 
-import System.IO (Handle, hPutStrLn)
-import Control.Monad
+import Lentils.Api.CommandMsg
+
 import Control.Concurrent.Chan
-import Control.Concurrent.MVar
 import Graphics.UI.WX
 import Graphics.UI.WXCore
-
-import Lentils.Api.CommandMsg
-import Lentils.Wx.WxToolBox
+import System.IO (Handle, hPutStrLn)
 
 
 wxLogin :: Handle -> Chan CommandMsg -> IO ()
 wxLogin h chan = do
-  chan' <- dupChan chan
 
-  f <- frameFixed [ text := "Login to freechess.org" ]
+  f <- frameFixed [ text := "FICS Login" ]
   p <- panel f []
   e_name <- textEntry p [ text := "guest", alignment := AlignRight]
   e_pw   <- textCtrlEx p wxTE_PASSWORD [ alignment := AlignRight]
 
   status <- statusField []
 
-  b_ok  <- button p [text := "Login", on command := okBtnHandler e_name e_pw status f h chan chan']
+  b_ok  <- button p [text := "Login", on command := okBtnHandler e_name e_pw f h chan]
   b_can <- button p [text := "Quit", on command := close f]
 
   set f [ defaultButton := b_ok
@@ -39,22 +35,14 @@ wxLogin h chan = do
         ]
 
 
-okBtnHandler :: TextCtrl() -> TextCtrl() -> StatusField -> Frame() -> Handle -> Chan CommandMsg -> Chan CommandMsg -> IO ()
-okBtnHandler e_name e_pw status f h chan chan' = do
+okBtnHandler :: TextCtrl() -> TextCtrl() -> Frame() -> Handle -> Chan CommandMsg -> IO ()
+okBtnHandler e_name e_pw f h chan = do
   name <- get e_name text
   pw <- get e_pw text
-  loop name pw False
-  where
-    loop name pw isGuest = do
-       cmd <- readChan chan
-       case cmd of
-         Login -> hPutStrLn h name >> loop name pw isGuest
-         Password -> hPutStrLn h pw >> loop name pw isGuest
-         LoggedIn name' -> hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
-                           close f >>
-                           createToolBox h name' isGuest chan'
-         InvalidPassword  -> void $ set status [text := "Invalid password"]
-         UnkownUsername _ -> hPutStrLn h name >> loop name pw isGuest
-         GuestLogin _     -> hPutStrLn h "" >> loop name pw True
-         _                -> loop name pw isGuest
+  hPutStrLn h name
+  loop pw
+  where loop pw = readChan chan >>= handlePw pw
+        handlePw pw' Password = hPutStrLn h pw' >> close f
+        handlePw _ (GuestLogin _) = hPutStrLn h "" >> close f
+        handlePw pw' _ = loop pw'
 

@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Lentils.Wx.WxToolBox (
-  createToolBox
+  wxToolBox
 ) where
 
 import Lentils.Api.Api
@@ -9,7 +9,9 @@ import Lentils.Api.CommandMsg
 import Lentils.Api.Move
 import Lentils.Api.Game
 import Lentils.Api.Seek
+
 import Lentils.Wx.WxAbout
+import Lentils.Wx.WxLogin
 import Lentils.Wx.WxMatch
 import Lentils.Wx.WxSeek
 import Lentils.Wx.WxUtils
@@ -17,8 +19,8 @@ import Lentils.Wx.WxObservedGame
 import Lentils.Wx.WxChallenge
 
 import Control.Concurrent
-import Control.Concurrent.Chan
-import qualified Control.Monad as M (when)
+import Control.Concurrent.Chan ()
+import qualified Control.Monad as M (when, void)
 import Data.List (elemIndex)
 import Graphics.UI.WX
 import Graphics.UI.WXCore
@@ -26,17 +28,23 @@ import System.IO
 
 ficsEventId = wxID_HIGHEST + 51
 
+data User = User { name :: String {-, isGuest :: Bool-} }
+
+--TODO: fix warnings
+--TODO: wxSeek & user isGuest
+--TODO: Deactivate buttons while not logged in
 --TODO: remove absolute paths to resources
 --TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 --TODO: make game list sortable, configurable
 --TODO: application icon
-createToolBox :: Handle -> String -> Bool -> Chan CommandMsg -> IO ()
-createToolBox h name isGuest chan = do
+wxToolBox :: Handle -> Chan CommandMsg -> IO ()
+wxToolBox h chan = do
     vCmd <- newEmptyMVar
+    vUser <- newMVar $ User ""
 
     -- main frame
     f  <- frame [ text := "Lentils"]
-    status <- statusField [ text := name ]
+    status <- statusField []
 
     -- right panel
     right <- panel f []
@@ -55,8 +63,8 @@ createToolBox h name isGuest chan = do
 
     -- toolbar
     tbar   <- toolBar f []
-    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/bullhorn.jpg" [ on command := wxSeek h isGuest ]
-    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/dot-circle-o.jpg" [ on command := wxMatch h isGuest ]
+    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/bullhorn.jpg" [ on command := wxSeek h False ]
+    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/dot-circle-o.jpg" [ on command := wxMatch h False ]
 
     -- tab2 : console
     cp <- panel nb []
@@ -83,7 +91,7 @@ createToolBox h name isGuest chan = do
 
     -- about menu
     m_help    <- menuHelp      []
-    m_about  <- menuAbout m_help [help := "About XChess", on command := wxAbout ]
+    _         <- menuAbout m_help [help := "About XChess", on command := wxAbout ]
 
     set f [ layout := container right
                          ( column 0
@@ -96,8 +104,12 @@ createToolBox h name isGuest chan = do
                             ]
                          ])
           , menuBar := [m_help]
+          , outerSize := sz 600 600
           , statusBar := [status]
           ]
+
+    -- select console first
+    notebookSetSelection nb 2
 
     threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
 
@@ -106,7 +118,8 @@ createToolBox h name isGuest chan = do
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
         Games games -> do
-          set status [text := name]
+          user <- Lentils.Wx.WxToolBox.name `fmap` readMVar vUser
+          set status [text := user ]
           set gl [items := [[show $ Lentils.Api.Game.id g, Lentils.Api.Game.nameW g, show $ ratingW g, Lentils.Api.Game.nameB g, show $ ratingB g]
                             | g <- games, not $ isPrivate $ settings g]]
           set gl [on listEvent := onGamesListEvent games h]
@@ -115,9 +128,14 @@ createToolBox h name isGuest chan = do
             pt <- listEventGetPoint evt
             menuPopup glCtxMenu pt gl)
 
-        NoSuchGame -> set status [text := name ++ ": No such game. Updating games..."] >>
+        NoSuchGame -> Lentils.Wx.WxToolBox.name `fmap` readMVar vUser >>= \user ->
+                      set status [text := user ++ ": No such game. Updating games..."] >>
                       hPutStrLn h "4 games"
 
+        TextMessage text -> appendText ct $ text ++ "\n"
+
+
+        -- SEEK MESSAGES
         NewSeek seek -> M.when (Lentils.Api.Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
                                itemAppend sl $ toList seek
 
@@ -127,7 +145,21 @@ createToolBox h name isGuest chan = do
           seeks <- get sl items
           sequence_ $ fmap (deleteSeek sl . findSeekIdx seeks) gameIds
 
+
+        -- LOGIN MESSAGES
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
+
+        InvalidPassword  -> M.void $ set status [text := "Invalid password."]
+
+        LoggedIn _ -> hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
+
+        -- UnkownUsername _ -> M.void $ set status [text := "Unknown username."]
+
+        -- GuestLogin _ -> set (toolItem tbar "Seek") [on command := return ()]
+
+
+        -- OPEN NEW FRAME
+        Login -> dupChan chan >>= wxLogin h
 
         Observe move -> dupChan chan >>= createObservedGame h move White
 
@@ -136,8 +168,6 @@ createToolBox h name isGuest chan = do
         GameMove move -> when (isPlayersNewGame move) $ dupChan chan >>= createObservedGame h move (colorOfPlayer move)
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
-
-        TextMessage text -> appendText ct $ text ++ "\n"
 
         _ -> return ()
 
@@ -150,7 +180,7 @@ deleteSeek sl (Just id) = itemDelete sl id
 deleteSeek _ _ = return ()
 
 toList :: Seek -> [String]
-toList (Seek id name rating time inc isRated gameType color ratingRange) =
+toList (Seek id name rating time inc isRated gameType _ _) =
   [show id, name, show rating, show time ++ " " ++ show inc, show gameType ++ " " ++ showIsRated isRated]
   where showIsRated True = "rated"
         showIsRated False = "unrated"

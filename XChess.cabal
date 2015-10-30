@@ -7,7 +7,7 @@ license-file: ""
 data-files:
 
 executable XChess
-    build-depends: base >=4.2 && <5, wxcore -any, wx -any,
+    build-depends: base >=4.2 && <5, cabal-macosx, wxcore -any, wx -any,
                    network -any, conduit -any, conduit-extra -any, text -any,
                    transformers -any, resourcet -any, bytestring -any, split -any,
                    attoparsec -any, filepath -any, containers -any, split -any,
