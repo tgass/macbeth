@@ -10,4 +10,3 @@ XChess.cabal.lkshw
 XChess.cabal.lkshs
 src/wx/EnableGUI.*
 Sodium.hs
-resources
