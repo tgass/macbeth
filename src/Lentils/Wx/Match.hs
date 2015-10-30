@@ -4,12 +4,18 @@ module Lentils.Wx.Match (
 ) where
 
 import Control.Applicative
-import Control.Monad (sequence)
 import Data.Char (toLower)
-import Data.List (intersperse)
 import Graphics.UI.WX
 import Graphics.UI.WXCore (windowShow)
 import System.IO (Handle, hPutStrLn, stdout)
+
+data WxMatch = WxMatch {
+  name :: TextCtrl (),
+  time :: TextCtrl (),
+  inc :: TextCtrl (),
+  rated :: CheckBox (),
+  color :: Choice ()
+}
 
 main = start $ wxMatch stdout False
 
@@ -43,29 +49,20 @@ matchInputs p isGuest = WxMatch
   <$> textEntry p [ ]
   <*> textEntry p [ text := "5" ]
   <*> textEntry p [ text := "0" ]
-  <*> checkBox p [ enabled := (not isGuest) ]
+  <*> checkBox p [ enabled := not isGuest ]
   <*> choice p [tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
 
 
 -- 4 match GuestXYZZ rated 5 0 white
 toString:: WxMatch -> IO String
-toString m = (("4 match " ++) . concat . intersperse " ") `fmap` sequence [
+toString m = (("4 match " ++) . unwords) `fmap` sequence [
        get (name m) text
      , convertIsRated `fmap` get (rated m) enabled
      , get (time m) text
      , get (inc m) text
-     , get (Lentils.Wx.Match.color m) selection >>= fmap convertColor . (get $ Lentils.Wx.Match.color m) . item]
+     , get (Lentils.Wx.Match.color m) selection >>= fmap convertColor . get (Lentils.Wx.Match.color m) . item]
     where
       convertIsRated True = "rated"
       convertIsRated False = "unrated"
       convertColor "Automatic" = ""
       convertColor x = fmap toLower x
-
-
-data WxMatch = WxMatch {
-  name :: TextCtrl (),
-  time :: TextCtrl (),
-  inc :: TextCtrl (),
-  rated :: CheckBox (),
-  color :: Choice ()
-}

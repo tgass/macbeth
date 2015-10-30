@@ -33,6 +33,7 @@ data User = User { name :: String {-, isGuest :: Bool-} }
 --TODO: fix warnings
 --TODO: wxSeek & user isGuest
 --TODO: Deactivate buttons while not logged in
+--TODO: close child windows, if this one closes
 --TODO: remove absolute paths to resources
 --TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 --TODO: make game list sortable, configurable

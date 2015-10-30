@@ -4,10 +4,17 @@ module Lentils.Wx.Login (
 
 import Lentils.Api.CommandMsg
 
+import Control.Applicative
 import Control.Concurrent.Chan
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO (Handle, hPutStrLn)
+
+
+data WxLogin = WxLogin {
+  name :: TextCtrl (),
+  password :: TextCtrl ()
+}
 
 
 wxLogin :: Handle -> Chan CommandMsg -> IO ()
@@ -15,34 +22,38 @@ wxLogin h chan = do
 
   f <- frameFixed [ text := "FICS Login" ]
   p <- panel f []
-  e_name <- textEntry p [ text := "guest", alignment := AlignRight]
-  e_pw   <- textCtrlEx p wxTE_PASSWORD [ alignment := AlignRight]
+  wxInputs <- loginInputs p
 
   status <- statusField []
 
-  b_ok  <- button p [text := "Login", on command := okBtnHandler e_name e_pw f h chan]
+  b_ok  <- button p [text := "Login", on command := okBtnHandler wxInputs f h chan]
   b_can <- button p [text := "Quit", on command := close f]
 
   set f [ defaultButton := b_ok
         , layout := container p $ margin 10 $
             column 25 [boxed "" (
               grid 15 15 [
-                [ label "Username:", hfill $ widget e_name]
-               ,[ label "Password:", hfill $ widget e_pw]]
+                [ label "Username:", hfill $ widget $ name wxInputs]
+               ,[ label "Password:", hfill $ widget $ password wxInputs]]
             )
             , floatBottomRight $ row 5 [widget b_ok, widget b_can]]
         , statusBar := [ status ]
         ]
 
 
-okBtnHandler :: TextCtrl() -> TextCtrl() -> Frame() -> Handle -> Chan CommandMsg -> IO ()
-okBtnHandler e_name e_pw f h chan = do
-  name <- get e_name text
-  pw <- get e_pw text
-  hPutStrLn h name
-  loop pw
-  where loop pw = readChan chan >>= handlePw pw
-        handlePw pw' Password = hPutStrLn h pw' >> close f
-        handlePw _ (GuestLogin _) = hPutStrLn h "" >> close f
-        handlePw pw' _ = loop pw'
+okBtnHandler :: WxLogin -> Frame() -> Handle -> Chan CommandMsg -> IO ()
+okBtnHandler wxInputs f h chan = get (name wxInputs) text >>= hPutStrLn h >> loop >> close f
+  where
+    loop = readChan chan >>= handlePw
+
+    handlePw Password = get (password wxInputs) text >>= hPutStrLn h
+    handlePw (GuestLogin _) = hPutStrLn h ""
+    handlePw _ = loop
+
+
+loginInputs :: Panel () -> IO WxLogin
+loginInputs p = WxLogin
+  <$> textEntry p [ text := "guest", alignment := AlignRight]
+  <*> textCtrlEx p wxTE_PASSWORD [ alignment := AlignRight]
+
 
