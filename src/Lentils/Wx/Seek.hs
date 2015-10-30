@@ -5,7 +5,6 @@ module Lentils.Wx.Seek (
 
 import Control.Applicative
 import Data.Char (toLower)
-import Data.List (intersperse)
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO (Handle, hPutStrLn, stdout)
@@ -37,11 +36,11 @@ wxSeek h isGuest = do
 
 -- 4 seek time inc rated color from-to
 toString:: WxSeek -> IO String
-toString m = (("4 seek " ++) . concat . intersperse " ") `fmap` sequence [
+toString m = (("4 seek " ++) . unwords) `fmap` sequence [
     get (time m) text
   , get (inc m) text
   , convertIsRated `fmap` get (rated m) enabled
-  , get (Lentils.Wx.Seek.color m) selection >>= fmap convertColor . (get $ Lentils.Wx.Seek.color m) . item
+  , get (Lentils.Wx.Seek.color m) selection >>= fmap convertColor . get (Lentils.Wx.Seek.color m) . item
   , convertRatingRange <$> get (ratingFrom m) text <*> get (ratingTo m) text]
     where
       convertIsRated True = "rated"
@@ -49,7 +48,7 @@ toString m = (("4 seek " ++) . concat . intersperse " ") `fmap` sequence [
       convertColor "Automatic" = ""
       convertColor x = fmap toLower x
       convertRatingRange from to
-             | (from == "" && to == "") = ""
+             | from == "" && to == "" = ""
              | otherwise = from ++ "-" ++ to
 
 
@@ -57,7 +56,7 @@ matchInputs :: Panel () -> Bool -> IO WxSeek
 matchInputs p isGuest = WxSeek
   <$> textEntry p [ text := "5"]
   <*> textEntry p [ text := "0"]
-  <*> checkBox p [ enabled := (not isGuest) ]
+  <*> checkBox p [ enabled := not isGuest ]
   <*> choice p [tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
   <*> textEntry p [ text := "0"]
   <*> textEntry p [ text := "9999"]
