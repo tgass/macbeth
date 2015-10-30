@@ -2,11 +2,9 @@ module Lentils.Api.CommandMsg (
   CommandMsg (..)
 ) where
 
-import Lentils.Api.Api
 import Lentils.Api.Challenge
 import Lentils.Api.Game
 import Lentils.Api.Move
-import Lentils.Api.Rating
 import Lentils.Api.Seek
 
 data CommandMsg =   GameMove Move
