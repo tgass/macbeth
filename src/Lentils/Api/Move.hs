@@ -3,12 +3,13 @@ module Lentils.Api.Move (
   Relation(..),
   remainingTime,
   decreaseRemainingTime,
+  nameUser,
+  colorUser,
   namePlayer,
-  colorOfPlayer,
-  nameOponent,
   isPlayersGame,
   isPlayersNewGame,
   playerColor,
+  nameOponent,
   isCheckmate,
   toGameResultTuple,
   dummyMove
@@ -50,13 +51,17 @@ decreaseRemainingTime Black move = move {remainingTimeB = max 0 $ remainingTimeB
 decreaseRemainingTime White move = move {remainingTimeW = max 0 $ remainingTimeW move - 1}
 
 
+nameUser :: Move -> String
+nameUser m = namePlayer (colorUser m) m
+
+
+colorUser :: Move -> Lentils.Api.Api.PColor
+colorUser m = if relation m == MyMove then turn m else Lentils.Api.Api.invert $ turn m
+
+
 namePlayer :: Lentils.Api.Api.PColor -> Move -> String
 namePlayer White = nameW
 namePlayer Black = nameB
-
-
-colorOfPlayer :: Move -> Lentils.Api.Api.PColor
-colorOfPlayer m = if relation m == MyMove then turn m else Lentils.Api.Api.invert $ turn m
 
 
 nameOponent :: Lentils.Api.Api.PColor -> Move -> String

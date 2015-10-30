@@ -165,9 +165,9 @@ wxToolBox h chan = do
 
         Observe move -> dupChan chan >>= createObservedGame h move White
 
-        MatchAccepted move -> dupChan chan >>= createObservedGame h move (colorOfPlayer move)
+        MatchAccepted move -> dupChan chan >>= createObservedGame h move (colorUser move)
 
-        GameMove move -> when (isPlayersNewGame move) $ dupChan chan >>= createObservedGame h move (colorOfPlayer move)
+        GameMove move -> when (isPlayersNewGame move) $ dupChan chan >>= createObservedGame h move (colorUser move)
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 

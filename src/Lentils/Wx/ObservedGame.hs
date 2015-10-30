@@ -8,7 +8,7 @@ import Lentils.Api.Move
 import Lentils.Utils.PGN
 import Lentils.Utils.Utils (formatTime)
 import Lentils.Wx.Utils
-import Lentils.Utils.Board
+import qualified Lentils.Utils.Board as Board
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
@@ -33,9 +33,9 @@ createObservedGame h move color chan = do
 
   -- board
   p_board <- panel p_back []
-  vBoardState <- variable [ value := BoardState p_board (Lentils.Api.Move.position move) color color (Square A One) Nothing (relation move == MyMove) ]
-  set p_board [ on paint := Lentils.Utils.Board.draw vBoardState ]
-  windowOnMouse p_board True $ Lentils.Utils.Board.onMouseEvent h vBoardState
+  vBoardState <- variable [ value := Board.BoardState p_board (Lentils.Api.Move.position move) color color (Square A One) Nothing (relation move == MyMove) ]
+  set p_board [ on paint := Board.draw vBoardState ]
+  windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
 
   -- clock
   vClock <- variable [ value := move ]
@@ -71,8 +71,9 @@ createObservedGame h move color chan = do
 
     GameMove move' -> when (Lentils.Api.Move.gameId move' == Lentils.Api.Move.gameId move) $ do
                                    state <- varGet vBoardState
-                                   varSet vBoardState $ state { _position = Lentils.Api.Move.position move', isInteractive = relation move' == MyMove}
-                                   repaint (_panel state)
+                                   varSet vBoardState $ state { Board._position = Lentils.Api.Move.position move'
+                                                              , Board.isInteractive = relation move' == MyMove}
+                                   repaint (Board._panel state)
                                    set t_white [enabled := True]
                                    set t_black [enabled := True]
                                    varSet vClock move'
@@ -81,12 +82,12 @@ createObservedGame h move color chan = do
 
     GameResult id reason result -> when (id == Lentils.Api.Move.gameId move) $ do
                               state <- varGet vBoardState
-                              varSet vBoardState $ state {Lentils.Utils.Board.isInteractive = False}
+                              varSet vBoardState $ state {Board.isInteractive = False}
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               set status [text := (show result ++ ": " ++ reason)]
                               moves <- takeMVar vGameMoves
-                              Lentils.Utils.PGN.saveAsPGN (reverse moves) "JJ" result
+                              Lentils.Utils.PGN.saveAsPGN (reverse moves) (nameUser move) result
                               hPutStrLn h "4 iset seekinfo 1"
 
     DrawOffered -> set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
@@ -107,13 +108,13 @@ createObservedGame h move color chan = do
                            _ -> return ()
 
 
-turnBoard :: Var Lentils.Utils.Board.BoardState -> Panel () -> (Lentils.Api.Api.PColor -> Layout) -> IO ()
+turnBoard :: Var Board.BoardState -> Panel () -> (Lentils.Api.Api.PColor -> Layout) -> IO ()
 turnBoard vState p layoutF = do
   state <- varGet vState
-  let color' = Lentils.Api.Api.invert $ Lentils.Utils.Board.perspective state
-  varSet vState $ state {Lentils.Utils.Board.perspective = color' }
+  let color' = Lentils.Api.Api.invert $ Board.perspective state
+  varSet vState $ state { Board.perspective = color' }
   set p [layout := layoutF color']
-  repaint (Lentils.Utils.Board._panel state)
+  repaint (Board._panel state)
   refit p
 
 
