@@ -7,10 +7,10 @@ module Lentils.Utils.Board (
 import Lentils.Api.Api
 
 import Control.Applicative (liftA)
-import Control.Monad.Trans.Maybe
 import Graphics.UI.WX
-import Graphics.UI.WXCore (dcSetUserScale, windowOnMouse)
+import Graphics.UI.WXCore (dcSetUserScale)
 import System.IO (Handle, hPutStrLn)
+
 
 data BoardState = BoardState { _panel :: Panel()
                              , _position :: Position
@@ -32,23 +32,23 @@ draw vState dc view = do
   state <- varGet vState
   scale <- calcScale `liftA` get (_panel state) size
   dcSetUserScale dc scale scale
-  drawBoard dc view
-  mapM_ (drawPiece dc view (perspective state)) (_position state)
+  drawBoard dc
+  mapM_ (drawPiece dc (perspective state)) (_position state)
   when (isInteractive state) $ do
-    paintSelectedSquare state scale dc view
-    drawDraggedPiece scale (draggedPiece state) dc view
+    paintSelectedSquare state dc
+    drawDraggedPiece scale (draggedPiece state) dc
 
 
-paintSelectedSquare :: BoardState -> Double -> DC a -> t -> IO ()
-paintSelectedSquare state scale dc view = do
+paintSelectedSquare :: BoardState -> DC a -> IO ()
+paintSelectedSquare state dc = do
   let pointX' = pointX $ toPos (selSquare state) (perspective state)
       pointY' = pointY $ toPos (selSquare state) (perspective state)
   set dc [penColor := rgb 255 0 (0 :: Int) ]
   drawRect dc (Rect pointX' pointY' 40 40) []
 
 
-drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> t -> IO ()
-drawDraggedPiece scale mDraggedPiece dc view = case mDraggedPiece of
+drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> IO ()
+drawDraggedPiece scale mDraggedPiece dc = case mDraggedPiece of
   Nothing -> return ()
   Just (DraggedPiece pt piece _) -> drawBitmap dc (pieceToBitmap piece) (scalePoint pt) True []
   where
@@ -84,13 +84,13 @@ onMouseEvent h vState evtMouse = do
     MouseLeftDrag pt _ -> varSet vState state { selSquare = toSquare pt
                                               , draggedPiece = draggedPiece state >>= setNewPoint pt}
 
-    otherwise -> return ()
+    _ -> return ()
 
   repaint (_panel state)
 
   where
     setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
-    setNewPoint pt (DraggedPiece pt' p s) = Just $ DraggedPiece pt p s
+    setNewPoint pt (DraggedPiece _ p s) = Just $ DraggedPiece pt p s
 
     getPiece :: Position -> Square -> PColor -> Maybe Piece
     getPiece pos sq color = sq `lookup` pos >>= checkColor color
@@ -124,8 +124,8 @@ calcScale :: Size -> Double
 calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
-drawPiece :: DC a -> t -> Lentils.Api.Api.PColor -> (Square, Piece) -> IO ()
-drawPiece dc view color (square, p) = drawBitmap dc (pieceToBitmap p) (toPos square color) True []
+drawPiece :: DC a -> Lentils.Api.Api.PColor -> (Square, Piece) -> IO ()
+drawPiece dc color (square, p) = drawBitmap dc (pieceToBitmap p) (toPos square color) True []
 
 
 scalePoint :: Double -> Point -> Point
@@ -133,8 +133,8 @@ scalePoint scale p = point (foo (pointX p) scale) (foo (pointY p) scale)
   where foo x s = max 0 $ min 319 $ floor (fromIntegral x / s)
 
 
-drawBoard :: DC a -> t -> IO ()
-drawBoard dc view = drawBitmap dc board (point 0 0) False []
+drawBoard :: DC a -> IO ()
+drawBoard dc = drawBitmap dc board (point 0 0) False []
 
 
 toPos :: Square -> Lentils.Api.Api.PColor -> Point
