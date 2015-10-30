@@ -4,7 +4,7 @@ cabal-version: >=1.6
 build-type: Simple
 license: AllRightsReserved
 license-file: ""
-data-files: gif/wb.gif
+data-files: resources
 
 executable XChess
     build-depends: base >=4.2 && <5, cabal-macosx, wxcore -any, wx -any,

@@ -2,6 +2,7 @@ module Lentils.Wx.About (
   wxAbout
 ) where
 
+import Paths_XChess
 import Graphics.UI.WX
 
 
@@ -13,5 +14,7 @@ wxAbout = do
   return ()
 
 paintAbout :: DC a -> t -> IO ()
-paintAbout dc _ = drawBitmap dc (bitmap "/Users/tilmann/Documents/leksah/XChess/gif/about.jpg") (point 0 0) False []
+paintAbout dc _ = do
+  dataDir <- getDataDir
+  drawBitmap dc (bitmap $ dataDir ++ "about.jpg") (point 0 0) False []
 

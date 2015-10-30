@@ -6,6 +6,8 @@ module Lentils.Utils.Board (
 
 import Lentils.Api.Api
 
+import Paths_XChess
+
 import Control.Applicative (liftA)
 import Graphics.UI.WX
 import Graphics.UI.WXCore (dcSetUserScale)
@@ -28,15 +30,16 @@ data DraggedPiece = DraggedPiece { _point :: Point
 
 
 draw :: Var BoardState -> DC a -> t -> IO ()
-draw vState dc view = do
+draw vState dc _ = do
   state <- varGet vState
   scale <- calcScale `liftA` get (_panel state) size
+  dataDir <- getDataDir
   dcSetUserScale dc scale scale
-  drawBoard dc
-  mapM_ (drawPiece dc (perspective state)) (_position state)
+  drawBoard dataDir dc
+  mapM_ (drawPiece dataDir dc (perspective state)) (_position state)
   when (isInteractive state) $ do
     paintSelectedSquare state dc
-    drawDraggedPiece scale (draggedPiece state) dc
+    drawDraggedPiece dataDir scale (draggedPiece state) dc
 
 
 paintSelectedSquare :: BoardState -> DC a -> IO ()
@@ -47,10 +50,10 @@ paintSelectedSquare state dc = do
   drawRect dc (Rect pointX' pointY' 40 40) []
 
 
-drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> IO ()
-drawDraggedPiece scale mDraggedPiece dc = case mDraggedPiece of
+drawDraggedPiece :: FilePath -> Double -> Maybe DraggedPiece -> DC a -> IO ()
+drawDraggedPiece dataDir scale mDraggedPiece dc = case mDraggedPiece of
   Nothing -> return ()
-  Just (DraggedPiece pt piece _) -> drawBitmap dc (pieceToBitmap piece) (scalePoint pt) True []
+  Just (DraggedPiece pt piece _) -> drawBitmap dc (toBitmap dataDir piece) (scalePoint pt) True []
   where
     scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
     scaleValue value = round $ (fromIntegral value - 20 * scale) / scale
@@ -124,8 +127,8 @@ calcScale :: Size -> Double
 calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
-drawPiece :: DC a -> Lentils.Api.Api.PColor -> (Square, Piece) -> IO ()
-drawPiece dc color (square, p) = drawBitmap dc (pieceToBitmap p) (toPos square color) True []
+drawPiece :: FilePath -> DC a -> Lentils.Api.Api.PColor -> (Square, Piece) -> IO ()
+drawPiece dataDir dc color (square, p) = drawBitmap dc (toBitmap dataDir p) (toPos square color) True []
 
 
 scalePoint :: Double -> Point -> Point
@@ -133,8 +136,8 @@ scalePoint scale p = point (foo (pointX p) scale) (foo (pointY p) scale)
   where foo x s = max 0 $ min 319 $ floor (fromIntegral x / s)
 
 
-drawBoard :: DC a -> IO ()
-drawBoard dc = drawBitmap dc board (point 0 0) False []
+drawBoard :: FilePath -> DC a -> IO ()
+drawBoard dataDir dc = drawBitmap dc (board dataDir) (point 0 0) False []
 
 
 toPos :: Square -> Lentils.Api.Api.PColor -> Point
@@ -161,28 +164,25 @@ intToCol White = toEnum
 intToCol Black = toEnum . abs . (7-)
 
 
-
-board :: Bitmap ()
-board = bitmap $ root ++ "board_empty.gif"
-
-pieceToBitmap :: Piece -> Bitmap ()
-pieceToBitmap (Piece King Black) = tobitmap "bk.gif"
-pieceToBitmap (Piece Queen Black) = tobitmap "bq.gif"
-pieceToBitmap (Piece Rook Black) = tobitmap "br.gif"
-pieceToBitmap (Piece Knight Black) = tobitmap "bn.gif"
-pieceToBitmap (Piece Bishop Black) = tobitmap "bb.gif"
-pieceToBitmap (Piece Pawn Black) = tobitmap "bp.gif"
-pieceToBitmap (Piece King White) = tobitmap "wk.gif"
-pieceToBitmap (Piece Queen White) = tobitmap "wq.gif"
-pieceToBitmap (Piece Rook White) = tobitmap "wr.gif"
-pieceToBitmap (Piece Knight White) = tobitmap "wn.gif"
-pieceToBitmap (Piece Bishop White) = tobitmap "wb.gif"
-pieceToBitmap (Piece Pawn White) = tobitmap "wp.gif"
+board :: FilePath -> Bitmap ()
+board root = bitmap $ root ++ "board_empty.gif"
 
 
-tobitmap gif = bitmap $ root ++ gif
+pieceToFile :: Piece -> String
+pieceToFile (Piece King Black) = "bk.gif"
+pieceToFile (Piece Queen Black) = "bq.gif"
+pieceToFile (Piece Rook Black) = "br.gif"
+pieceToFile (Piece Knight Black) = "bn.gif"
+pieceToFile (Piece Bishop Black) = "bb.gif"
+pieceToFile (Piece Pawn Black) = "bp.gif"
+pieceToFile (Piece King White) = "wk.gif"
+pieceToFile (Piece Queen White) = "wq.gif"
+pieceToFile (Piece Rook White) = "wr.gif"
+pieceToFile (Piece Knight White) = "wn.gif"
+pieceToFile (Piece Bishop White) = "wb.gif"
+pieceToFile (Piece Pawn White) = "wp.gif"
 
 
-root = "/Users/tilmann/Documents/leksah/XChess/gif/"
-
+toBitmap :: FilePath -> Piece -> Bitmap ()
+toBitmap root p = bitmap $ root ++ pieceToFile p
 

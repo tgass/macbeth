@@ -18,6 +18,8 @@ import Lentils.Wx.Utils
 import Lentils.Wx.ObservedGame
 import Lentils.Wx.Challenge
 
+import Paths_XChess
+
 import Control.Concurrent
 import Control.Concurrent.Chan ()
 import qualified Control.Monad as M (when, void)
@@ -34,7 +36,6 @@ data User = User { name :: String {-, isGuest :: Bool-} }
 --TODO: wxSeek & user isGuest
 --TODO: Deactivate buttons while not logged in
 --TODO: close child windows, if this one closes
---TODO: remove absolute paths to resources
 --TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 --TODO: make game list sortable, configurable
 --TODO: application icon
@@ -42,6 +43,7 @@ wxToolBox :: Handle -> Chan CommandMsg -> IO ()
 wxToolBox h chan = do
     vCmd <- newEmptyMVar
     vUser <- newMVar $ User ""
+    dataDir <- getDataDir
 
     -- main frame
     f  <- frame [ text := "Lentils"]
@@ -64,8 +66,8 @@ wxToolBox h chan = do
 
     -- toolbar
     tbar   <- toolBar f []
-    toolItem tbar "Seek" False  "/Users/tilmann/Documents/leksah/XChess/gif/bullhorn.jpg" [ on command := wxSeek h False ]
-    toolItem tbar "Match" False  "/Users/tilmann/Documents/leksah/XChess/gif/dot-circle-o.jpg" [ on command := wxMatch h False ]
+    toolItem tbar "Seek" False (dataDir ++ "bullhorn.jpg") [ on command := wxSeek h False ]
+    toolItem tbar "Match" False  (dataDir ++ "dot-circle-o.jpg") [ on command := wxMatch h False ]
 
     -- tab2 : console
     cp <- panel nb []
