@@ -19,7 +19,6 @@ data WxLogin = WxLogin {
 
 wxLogin :: Handle -> Chan CommandMsg -> IO ()
 wxLogin h chan = do
-
   f <- frameFixed [ text := "FICS Login" ]
   p <- panel f []
   wxInputs <- loginInputs p

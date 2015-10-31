@@ -22,6 +22,8 @@ import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.List as CL
 
 
+--TODO: provide more logging choice
+--TODO: handle Exceptions
 ficsConnection :: IO (Handle, Chan CommandMsg)
 ficsConnection = runResourceT $ do
   chan <- liftIO newChan
@@ -84,7 +86,6 @@ toGameResult :: Move -> CommandMsg
 toGameResult move = GameResult id reason result
   where (id, reason, result) = Lentils.Api.Move.toGameResultTuple move
 
---TODO: provide more logging choice
 printCmdMsg :: CommandMsg -> IO ()
 printCmdMsg Prompt = return ()
 printCmdMsg (NewSeek _) = return ()

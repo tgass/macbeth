@@ -34,14 +34,11 @@ data User = User { name :: String {-, isGuest :: Bool-} }
 
 --TODO: fix warnings
 --TODO: wxSeek & user isGuest
---TODO: Deactivate buttons while not logged in
---TODO: close child windows, if this one closes
 --TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 --TODO: make game list sortable, configurable
 --TODO: application icon
 wxToolBox :: Handle -> Chan CommandMsg -> IO ()
 wxToolBox h chan = do
-    vCmd <- newEmptyMVar
     vUser <- newMVar $ User ""
     dataDir <- getDataDir
 
@@ -66,12 +63,16 @@ wxToolBox h chan = do
 
     -- toolbar
     tbar   <- toolBar f []
-    toolItem tbar "Seek" False (dataDir ++ "bullhorn.gif") [ on command := wxSeek h False ]
-    toolItem tbar "Match" False  (dataDir ++ "dot-circle-o.gif") [ on command := wxMatch h False ]
+    tbarItem_seek <- toolItem tbar "Seek" False (dataDir ++ "bullhorn.gif")
+      [ on command := wxSeek h False, enabled := False ]
+
+    tbarItem_match <- toolItem tbar "Match" False  (dataDir ++ "dot-circle-o.gif")
+      [ on command := wxMatch h False, enabled := False]
+
 
     -- tab2 : console
     cp <- panel nb []
-    ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH) [font := fontFixed]
+    ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed]
     ce <- entry cp []
     set ce [on enterKey := emitCommand ce h]
 
@@ -111,13 +112,12 @@ wxToolBox h chan = do
           , statusBar := [status]
           ]
 
-    -- select console first
+    -- preselect console
     notebookSetSelection nb 2
 
+    vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
-
-    windowOnDestroy f $ killThread threadId
-
+    windowOnDestroy f $ windowChildren f >>= sequence_ . fmap (`windowClose` True) >> killThread threadId
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
         Games games -> do
@@ -126,19 +126,18 @@ wxToolBox h chan = do
           set gl [items := [[show $ Lentils.Api.Game.id g, Lentils.Api.Game.nameW g, show $ ratingW g, Lentils.Api.Game.nameB g, show $ ratingB g]
                             | g <- games, not $ isPrivate $ settings g]]
           set gl [on listEvent := onGamesListEvent games h]
-          --TODO: aufhübschen
+
           listItemRightClickEvent gl (\evt -> do
             pt <- listEventGetPoint evt
             menuPopup glCtxMenu pt gl)
 
-        NoSuchGame -> Lentils.Wx.ToolBox.name `fmap` readMVar vUser >>= \user ->
-                      set status [text := user ++ ": No such game. Updating games..."] >>
-                      hPutStrLn h "4 games"
+        NoSuchGame -> do
+          user <- Lentils.Wx.ToolBox.name `fmap` readMVar vUser
+          set status [text := user ++ ": No such game. Updating games..."]
+          hPutStrLn h "4 games"
 
         TextMessage text -> appendText ct $ text ++ "\n"
 
-
-        -- SEEK MESSAGES
         NewSeek seek -> M.when (Lentils.Api.Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
                                itemAppend sl $ toList seek
 
@@ -148,21 +147,18 @@ wxToolBox h chan = do
           seeks <- get sl items
           sequence_ $ fmap (deleteSeek sl . findSeekIdx seeks) gameIds
 
-
-        -- LOGIN MESSAGES
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
 
         InvalidPassword  -> M.void $ set status [text := "Invalid password."]
 
         LoggedIn userName -> swapMVar vUser (User userName) >>
-                             hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
+                             hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
+                             set tbarItem_seek [ enabled := True ] >>
+                             set tbarItem_match [ enabled := True ]
 
         -- UnkownUsername _ -> M.void $ set status [text := "Unknown username."]
-
         -- GuestLogin _ -> set (toolItem tbar "Seek") [on command := return ()]
 
-
-        -- OPEN NEW FRAME
         Login -> dupChan chan >>= wxLogin h
 
         Observe move -> dupChan chan >>= createObservedGame h move White
@@ -204,7 +200,7 @@ onSeekListEvent sl h eventList = case eventList of
 
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
-emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h >> set textCtrl [text := ""]
+emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set textCtrl [text := ""]
 
 
 listItemRightClickEvent :: ListCtrl a -> (Graphics.UI.WXCore.ListEvent () -> IO ()) -> IO ()

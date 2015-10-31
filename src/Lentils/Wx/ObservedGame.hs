@@ -102,8 +102,8 @@ createObservedGame h move color chan = do
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ do killThread threadId
                          case relation move of
-                           MyMove -> hPutStrLn h "5 resign"
-                           OponentsMove -> hPutStrLn h "5 resign"
+                           -- MyMove -> hPutStrLn h "5 resign"
+                           -- OponentsMove -> hPutStrLn h "5 resign"
                            Observing -> hPutStrLn h $ "5 unobserve " ++ show (Lentils.Api.Move.gameId move)
                            _ -> return ()
 

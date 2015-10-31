@@ -4,6 +4,7 @@ module Lentils.Wx.Match (
 ) where
 
 import Control.Applicative
+import Control.Monad (void)
 import Data.Char (toLower)
 import Graphics.UI.WX
 import Graphics.UI.WXCore (windowShow)
@@ -40,8 +41,8 @@ wxMatch h isGuest = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-  windowShow f
-  return ()
+  void $ windowShow f
+
 
 
 matchInputs :: Panel () -> Bool -> IO WxMatch

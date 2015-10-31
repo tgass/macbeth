@@ -4,6 +4,7 @@ module Lentils.Wx.Seek (
 ) where
 
 import Control.Applicative
+import Control.Monad (void)
 import Data.Char (toLower)
 import Graphics.UI.WX
 import Graphics.UI.WXCore
@@ -31,8 +32,7 @@ wxSeek h isGuest = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-  windowShow f
-  return ()
+  void $ windowShow f
 
 -- 4 seek time inc rated color from-to
 toString:: WxSeek -> IO String
