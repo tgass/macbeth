@@ -66,8 +66,8 @@ wxToolBox h chan = do
 
     -- toolbar
     tbar   <- toolBar f []
-    toolItem tbar "Seek" False (dataDir ++ "bullhorn.jpg") [ on command := wxSeek h False ]
-    toolItem tbar "Match" False  (dataDir ++ "dot-circle-o.jpg") [ on command := wxMatch h False ]
+    toolItem tbar "Seek" False (dataDir ++ "bullhorn.gif") [ on command := wxSeek h False ]
+    toolItem tbar "Match" False  (dataDir ++ "dot-circle-o.gif") [ on command := wxMatch h False ]
 
     -- tab2 : console
     cp <- panel nb []
