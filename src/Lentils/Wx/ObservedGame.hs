@@ -28,7 +28,7 @@ createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
   vGameMoves <- newMVar []
 
-  f <- frame []
+  f <- frame [ text := title move ]
   p_back <- panel f []
 
   -- board
@@ -176,4 +176,7 @@ addMove m moves@(m':_)
 areEqual :: Move -> Move -> Bool
 areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
 
-
+title move
+  | isPlayersGame move = "Playing: " ++ description
+  | otherwise = "Observing: " ++ description
+    where description = nameW move ++ " vs " ++ nameB move ++ " [Game " ++ show (Lentils.Api.Move.gameId move) ++ "]"
