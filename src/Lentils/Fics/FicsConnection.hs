@@ -22,8 +22,6 @@ import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.List as CL
 
 
---TODO: provide more logging choice
---TODO: handle Exceptions
 ficsConnection :: IO (Handle, Chan CommandMsg)
 ficsConnection = runResourceT $ do
   chan <- liftIO newChan

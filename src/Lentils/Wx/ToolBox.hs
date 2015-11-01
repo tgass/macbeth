@@ -32,11 +32,6 @@ ficsEventId = wxID_HIGHEST + 51
 
 data User = User { name :: String {-, isGuest :: Bool-} }
 
---TODO: fix warnings
---TODO: wxSeek & user isGuest
---TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
---TODO: make game list sortable, configurable
---TODO: application icon
 wxToolBox :: Handle -> Chan CommandMsg -> IO ()
 wxToolBox h chan = do
     vUser <- newMVar $ User ""

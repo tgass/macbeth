@@ -94,12 +94,8 @@ matchUpdated = MatchUpdated <$> manyTill anyChar space <* "updates the match req
 accept :: Parser CommandMsg
 accept = MatchAccepted <$> (commandHead 11 *> move)
 
---TODO Implement UX for DeclineChallenge
 declinedChallenge :: Parser CommandMsg
 declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure MatchDeclined
-
---TODO Adjourns challenge
-
 
 seekInfoBlock :: Parser CommandMsg
 seekInfoBlock = Boxed
@@ -165,7 +161,7 @@ settingsDone = char (chr 23) *> pure SettingsDone
 
 
 {- HELPER -}
-data CommandHead = CommandHead { commandId :: Int } deriving (Show)
+data CommandHead = CommandHead Int deriving (Show)
 
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
@@ -178,24 +174,11 @@ commandHead code = do
 
 
 {- TEST DATA -}
-
-newGame' = BS.pack "{Game 214 (GuestPPFS vs. GuestDSRY) Creating unrated blitz match.}"
-creatingGame' = BS.pack "Creating: Altivolous (1086) Schoon (1013) rated blitz 5 3"
 seekMatchesAlreadyPosted' = BS.pack "\NAK4\SYN155\SYNYour seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 364 GuestJYQC GuestNGCB -1 2 12 39 39 120 120 1 none (0:00) none 1 0 0\n"
 seekMatchesAlreadyPosted'' = BS.pack "\NAK4\SYN155\SYNYou are unregistered - setting to unrated.\nYour seek matches one already posted by GuestLQFZ.\n\n<sr> 130\nfics% \nCreating: GuestLQFZ (++++) GuestSFKS (++++) unrated blitz 5 0\n{Game 214 (GuestLQFZ vs. GuestSFKS) Creating unrated blitz match.}\n\a\n<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 214 GuestLQFZ GuestSFKS -1 5 0 39 39 300 300 1 none (0:00) none 1 0 0\n\nGame 214: A disconnection will be considered a forfeit.\n\ETB"
 playSeek' = BS.pack "\NAK4\SYN158\SYN\n<sr> 25\nfics% \nCreating: chicapucp (1658) GuestFTYL (++++) unrated blitz 3 0\n{Game 18 (chicapucp vs. GuestFTYL) Creating unrated blitz match.}\n\a\n<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 18 chicapucp GuestFTYL -1 3 0 39 39 180 180 1 none (0:00) none 1 0 0\n\nGame 18: A disconnection will be considered a forfeit.\n\ETB"
 seekInfoBlock' = BS.pack "seekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n<s> 44 w=masheen ti=02 rt=2628  t=5 i=0 r=u tp=suicide c=? rr=0-9999 a=t f=f\n<s> 51 w=masheen ti=02 rt=2628  t=2 i=12 r=u tp=suicide c=? rr=0-9999 a=t f=f\n<s> 81 w=GuestHZLT ti=01 rt=0P t=2 i=0 r=u tp=lightning c=? rr=0-9999 a=t f=f\n"
 playMsg = BS.pack "Creating: GuestCCFP (++++) GuestGVJK (++++) unrated blitz 0 20 {Game 132 (GuestCCFP vs. GuestGVJK) Creating unrated blitz match.} <12> rnbqkbnr pppppppp ———— ———— ———— ———— PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 132 GuestCCFP GuestGVJK -1 0 20 39 39 10 10 1 none (0:00) none 1 0 0"
 obs = BS.pack "You are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0<12> -------- -pp-Q--- pk------ ----p--- -P---p-- --qB---- -------- ---R-K-- B -1 0 0 0 0 9 157 IMUrkedal GMRomanov 0 120 0 18 14 383 38 57 K/e1-f1 (0:03) Kf1 0 0 0"
-noSuchGame' = BS.pack "\NAK5\SYN80\SYNThere is no such game.\n\ETB"
 guestLoginTxt = BS.pack "Press return to enter the server as \"FOOBAR\":"
 
-matchRequested' = BS.pack "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12."
-matchUpdated' = BS.pack "GuestQGGQ updates the match request."
-gameResult1 = BS.pack  "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0"
-gameResult2 = BS.pack "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done."
-gameResult3 = BS.pack "{Game 181 (Danimateit vs. WhatKnight) Danimateit forfeits on time} 0-1"
-gameResultMutualDraw' = BS.pack "\NAK4\SYN34\SYN\n{Game 196 (GuestCWVD vs. GuestDWTL) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB"
-gameResultAcceptDraw' = BS.pack "\NAK5\SYN11\SYNYou accept the draw request from GuestNMNG.\n\n{Game 202 (GuestDKZD vs. GuestNMNG) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB"
-drawOffered' = BS.pack "GuestDWXY offers you a draw."
-drawDeclined' = BS.pack "GuestXDXP declines the draw request."

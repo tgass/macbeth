@@ -46,7 +46,6 @@ gameType' =
   "untimed" *> pure Untimed <|>
   "examined" *> pure ExaminedGame <|>
   "standard" *> pure Standard <|>
-  --TODO: save variant, implement wild variant roules (castling)
   "wild/" *> decimal *> pure Wild <|>
   "atomic" *> pure Atomic <|>
   "crazyhouse" *> pure Crazyhouse <|>

@@ -13,7 +13,6 @@ import System.IO
 
 eventId = wxID_HIGHEST + 97
 
--- TODO: UX: show that challenge was an update
 wxChallenge :: Handle -> Challenge -> Chan CommandMsg  -> IO ()
 wxChallenge h c chan = do
   vCmd <- newEmptyMVar

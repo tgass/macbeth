@@ -36,4 +36,4 @@ data CommandMsg =   GameMove Move
                   | TextMessage String
 
                   {- Internal -}
-                  | Boxed [CommandMsg] deriving (Show)
+                  | Boxed [CommandMsg] deriving (Show, Eq)

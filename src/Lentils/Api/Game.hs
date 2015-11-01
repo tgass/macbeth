@@ -19,21 +19,21 @@ data Game = Game {
   , nameW :: String
   , ratingB :: Rating
   , nameB :: String
-  , settings :: GameSettings } deriving (Show)
+  , settings :: GameSettings } deriving (Show, Eq)
 
 data GameSettings = GameSettings {
     isPrivate :: Bool
   , gameType :: GameType
-  , isRated :: Bool} deriving (Show)
+  , isRated :: Bool} deriving (Show, Eq)
 
 data GameInfo = GameInfo {
     _nameW :: String
   , _ratingW :: Rating
   , _nameB :: String
   , _ratingB :: Rating
-} deriving (Show)
+} deriving (Show, Eq)
 
-data GameResult = WhiteWins | BlackWins | Draw
+data GameResult = WhiteWins | BlackWins | Draw deriving (Eq)
 
 instance Show GameResult where
   show WhiteWins = "1-0"

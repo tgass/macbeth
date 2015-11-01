@@ -15,7 +15,6 @@ import qualified Data.ByteString.Char8 as BS
 paresGamesList :: Parser [Game]
 paresGamesList = many' gameP
 
---TODO: parse more fields, ie. remaining time
 gameP :: Parser Game
 gameP = Game
   <$> (takeTill (== '\n') *> "\n" *> many space *> decimal)

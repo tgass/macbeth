@@ -1,21 +1,41 @@
 name: XChess
 version: 0.0.1
-cabal-version: >=1.6
+cabal-version: >=1.8
 build-type: Simple
 license: AllRightsReserved
 license-file: ""
 data-files: resources
 
-executable XChess
+library
     build-depends: base >=4.2 && <5, cabal-macosx, wxcore -any, wx -any,
                    network -any, conduit -any, conduit-extra -any, text -any,
                    transformers -any, resourcet -any, bytestring -any, split -any,
                    attoparsec -any, filepath -any, containers -any, split -any,
                    mtl -any, stm -any, sodium -any, directory -any, filepath -any,
-                   time -any
-    main-is: XChess.hs
-    buildable: True
+                   time -any                                                          
     hs-source-dirs: src
+    exposed-modules: Lentils.Api.Api,
+                     Lentils.Api.Challenge,
+                     Lentils.Api.CommandMsg,
+                     Lentils.Api.Game,
+                     Lentils.Api.Move,
+                     Lentils.Api.Rating,
+                     Lentils.Api.Seek,
+                     Lentils.Fics.Parsers.CommandMsgParser,
+                     Lentils.Fics.Parsers.GamesParser,
+                     Lentils.Fics.Parsers.MoveParser2,
+                     Lentils.Fics.Parsers.PositionParser,
+                     Lentils.Fics.Parsers.RatingParser,
+                     Lentils.Fics.Parsers.SeekMsgParsers
     ghc-options: -O3 -threaded -W
 
+--executable XChessExe
+--    build-depends: XChess
+--    main-is: src/XChess.hs
+--    buildable: True
 
+Test-Suite XChessTestSuite
+    type:       detailed-0.9
+    hs-source-dirs: test 
+    test-module: Bar
+    build-depends: XChess, base, Cabal >= 1.9.2, bytestring 
