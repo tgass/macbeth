@@ -11,6 +11,7 @@ import Lentils.Api.Game
 import Lentils.Api.Seek
 
 import Lentils.Wx.About
+import Lentils.Wx.Finger
 import Lentils.Wx.Login
 import Lentils.Wx.Match
 import Lentils.Wx.Seek
@@ -64,6 +65,8 @@ wxToolBox h chan = do
     tbarItem_match <- toolItem tbar "Match" False  (dataDir ++ "dot-circle-o.gif")
       [ on command := wxMatch h False, enabled := False]
 
+    tbarItem_finger <- toolItem tbar "Finger" False  (dataDir ++ "fa-question.png")
+      [ on command := hPutStrLn h "4 finger", enabled := False]
 
     -- tab2 : console
     cp <- panel nb []
@@ -86,7 +89,6 @@ wxToolBox h chan = do
     -- Games list : context menu
     glCtxMenu <- menuPane []
     menuItem glCtxMenu [ text := "Refresh", on command := hPutStrLn h "4 games" ]
-
 
     -- about menu
     m_help    <- menuHelp      []
@@ -149,10 +151,13 @@ wxToolBox h chan = do
         LoggedIn userName -> swapMVar vUser (User userName) >>
                              hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
                              set tbarItem_seek [ enabled := True ] >>
-                             set tbarItem_match [ enabled := True ]
+                             set tbarItem_match [ enabled := True ] >>
+                             set tbarItem_finger [ enabled := True ]
 
         GuestLogin _ -> set tbarItem_seek  [on command := wxSeek h True ] >>
                         set tbarItem_match  [on command := wxMatch h True ]
+
+        Finger name stats -> wxFinger name stats
 
         Login -> dupChan chan >>= wxLogin h
 

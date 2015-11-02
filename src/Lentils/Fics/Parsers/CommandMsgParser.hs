@@ -47,6 +47,8 @@ parseCommandMsg = parseOnly parser where
                   , seekMatchesAlreadyPosted
                   , gameMove
 
+                  , finger
+
                   , login
                   , password
                   , guestLogin
@@ -129,6 +131,11 @@ gameResult' = GameResult
   <$> (skipSpace *> "{Game" *> space *> decimal)
   <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
+
+finger :: Parser CommandMsg
+finger = Finger
+  <$> (commandHead 37 *> "Finger of " *> manyTill anyChar ":")
+  <*> manyTill anyChar "\n\n\ETB"
 
 login :: Parser CommandMsg
 login = "login: " *> pure Login

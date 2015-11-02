@@ -24,6 +24,8 @@ data CommandMsg =   GameMove Move
                   | RemoveSeeks [Int]
                   | ClearSeek
 
+                  | Finger String String
+
                   | Login
                   | Password
                   | GuestLogin String

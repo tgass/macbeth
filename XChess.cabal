@@ -1,10 +1,10 @@
 name: XChess
 version: 0.0.1
 cabal-version: >= 1.8
-build-type: Custom
+build-type: Simple
 license: AllRightsReserved
 license-file: ""
-data-files: resources
+data-dir: resources
 
 library
     build-depends: base >=4.2 && <5, cabal-macosx, wxcore -any, wx -any,
@@ -32,14 +32,15 @@ library
                      Lentils.Utils.Board,
                      Lentils.Utils.Utils,
                      Lentils.Wx.About,
+                     Lentils.Wx.Finger,
                      Lentils.Wx.Challenge,
                      Lentils.Wx.Login,
                      Lentils.Wx.Match,
                      Lentils.Wx.ObservedGame,
                      Lentils.Wx.Seek,
                      Lentils.Wx.ToolBox,
-                     Lentils.Wx.Utils,
-                     Paths_XChess
+                     Lentils.Wx.Utils
+  other-modules: Paths_XChess
   ghc-options: -O3 -threaded -W
 
 executable XChessRun
