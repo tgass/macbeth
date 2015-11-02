@@ -5,9 +5,6 @@ import Lentils.Wx.ToolBox
 
 import Graphics.UI.WX
 
-
--- TODO: wxSeek & user isGuest
--- TODO: handle Exceptions (ie no connection)
 -- TODO: application icon
 
 -- TODO: Request move take backend, accept/ decline move takeback request

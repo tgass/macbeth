@@ -27,13 +27,15 @@ data CommandMsg =   GameMove Move
                   | Login
                   | Password
                   | GuestLogin String
-                  | UnkownUsername String
                   | LoggedIn String
                   | InvalidPassword
                   | Prompt
                   | SettingsDone
                   | Acknoledge
                   | TextMessage String
+
+                  {- Unused -}
+                  | UnkownUsername String
 
                   {- Internal -}
                   | Boxed [CommandMsg] deriving (Show, Eq)

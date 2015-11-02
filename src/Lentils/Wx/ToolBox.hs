@@ -151,8 +151,8 @@ wxToolBox h chan = do
                              set tbarItem_seek [ enabled := True ] >>
                              set tbarItem_match [ enabled := True ]
 
-        -- UnkownUsername _ -> M.void $ set status [text := "Unknown username."]
-        -- GuestLogin _ -> set (toolItem tbar "Seek") [on command := return ()]
+        GuestLogin _ -> set tbarItem_seek  [on command := wxSeek h True ] >>
+                        set tbarItem_match  [on command := wxMatch h True ]
 
         Login -> dupChan chan >>= wxLogin h
 
