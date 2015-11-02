@@ -33,10 +33,7 @@ data Move = Move {
   , remainingTimeW :: Int
   , remainingTimeB :: Int
   , movePretty :: Maybe String
-  } deriving (Eq)
-
-instance Show Move where
-  show m = "Move { gameId=" ++ show (gameId m) ++ ", move=" ++ show (movePretty m) ++ "}"
+  } deriving (Eq, Show)
 
 data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
 

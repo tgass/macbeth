@@ -88,5 +88,6 @@ printCmdMsg :: CommandMsg -> IO ()
 printCmdMsg Prompt = return ()
 printCmdMsg (NewSeek _) = return ()
 printCmdMsg (RemoveSeeks _) = return ()
+printCmdMsg (GameMove m) = print $ prettyMove m
 printCmdMsg cmd = print cmd
 

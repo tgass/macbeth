@@ -14,7 +14,6 @@ import Lentils.Api.Seek
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
-import qualified Data.ByteString.Char8 as BS
 
 clearSeek :: Parser CommandMsg
 clearSeek = "<sc>" *> pure ClearSeek
@@ -58,9 +57,3 @@ gameType' =
 rating' :: Parser Rating
 rating' = Rating <$> decimal >>= \r -> " " *> pure r <|> "E" *> pure r <|> "P" *> pure Guest
 
-
-clearSeek' = BS.pack "<sc>"
-newSeek' = BS.pack "<s> 7 w=GuestNMZJ ti=01 rt=0P t=15 i=5 r=u tp=standard c=W rr=0-9999 a=t f=t"
-newSeek'' = BS.pack "<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f"
-newSeek''' = BS.pack "<s> 56 w=GuestCXDH ti=01 rt=0P t=7 i=0 r=u tp=wild/4 c=W rr=0-9999 a=t f=f"
-removeSeeks' = BS.pack "<sr> 59 3 11"

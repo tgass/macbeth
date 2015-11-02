@@ -18,7 +18,7 @@ move :: Parser Move
 move = do
   pos <- takeTill (== '<') *> "<12>" *> space *> A.take 71
   turn <- space *> ("B" *> pure Black <|> "W" *> pure White)
-  doublePawnPush <- space *> ("-1" *> pure Nothing <|> (liftM Just decimal))
+  doublePawnPush <- space *> "-1" *> pure Nothing <|> liftM Just decimal
   space *> parseBool -- castle white short
   space *> parseBool -- castle white long
   space *> parseBool -- castle black short
@@ -62,8 +62,3 @@ parseRelation =
   "-1" *> pure OponentsMove <|>
   "1"  *> pure MyMove <|>
   "0"  *> pure Observing
-
-
-
-move' = BS.pack "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 0 0 0 0 4 203 zerowin Hutnik 0 1 0 0 10 13 26 52 Q/e1-h1 (0:00) Qh1# 0 1 818"
-move'' = BS.pack "<12> r------- pppbq--- -----r-k ----b--- -PB-Pp-- P------p --PQ--PN ----RRK- W -1 0 0 0 0 0 181 Danimateit WhatKnight 0 2 6 30 30 -1 89 26 P/g4-h3 (0:06) gxh3 0 1 0"

@@ -11,10 +11,9 @@ import Data.Maybe
 
 
 parsePosition :: String -> [(Square, Piece)]
-parsePosition str = fmap (second fromJust) $ filter (\(s,p) -> isJust p) squares
+parsePosition str = fmap (second fromJust) $ filter (\(_,p) -> isJust p) squares
                 where rows = parseRows str
                       squares = concat $ fmap parseSquares rows
-
 
 parseRows :: String -> [(Row, String)]
 parseRows str = zip rows lines
@@ -44,9 +43,3 @@ readPiece 'b' = Just(Piece Bishop Black)
 readPiece 'q' = Just(Piece Queen Black)
 readPiece 'k' = Just(Piece King Black)
 readPiece _ = Nothing
-
-
-move' = "<12> ———— ———— ——p—— ———— ———— ——k-K ———— ———q W -1 0 0 0 0 4 203 zerowin Hutnik 0 1 0 0 10 13 26 52 Q/e1-h1 (0:00) Qh1# 0 1 818"
-
-
-

@@ -19,9 +19,6 @@ data Seek = Seek {
   , ratingRange :: (Int, Int)
 --                 , startMode :: StartMode
 --                 , checkFormula :: Bool
-} deriving (Eq)
-
-instance Show Seek where
-  show seek = "Seek {id = " ++ show (Lentils.Api.Seek.id seek) ++ "}"
+} deriving (Eq, Show)
 
 data StartMode = Auto | Manual deriving (Show)
