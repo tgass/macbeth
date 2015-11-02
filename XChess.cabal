@@ -40,6 +40,7 @@ library
                      Lentils.Wx.ToolBox,
                      Lentils.Wx.Utils,
                      Paths_XChess
+  ghc-options: -O3 -threaded -W
 
 executable XChessRun
   main-is: src/XChess.hs
