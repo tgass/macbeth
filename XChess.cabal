@@ -1,7 +1,7 @@
 name: XChess
 version: 0.0.1
-cabal-version: >=1.8
-build-type: Simple
+cabal-version: >= 1.8
+build-type: Custom
 license: AllRightsReserved
 license-file: ""
 data-files: resources
@@ -21,6 +21,7 @@ library
                      Lentils.Api.Move,
                      Lentils.Api.Rating,
                      Lentils.Api.Seek,
+                     Lentils.Fics.FicsConnection
                      Lentils.Fics.Parsers.CommandMsgParser,
                      Lentils.Fics.Parsers.GamesParser,
                      Lentils.Fics.Parsers.MoveParser2,
@@ -37,9 +38,13 @@ library
                      Lentils.Wx.ObservedGame,
                      Lentils.Wx.Seek,
                      Lentils.Wx.ToolBox,
-                     Lentils.Wx.Utils
+                     Lentils.Wx.Utils,
+                     Paths_XChess
 
-    ghc-options: -O3 -threaded -W
+executable XChessRun
+  main-is: src/XChess.hs
+  build-depends: base  >= 4.2, wx -any, XChess
+  ghc-options: -O3 -threaded -W
 
 Test-Suite XChessTestSuite
     type:       detailed-0.9

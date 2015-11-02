@@ -6,7 +6,6 @@ import Lentils.Wx.ToolBox
 import Graphics.UI.WX
 
 
--- TODO: fix warnings, put test data into /test
 -- TODO: wxSeek & user isGuest
 -- TODO: handle Exceptions (ie no connection)
 -- TODO: application icon
