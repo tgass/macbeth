@@ -12,9 +12,10 @@ import qualified Lentils.Utils.Board as Board
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
+import Control.Monad
 import Data.Maybe
-import Graphics.UI.WX
-import Graphics.UI.WXCore
+import Graphics.UI.WX hiding (when)
+import Graphics.UI.WXCore hiding (when)
 import System.IO
 
 
@@ -23,7 +24,7 @@ eventId = wxID_HIGHEST + 53
 createObservedGame :: Handle -> Move -> Lentils.Api.Api.PColor -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
-  vGameMoves <- newMVar []
+  vMoves <- newMVar [move]
 
   f <- frame [ text := title move ]
   p_back <- panel f []
@@ -54,6 +55,8 @@ createObservedGame h move color chan = do
                  menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
                  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
                  return ()
+  when (relation move == Observing) $
+                 void $ menuItem ctxMenu [ text := "Save Game", on command := saveGame vMoves ]
 
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
@@ -75,7 +78,7 @@ createObservedGame h move color chan = do
                                    set t_black [enabled := True]
                                    varSet vClock move'
                                    set status [text := ""]
-                                   when (isPlayersGame move') $ modifyMVar_ vGameMoves $ return . addMove move'
+                                   modifyMVar_ vMoves $ return . addMove move'
 
     GameResult id reason result -> when (id == Lentils.Api.Move.gameId move) $ do
                               state <- varGet vBoardState
@@ -83,8 +86,6 @@ createObservedGame h move color chan = do
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               set status [text := (show result ++ ": " ++ reason)]
-                              moves <- takeMVar vGameMoves
-                              Lentils.Utils.PGN.saveAsPGN (reverse moves) (nameUser move) result
                               hPutStrLn h "4 iset seekinfo 1"
 
     DrawOffered -> set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
@@ -98,11 +99,17 @@ createObservedGame h move color chan = do
   windowShow f
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ do killThread threadId
+                         when (isPlayersGame move) $ saveGame vMoves
                          case relation move of
-                           -- MyMove -> hPutStrLn h "5 resign"
-                           -- OponentsMove -> hPutStrLn h "5 resign"
+                           MyMove -> hPutStrLn h "5 resign"
+                           OponentsMove -> hPutStrLn h "5 resign"
                            Observing -> hPutStrLn h $ "5 unobserve " ++ show (Lentils.Api.Move.gameId move)
                            _ -> return ()
+
+saveGame :: MVar [Move] -> IO ()
+saveGame vMoves = do
+  moves <- readMVar vMoves
+  Lentils.Utils.PGN.saveAsPGN (reverse moves)
 
 
 turnBoard :: Var Board.BoardState -> Panel () -> (Lentils.Api.Api.PColor -> Layout) -> IO ()

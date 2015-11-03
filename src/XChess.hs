@@ -5,6 +5,8 @@ import Lentils.Wx.ToolBox
 
 import Graphics.UI.WX
 
+-- TODO: add game result to PGN
+-- TODO: close eventLoop after GameResult
 -- TODO: application icon
 
 -- TODO: Request move take backend, accept/ decline move takeback request

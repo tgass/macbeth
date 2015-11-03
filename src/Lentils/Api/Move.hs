@@ -1,6 +1,7 @@
 module Lentils.Api.Move (
   Move(..),
   Relation(..),
+  Castling(..),
   remainingTime,
   decreaseRemainingTime,
   nameUser,
@@ -17,12 +18,16 @@ module Lentils.Api.Move (
 
 import Lentils.Api.Api
 import qualified Lentils.Api.Game as Game
+
 import Data.Maybe (isNothing)
 
 data Move = Move {
-    position :: [(Square, Piece)]
+    positionRaw :: String
+  , position :: [(Square, Piece)]
   , turn :: PColor
-  , doublePawnPush :: Maybe Int
+  , doublePawnPush :: Maybe Column
+  , castlingAv :: [Castling]
+  , ply :: Int
   , gameId :: Int
   , nameW :: String
   , nameB :: String
@@ -37,6 +42,7 @@ data Move = Move {
 
 data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
 
+data Castling = WhiteLong | WhiteShort | BlackLong | BlackShort deriving (Show, Eq)
 
 remainingTime :: Lentils.Api.Api.PColor -> Move -> Int
 remainingTime Black = remainingTimeB
@@ -92,6 +98,7 @@ toGameResultTuple move = (gameId move, namePlayer colorTurn move ++ " checkmated
 
 dummyMove :: Move
 dummyMove = Move {
+    positionRaw = "",
     position = [ (Square A One, Piece Rook White)
                    , (Square A Two, Piece Pawn White)
                    , (Square B Two, Piece Pawn White)
@@ -101,6 +108,8 @@ dummyMove = Move {
                    ],
     turn = Black,
     doublePawnPush = Nothing,
+    castlingAv = [],
+    ply = 0,
     gameId = 1,
     nameW = "foobar",
     nameB = "barbaz",

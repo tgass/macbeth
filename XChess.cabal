@@ -12,7 +12,7 @@ library
                    transformers -any, resourcet -any, bytestring -any, split -any,
                    attoparsec -any, filepath -any, containers -any, split -any,
                    mtl -any, stm -any, sodium -any, directory -any, filepath -any,
-                   time -any
+                   time -any, MissingH -any, old-locale -any
     hs-source-dirs: src
     exposed-modules: Lentils.Api.Api,
                      Lentils.Api.Challenge,
@@ -29,6 +29,7 @@ library
                      Lentils.Fics.Parsers.RatingParser,
                      Lentils.Fics.Parsers.SeekMsgParsers,
                      Lentils.Utils.PGN,
+                     Lentils.Utils.FEN,
                      Lentils.Utils.Board,
                      Lentils.Utils.Utils,
                      Lentils.Wx.About,
