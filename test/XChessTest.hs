@@ -53,11 +53,11 @@ commandMessageParserTest = [
       , (Boxed [ClearSeek, NewSeek $ Seek 16 "CatNail" (Rating 1997) 3 0 False Suicide Nothing (0, 9999)], "\NAK4\SYN56\SYNseekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n")
       -- observe
       , (Observe defaultMove, "\NAK5\SYN80\SYNYou are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0" ++ defaultMoveStr)
-      , (Finger "GuestSPRM(U)" "On for: 4 mins   Idle: 0 secs\n\n\nTotal time online: 4 mins\n\nTimeseal   : Off\n\n", "\NAK5\SYN37\SYNFinger of GuestSPRM(U):\n\nOn for: 4 mins   Idle: 0 secs\n\n\nTotal time online: 4 mins\n\nTimeseal   : Off\n\n\ETB")
+      , (Finger "GuestSPRM(U)" "\n\nOn for: 4 mins   Idle: 0 secs\n\n\nTotal time online: 4 mins\n\nTimeseal   : Off", "\NAK5\SYN37\SYNFinger of GuestSPRM(U):\n\nOn for: 4 mins   Idle: 0 secs\n\n\nTotal time online: 4 mins\n\nTimeseal   : Off\n\n\ETB")
       ]
 
 defaultMove = Move [] White Nothing 18 "nameWhite" "nameBlack" OponentsMove 1 "none" "(0:00)" 180 180 Nothing
-defaultMoveStr = "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 1 1 1 1 0 18 nameWhite nameBlack -1 3 0 39 39 180 180 1 none (0:00) none 1 0 0"
+defaultMoveStr = "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 1 1 1 1 0 18 nameWhite nameBlack -1 3 0 39 39 180 180 1 none (0:00) none 1 0 0\n"
 
 
 seekMsgParserTest :: [(CommandMsg, String)]
@@ -68,6 +68,10 @@ seekMsgParserTest = [
   , (NewSeek $ Seek 16 "CatNail" (Rating 1997) 3 0 False Suicide Nothing (0,9999), "<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f")
   , (NewSeek $ Seek 56 "GuestCXDH" Guest 7 0 False Wild (Just White) (0,9999), "<s> 56 w=GuestCXDH ti=01 rt=0P t=7 i=0 r=u tp=wild/4 c=W rr=0-9999 a=t f=f")
   ]
+
+
+-- fuzzy compare
+--, (GameMove _), "<12> rnbqkbnr pp-p-ppp ----p--- --p----- ----P--- ------P- PPPP-P-P RNBQKBNR W 2 1 1 1 1 0 232 tuffshaq mlaren 0 15 12 39 39 901 897 3 P/c7-c5 (0:15) c5 0 1 167")
 
 
 positionTest :: [(Position, String)]

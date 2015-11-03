@@ -18,7 +18,7 @@ move :: Parser Move
 move = do
   pos <- takeTill (== '<') *> "<12>" *> space *> A.take 71
   turn <- space *> ("B" *> pure Black <|> "W" *> pure White)
-  doublePawnPush <- space *> "-1" *> pure Nothing <|> liftM Just decimal
+  doublePawnPush <- space *> ("-1" *> pure Nothing <|> liftM Just decimal)
   space *> parseBool -- castle white short
   space *> parseBool -- castle white long
   space *> parseBool -- castle black short
