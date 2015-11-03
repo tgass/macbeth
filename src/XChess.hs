@@ -7,6 +7,7 @@ import Graphics.UI.WX
 
 -- TODO: add game result to PGN
 -- TODO: close eventLoop after GameResult
+-- TODO: add initial move to vMoves if not empty!
 -- TODO: application icon
 
 -- TODO: Request move take backend, accept/ decline move takeback request

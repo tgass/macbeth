@@ -24,7 +24,7 @@ eventId = wxID_HIGHEST + 53
 createObservedGame :: Handle -> Move -> Lentils.Api.Api.PColor -> Chan CommandMsg -> IO ()
 createObservedGame h move color chan = do
   vCmd <- newEmptyMVar
-  vMoves <- newMVar [move]
+  vMoves <- newMVar []
 
   f <- frame [ text := title move ]
   p_back <- panel f []
