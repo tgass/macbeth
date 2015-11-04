@@ -15,6 +15,8 @@ import Graphics.UI.WX
 -- TODO: provide more logging choice
 -- TODO: Seek auto match ?! Bug?
 
+-- TODO: You are not observing any games. remove from console
+
 main :: IO ()
 main = do
   (h, chan) <- ficsConnection

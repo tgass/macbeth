@@ -26,7 +26,7 @@ import Control.Concurrent
 import Control.Concurrent.Chan ()
 import qualified Control.Monad as M (when, void)
 import Data.List (elemIndex)
-import Graphics.UI.WX hiding (refresh)
+import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
 
@@ -39,24 +39,7 @@ wxToolBox h chan = do
     -- main frame
     f  <- frame [ text := "MacBeth" ]
 
-    status <- statusField []
 
-    -- right panel
-    right <- panel f []
-    nb <- notebook right []
-
-    -- tab1 : Sought list
-    slp <- panel nb []
-    sl  <- listCtrl slp [columns := [ ("#", AlignLeft, -1)
-                                    , ("handle", AlignLeft, -1)
-                                    , ("rating", AlignLeft, -1)
-                                    , ("Time (start inc.)", AlignRight, -1)
-                                    , ("type", AlignRight, -1)]
-                                    ]
-    set sl [on listEvent := onSeekListEvent sl h]
-    listCtrlSetColumnWidths sl 100
-
-    -- toolbar
     tbar   <- toolBar f []
     tbarItem_seek <- toolItem tbar "Seek" False (dataDir ++ "bullhorn.gif")
       [ on command := wxSeek h False, enabled := False ]
@@ -67,17 +50,33 @@ wxToolBox h chan = do
     tbarItem_finger <- toolItem tbar "Finger" False  (dataDir ++ "fa-question.png")
       [ on command := hPutStrLn h "4 finger", enabled := False]
 
-    -- tab: Pending
+    status <- statusField []
+
+
+    nb <- notebook f []
+
+    -- Sought list
+    slp <- panel nb []
+    sl  <- listCtrl slp [columns := [ ("#", AlignLeft, -1)
+                                    , ("handle", AlignLeft, -1)
+                                    , ("rating", AlignLeft, -1)
+                                    , ("Time (start inc.)", AlignRight, -1)
+                                    , ("type", AlignRight, -1)]
+                                    ]
+    set sl [on listEvent := onSeekListEvent sl h]
+    listCtrlSetColumnWidths sl 100
+
+    -- Pending
     pending <- panel nb []
     pendingWidget <- wxPending pending
 
-    -- tab2 : console
+    -- Console
     cp <- panel nb []
     ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed]
     ce <- entry cp []
     set ce [on enterKey := emitCommand ce h]
 
-    -- tab3 : Games list
+    -- Games list
     glp <- panel nb []
     (gl, glHandler)  <- wxGamesList glp h
 
@@ -85,17 +84,13 @@ wxToolBox h chan = do
     m_help    <- menuHelp      []
     _         <- menuAbout m_help [help := "About XChess", on command := wxAbout ]
 
-    set f [ layout := container right
-                         ( column 0
-                         [ tabs nb
-                            [ tab "Sought" $ container slp $ fill $ widget sl
-                            , tab "Games" $ container glp $ fill $ widget gl
-                            , tab "Pending" $ container pending $ fill $ widget pendingWidget
-                            , tab "Console" $ container cp
-                                            ( column 5  [ floatLeft $ expand $ hstretch $ widget ct
-                                                        , expand $ hstretch $ widget ce])
-                            ]
-                         ])
+    set f [ layout := tabs nb
+                        [ tab "Sought" $ container slp $ fill $ widget sl
+                        , tab "Games" $ container glp $ fill $ widget gl
+                        , tab "Pending" $ container pending $ fill $ widget pendingWidget
+                        , tab "Console" $ container cp ( column 5  [ fill $ widget ct
+                                                                   , hfill $ widget ce])
+                        ]
           , menuBar := [m_help]
           , outerSize := sz 600 600
           , statusBar := [status]
