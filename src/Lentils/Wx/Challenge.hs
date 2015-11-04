@@ -39,18 +39,16 @@ wxChallenge h c chan = do
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
-      MatchUpdated playerName -> when (isUpdate playerName c) $ close f
+      MatchRequested c' -> when (isUpdate c c') $ close f
 
       _ -> return ()
 
-
-  windowShow f
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ killThread threadId >> hPutStrLn h "5 adjourn"
 
 
-isUpdate :: String -> Challenge -> Bool
-isUpdate playerName c = nameW c == playerName || nameB c == playerName
+isUpdate :: Challenge -> Challenge -> Bool
+isUpdate c c' = (nameW c == nameW c') && (nameB c == nameB c')
 
 
 --main = start $ wxChallenge undefined (Challenge "foobar" (Rating 1200) "barbaz" Guest "12 2 blitz")

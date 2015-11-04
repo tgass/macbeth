@@ -15,7 +15,6 @@ import Graphics.UI.WX
 -- TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 -- TODO: make game list sortable, configurable, filter private games
 -- TODO: provide more logging choice
--- TODO: UX: show that challenge was an update
 -- TODO: Seek auto match ?! Bug?
 
 main :: IO ()

@@ -27,7 +27,6 @@ parseCommandMsg = parseOnly parser where
                   , SP.removeSeeks
 
                   , matchRequested
-                  , matchUpdated
                   , declinedChallenge
                   , drawOffered
                   , drawDeclined
@@ -89,9 +88,6 @@ matchRequested = MatchRequested <$> (Challenge
   <*> (") " *> manyTill anyChar space)
   <*> ("(" *> rating)
   <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
-
-matchUpdated :: Parser CommandMsg
-matchUpdated = MatchUpdated <$> manyTill anyChar space <* "updates the match request."
 
 accept :: Parser CommandMsg
 accept = MatchAccepted <$> (commandHead 11 *> move)

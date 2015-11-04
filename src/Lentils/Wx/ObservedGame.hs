@@ -121,7 +121,7 @@ saveGame vMoves vGameResult = do
 turnBoard :: Var Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()
 turnBoard vState p layoutF = do
   state <- varGet vState
-  let color' = Lentils.Api.Api.invert $ Board.perspective state
+  let color' = invert $ Board.perspective state
   varSet vState $ state { Board.perspective = color' }
   set p [layout := layoutF color']
   repaint (Board._panel state)

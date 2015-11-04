@@ -13,7 +13,6 @@ data CommandMsg =   GameMove Move
                   | NoSuchGame
 
                   | MatchRequested Challenge
-                  | MatchUpdated String
                   | MatchAccepted Move
                   | MatchDeclined
                   | DrawOffered
