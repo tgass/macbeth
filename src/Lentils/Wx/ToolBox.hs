@@ -17,24 +17,28 @@ import Lentils.Wx.Seek
 import Lentils.Wx.Utils
 import Lentils.Wx.ObservedGame
 import Lentils.Wx.Challenge
+import Lentils.Wx.Pending
 
 import Paths_XChess
 
+import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.Chan ()
 import qualified Control.Monad as M (when, void)
 import Data.List (elemIndex)
-import Graphics.UI.WX
+import Graphics.UI.WX hiding (refresh)
 import Graphics.UI.WXCore
 import System.IO
 
 ficsEventId = wxID_HIGHEST + 51
 
-data User = User { name :: String {-, isGuest :: Bool-} }
+data GamesOpts = GamesOpts { refresh :: MenuItem ()
+                           , showRated :: MenuItem ()
+                           , showUnrated :: MenuItem ()
+                           }
 
 wxToolBox :: Handle -> Chan CommandMsg -> IO ()
 wxToolBox h chan = do
-    vUser <- newMVar $ User ""
     dataDir <- getDataDir
 
     -- main frame
@@ -68,6 +72,10 @@ wxToolBox h chan = do
     tbarItem_finger <- toolItem tbar "Finger" False  (dataDir ++ "fa-question.png")
       [ on command := hPutStrLn h "4 finger", enabled := False]
 
+    -- tab: Pending
+    pending <- panel nb []
+    pendingWidget <- wxPending pending
+
     -- tab2 : console
     cp <- panel nb []
     ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed]
@@ -82,13 +90,15 @@ wxToolBox h chan = do
                                     , ("rating", AlignLeft, -1)
                                     , ("player 2", AlignLeft, -1)
                                     , ("rating", AlignLeft, -1)
+                                    , ("Game type", AlignLeft, -1)
                                     ]
                         ]
     listCtrlSetColumnWidths gl 100
 
     -- Games list : context menu
     glCtxMenu <- menuPane []
-    menuItem glCtxMenu [ text := "Refresh", on command := hPutStrLn h "4 games" ]
+    gamesOpts <- getGamesOpts glCtxMenu
+    set (refresh gamesOpts) [on command := hPutStrLn h "4 games"]
 
     -- about menu
     m_help    <- menuHelp      []
@@ -99,6 +109,7 @@ wxToolBox h chan = do
                          [ tabs nb
                             [ tab "Sought" $ container slp $ fill $ widget sl
                             , tab "Games" $ container glp $ fill $ widget gl
+                            , tab "Pending" $ container pending $ fill $ widget pendingWidget
                             , tab "Console" $ container cp
                                             ( column 5  [ floatLeft $ expand $ hstretch $ widget ct
                                                         , expand $ hstretch $ widget ce])
@@ -110,7 +121,7 @@ wxToolBox h chan = do
           ]
 
     -- preselect console
-    notebookSetSelection nb 2
+    notebookSetSelection nb 3
 
     vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
@@ -118,10 +129,9 @@ wxToolBox h chan = do
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
         Games games -> do
-          user <- Lentils.Wx.ToolBox.name `fmap` readMVar vUser
-          set status [text := user ]
-          set gl [items := [[show $ Lentils.Api.Game.id g, Lentils.Api.Game.nameW g, show $ ratingW g, Lentils.Api.Game.nameB g, show $ ratingB g]
-                            | g <- games, not $ isPrivate $ settings g]]
+          filterGamesList gl gamesOpts games
+          set (showRated gamesOpts) [on command := filterGamesList gl gamesOpts games]
+          set (showUnrated gamesOpts) [on command := filterGamesList gl gamesOpts games]
           set gl [on listEvent := onGamesListEvent games h]
 
           listItemRightClickEvent gl (\evt -> do
@@ -129,8 +139,7 @@ wxToolBox h chan = do
             menuPopup glCtxMenu pt gl)
 
         NoSuchGame -> do
-          user <- Lentils.Wx.ToolBox.name `fmap` readMVar vUser
-          set status [text := user ++ ": No such game. Updating games..."]
+          set status [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
 
         TextMessage text -> appendText ct $ text ++ "\n"
@@ -148,8 +157,11 @@ wxToolBox h chan = do
 
         InvalidPassword  -> M.void $ set status [text := "Invalid password."]
 
-        LoggedIn userName -> swapMVar vUser (User userName) >>
-                             hPutStrLn h `mapM_` ["set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
+        LoggedIn userName -> hPutStrLn h `mapM_` [ "set seek 0"
+                                                 , "set style 12"
+                                                 , "iset nowrap 1"
+                                                 , "iset block 1"] >>
+                             set f [ text := "MacBeth - Logged in as " ++ userName ] >>
                              set tbarItem_seek [ enabled := True ] >>
                              set tbarItem_match [ enabled := True ] >>
                              set tbarItem_finger [ enabled := True ]
@@ -171,6 +183,27 @@ wxToolBox h chan = do
 
         _ -> return ()
 
+filterGamesList :: ListCtrl () -> GamesOpts -> [Game] -> IO ()
+filterGamesList gl opts games = do
+  showRated' <- get (showRated opts) checked
+  showUnrated' <- get (showUnrated opts) checked
+  set gl [items := [ toList g | g <- games
+                   , (Lentils.Api.Game.isRated (settings g) == showRated') ||
+                     (Lentils.Api.Game.isRated (settings g) == not showUnrated')
+                   , not $ isPrivate $ settings g]]
+
+  where toList g = [show $ Lentils.Api.Game.id g
+               , Lentils.Api.Game.nameW g
+               , show $ ratingW g
+               , Lentils.Api.Game.nameB g
+               , show $ ratingB g
+               , show $ Lentils.Api.Game.gameType $ settings g]
+
+getGamesOpts :: Menu () -> IO GamesOpts
+getGamesOpts ctxMenu = GamesOpts
+  <$> menuItem ctxMenu [ text := "Refresh" ]
+  <*> menuItem ctxMenu [ text := "Show rated games", checkable := True, checked := True]
+  <*> menuItem ctxMenu [ text := "Show unrated games", checkable := True, checked := True]
 
 findSeekIdx :: [[String]] -> Int -> Maybe Int
 findSeekIdx seeks gameId = elemIndex gameId $ fmap (read . (!! 0)) seeks

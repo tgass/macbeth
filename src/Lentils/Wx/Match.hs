@@ -41,8 +41,6 @@ wxMatch h isGuest = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-  void $ windowShow f
-
 
 
 matchInputs :: Panel () -> Bool -> IO WxMatch

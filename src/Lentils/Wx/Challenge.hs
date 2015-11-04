@@ -44,7 +44,7 @@ wxChallenge h c chan = do
       _ -> return ()
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
-  windowOnDestroy f $ killThread threadId >> hPutStrLn h "5 adjourn"
+  windowOnDestroy f $ killThread threadId
 
 
 isUpdate :: Challenge -> Challenge -> Bool

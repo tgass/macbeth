@@ -6,7 +6,7 @@ module Lentils.Wx.Seek (
 import Control.Applicative
 import Control.Monad (void)
 import Data.Char (toLower)
-import Graphics.UI.WX
+import Graphics.UI.WX hiding (color)
 import Graphics.UI.WXCore
 import System.IO (Handle, hPutStrLn, stdout)
 
@@ -27,7 +27,7 @@ wxSeek h isGuest = do
             column 10 [boxed "" (
               grid 15 15 [
                 [ label "Time [min.]:", hfill $ widget $ time match, label "Inc [sec.]:", hfill $ widget $ inc match]
-              , [ label "Rated:", hfill $ widget $ rated match, label "Color:", hfill $ widget $ Lentils.Wx.Seek.color match]
+              , [ label "Rated:", hfill $ widget $ rated match, label "Color:", hfill $ widget $ color match]
               , [ label "Rating from", hfill $ widget $ ratingFrom match, label "to", hfill $ widget $ ratingTo match]
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
@@ -40,7 +40,7 @@ toString m = (("4 seek " ++) . unwords) `fmap` sequence [
     get (time m) text
   , get (inc m) text
   , convertIsRated `fmap` get (rated m) enabled
-  , get (Lentils.Wx.Seek.color m) selection >>= fmap convertColor . get (Lentils.Wx.Seek.color m) . item
+  , get (Lentils.Wx.Seek.color m) selection >>= fmap convertColor . get (color m) . item
   , convertRatingRange <$> get (ratingFrom m) text <*> get (ratingTo m) text]
     where
       convertIsRated True = "rated"
