@@ -7,8 +7,8 @@ module Lentils.Api.Move (
   nameUser,
   colorUser,
   namePlayer,
-  isPlayersGame,
-  isPlayersNewGame,
+  isGameUser,
+  isNewGameUser,
   playerColor,
   nameOponent,
   isCheckmate,
@@ -61,6 +61,13 @@ nameUser m = namePlayer (colorUser m) m
 colorUser :: Move -> Lentils.Api.Api.PColor
 colorUser m = if relation m == MyMove then turn m else Lentils.Api.Api.invert $ turn m
 
+isGameUser :: Move -> Bool
+isGameUser m = relation m `elem` [MyMove, OponentsMove]
+
+
+isNewGameUser :: Move -> Bool
+isNewGameUser m = isGameUser m && isNothing (movePretty m)
+
 
 namePlayer :: Lentils.Api.Api.PColor -> Move -> String
 namePlayer White = nameW
@@ -70,14 +77,6 @@ namePlayer Black = nameB
 nameOponent :: Lentils.Api.Api.PColor -> Move -> String
 nameOponent White = nameB
 nameOponent Black = nameW
-
-
-isPlayersGame :: Move -> Bool
-isPlayersGame m = (relation m == MyMove) || (relation m == OponentsMove)
-
-
-isPlayersNewGame :: Move -> Bool
-isPlayersNewGame m = isPlayersGame m && isNothing (movePretty m)
 
 
 playerColor :: String -> Move -> Lentils.Api.Api.PColor

@@ -4,7 +4,6 @@ module Lentils.Wx.ToolBox (
   wxToolBox
 ) where
 
-import Lentils.Api.Api
 import Lentils.Api.CommandMsg
 import Lentils.Api.Move
 import Lentils.Api.Game
@@ -39,7 +38,8 @@ wxToolBox h chan = do
     dataDir <- getDataDir
 
     -- main frame
-    f  <- frame [ text := "Lentils"]
+    f  <- frame [ text := "MacBeth" ]
+
     status <- statusField []
 
     -- right panel
@@ -114,7 +114,7 @@ wxToolBox h chan = do
 
     vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
-    windowOnDestroy f $ windowChildren f >>= sequence_ . fmap (`windowClose` True) >> killThread threadId
+    windowOnDestroy f $ killThread threadId
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
         Games games -> do
@@ -165,7 +165,7 @@ wxToolBox h chan = do
 
         MatchAccepted move -> dupChan chan >>= createObservedGame h move
 
-        GameMove move -> when (isPlayersNewGame move) $ dupChan chan >>= createObservedGame h move
+        GameMove move -> when (isNewGameUser move) $ dupChan chan >>= createObservedGame h move
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 

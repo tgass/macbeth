@@ -6,9 +6,11 @@ import Lentils.Wx.ToolBox
 import Graphics.UI.WX
 
 -- TODO: close eventLoop after GameResult
--- TODO: application icon
 -- TODO: games list: filter private games
--- TODO: drawOffered wird in allen offenen Fenstern verarbeitet
+-- TODO: application icon
+
+-- TODO: close all windows if ToolBox closes
+-- TODO: user frameCreateTopFrame for background / hibernation /network conn evnt
 
 -- TODO: Request move take backend, accept/ decline move takeback request
 -- TODO: Save observed game with initial position

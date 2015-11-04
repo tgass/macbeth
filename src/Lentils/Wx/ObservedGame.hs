@@ -90,11 +90,13 @@ createObservedGame h move chan = do
                               swapMVar vGameResult $ Just result
                               hPutStrLn h "4 iset seekinfo 1"
 
-    DrawOffered -> set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
-                   set p_back [on (charKey 'y') := hPutStrLn h "5 accept" >> unsetKeyHandler p_back] >>
-                   set p_back [on (charKey 'n') := hPutStrLn h "5 decline" >> unsetKeyHandler p_back]
+    DrawOffered -> when (isGameUser move) $
+                     set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
+                     set p_back [on (charKey 'y') := hPutStrLn h "5 accept" >> unsetKeyHandler p_back] >>
+                     set p_back [on (charKey 'n') := hPutStrLn h "5 decline" >> unsetKeyHandler p_back]
 
-    DrawDeclined -> set status [text := nameOponent color move ++ " declined your draw offer."]
+    DrawDeclined -> when (isGameUser move) $
+                      set status [text := nameOponent color move ++ " declined your draw offer."]
 
     _ -> return ()
 
@@ -183,6 +185,6 @@ addMove m moves@(m':_)
 
 
 title move
-  | isPlayersGame move = "Playing: " ++ description
+  | isGameUser move = "Playing: " ++ description
   | otherwise = "Observing: " ++ description
     where description = nameW move ++ " vs " ++ nameB move ++ " [Game " ++ show (Lentils.Api.Move.gameId move) ++ "]"
