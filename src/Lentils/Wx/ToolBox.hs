@@ -16,6 +16,7 @@ import Lentils.Wx.Login
 import Lentils.Wx.Match
 import Lentils.Wx.Seek
 import Lentils.Wx.Utils
+import Lentils.Wx.SoughtList
 import Lentils.Wx.ObservedGame
 import Lentils.Wx.Challenge
 import Lentils.Wx.Pending
@@ -25,7 +26,7 @@ import Paths_XChess
 import Control.Concurrent
 import Control.Concurrent.Chan ()
 import qualified Control.Monad as M (when, void)
-import Data.List (elemIndex)
+
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
@@ -57,14 +58,7 @@ wxToolBox h chan = do
 
     -- Sought list
     slp <- panel nb []
-    sl  <- listCtrl slp [columns := [ ("#", AlignLeft, -1)
-                                    , ("handle", AlignLeft, -1)
-                                    , ("rating", AlignLeft, -1)
-                                    , ("Time (start inc.)", AlignRight, -1)
-                                    , ("type", AlignRight, -1)]
-                                    ]
-    set sl [on listEvent := onSeekListEvent sl h]
-    listCtrlSetColumnWidths sl 100
+    (sl, slHandler) <- wxSoughtList slp h
 
     -- Pending
     pending <- panel nb []
@@ -102,7 +96,7 @@ wxToolBox h chan = do
     vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
     windowOnDestroy f $ killThread threadId
-    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= glHandler >>= \cmd -> case cmd of
+    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= glHandler >>= slHandler >>= \cmd -> case cmd of
 
         NoSuchGame -> do
           set status [text := "No such game. Updating games..."]
@@ -110,23 +104,11 @@ wxToolBox h chan = do
 
         TextMessage text -> appendText ct $ text ++ "\n"
 
-        NewSeek seek -> M.when (Lentils.Api.Seek.gameType seek `elem` [Untimed, Standard, Blitz, Lightning]) $
-                               itemAppend sl $ toList seek
-
-        ClearSeek -> itemsDelete sl
-
-        RemoveSeeks gameIds -> do
-          seeks <- get sl items
-          sequence_ $ fmap (deleteSeek sl . findSeekIdx seeks) gameIds
-
         SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
 
         InvalidPassword  -> M.void $ set status [text := "Invalid password."]
 
-        LoggedIn userName -> hPutStrLn h `mapM_` [ "set seek 0"
-                                                 , "set style 12"
-                                                 , "iset nowrap 1"
-                                                 , "iset block 1"] >>
+        LoggedIn userName -> hPutStrLn h `mapM_` defaultParams >>
                              set f [ text := "MacBeth - Logged in as " ++ userName ] >>
                              set tbarItem_seek [ enabled := True ] >>
                              set tbarItem_match [ enabled := True ] >>
@@ -150,29 +132,9 @@ wxToolBox h chan = do
         _ -> return ()
 
 
-
-findSeekIdx :: [[String]] -> Int -> Maybe Int
-findSeekIdx seeks gameId = elemIndex gameId $ fmap (read . (!! 0)) seeks
-
-deleteSeek :: ListCtrl () -> Maybe Int -> IO ()
-deleteSeek sl (Just id) = itemDelete sl id
-deleteSeek _ _ = return ()
-
-toList :: Seek -> [String]
-toList (Seek id name rating time inc isRated gameType _ _) =
-  [show id, name, show rating, show time ++ " " ++ show inc, show gameType ++ " " ++ showIsRated isRated]
-  where showIsRated True = "rated"
-        showIsRated False = "unrated"
-
-
-onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
-onSeekListEvent sl h eventList = case eventList of
-  ListItemActivated idx -> do
-    seeks <- get sl items
-    hPutStrLn h $ "4 play " ++ show (read $ head (seeks !! idx) :: Int)
-  _ -> return ()
-
-
 emitCommand :: TextCtrl () -> Handle -> IO ()
 emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set textCtrl [text := ""]
+
+
+defaultParams = [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
 

@@ -42,7 +42,8 @@ library
                      Lentils.Wx.ToolBox,
                      Lentils.Wx.Utils,
                      Lentils.Wx.Pending,
-                     Lentils.Wx.GamesList
+                     Lentils.Wx.GamesList,
+                     Lentils.Wx.SoughtList
   other-modules: Paths_XChess
   ghc-options: -O3 -threaded -W
 
