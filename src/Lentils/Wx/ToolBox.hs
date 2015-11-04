@@ -11,6 +11,7 @@ import Lentils.Api.Seek
 
 import Lentils.Wx.About
 import Lentils.Wx.Finger
+import Lentils.Wx.GamesList
 import Lentils.Wx.Login
 import Lentils.Wx.Match
 import Lentils.Wx.Seek
@@ -21,7 +22,6 @@ import Lentils.Wx.Pending
 
 import Paths_XChess
 
-import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.Chan ()
 import qualified Control.Monad as M (when, void)
@@ -31,11 +31,6 @@ import Graphics.UI.WXCore
 import System.IO
 
 ficsEventId = wxID_HIGHEST + 51
-
-data GamesOpts = GamesOpts { refresh :: MenuItem ()
-                           , showRated :: MenuItem ()
-                           , showUnrated :: MenuItem ()
-                           }
 
 wxToolBox :: Handle -> Chan CommandMsg -> IO ()
 wxToolBox h chan = do
@@ -82,23 +77,9 @@ wxToolBox h chan = do
     ce <- entry cp []
     set ce [on enterKey := emitCommand ce h]
 
-
     -- tab3 : Games list
     glp <- panel nb []
-    gl  <- listCtrl glp [columns := [("#", AlignLeft, -1)
-                                    , ("player 1", AlignLeft, -1)
-                                    , ("rating", AlignLeft, -1)
-                                    , ("player 2", AlignLeft, -1)
-                                    , ("rating", AlignLeft, -1)
-                                    , ("Game type", AlignLeft, -1)
-                                    ]
-                        ]
-    listCtrlSetColumnWidths gl 100
-
-    -- Games list : context menu
-    glCtxMenu <- menuPane []
-    gamesOpts <- getGamesOpts glCtxMenu
-    set (refresh gamesOpts) [on command := hPutStrLn h "4 games"]
+    (gl, glHandler)  <- wxGamesList glp h
 
     -- about menu
     m_help    <- menuHelp      []
@@ -126,17 +107,7 @@ wxToolBox h chan = do
     vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
     windowOnDestroy f $ killThread threadId
-    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd -> case cmd of
-
-        Games games -> do
-          filterGamesList gl gamesOpts games
-          set (showRated gamesOpts) [on command := filterGamesList gl gamesOpts games]
-          set (showUnrated gamesOpts) [on command := filterGamesList gl gamesOpts games]
-          set gl [on listEvent := onGamesListEvent games h]
-
-          listItemRightClickEvent gl (\evt -> do
-            pt <- listEventGetPoint evt
-            menuPopup glCtxMenu pt gl)
+    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= glHandler >>= \cmd -> case cmd of
 
         NoSuchGame -> do
           set status [text := "No such game. Updating games..."]
@@ -183,27 +154,7 @@ wxToolBox h chan = do
 
         _ -> return ()
 
-filterGamesList :: ListCtrl () -> GamesOpts -> [Game] -> IO ()
-filterGamesList gl opts games = do
-  showRated' <- get (showRated opts) checked
-  showUnrated' <- get (showUnrated opts) checked
-  set gl [items := [ toList g | g <- games
-                   , (Lentils.Api.Game.isRated (settings g) == showRated') ||
-                     (Lentils.Api.Game.isRated (settings g) == not showUnrated')
-                   , not $ isPrivate $ settings g]]
 
-  where toList g = [show $ Lentils.Api.Game.id g
-               , Lentils.Api.Game.nameW g
-               , show $ ratingW g
-               , Lentils.Api.Game.nameB g
-               , show $ ratingB g
-               , show $ Lentils.Api.Game.gameType $ settings g]
-
-getGamesOpts :: Menu () -> IO GamesOpts
-getGamesOpts ctxMenu = GamesOpts
-  <$> menuItem ctxMenu [ text := "Refresh" ]
-  <*> menuItem ctxMenu [ text := "Show rated games", checkable := True, checked := True]
-  <*> menuItem ctxMenu [ text := "Show unrated games", checkable := True, checked := True]
 
 findSeekIdx :: [[String]] -> Int -> Maybe Int
 findSeekIdx seeks gameId = elemIndex gameId $ fmap (read . (!! 0)) seeks
@@ -218,11 +169,6 @@ toList (Seek id name rating time inc isRated gameType _ _) =
   where showIsRated True = "rated"
         showIsRated False = "unrated"
 
-onGamesListEvent :: [Game] -> Handle -> EventList -> IO ()
-onGamesListEvent games h eventList = case eventList of
-  ListItemActivated idx -> hPutStrLn h $ "4 observe " ++ show (Lentils.Api.Game.id $ games !! idx)
-  _ -> return ()
-
 
 onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
 onSeekListEvent sl h eventList = case eventList of
@@ -234,12 +180,4 @@ onSeekListEvent sl h eventList = case eventList of
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
 emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set textCtrl [text := ""]
-
-
-listItemRightClickEvent :: ListCtrl a -> (Graphics.UI.WXCore.ListEvent () -> IO ()) -> IO ()
-listItemRightClickEvent listCtrl eventHandler
-  = windowOnEvent listCtrl [wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK] eventHandler listHandler
-    where
-      listHandler :: Graphics.UI.WXCore.Event () -> IO ()
-      listHandler evt = eventHandler $ objectCast evt
 
