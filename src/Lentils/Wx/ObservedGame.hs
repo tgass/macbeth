@@ -13,6 +13,7 @@ import qualified Lentils.Utils.Board as Board
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
+import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Graphics.UI.WX hiding (when, position)
@@ -29,7 +30,7 @@ createObservedGame h move chan = do
   vMoves <- newMVar [move | isJust $ movePretty move]
   vGameResult <- newMVar Nothing
 
-  f <- frame [ text := title move ]
+  f <- frame [ text := frameTitle move ]
   p_back <- panel f []
 
   -- board
@@ -67,7 +68,7 @@ createObservedGame h move chan = do
   set f [ statusBar := [status]]
   refit p_back
 
-
+  threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
     GameMove move' -> when (gameId move' == gameId move) $ do
@@ -89,6 +90,7 @@ createObservedGame h move chan = do
                               set status [text := (show result ++ ": " ++ reason)]
                               swapMVar vGameResult $ Just result
                               hPutStrLn h "4 iset seekinfo 1"
+                              killThread threadId
 
     DrawOffered -> when (isGameUser move) $
                      set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
@@ -100,9 +102,7 @@ createObservedGame h move chan = do
 
     _ -> return ()
 
-  windowShow f
-  threadId <- forkIO $ eventLoop eventId chan vCmd f
-  windowOnDestroy f $ do killThread threadId
+  windowOnDestroy f $ do catch (killThread threadId) (\e -> print $ show (e :: IOException))
                          saveGame vMoves vGameResult
                          case relation move of
                            MyMove -> hPutStrLn h "5 resign"
@@ -184,7 +184,5 @@ addMove m moves@(m':_)
     where areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
 
 
-title move
-  | isGameUser move = "Playing: " ++ description
-  | otherwise = "Observing: " ++ description
-    where description = nameW move ++ " vs " ++ nameB move ++ " [Game " ++ show (Lentils.Api.Move.gameId move) ++ "]"
+frameTitle move = "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move
+
