@@ -5,10 +5,10 @@ import Lentils.Wx.ToolBox
 
 import Graphics.UI.WX
 
--- TODO: add game result to PGN
 -- TODO: close eventLoop after GameResult
--- TODO: add initial move to vMoves if not empty!
 -- TODO: application icon
+-- TODO: games list: filter private games
+-- TODO: drawOffered wird in allen offenen Fenstern verarbeitet
 
 -- TODO: Request move take backend, accept/ decline move takeback request
 -- TODO: Save observed game with initial position

@@ -3,10 +3,11 @@ module Lentils.Wx.ObservedGame (
 ) where
 
 import Lentils.Api.Api
-import Lentils.Api.CommandMsg
+import Lentils.Api.CommandMsg hiding (gameId)
 import Lentils.Api.Move
+import Lentils.Api.Game hiding (nameW, nameB)
 import Lentils.Utils.PGN
-import Lentils.Utils.Utils (formatTime)
+import Lentils.Utils.Utils
 import Lentils.Wx.Utils
 import qualified Lentils.Utils.Board as Board
 
@@ -14,24 +15,26 @@ import Control.Concurrent
 import Control.Concurrent.Chan ()
 import Control.Monad
 import Data.Maybe
-import Graphics.UI.WX hiding (when)
+import Graphics.UI.WX hiding (when, position)
 import Graphics.UI.WXCore hiding (when)
 import System.IO
 
 
 eventId = wxID_HIGHEST + 53
 
-createObservedGame :: Handle -> Move -> Lentils.Api.Api.PColor -> Chan CommandMsg -> IO ()
-createObservedGame h move color chan = do
+createObservedGame :: Handle -> Move -> Chan CommandMsg -> IO ()
+createObservedGame h move chan = do
+  let color = if relation move == Observing then White else colorUser move
   vCmd <- newEmptyMVar
-  vMoves <- newMVar []
+  vMoves <- newMVar [move | isJust $ movePretty move]
+  vGameResult <- newMVar Nothing
 
   f <- frame [ text := title move ]
   p_back <- panel f []
 
   -- board
   p_board <- panel p_back []
-  vBoardState <- variable [ value := Board.BoardState p_board (Lentils.Api.Move.position move) color color (Square A One) Nothing (relation move == MyMove) ]
+  vBoardState <- variable [ value := Board.BoardState p_board (position move) color color (Square A One) Nothing (relation move == MyMove) ]
   set p_board [ on paint := Board.draw vBoardState ]
   windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
 
@@ -51,12 +54,10 @@ createObservedGame h move color chan = do
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState p_back layoutBoardF ]
-  when (relation move /= Observing) $ do
+  when (relation move `elem` [MyMove, OponentsMove]) $ do
                  menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
                  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
                  return ()
-  when (relation move == Observing) $
-                 void $ menuItem ctxMenu [ text := "Save Game", on command := saveGame vMoves ]
 
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
@@ -69,9 +70,9 @@ createObservedGame h move color chan = do
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
-    GameMove move' -> when (Lentils.Api.Move.gameId move' == Lentils.Api.Move.gameId move) $ do
+    GameMove move' -> when (gameId move' == gameId move) $ do
                                    state <- varGet vBoardState
-                                   varSet vBoardState $ state { Board._position = Lentils.Api.Move.position move'
+                                   varSet vBoardState $ state { Board._position = position move'
                                                               , Board.isInteractive = relation move' == MyMove}
                                    repaint (Board._panel state)
                                    set t_white [enabled := True]
@@ -80,12 +81,13 @@ createObservedGame h move color chan = do
                                    set status [text := ""]
                                    modifyMVar_ vMoves $ return . addMove move'
 
-    GameResult id reason result -> when (id == Lentils.Api.Move.gameId move) $ do
+    GameResult id reason result -> when (id == gameId move) $ do
                               state <- varGet vBoardState
                               varSet vBoardState $ state {Board.isInteractive = False}
                               set t_white [enabled := False]
                               set t_black [enabled := False]
                               set status [text := (show result ++ ": " ++ reason)]
+                              swapMVar vGameResult $ Just result
                               hPutStrLn h "4 iset seekinfo 1"
 
     DrawOffered -> set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
@@ -99,20 +101,22 @@ createObservedGame h move color chan = do
   windowShow f
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ do killThread threadId
-                         when (isPlayersGame move) $ saveGame vMoves
+                         saveGame vMoves vGameResult
                          case relation move of
                            MyMove -> hPutStrLn h "5 resign"
                            OponentsMove -> hPutStrLn h "5 resign"
-                           Observing -> hPutStrLn h $ "5 unobserve " ++ show (Lentils.Api.Move.gameId move)
+                           Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
                            _ -> return ()
 
-saveGame :: MVar [Move] -> IO ()
-saveGame vMoves = do
+
+saveGame :: MVar [Move] -> MVar (Maybe GameResult) -> IO ()
+saveGame vMoves vGameResult = do
   moves <- readMVar vMoves
-  Lentils.Utils.PGN.saveAsPGN (reverse moves)
+  mGameResult <- readMVar vGameResult
+  saveAsPGN (reverse moves) mGameResult
 
 
-turnBoard :: Var Board.BoardState -> Panel () -> (Lentils.Api.Api.PColor -> Layout) -> IO ()
+turnBoard :: Var Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()
 turnBoard vState p layoutF = do
   state <- varGet vState
   let color' = Lentils.Api.Api.invert $ Board.perspective state
@@ -122,7 +126,7 @@ turnBoard vState p layoutF = do
   refit p
 
 
-createStatusPanel :: Panel () -> Var Move -> Lentils.Api.Api.PColor -> IO (Panel (), Graphics.UI.WX.Timer)
+createStatusPanel :: Panel () -> Var Move -> PColor -> IO (Panel (), Graphics.UI.WX.Timer)
 createStatusPanel p_back vMove color = do
   move <- varGet vMove
   p_status <- panel p_back []
@@ -141,7 +145,7 @@ createStatusPanel p_back vMove color = do
   return (p_status, t)
 
 
-updateTime :: Lentils.Api.Api.PColor -> Var Move -> StaticText () -> IO ()
+updateTime :: PColor -> Var Move -> StaticText () -> IO ()
 updateTime color vClock st = do
   move <- changeRemainingTime color `fmap` varGet vClock
   varSet vClock move
@@ -158,7 +162,7 @@ staticTextFormatted p s = staticText p [ text := s
                                        , fontWeight := WeightBold]
 
 
-layoutBoard :: Panel() -> Panel() -> Panel() -> Lentils.Api.Api.PColor -> Layout
+layoutBoard :: Panel() -> Panel() -> Panel() -> PColor -> Layout
 layoutBoard board white black color = grid 0 0 [ [hfill $ widget (if color == White then black else white)]
                                                , [fill $ minsize (Size 320 320) $ widget board]
                                                , [hfill $ widget (if color == White then white else black)]]
@@ -169,16 +173,14 @@ unsetKeyHandler p = set p [on (charKey 'y') := return ()] >>
                     set p [on (charKey 'n') := return ()]
 
 
-{- Add new moves in the front, so you can check for duplicates. -}
+{- Add new moves in the front, so I can check for duplicates. -}
 addMove :: Move -> [Move] -> [Move]
 addMove m [] = [m]
 addMove m moves@(m':_)
-           | areEqual m m' = moves
-           | otherwise = m : moves
+  | areEqual m m' = moves
+  | otherwise = m : moves
+    where areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
 
-
-areEqual :: Move -> Move -> Bool
-areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
 
 title move
   | isPlayersGame move = "Playing: " ++ description

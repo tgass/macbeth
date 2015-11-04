@@ -4,6 +4,7 @@ module Lentils.Utils.PGN (
 
 import Lentils.Api.Api
 import Lentils.Api.Move
+import Lentils.Api.Game (GameResult)
 import qualified Lentils.Utils.FEN as FEN
 
 import Data.Maybe
@@ -13,13 +14,14 @@ import System.FilePath
 import System.Locale
 
 
-saveAsPGN :: [Move] -> IO ()
-saveAsPGN moves = do
+saveAsPGN :: [Move] -> Maybe GameResult ->  IO ()
+saveAsPGN [] _ = return ()
+saveAsPGN moves mGameResult = do
   rootDir <- getUserDocumentsDirectory
   createDirectoryIfMissing False $ rootDir </> "XChess"
   dateTime <- getZonedTime
   path <- filepath dateTime (head moves)
-  appendFile path $ toPGN moves dateTime
+  appendFile path $ toPGN moves mGameResult dateTime
 
 filepath :: ZonedTime -> Move -> IO FilePath
 filepath dateTime m = do
@@ -27,17 +29,17 @@ filepath dateTime m = do
   return $ rootDir </> "XChess" </> formatTime defaultTimeLocale "%Y-%m-%d" dateTime ++ "_" ++
            formatTime defaultTimeLocale "%H-%M-%S" dateTime ++ "_" ++ nameW m ++ "_vs_" ++ nameB m ++ ".pgn"
 
-toPGN :: [Move] -> ZonedTime -> String
-toPGN [] _ = ""
-toPGN moves@(m:_) dateTime =
-  tagsSection m dateTime ++ "\n\n" ++
-  moveSection (if FEN.available $ head moves then tail moves else moves) ++ " " ++ "\n\n"
+toPGN :: [Move] -> Maybe GameResult -> ZonedTime -> String
+toPGN [] _ _ = ""
+toPGN moves@(m:_) mGameResult dateTime =
+  tagsSection m mGameResult dateTime ++ "\n\n" ++
+  moveSection (if FEN.available $ head moves then tail moves else moves) ++ " " ++ maybe "" show mGameResult ++ "\n\n"
 
 moveSection :: [Move] -> String
 moveSection = unwords . fmap (toString . toSAN) . filter realMove
 
-tagsSection :: Move -> ZonedTime -> String
-tagsSection m dateTime =
+tagsSection :: Move -> Maybe GameResult -> ZonedTime -> String
+tagsSection m mGameResult dateTime =
   "[Event \"?\"]\n\
   \[Site \"?\"]\n\
   \[Date \"" ++ formatTime defaultTimeLocale "%Y.%m.%d" dateTime ++ "\"]\n\
@@ -45,7 +47,7 @@ tagsSection m dateTime =
   \[Round \"?\"]\n\
   \[White \"" ++ Lentils.Api.Move.nameW m ++ "\"]\n\
   \[Black \"" ++ Lentils.Api.Move.nameB m ++ "\"]\n\
-  \[Result \"?\"]\n\
+  \[Result \"" ++ maybe "?" show mGameResult ++ "\"]\n\
   \[BlackElo \"?\"]\n\
   \[WhiteElo \"?\"]\n\
   \[ECO \"?\"]\n\
