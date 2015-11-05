@@ -50,9 +50,7 @@ wxToolBox h chan = do
     status <- statusField []
 
 
-    nb <- notebook f [on notebookEvent := (\evt -> case evt of
-                                            PageSelected i -> print i
-                                            _ -> print "unkown" )]
+    nb <- notebook f []
 
     -- Sought list
     slp <- panel nb []
@@ -74,7 +72,7 @@ wxToolBox h chan = do
 
 
     -- about menu
-    m_help    <- menuHelp      []
+    m_help    <- menuHelp []
     _         <- menuAbout m_help [help := "About XChess", on command := wxAbout ]
 
     set f [ layout := tabs nb
@@ -137,43 +135,6 @@ emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set te
 
 
 defaultParams = [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
-
-data EventNotebook = PageSelected !Int | Unknown deriving (Show)
-
-notebookEvent :: Graphics.UI.WX.Event (Notebook a) (EventNotebook -> IO ())
-notebookEvent
-  = newEvent "notebookEvent" nbCtrlGetOnNotebookEvent nbCtrlOnNotebookEvent
-
-nbCtrlOnNotebookEvent :: Notebook a -> (EventNotebook -> IO ()) -> IO ()
-nbCtrlOnNotebookEvent nb eventHandler
-  = windowOnEvent nb (map fst nbEvents) eventHandler nbHandler
-  where
-    nbHandler event
-      = do eventList <- fromNbEvent (objectCast event)
-           eventHandler eventList
-
--- | Get the current list event handler of a window.
-nbCtrlGetOnNotebookEvent :: Notebook a -> IO (EventNotebook -> IO ())
-nbCtrlGetOnNotebookEvent nb
-  = unsafeWindowGetHandlerState nb wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED (\evt -> skipCurrentEvent)
-
-
-nbEvents = [(wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, withItem PageSelected)]
-  where withItem make evt = do col <- commandEventGetSelection evt
-                               return (make col)
-
-
-fromNbEvent :: NotebookEvent a -> IO EventNotebook
-fromNbEvent evt
-  = do tp <- eventGetEventType evt
-       print tp
-       case lookup tp nbEvents of
-         Just f  -> f evt
-         Nothing -> return Unknown
-
-
-
-
 
 
 

@@ -4,10 +4,8 @@ module Lentils.Wx.Match (
 ) where
 
 import Control.Applicative
-import Control.Monad (void)
 import Data.Char (toLower)
 import Graphics.UI.WX
-import Graphics.UI.WXCore (windowShow)
 import System.IO (Handle, hPutStrLn, stdout)
 
 data WxMatch = WxMatch {
