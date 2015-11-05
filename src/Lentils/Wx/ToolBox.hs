@@ -27,6 +27,12 @@ import Graphics.UI.WXCore
 import System.IO
 import qualified Control.Monad as M (when, void)
 
+import System.IO.Unsafe
+import Foreign.Marshal.Alloc
+import Foreign.Storable
+import Foreign.Ptr
+import Foreign.C.Types
+
 ficsEventId = wxID_HIGHEST + 51
 
 wxToolBox :: Handle -> Chan CommandMsg -> IO ()
@@ -75,6 +81,7 @@ wxToolBox h chan = do
     m_help    <- menuHelp []
     _         <- menuAbout m_help [help := "About XChess", on command := wxAbout ]
 
+    set nb [on click := onMouse nb]
     set f [ layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
@@ -137,4 +144,16 @@ emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set te
 defaultParams = [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
 
 
+onMouse :: Notebook() -> Point -> IO ()
+onMouse nb p = do
+  propagateEvent
+  i  <- notebookHitTest nb p flag
+  n  <- notebookGetSelection nb
+  logMessage (  " GetSelection: " ++ show n ++ ", " ++ show (i))
 
+flag :: Ptr CInt
+flag  =  unsafePerformIO flag' where
+           flag' = do
+             work <- malloc::IO (Ptr CInt)
+             poke work (fromIntegral wxBK_HITTEST_ONPAGE)
+             return work
