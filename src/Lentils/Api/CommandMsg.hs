@@ -2,6 +2,7 @@ module Lentils.Api.CommandMsg (
   CommandMsg (..)
 ) where
 
+import Lentils.Api.Api
 import Lentils.Api.Challenge
 import Lentils.Api.Game
 import Lentils.Api.Move
@@ -18,6 +19,7 @@ data CommandMsg =   GameMove Move
                   | DrawOffered
                   | DrawDeclined
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
+                  | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }
 
                   | NewSeek Seek
                   | RemoveSeeks [Int]
@@ -40,3 +42,4 @@ data CommandMsg =   GameMove Move
 
                   {- Internal -}
                   | Boxed [CommandMsg] deriving (Show, Eq)
+

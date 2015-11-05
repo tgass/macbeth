@@ -8,6 +8,7 @@ module Lentils.Api.Api (
   Row (..),
   Column (..),
   Position,
+  PendingOffer (..),
   pColor,
   invert
 ) where
@@ -30,6 +31,8 @@ instance Show Square where
   show (Square s y) = fmap toLower (show s) ++ show (fromEnum y + 1)
 
 type Position = [(Square, Piece)]
+
+data PendingOffer = PendingOffer { offerId :: Int, offer :: String } deriving (Show, Eq)
 
 pColor :: Piece -> PColor
 pColor (Piece _ color) = color

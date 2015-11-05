@@ -6,9 +6,6 @@ module Lentils.Wx.ToolBox (
 
 import Lentils.Api.CommandMsg
 import Lentils.Api.Move
-import Lentils.Api.Game
-import Lentils.Api.Seek
-
 import Lentils.Wx.About
 import Lentils.Wx.Finger
 import Lentils.Wx.GamesList
@@ -25,11 +22,10 @@ import Paths_XChess
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
-import qualified Control.Monad as M (when, void)
-
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
+import qualified Control.Monad as M (when, void)
 
 ficsEventId = wxID_HIGHEST + 51
 
@@ -55,6 +51,7 @@ wxToolBox h chan = do
 
 
     nb <- notebook f []
+    notebookPageChanged nb (\evt -> notebookGetSelection nb >>= print)
 
     -- Sought list
     slp <- panel nb []
@@ -62,7 +59,7 @@ wxToolBox h chan = do
 
     -- Pending
     pending <- panel nb []
-    pendingWidget <- wxPending pending
+    (pendingWidget, pendingHandler) <- wxPending pending
 
     -- Console
     cp <- panel nb []
@@ -96,7 +93,8 @@ wxToolBox h chan = do
     vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
     windowOnDestroy f $ killThread threadId
-    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= glHandler >>= slHandler >>= \cmd -> case cmd of
+    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd
+      >>= glHandler >>= slHandler >>= pendingHandler >>= \cmd -> case cmd of
 
         NoSuchGame -> do
           set status [text := "No such game. Updating games..."]
@@ -125,7 +123,7 @@ wxToolBox h chan = do
 
         MatchAccepted move -> dupChan chan >>= createObservedGame h move
 
-        GameMove move -> when (isNewGameUser move) $ dupChan chan >>= createObservedGame h move
+        GameMove move -> M.when (isNewGameUser move) $ dupChan chan >>= createObservedGame h move
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 
@@ -137,4 +135,9 @@ emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set te
 
 
 defaultParams = [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
+
+notebookPageChanged :: Notebook () -> (Graphics.UI.WXCore.Event () -> IO ()) -> IO ()
+notebookPageChanged nb eventHandler =
+  windowOnEvent nb [wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED] eventHandler (\evt -> eventHandler evt)
+
 

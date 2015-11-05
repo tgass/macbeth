@@ -4,6 +4,7 @@ module Lentils.Fics.Parsers.CommandMsgParser (
  parseCommandMsg
 ) where
 
+import Lentils.Api.Api
 import Lentils.Api.Challenge
 import Lentils.Api.CommandMsg
 import Lentils.Api.Game
@@ -47,6 +48,7 @@ parseCommandMsg = parseOnly parser where
                   , gameMove
 
                   , finger
+                  , pendingOffers
 
                   , login
                   , password
@@ -133,11 +135,16 @@ finger = Finger
   <$> (commandHead 37 *> "Finger of " *> manyTill anyChar ":")
   <*> manyTill anyChar "\n\n\ETB"
 
+pendingOffers :: Parser CommandMsg
+pendingOffers = PendingOffers
+  <$> (commandHead 87 *> (("There are no offers pending to other players.\n\n" *> pure []) <|>
+                          ("Offers to other players:\n\n" *> sepBy pendingOffer "\n\n" <* "\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\n")))
+  <*> (("There are no offers pending from other players." *> pure []) <|>
+        "Offers from other players:\n\n" *> sepBy pendingOffer "\n\n")
 
+pendingOffer :: Parser PendingOffer
+pendingOffer = PendingOffer <$> (skipSpace *> decimal <* ": ") <*> manyTill anyChar "."
 
---"\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nThere are no offers pending from other players.\n\ETB"
---"\NAK5\SYN87\SYNOffers to other players:\n\n  45: You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0.\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\nThere are no offers pending from other players.\n\ETB"
---"\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nOffers from other players:\n\n  43: GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0.\n\nIf you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".\n\ETB"
 login :: Parser CommandMsg
 login = "login: " *> pure Login
 

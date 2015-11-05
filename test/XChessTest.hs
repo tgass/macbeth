@@ -51,9 +51,11 @@ commandMessageParserTest = [
       , (Boxed [RemoveSeeks [119], GameMove defaultMove], "\NAK4\SYN155\SYNYour seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n")
       -- seekInfoBlock
       , (Boxed [ClearSeek, NewSeek $ Seek 16 "CatNail" (Rating 1997) 3 0 False Suicide Nothing (0, 9999)], "\NAK4\SYN56\SYNseekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n")
-      -- observe
       , (Observe defaultMove, "\NAK5\SYN80\SYNYou are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0" ++ defaultMoveStr)
       , (Finger "GuestSPRM(U)" "\n\nOn for: 4 mins   Idle: 0 secs\n\n\nTotal time online: 4 mins\n\nTimeseal   : Off", "\NAK5\SYN37\SYNFinger of GuestSPRM(U):\n\nOn for: 4 mins   Idle: 0 secs\n\n\nTotal time online: 4 mins\n\nTimeseal   : Off\n\n\ETB")
+      , (PendingOffers [] [], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nThere are no offers pending from other players.\n\ETB")
+      , (PendingOffers [PendingOffer 45 "You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0"] [], "\NAK5\SYN87\SYNOffers to other players:\n\n  45: You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0.\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\nThere are no offers pending from other players.\n\ETB")
+      , (PendingOffers [] [PendingOffer 43 "GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0"], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nOffers from other players:\n\n  43: GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0.\n\nIf you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".\n\ETB")
       ]
 
 defaultMove = Move "-------- -------- -------- -------- -------- -------- -------- --------" [] White Nothing [WhiteShort,WhiteLong,BlackShort,BlackLong] 0 18 "nameWhite" "nameBlack" OponentsMove 1 "none" "(0:00)" 180 180 Nothing

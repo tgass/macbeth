@@ -2,10 +2,12 @@ module Lentils.Wx.Pending (
   wxPending
 ) where
 
+import Lentils.Api.Api
+import Lentils.Api.CommandMsg
 import Graphics.UI.WX
 
 
-wxPending :: Panel () -> IO (Panel ())
+wxPending :: Panel () -> IO (Panel (), CommandMsg -> IO CommandMsg)
 wxPending p' = do
   p <- panel p' []
   stFrom <- staticText p [ text := "Offers from other players:", fontSize := 12]
@@ -27,6 +29,17 @@ wxPending p' = do
                              , hfill $ widget $ vspace 5
                              , hfill $ widget stTo
                              , fill $ widget lcTo]]
-  return p
 
---"\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nThere are no offers pending from other players.\n\ETB"
+  let handler cmd = case cmd of
+                PendingOffers tx fx -> do
+                  set lcFrom [items := [ toList offer | offer <- fx]]
+                  set lcTo [items := [ toList offer | offer <- tx]]
+                  return cmd
+                _ -> return cmd
+
+  return (p, handler)
+
+
+toList :: PendingOffer -> [String]
+toList (PendingOffer id offer) = [show id, offer]
+
