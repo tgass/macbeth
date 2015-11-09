@@ -18,12 +18,12 @@ import Graphics.UI.WX
 
 -- FEATURES
 -- TODO: Pre-Moves
--- TODO: Request move take backend, accept/ decline move takeback request
+-- TODO: takeback
+-- TODO: abort
 
 
 -- MINOR
--- TODO: You are not observing any games. remove from console
-
+-- TODO: Observed games ends: "Removing game 264 from observation list."
 
 main :: IO ()
 main = do

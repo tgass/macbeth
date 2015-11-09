@@ -103,19 +103,14 @@ createObservedGame h move chan = do
     _ -> return ()
 
   windowOnDestroy f $ do catch (killThread threadId) (\e -> print $ show (e :: IOException))
-                         saveGame vMoves vGameResult
-                         case relation move of
+                         gameResult <- readMVar vGameResult
+                         moves <- readMVar vMoves
+                         saveAsPGN (reverse moves) gameResult
+                         unless (isJust gameResult) $ case relation move of
                            MyMove -> hPutStrLn h "5 resign"
                            OponentsMove -> hPutStrLn h "5 resign"
                            Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
                            _ -> return ()
-
-
-saveGame :: MVar [Move] -> MVar (Maybe GameResult) -> IO ()
-saveGame vMoves vGameResult = do
-  moves <- readMVar vMoves
-  mGameResult <- readMVar vGameResult
-  saveAsPGN (reverse moves) mGameResult
 
 
 turnBoard :: Var Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()

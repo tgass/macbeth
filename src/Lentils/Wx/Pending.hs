@@ -33,10 +33,15 @@ wxPending h p' = do
                              , fill $ widget lcTo]]
 
   let handler cmd = case cmd of
+
                 PendingOffers tx fx -> do
                   set lcFrom [items := [ toList offer | offer <- fx]]
                   listItemRightClickEvent lcFrom (ctxMenuHandler h lcFrom fx)
                   set lcTo [items := [ toList offer | offer <- tx]]
+
+                OfferAccepted -> hPutStrLn h "4 pending"
+
+                OfferDeclined -> hPutStrLn h "4 pending"
 
                 _ -> return ()
 

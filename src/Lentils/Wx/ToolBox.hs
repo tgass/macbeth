@@ -124,10 +124,6 @@ wxToolBox h chan = do
 
         Finger name stats -> wxFinger name stats
 
-        OfferAccepted -> hPutStrLn h "4 pending"
-
-        OfferDeclined -> hPutStrLn h "4 pending"
-
         Login -> dupChan chan >>= wxLogin h
 
         Observe move -> dupChan chan >>= createObservedGame h move
