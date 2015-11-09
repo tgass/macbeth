@@ -49,6 +49,8 @@ parseCommandMsg = parseOnly parser where
 
                   , finger
                   , pendingOffers
+                  , offerAccepted
+                  , offerDeclined
 
                   , login
                   , password
@@ -144,6 +146,12 @@ pendingOffers = PendingOffers
 
 pendingOffer :: Parser PendingOffer
 pendingOffer = PendingOffer <$> (skipSpace *> decimal <* ": ") <*> manyTill anyChar "."
+
+offerAccepted :: Parser CommandMsg
+offerAccepted = manyTill anyChar " " *> "accepts the match offer." *> pure OfferAccepted
+
+offerDeclined :: Parser CommandMsg
+offerDeclined = manyTill anyChar " " *> "declines the match offer." *> pure OfferDeclined
 
 login :: Parser CommandMsg
 login = "login: " *> pure Login

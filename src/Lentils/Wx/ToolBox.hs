@@ -22,10 +22,10 @@ import Paths_XChess
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
-import Graphics.UI.WX
-import Graphics.UI.WXCore
+import Graphics.UI.WX hiding (when)
+import Graphics.UI.WXCore hiding (when)
 import System.IO
-import qualified Control.Monad as M (when, void)
+import Control.Monad
 
 import System.IO.Unsafe
 import Foreign.Marshal.Alloc
@@ -68,7 +68,7 @@ wxToolBox h chan = do
 
     -- Pending
     pending <- panel nb []
-    (pendingWidget, pendingHandler) <- wxPending pending
+    (pendingWidget, pendingHandler) <- wxPending h pending
 
     -- Console
     cp <- panel nb []
@@ -81,7 +81,7 @@ wxToolBox h chan = do
     m_help    <- menuHelp []
     _         <- menuAbout m_help [help := "About XChess", on command := wxAbout ]
 
-    set nb [on click := onMouse nb]
+    set nb [on click := (onMouse nb >=> clickHandler h nb)]
     set f [ layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
@@ -100,8 +100,8 @@ wxToolBox h chan = do
     vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
     windowOnDestroy f $ killThread threadId
-    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd
-      >>= glHandler >>= slHandler >>= pendingHandler >>= \cmd -> case cmd of
+    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd ->
+      glHandler cmd >> slHandler cmd >> pendingHandler cmd >> case cmd of
 
         NoSuchGame -> do
           set status [text := "No such game. Updating games..."]
@@ -109,9 +109,9 @@ wxToolBox h chan = do
 
         TextMessage text -> appendText ct $ text ++ "\n"
 
-        SettingsDone -> hPutStrLn h "4 iset seekinfo 1" >> hPutStrLn h "4 games"
+        SettingsDone -> hPutStrLn h "4 iset seekinfo 1"
 
-        InvalidPassword  -> M.void $ set status [text := "Invalid password."]
+        InvalidPassword  -> void $ set status [text := "Invalid password."]
 
         LoggedIn userName -> hPutStrLn h `mapM_` defaultParams >>
                              set f [ text := "MacBeth - Logged in as " ++ userName ] >>
@@ -124,13 +124,17 @@ wxToolBox h chan = do
 
         Finger name stats -> wxFinger name stats
 
+        OfferAccepted -> hPutStrLn h "4 pending"
+
+        OfferDeclined -> hPutStrLn h "4 pending"
+
         Login -> dupChan chan >>= wxLogin h
 
         Observe move -> dupChan chan >>= createObservedGame h move
 
         MatchAccepted move -> dupChan chan >>= createObservedGame h move
 
-        GameMove move -> M.when (isNewGameUser move) $ dupChan chan >>= createObservedGame h move
+        GameMove move -> when (isNewGameUser move) $ dupChan chan >>= createObservedGame h move
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 
@@ -144,16 +148,20 @@ emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set te
 defaultParams = [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
 
 
-onMouse :: Notebook() -> Point -> IO ()
-onMouse nb p = do
-  propagateEvent
-  i  <- notebookHitTest nb p flag
-  n  <- notebookGetSelection nb
-  logMessage (  " GetSelection: " ++ show n ++ ", " ++ show (i))
+onMouse :: Notebook() -> Point -> IO Int
+onMouse nb p = propagateEvent >> notebookHitTest nb p flag
 
+clickHandler :: Handle -> Notebook () -> Int -> IO ()
+clickHandler h nb idx = notebookGetPageText nb idx >>= \text -> case text of
+  "Pending" -> hPutStrLn h "5 pending"
+  "Games" -> hPutStrLn h "5 games"
+  _ -> return ()
+
+
+{-# NOINLINE flag #-}
 flag :: Ptr CInt
-flag  =  unsafePerformIO flag' where
-           flag' = do
+flag  =  unsafePerformIO flag'
+  where flag' = do
              work <- malloc::IO (Ptr CInt)
              poke work (fromIntegral wxBK_HITTEST_ONPAGE)
              return work

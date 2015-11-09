@@ -4,6 +4,7 @@ module Lentils.Wx.GamesList (
 
 import Lentils.Api.Game
 import Lentils.Api.CommandMsg
+import Lentils.Wx.Utils
 
 import Control.Applicative
 import Graphics.UI.WX hiding (refresh)
@@ -70,14 +71,6 @@ getGamesOpts ctxMenu = GamesOpts
   <$> menuItem ctxMenu [ text := "Refresh" ]
   <*> menuItem ctxMenu [ text := "Show rated games", checkable := True, checked := True]
   <*> menuItem ctxMenu [ text := "Show unrated games", checkable := True, checked := True]
-
-
-listItemRightClickEvent :: ListCtrl a -> (Graphics.UI.WXCore.ListEvent () -> IO ()) -> IO ()
-listItemRightClickEvent listCtrl eventHandler
-  = windowOnEvent listCtrl [wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK] eventHandler listHandler
-    where
-      listHandler :: Graphics.UI.WXCore.Event () -> IO ()
-      listHandler evt = eventHandler $ objectCast evt
 
 
 toList g = [show $ Lentils.Api.Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g, show $ gameType $ settings g]
