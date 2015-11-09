@@ -23,7 +23,7 @@ import Graphics.UI.WX
 
 
 -- MINOR
--- TODO: Observed games ends: "Removing game 264 from observation list."
+
 
 main :: IO ()
 main = do

@@ -5,7 +5,6 @@ module Lentils.Wx.ObservedGame (
 import Lentils.Api.Api
 import Lentils.Api.CommandMsg hiding (gameId)
 import Lentils.Api.Move
-import Lentils.Api.Game hiding (nameW, nameB)
 import Lentils.Utils.PGN
 import Lentils.Utils.Utils
 import Lentils.Wx.Utils

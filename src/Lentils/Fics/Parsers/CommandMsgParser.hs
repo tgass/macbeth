@@ -35,6 +35,7 @@ parseCommandMsg = parseOnly parser where
                   , games
                   , playSeek
                   , observe
+                  , removingObservedGame
                   , noSuchGame
                   , accept
                   , gameResult
@@ -68,6 +69,9 @@ games = Games <$> (commandHead 43 *> parseGamesList)
 
 observe :: Parser CommandMsg
 observe = Observe <$> (commandHead 80 *> move)
+
+removingObservedGame :: Parser CommandMsg
+removingObservedGame = "Removing game " *> decimal *> " from observation list." *> pure RemovingObservedGame
 
 noSuchGame :: Parser CommandMsg
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame

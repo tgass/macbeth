@@ -11,6 +11,7 @@ import Lentils.Api.Seek
 data CommandMsg =   GameMove Move
                   | Games [Game]
                   | Observe Move
+                  | RemovingObservedGame
                   | NoSuchGame
 
                   | MatchRequested Challenge
