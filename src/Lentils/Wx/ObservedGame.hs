@@ -57,7 +57,8 @@ createObservedGame h move chan = do
   when (relation move `elem` [MyMove, OponentsMove]) $ do
                  menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
                  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
-                 return ()
+                 void $ menuItem ctxMenu [ text := "Abort", on command := hPutStrLn h "4 abort"]
+
 
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
@@ -98,6 +99,21 @@ createObservedGame h move chan = do
 
     DrawDeclined -> when (isGameUser move) $
                       set status [text := nameOponent color move ++ " declined your draw offer."]
+
+    AbortRequested user -> when (isGameUser move) $
+                     set status [text := user ++ " would like to abort the game. Accept? (y/n)"] >>
+                     set p_back [on (charKey 'y') := hPutStrLn h "5 abort" >> unsetKeyHandler p_back] >>
+                     set p_back [on (charKey 'n') := hPutStrLn h "5 decline" >> unsetKeyHandler p_back]
+
+
+    AbortedGame id reason -> when (id == gameId move) $ do
+                              state <- varGet vBoardState
+                              varSet vBoardState $ state {Board.isInteractive = False}
+                              set t_white [enabled := False]
+                              set t_black [enabled := False]
+                              set status [text := reason]
+                              hPutStrLn h "4 iset seekinfo 1"
+                              killThread threadId
 
     _ -> return ()
 

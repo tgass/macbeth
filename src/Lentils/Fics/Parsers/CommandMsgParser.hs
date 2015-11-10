@@ -52,6 +52,14 @@ parseCommandMsg = parseOnly parser where
                   , pendingOffers
                   , offerAccepted
                   , offerDeclined
+                  , identicalOffer
+
+                  , abortRequested
+                  , abortRequest
+                  , abortDeclined
+                  , abortAccepted
+                  , abortedGame
+                  , abortedGame2
 
                   , login
                   , password
@@ -156,6 +164,32 @@ offerAccepted = manyTill anyChar " " *> "accepts the match offer." *> pure Offer
 
 offerDeclined :: Parser CommandMsg
 offerDeclined = manyTill anyChar " " *> "declines the match offer." *> pure OfferDeclined
+
+identicalOffer :: Parser CommandMsg
+identicalOffer = commandHead 73 *> "You are already offering an identical match to" *> pure IdenticalOffer
+
+abortRequest :: Parser CommandMsg
+abortRequest = commandHead 10 *> "Abort request sent." *> pure AbortRequest
+
+abortRequested :: Parser CommandMsg
+abortRequested = AbortRequested
+  <$> (manyTill anyChar " " <* "would like to abort the game;")
+
+abortDeclined :: Parser CommandMsg
+abortDeclined = ((commandHead 33 *> "You decline the abort request from") <|>
+  (manyTill anyChar " " *> "declines the abort request.")) *> pure AbortDeclined
+
+abortAccepted :: Parser CommandMsg
+abortAccepted = ((commandHead 11 *> "You accept the abort request from") <|>
+  (manyTill anyChar " " *> "accepts the abort request.")) *> pure AbortAccepted
+
+abortedGame :: Parser CommandMsg
+abortedGame = AbortedGame
+  <$> ("{Game " *> decimal <* manyTill anyChar ") ")
+  <*> manyTill anyChar "}"
+
+abortedGame2 :: Parser CommandMsg
+abortedGame2 = commandHead 10 *> "The game has been aborted on move one.\n\n" *> abortedGame
 
 login :: Parser CommandMsg
 login = "login: " *> pure Login

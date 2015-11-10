@@ -56,6 +56,16 @@ commandMessageParserTest = [
       , (PendingOffers [] [], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nThere are no offers pending from other players.\n\ETB")
       , (PendingOffers [PendingOffer 45 "You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0"] [], "\NAK5\SYN87\SYNOffers to other players:\n\n  45: You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0.\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\nThere are no offers pending from other players.\n\ETB")
       , (PendingOffers [] [PendingOffer 43 "GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0"], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nOffers from other players:\n\n  43: GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0.\n\nIf you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".\n\ETB")
+      , (IdenticalOffer, "\NAK4\SYN73\SYNYou are already offering an identical match to GuestSPLL.\n\ETB")
+      , (AbortRequest, "\NAK4\SYN10\SYNAbort request sent.\n\ETB")
+      , (AbortRequested "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
+      , (AbortDeclined, "\NAK5\SYN33\SYNYou decline the abort request from GuestSPLL.\n\ETB")
+      , (AbortDeclined, "GuestTKHJ declines the abort request.")
+      , (AbortAccepted, "\NAK5\SYN11\SYNYou accept the abort request from GuestSPLL.\n\n{Game 82 (GuestTKHJ vs. GuestSPLL) Game aborted by mutual agreement} *\n\ETB")
+      , (AbortAccepted, "GuestTKHJ accepts the abort request.")
+      , (AbortedGame 112 "Game aborted on move 1", "\NAK4\SYN10\SYNThe game has been aborted on move one.\n\n{Game 112 (GuestSPLL vs. GuestTKHJ) Game aborted on move 1} *\n\ETB")
+      , (AbortedGame 112 "Game aborted on move 1", "{Game 112 (GuestSPLL vs. GuestTKHJ) Game aborted on move 1} *")
+      , (AbortedGame 297 "Game aborted by mutual agreement", "{Game 297 (GuestSPLL vs. GuestTKHJ) Game aborted by mutual agreement} *")
       ]
 
 defaultMove = Move "-------- -------- -------- -------- -------- -------- -------- --------" [] White Nothing [WhiteShort,WhiteLong,BlackShort,BlackLong] 0 18 "nameWhite" "nameBlack" OponentsMove 1 "none" "(0:00)" 180 180 Nothing

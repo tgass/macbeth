@@ -19,8 +19,6 @@ import Graphics.UI.WX
 -- FEATURES
 -- TODO: Pre-Moves
 -- TODO: takeback
--- TODO: abort
-
 
 -- MINOR
 

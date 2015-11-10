@@ -24,6 +24,13 @@ data CommandMsg =   GameMove Move
                   | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }
                   | OfferAccepted
                   | OfferDeclined
+                  | IdenticalOffer
+
+                  | AbortRequest
+                  | AbortRequested String
+                  | AbortDeclined
+                  | AbortAccepted
+                  | AbortedGame { gameId :: Int, reason :: String }
 
                   | NewSeek Seek
                   | RemoveSeeks [Int]
