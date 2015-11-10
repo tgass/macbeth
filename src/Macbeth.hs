@@ -4,7 +4,7 @@ import Macbeth.Fics.FicsConnection
 import Macbeth.Wx.ToolBox
 
 import Graphics.UI.WX
-
+import Paths_Macbeth
 -- TODO: application icon
 
 -- ARCHITEX
@@ -25,5 +25,7 @@ import Graphics.UI.WX
 
 main :: IO ()
 main = do
+  dir <- getDataDir
+  print dir
   (h, chan) <- ficsConnection
   start $ wxToolBox h chan
