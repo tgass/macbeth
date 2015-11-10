@@ -1,0 +1,59 @@
+name: Macbeth
+version: 0.0.1
+cabal-version: >= 1.8
+build-type: Simple
+license: AllRightsReserved
+license-file: ""
+data-dir: resources
+
+library
+    build-depends: base >=4.2 && <5, cabal-macosx, wxcore -any, wx -any,
+                   network -any, conduit -any, conduit-extra -any, text -any,
+                   transformers -any, resourcet -any, bytestring -any, split -any,
+                   attoparsec -any, filepath -any, containers -any, split -any,
+                   mtl -any, stm -any, sodium -any, directory -any, filepath -any,
+                   time -any, MissingH -any, old-locale -any
+    hs-source-dirs: src
+    exposed-modules: Macbeth.Api.Api,
+                     Macbeth.Api.Challenge,
+                     Macbeth.Api.CommandMsg,
+                     Macbeth.Api.Game,
+                     Macbeth.Api.Move,
+                     Macbeth.Api.Rating,
+                     Macbeth.Api.Seek,
+                     Macbeth.Fics.FicsConnection
+                     Macbeth.Fics.Parsers.CommandMsgParser,
+                     Macbeth.Fics.Parsers.GamesParser,
+                     Macbeth.Fics.Parsers.MoveParser2,
+                     Macbeth.Fics.Parsers.PositionParser,
+                     Macbeth.Fics.Parsers.RatingParser,
+                     Macbeth.Fics.Parsers.SeekMsgParsers,
+                     Macbeth.Utils.PGN,
+                     Macbeth.Utils.FEN,
+                     Macbeth.Utils.Board,
+                     Macbeth.Utils.Utils,
+                     Macbeth.Wx.About,
+                     Macbeth.Wx.Finger,
+                     Macbeth.Wx.Challenge,
+                     Macbeth.Wx.Login,
+                     Macbeth.Wx.Match,
+                     Macbeth.Wx.ObservedGame,
+                     Macbeth.Wx.Seek,
+                     Macbeth.Wx.ToolBox,
+                     Macbeth.Wx.Utils,
+                     Macbeth.Wx.Pending,
+                     Macbeth.Wx.GamesList,
+                     Macbeth.Wx.SoughtList
+  other-modules: Paths_Macbeth
+  ghc-options: -O3 -threaded -W
+
+executable MacbethRun
+  main-is: src/Macbeth.hs
+  build-depends: base  >= 4.2, wx -any, Macbeth
+  ghc-options: -O3 -threaded -W
+
+Test-Suite MacbethTestSuite
+    type:       detailed-0.9
+    hs-source-dirs: test
+    test-module: MacbethTest
+    build-depends: Macbeth, base, Cabal >= 1.9.2, bytestring
