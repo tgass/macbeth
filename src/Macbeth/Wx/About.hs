@@ -4,6 +4,7 @@ module Macbeth.Wx.About (
 
 import Paths_Macbeth
 import Graphics.UI.WX
+import System.IO.Unsafe
 
 
 wxAbout :: IO ()
@@ -14,7 +15,5 @@ wxAbout = do
   return ()
 
 paintAbout :: DC a -> t -> IO ()
-paintAbout dc _ = do
-  dataDir <- getDataDir
-  drawBitmap dc (bitmap $ dataDir ++ "about.jpg") (point 0 0) False []
+paintAbout dc _ = drawBitmap dc (bitmap $ unsafePerformIO $ getDataFileName "about.jpg") (point 0 0) False []
 

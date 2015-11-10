@@ -11,7 +11,8 @@ import Paths_Macbeth
 import Control.Applicative (liftA)
 import Graphics.UI.WX
 import Graphics.UI.WXCore (dcSetUserScale)
-import System.IO (Handle, hPutStrLn)
+import System.IO
+import System.IO.Unsafe
 
 
 data BoardState = BoardState { _panel :: Panel()
@@ -33,13 +34,12 @@ draw :: Var BoardState -> DC a -> t -> IO ()
 draw vState dc _ = do
   state <- varGet vState
   scale <- calcScale `liftA` get (_panel state) size
-  dataDir <- getDataDir
   dcSetUserScale dc scale scale
-  drawBoard dataDir dc
-  mapM_ (drawPiece dataDir dc (perspective state)) (_position state)
+  drawBoard dc
+  mapM_ (drawPiece dc (perspective state)) (_position state)
   when (isInteractive state) $ do
     paintSelectedSquare state dc
-    drawDraggedPiece dataDir scale (draggedPiece state) dc
+    drawDraggedPiece scale (draggedPiece state) dc
 
 
 paintSelectedSquare :: BoardState -> DC a -> IO ()
@@ -50,10 +50,10 @@ paintSelectedSquare state dc = do
   drawRect dc (Rect pointX' pointY' 40 40) []
 
 
-drawDraggedPiece :: FilePath -> Double -> Maybe DraggedPiece -> DC a -> IO ()
-drawDraggedPiece dataDir scale mDraggedPiece dc = case mDraggedPiece of
+drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> IO ()
+drawDraggedPiece scale mDraggedPiece dc = case mDraggedPiece of
   Nothing -> return ()
-  Just (DraggedPiece pt piece _) -> drawBitmap dc (toBitmap dataDir piece) (scalePoint pt) True []
+  Just (DraggedPiece pt piece _) -> drawBitmap dc (toBitmap piece) (scalePoint pt) True []
   where
     scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
     scaleValue value = round $ (fromIntegral value - 20 * scale) / scale
@@ -127,8 +127,8 @@ calcScale :: Size -> Double
 calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
-drawPiece :: FilePath -> DC a -> Macbeth.Api.Api.PColor -> (Square, Piece) -> IO ()
-drawPiece dataDir dc color (square, p) = drawBitmap dc (toBitmap dataDir p) (toPos square color) True []
+drawPiece :: DC a -> Macbeth.Api.Api.PColor -> (Square, Piece) -> IO ()
+drawPiece dc color (square, p) = drawBitmap dc (toBitmap p) (toPos square color) True []
 
 
 scalePoint :: Double -> Point -> Point
@@ -136,8 +136,8 @@ scalePoint scale p = point (foo (pointX p) scale) (foo (pointY p) scale)
   where foo x s = max 0 $ min 319 $ floor (fromIntegral x / s)
 
 
-drawBoard :: FilePath -> DC a -> IO ()
-drawBoard dataDir dc = drawBitmap dc (board dataDir) (point 0 0) False []
+drawBoard :: DC a -> IO ()
+drawBoard dc = drawBitmap dc board (point 0 0) False []
 
 
 toPos :: Square -> Macbeth.Api.Api.PColor -> Point
@@ -164,8 +164,8 @@ intToCol White = toEnum
 intToCol Black = toEnum . abs . (7-)
 
 
-board :: FilePath -> Bitmap ()
-board root = bitmap $ root ++ "board_empty.gif"
+board :: Bitmap ()
+board = bitmap $ unsafePerformIO $ getDataFileName "board_empty.gif"
 
 
 pieceToFile :: Piece -> String
@@ -183,6 +183,6 @@ pieceToFile (Piece Bishop White) = "wb.gif"
 pieceToFile (Piece Pawn White) = "wp.gif"
 
 
-toBitmap :: FilePath -> Piece -> Bitmap ()
-toBitmap root p = bitmap $ root ++ pieceToFile p
+toBitmap :: Piece -> Bitmap ()
+toBitmap p = bitmap $ unsafePerformIO getDataDir ++ pieceToFile p
 

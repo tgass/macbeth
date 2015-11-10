@@ -22,35 +22,32 @@ import Paths_Macbeth
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
-import Graphics.UI.WX hiding (when)
-import Graphics.UI.WXCore hiding (when)
-import System.IO
 import Control.Monad
-
-import System.IO.Unsafe
 import Foreign.Marshal.Alloc
 import Foreign.Storable
 import Foreign.Ptr
 import Foreign.C.Types
+import Graphics.UI.WX hiding (when)
+import Graphics.UI.WXCore hiding (when)
+import System.IO
+import System.IO.Unsafe
 
 ficsEventId = wxID_HIGHEST + 51
 
 wxToolBox :: Handle -> Chan CommandMsg -> IO ()
 wxToolBox h chan = do
-    dataDir <- getDataDir
-
     -- main frame
     f  <- frame [ text := "Macbeth" ]
 
 
     tbar   <- toolBar f []
-    tbarItem_seek <- toolItem tbar "Seek" False (dataDir ++ "bullhorn.gif")
+    tbarItem_seek <- toolItem tbar "Seek" False (unsafePerformIO $ getDataFileName "bullhorn.gif")
       [ on command := wxSeek h False, enabled := False ]
 
-    tbarItem_match <- toolItem tbar "Match" False  (dataDir ++ "dot-circle-o.gif")
+    tbarItem_match <- toolItem tbar "Match" False  (unsafePerformIO $ getDataFileName "dot-circle-o.gif")
       [ on command := wxMatch h False, enabled := False]
 
-    tbarItem_finger <- toolItem tbar "Finger" False  (dataDir ++ "fa-question.png")
+    tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName "fa-question.png")
       [ on command := hPutStrLn h "4 finger", enabled := False]
 
     status <- statusField []
