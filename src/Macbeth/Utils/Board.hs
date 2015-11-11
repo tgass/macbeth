@@ -1,10 +1,12 @@
 module Macbeth.Utils.Board (
   draw,
   onMouseEvent,
+  initBoardState,
   BoardState(..)
 ) where
 
 import Macbeth.Api.Api
+import Macbeth.Api.Move
 
 import Paths_Macbeth
 
@@ -29,6 +31,13 @@ data DraggedPiece = DraggedPiece { _point :: Point
                                  , _piece :: Piece
                                  , _square :: Square } deriving (Show)
 
+initBoardState panel move = BoardState { _panel = panel
+                                       , _position = Macbeth.Api.Move.position move
+                                       , Macbeth.Utils.Board.playerColor = colorUser move
+                                       , perspective = if relation move == Observing then White else Black
+                                       , selSquare = Square A One
+                                       , draggedPiece = Nothing
+                                       , isInteractive = relation move == MyMove}
 
 draw :: Var BoardState -> DC a -> t -> IO ()
 draw vState dc _ = do
@@ -71,7 +80,7 @@ onMouseEvent h vState evtMouse = do
 
     MouseLeftDown pt _ -> when (isInteractive state) $ do
         let square' = toSquare pt
-        case getPiece (_position state) square' (playerColor state) of
+        case getPiece (_position state) square' (Macbeth.Utils.Board.playerColor state) of
           Just piece -> varSet vState state { _position = removePiece (_position state) square'
                                             , draggedPiece = Just $ DraggedPiece pt piece square'}
           _ -> return ()

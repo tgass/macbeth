@@ -12,6 +12,7 @@ import qualified Macbeth.Utils.Board as Board
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
+import Control.Concurrent.STM
 import Control.Exception
 import Control.Monad
 import Data.Maybe
@@ -24,7 +25,6 @@ eventId = wxID_HIGHEST + 53
 
 createObservedGame :: Handle -> Move -> Chan CommandMsg -> IO ()
 createObservedGame h move chan = do
-  let color = if relation move == Observing then White else colorUser move
   vCmd <- newEmptyMVar
   vMoves <- newMVar [move | isJust $ movePretty move]
   vGameResult <- newMVar Nothing
@@ -34,7 +34,8 @@ createObservedGame h move chan = do
 
   -- board
   p_board <- panel p_back []
-  vBoardState <- variable [ value := Board.BoardState p_board (position move) color color (Square A One) Nothing (relation move == MyMove) ]
+  let boardState = Board.initBoardState p_board move
+  vBoardState <- variable [ value := boardState]
   set p_board [ on paint := Board.draw vBoardState ]
   windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
 
@@ -64,7 +65,7 @@ createObservedGame h move chan = do
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
   -- layout
-  set p_back [ layout := layoutBoardF color ]
+  set p_back [ layout := layoutBoardF (Board.perspective boardState) ]
   set f [ statusBar := [status]]
   refit p_back
 
@@ -93,12 +94,12 @@ createObservedGame h move chan = do
                               killThread threadId
 
     DrawOffered -> when (isGameUser move) $
-                     set status [text := nameOponent color move ++ " offered a draw. Accept? (y/n)"] >>
+                     set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"] >>
                      set p_back [on (charKey 'y') := hPutStrLn h "5 accept" >> unsetKeyHandler p_back] >>
                      set p_back [on (charKey 'n') := hPutStrLn h "5 decline" >> unsetKeyHandler p_back]
 
     DrawDeclined -> when (isGameUser move) $
-                      set status [text := nameOponent color move ++ " declined your draw offer."]
+                      set status [text := nameOponent move ++ " declined your draw offer."]
 
     AbortRequested user -> when (isGameUser move) $
                      set status [text := user ++ " would like to abort the game. Accept? (y/n)"] >>
@@ -128,13 +129,11 @@ createObservedGame h move chan = do
                            _ -> return ()
 
 
-turnBoard :: Var Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()
+turnBoard :: TVar Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()
 turnBoard vState p layoutF = do
-  state <- varGet vState
-  let color' = invert $ Board.perspective state
-  varSet vState $ state { Board.perspective = color' }
-  set p [layout := layoutF color']
-  repaint (Board._panel state)
+  atomically $ modifyTVar vState (\s -> s{Board.perspective = invert $ Board.perspective s})
+  state <- readTVarIO vState
+  set p [layout := layoutF $ Board.perspective state]
   refit p
 
 

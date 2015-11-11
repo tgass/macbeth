@@ -74,9 +74,8 @@ namePlayer White = nameW
 namePlayer Black = nameB
 
 
-nameOponent :: Macbeth.Api.Api.PColor -> Move -> String
-nameOponent White = nameB
-nameOponent Black = nameW
+nameOponent :: Move -> String
+nameOponent m = namePlayer (invert $ colorUser m) m
 
 
 playerColor :: String -> Move -> Macbeth.Api.Api.PColor
