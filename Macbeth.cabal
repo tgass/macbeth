@@ -50,7 +50,7 @@ library
 
 executable MacbethRun
   main-is: src/Macbeth.hs
-  build-depends: base  >= 4.2, wx, Macbeth
+  build-depends: base  >= 4.2, wx, wxcore, Macbeth
   ghc-options: -O3 -threaded -W
 
 Test-Suite MacbethTestSuite

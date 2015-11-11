@@ -35,7 +35,7 @@ createObservedGame h move chan = do
   -- board
   p_board <- panel p_back []
   let boardState = Board.initBoardState p_board move
-  vBoardState <- variable [ value := boardState]
+  vBoardState <- newTVarIO boardState
   set p_board [ on paint := Board.draw vBoardState ]
   windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
 
@@ -74,7 +74,8 @@ createObservedGame h move chan = do
     GameMove move' -> when (gameId move' == gameId move) $ do
                                    state <- varGet vBoardState
                                    varSet vBoardState $ state { Board._position = position move'
-                                                              , Board.isInteractive = relation move' == MyMove}
+                                                              , Board.isInteractive = relation move' == MyMove
+                                                              , Board.lastMove = moveVerbose move'}
                                    repaint (Board._panel state)
                                    updateChessClock move' cc
                                    set status [text := ""]

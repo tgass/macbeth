@@ -7,37 +7,41 @@ module Macbeth.Utils.Board (
 
 import Macbeth.Api.Api
 import Macbeth.Api.Move
-
+import Macbeth.Wx.Utils
 import Paths_Macbeth
 
-import Control.Applicative (liftA)
+import Control.Applicative
+import Data.Maybe
 import Graphics.UI.WX
-import Graphics.UI.WXCore (dcSetUserScale)
+import Graphics.UI.WXCore hiding (Row, Column)
 import System.IO
 import System.IO.Unsafe
 
 
 data BoardState = BoardState { _panel :: Panel()
+                             , lastMove :: Maybe (Square, Square)
                              , _position :: Position
                              , playerColor :: Macbeth.Api.Api.PColor
                              , perspective :: Macbeth.Api.Api.PColor
                              , selSquare :: Square
                              , draggedPiece :: Maybe DraggedPiece
                              , isInteractive :: Bool
-                             } deriving (Show)
+                             }
 
 
 data DraggedPiece = DraggedPiece { _point :: Point
                                  , _piece :: Piece
                                  , _square :: Square } deriving (Show)
 
-initBoardState panel move = BoardState { _panel = panel
-                                       , _position = Macbeth.Api.Move.position move
-                                       , Macbeth.Utils.Board.playerColor = colorUser move
-                                       , perspective = if relation move == Observing then White else colorUser move
-                                       , selSquare = Square A One
-                                       , draggedPiece = Nothing
-                                       , isInteractive = relation move == MyMove}
+initBoardState panel move = BoardState {
+      _panel = panel
+    , lastMove = moveVerbose move
+    , _position = Macbeth.Api.Move.position move
+    , Macbeth.Utils.Board.playerColor = colorUser move
+    , perspective = if relation move == Observing then White else colorUser move
+    , selSquare = Square A One
+    , draggedPiece = Nothing
+    , isInteractive = relation move == MyMove}
 
 draw :: Var BoardState -> DC a -> t -> IO ()
 draw vState dc _ = do
@@ -45,18 +49,16 @@ draw vState dc _ = do
   scale <- calcScale `liftA` get (_panel state) size
   dcSetUserScale dc scale scale
   drawBoard dc
+  when(isJust $ lastMove state) $ highlightLastMove dc (fromJust $ lastMove state) (perspective state)
   mapM_ (drawPiece dc (perspective state)) (_position state)
   when (isInteractive state) $ do
-    paintSelectedSquare state dc
+    set dc [penColor := rgb 255 0 (0 :: Int) ]
+    paintSquare (selSquare state) (perspective state) dc
     drawDraggedPiece scale (draggedPiece state) dc
 
 
-paintSelectedSquare :: BoardState -> DC a -> IO ()
-paintSelectedSquare state dc = do
-  let pointX' = pointX $ toPos (selSquare state) (perspective state)
-      pointY' = pointY $ toPos (selSquare state) (perspective state)
-  set dc [penColor := rgb 255 0 (0 :: Int) ]
-  drawRect dc (Rect pointX' pointY' 40 40) []
+paintSquare :: Square -> PColor -> DC a -> IO ()
+paintSquare sq color dc = drawRect dc (squareToRect sq color) []
 
 
 drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> IO ()
@@ -149,20 +151,6 @@ drawBoard :: DC a -> IO ()
 drawBoard dc = drawBitmap dc board (point 0 0) False []
 
 
-toPos :: Square -> Macbeth.Api.Api.PColor -> Point
-toPos (Square c r) color = point (colToInt color c * 40) (rowToInt color r * 40)
-
-
-rowToInt :: Macbeth.Api.Api.PColor -> Row -> Int
-rowToInt White = abs . (7-) . fromEnum
-rowToInt Black = fromEnum
-
-
-colToInt :: Macbeth.Api.Api.PColor -> Column -> Int
-colToInt White = fromEnum
-colToInt Black = abs . (7-) . fromEnum
-
-
 intToRow :: Macbeth.Api.Api.PColor -> Int -> Row
 intToRow White = toEnum . abs . (7-)
 intToRow Black = toEnum
@@ -194,4 +182,16 @@ pieceToFile (Piece Pawn White) = "wp.gif"
 
 toBitmap :: Piece -> Bitmap ()
 toBitmap p = bitmap $ unsafePerformIO getDataDir ++ pieceToFile p
+
+
+highlightLastMove :: DC a -> (Square, Square) -> PColor -> IO ()
+highlightLastMove dc (s1, s2) perspective = do
+  set dc [penColor := blue ]
+  withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) blue) $ \brushBg -> do
+    dcSetBrush dc brushBg
+    paintSquare s1 perspective dc
+    paintSquare s2 perspective dc
+  withBrushStyle (BrushStyle BrushSolid blue) $ \brushArrow -> do
+    dcSetBrush dc brushArrow
+    drawArrow dc s1 s2 perspective
 

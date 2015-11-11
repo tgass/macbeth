@@ -11,9 +11,8 @@ import Macbeth.Api.Move
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Utils
 
-import Control.Concurrent.Chan ()
 import Control.Concurrent.STM
-import Graphics.UI.WX hiding (when, position)
+import Graphics.UI.WX
 
 
 data Clock = Clock {color :: PColor, time :: TVar Int, timerCtrl :: Timer, clockTxt :: StaticText () }

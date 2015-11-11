@@ -37,8 +37,8 @@ move = do
   remTimeWhite <- space *> (decimal <|> ("-" *> (decimal >>= pure . negate)))
   remTimeBlack <- space *> (decimal <|> ("-" *> (decimal >>= pure . negate)))
   moveNumber <- space *> decimal
-  moveVerbose <- space *> manyTill anyChar space
-  timeTaken <- manyTill anyChar space
+  moveVerbose <- space *> parseVerboseMove
+  timeTaken <- space *> manyTill anyChar space
   movePretty <- "none" *> pure Nothing <|> liftM Just (manyTill anyChar space)
 
   return $ Move pos
@@ -57,6 +57,39 @@ move = do
                 remTimeWhite
                 remTimeBlack
                 movePretty
+
+--P/c7-c5
+parseVerboseMove :: Parser (Maybe (Square, Square))
+parseVerboseMove = ("none" *> pure Nothing) <|>
+  Just `liftM` ((,) <$> (anyChar *> anyChar *> square) <*> ("-" *> square))
+
+
+square :: Parser Square
+square = Square
+  <$> columnAH
+  <*> row
+
+columnAH :: Parser Column
+columnAH =
+  "a" *> pure A <|>
+  "b" *> pure B <|>
+  "c" *> pure C <|>
+  "d" *> pure Macbeth.Api.Api.D <|>
+  "e" *> pure E <|>
+  "f" *> pure F <|>
+  "g" *> pure G <|>
+  "h" *> pure H
+
+row :: Parser Row
+row =
+  "1" *> pure One <|>
+  "2" *> pure Two <|>
+  "3" *> pure Three <|>
+  "4" *> pure Four <|>
+  "5" *> pure Five <|>
+  "6" *> pure Six <|>
+  "7" *> pure Seven <|>
+  "8" *> pure Eight
 
 parseRelation =
   "-3" *> pure Other <|>

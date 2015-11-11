@@ -33,7 +33,7 @@ data Move = Move {
   , nameB :: String
   , relation :: Relation
   , moveNumber :: Int
-  , moveVerbose :: String
+  , moveVerbose :: Maybe (Square, Square)
   , timeTaken :: String
   , remainingTimeW :: Int
   , remainingTimeB :: Int
@@ -113,7 +113,7 @@ dummyMove = Move {
     nameB = "barbaz",
     relation = MyMove,
     moveNumber = 0,
-    moveVerbose = "none",
+    moveVerbose = Nothing,
     timeTaken = "0",
     remainingTimeW = 0,
     remainingTimeB = 0,

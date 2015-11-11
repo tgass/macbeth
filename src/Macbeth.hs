@@ -6,6 +6,7 @@ import Macbeth.Wx.ToolBox
 import Graphics.UI.WX
 import Paths_Macbeth
 -- TODO: application icon
+-- TODO: Bug: dont click on games before login!
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes
