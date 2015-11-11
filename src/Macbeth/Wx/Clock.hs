@@ -21,13 +21,16 @@ data Clock = Clock {color :: PColor, time :: TVar Int, timerCtrl :: Timer, clock
 data ChessClock = ChessClock {clockW :: Clock, clockB :: Clock}
 
 
+stopChessClock :: ChessClock -> IO ()
 stopChessClock cc =
   set (timerCtrl $ clockW cc) [enabled := False] >>
   set (timerCtrl $ clockB cc) [enabled := False]
 
 
 updateChessClock :: Move -> ChessClock -> IO ()
-updateChessClock m cc = updateClock m White (clockW cc) >> updateClock m Black (clockB cc)
+updateChessClock m cc =
+  updateClock m White (clockW cc) >>
+  updateClock m Black (clockB cc)
 
 
 updateClock :: Move -> PColor -> Clock -> IO ()
@@ -35,10 +38,8 @@ updateClock move color clock = do
   let time' = remainingTime color move
   atomically $ swapTVar (time clock) time'
   set (clockTxt clock) [text := formatTime time']
-  set (timerCtrl clock) [enabled := isActive color move]
-
-isActive :: PColor -> Move -> Bool
-isActive c m = if moveNumber m == 1 then False else turn m == c
+  set (timerCtrl clock) [enabled := isActive]
+  where isActive = (moveNumber move /= 1) && (turn move == color)
 
 
 newClock :: Panel () -> PColor -> Move -> IO Clock
