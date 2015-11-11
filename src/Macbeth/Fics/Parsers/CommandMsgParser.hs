@@ -188,9 +188,10 @@ abortAccepted = ((commandHead 11 *> "You accept the abort request from") <|>
   (manyTill anyChar " " *> "accepts the abort request.")) *> pure AbortAccepted
 
 abortedGame :: Parser CommandMsg
-abortedGame = AbortedGame
+abortedGame = GameResult
   <$> ("{Game " *> decimal <* manyTill anyChar ") ")
-  <*> manyTill anyChar "}"
+  <*> (manyTill anyChar "}")
+  <*> pure Aborted
 
 abortedGame2 :: Parser CommandMsg
 abortedGame2 = commandHead 10 *> "The game has been aborted on move one.\n\n" *> abortedGame

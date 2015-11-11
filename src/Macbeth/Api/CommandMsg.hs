@@ -30,7 +30,6 @@ data CommandMsg =   GameMove Move
                   | AbortRequested String
                   | AbortDeclined
                   | AbortAccepted
-                  | AbortedGame { gameId :: Int, reason :: String }
 
                   | NewSeek Seek
                   | RemoveSeeks [Int]

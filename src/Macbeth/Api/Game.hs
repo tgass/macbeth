@@ -33,10 +33,11 @@ data GameInfo = GameInfo {
   , _ratingB :: Rating
 } deriving (Show, Eq)
 
-data GameResult = WhiteWins | BlackWins | Draw deriving (Eq)
+data GameResult = WhiteWins | BlackWins | Draw | Aborted deriving (Eq)
 
 instance Show GameResult where
   show WhiteWins = "1-0"
   show BlackWins = "0-1"
   show Draw      = "1/2-1/2"
+  show Aborted   = ""
 

@@ -81,10 +81,9 @@ createObservedGame h move chan = do
                                    modifyMVar_ vMoves $ return . addMove move'
 
     GameResult id reason result -> when (id == gameId move) $ do
-                              state <- varGet vBoardState
-                              varSet vBoardState $ state {Board.isInteractive = False}
+                              atomically $ modifyTVar vBoardState (\s -> s{Board.isInteractive = False})
                               stopChessClock cc
-                              set status [text := (show result ++ ": " ++ reason)]
+                              set status [text := (show result ++ " " ++ reason)]
                               swapMVar vGameResult $ Just result
                               hPutStrLn h "4 iset seekinfo 1"
                               killThread threadId
@@ -101,15 +100,6 @@ createObservedGame h move chan = do
                      set status [text := user ++ " would like to abort the game. Accept? (y/n)"] >>
                      set p_back [on (charKey 'y') := hPutStrLn h "5 abort" >> unsetKeyHandler p_back] >>
                      set p_back [on (charKey 'n') := hPutStrLn h "5 decline" >> unsetKeyHandler p_back]
-
-
-    AbortedGame id reason -> when (id == gameId move) $ do
-                              state <- varGet vBoardState
-                              varSet vBoardState $ state {Board.isInteractive = False}
-                              stopChessClock cc
-                              set status [text := reason]
-                              hPutStrLn h "4 iset seekinfo 1"
-                              killThread threadId
 
     _ -> return ()
 
