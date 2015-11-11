@@ -1,7 +1,8 @@
 module Macbeth.Wx.Utils (
   eventLoop,
   listItemRightClickEvent,
-  toWxColor
+  toWxColor,
+  staticTextFormatted
 ) where
 
 import Macbeth.Api.Api
@@ -9,6 +10,7 @@ import Macbeth.Api.CommandMsg
 
 import Control.Concurrent.Chan
 import Control.Concurrent.MVar
+import Graphics.UI.WX
 import Graphics.UI.WXCore
 
 
@@ -29,3 +31,9 @@ listItemRightClickEvent listCtrl eventHandler
 toWxColor :: Macbeth.Api.Api.PColor -> Graphics.UI.WXCore.Color
 toWxColor White = white
 toWxColor Black = black
+
+staticTextFormatted :: Panel () -> String -> IO (StaticText ())
+staticTextFormatted p s = staticText p [ text := s
+                                       , fontFace := "Avenir Next Medium"
+                                       , fontSize := 20
+                                       , fontWeight := WeightBold]

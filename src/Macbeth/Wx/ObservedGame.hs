@@ -6,8 +6,8 @@ import Macbeth.Api.Api
 import Macbeth.Api.CommandMsg hiding (gameId)
 import Macbeth.Api.Move
 import Macbeth.Utils.PGN
-import Macbeth.Utils.Utils
 import Macbeth.Wx.Utils
+import Macbeth.Wx.Clock
 import qualified Macbeth.Utils.Board as Board
 
 import Control.Concurrent
@@ -17,7 +17,7 @@ import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Graphics.UI.WX hiding (when, position)
-import Graphics.UI.WXCore hiding (when)
+import Graphics.UI.WXCore hiding (when, Timer)
 import System.IO
 
 
@@ -39,15 +39,14 @@ createObservedGame h move chan = do
   set p_board [ on paint := Board.draw vBoardState ]
   windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
 
-  -- clock
-  vClock <- variable [ value := move ]
-
   -- status line
   status <- statusField []
 
   -- panels
-  (p_white, t_white) <- createStatusPanel p_back vClock White
-  (p_black, t_black) <- createStatusPanel p_back vClock Black
+  (p_white, cw) <- createStatusPanel p_back White move
+  (p_black, cb) <- createStatusPanel p_back Black move
+  let cc = ChessClock cw cb
+  updateChessClock move cc
 
   -- layout helper
   let layoutBoardF = layoutBoard p_board p_white p_black
@@ -77,17 +76,14 @@ createObservedGame h move chan = do
                                    varSet vBoardState $ state { Board._position = position move'
                                                               , Board.isInteractive = relation move' == MyMove}
                                    repaint (Board._panel state)
-                                   set t_white [enabled := True]
-                                   set t_black [enabled := True]
-                                   varSet vClock move'
+                                   updateChessClock move' cc
                                    set status [text := ""]
                                    modifyMVar_ vMoves $ return . addMove move'
 
     GameResult id reason result -> when (id == gameId move) $ do
                               state <- varGet vBoardState
                               varSet vBoardState $ state {Board.isInteractive = False}
-                              set t_white [enabled := False]
-                              set t_black [enabled := False]
+                              stopChessClock cc
                               set status [text := (show result ++ ": " ++ reason)]
                               swapMVar vGameResult $ Just result
                               hPutStrLn h "4 iset seekinfo 1"
@@ -110,8 +106,7 @@ createObservedGame h move chan = do
     AbortedGame id reason -> when (id == gameId move) $ do
                               state <- varGet vBoardState
                               varSet vBoardState $ state {Board.isInteractive = False}
-                              set t_white [enabled := False]
-                              set t_black [enabled := False]
+                              stopChessClock cc
                               set status [text := reason]
                               hPutStrLn h "4 iset seekinfo 1"
                               killThread threadId
@@ -137,41 +132,17 @@ turnBoard vState p layoutF = do
   refit p
 
 
-createStatusPanel :: Panel () -> Var Move -> PColor -> IO (Panel (), Graphics.UI.WX.Timer)
-createStatusPanel p_back vMove color = do
-  move <- varGet vMove
-  p_status <- panel p_back []
-
+createStatusPanel :: Panel () -> PColor -> Move -> IO (Panel (), Clock)
+createStatusPanel p color move = do
+  p_status <- panel p []
+  cl <- newClock p_status color move
   p_color <- panel p_status [bgcolor := toWxColor color]
-  st_clock <- staticTextFormatted p_status (formatTime $ remainingTime color move)
   st_playerName <- staticTextFormatted p_status (namePlayer color move)
 
-  t <- timer p_back [ interval := 1000
-                    , on command := updateTime color vMove st_clock
-                    , enabled := isJust $ movePretty move ]
-
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
-                                  , widget st_clock
+                                  , widget $ clockTxt cl
                                   , widget st_playerName] ]
-  return (p_status, t)
-
-
-updateTime :: PColor -> Var Move -> StaticText () -> IO ()
-updateTime color vClock st = do
-  move <- changeRemainingTime color `fmap` varGet vClock
-  varSet vClock move
-  set st [text := formatTime $ remainingTime color move]
-  where
-    changeRemainingTime color move = if color == turn move
-      then decreaseRemainingTime color move else move
-
-
-staticTextFormatted :: Panel () -> String -> IO (StaticText ())
-staticTextFormatted p s = staticText p [ text := s
-                                       , fontFace := "Avenir Next Medium"
-                                       , fontSize := 20
-                                       , fontWeight := WeightBold]
-
+  return (p_status, cl)
 
 layoutBoard :: Panel() -> Panel() -> Panel() -> PColor -> Layout
 layoutBoard board white black color = grid 0 0 [ [hfill $ widget (if color == White then black else white)]

@@ -43,7 +43,8 @@ library
                      Macbeth.Wx.Utils,
                      Macbeth.Wx.Pending,
                      Macbeth.Wx.GamesList,
-                     Macbeth.Wx.SoughtList
+                     Macbeth.Wx.SoughtList,
+                     Macbeth.Wx.Clock
   other-modules: Paths_Macbeth
   ghc-options: -O3 -threaded -W
 

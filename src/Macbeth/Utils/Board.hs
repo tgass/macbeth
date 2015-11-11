@@ -34,7 +34,7 @@ data DraggedPiece = DraggedPiece { _point :: Point
 initBoardState panel move = BoardState { _panel = panel
                                        , _position = Macbeth.Api.Move.position move
                                        , Macbeth.Utils.Board.playerColor = colorUser move
-                                       , perspective = if relation move == Observing then White else Black
+                                       , perspective = if relation move == Observing then White else colorUser move
                                        , selSquare = Square A One
                                        , draggedPiece = Nothing
                                        , isInteractive = relation move == MyMove}
