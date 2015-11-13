@@ -9,6 +9,7 @@ module Macbeth.Api.Api (
   Column (..),
   Position,
   PendingOffer (..),
+  MoveDetailed (..),
   pColor,
   invert
 ) where
@@ -33,6 +34,8 @@ instance Show Square where
 type Position = [(Square, Piece)]
 
 data PendingOffer = PendingOffer { offerId :: Int, offer :: String } deriving (Show, Eq)
+
+data MoveDetailed = Simple Square Square | CastleLong | CastleShort deriving (Show, Eq)
 
 pColor :: Piece -> PColor
 pColor (Piece _ color) = color

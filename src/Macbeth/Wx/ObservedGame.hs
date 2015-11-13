@@ -1,6 +1,7 @@
 module Macbeth.Wx.ObservedGame (
-  createObservedGame,
+  createObservedGame
 ) where
+
 
 import Macbeth.Api.Api
 import Macbeth.Api.CommandMsg hiding (gameId)
@@ -30,9 +31,11 @@ createObservedGame h move chan = do
   vMoves <- newTVarIO [move | isJust $ movePretty move]
   vGameResult <- newMVar Nothing
 
-  f <- frame [ text := frameTitle move ]
-  (p_moves, updateMoves) <- wxGameMoves f vMoves
-  p_back <- panel f []
+  f <- frameFixed [ text := frameTitle move ]
+  sw <- splitterWindow f []
+  (p_moves, updateMoves) <- wxGameMoves sw vMoves
+
+  p_back <- panel sw []
 
   -- board
   p_board <- panel p_back []
@@ -41,21 +44,18 @@ createObservedGame h move chan = do
   set p_board [ on paint := Board.draw vBoardState ]
   windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
 
-  -- status line
-  status <- statusField []
-
-  -- panels
+  -- player panels
   (p_white, cw) <- createStatusPanel p_back White move
   (p_black, cb) <- createStatusPanel p_back Black move
   let cc = ChessClock cw cb
   updateChessClock move cc
 
   -- layout helper
-  let layoutBoardF = layoutBoard p_back p_board p_white p_black
+  let layoutBoardF = layoutBoard p_board p_white p_black
 
   -- context menu
   ctxMenu <- menuPane []
-  menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState f p_moves p_back layoutBoardF ]
+  menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState f p_back layoutBoardF ]
   when (relation move `elem` [MyMove, OponentsMove]) $ do
                  menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
                  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
@@ -65,9 +65,13 @@ createObservedGame h move chan = do
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
+  -- status line
+  status <- statusField []
   -- layout
-  set f [ layout := row 5 [layoutBoardF (Board.perspective boardState), widget p_moves] ]
-  set f [ statusBar := [status]]
+
+  set f [ layout := fill $ vsplit sw 0 0 (fill $ container p_back $ layoutBoardF (Board.perspective boardState))
+                                         (widget p_moves)
+        , statusBar := [status]]
   refit p_back
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
@@ -75,9 +79,7 @@ createObservedGame h move chan = do
 
     GameMove move' -> when (gameId move' == gameId move) $ do
                                    state <- varGet vBoardState
-                                   varSet vBoardState $ state { Board._position = position move'
-                                                              , Board.isInteractive = relation move' == MyMove
-                                                              , Board.lastMove = moveVerbose move'}
+                                   varSet vBoardState $ updateBoardState state move'
                                    repaint (Board._panel state)
                                    updateChessClock move' cc
                                    set status [text := ""]
@@ -119,12 +121,12 @@ createObservedGame h move chan = do
                            _ -> return ()
 
 
-turnBoard :: TVar Board.BoardState -> Frame () -> Panel () -> Panel () -> (PColor -> Layout) -> IO ()
-turnBoard vState f p_moves p layoutF = do
+turnBoard :: TVar Board.BoardState -> Frame () -> Panel () -> (PColor -> Layout) -> IO ()
+turnBoard vState f p layoutF = do
   atomically $ modifyTVar vState (\s -> s{Board.perspective = invert $ Board.perspective s})
   state <- readTVarIO vState
-  set f [ layout := row 5 [layoutF (Board.perspective state), widget p_moves] ]
-  refit p
+  set p [ layout := layoutF (Board.perspective state) ]
+  refit f
 
 
 createStatusPanel :: Panel () -> PColor -> Move -> IO (Panel (), Clock)
@@ -139,11 +141,10 @@ createStatusPanel p color move = do
                                   , widget st_playerName] ]
   return (p_status, cl)
 
-layoutBoard :: Panel () -> Panel() -> Panel() -> Panel() -> PColor -> Layout
-layoutBoard back board white black color = container back $
-                                              column 0 [hfill $ widget (if color == White then black else white)
-                                            , fill $ minsize (Size 320 320) $ widget board
-                                            , hfill $ widget (if color == White then white else black)]
+layoutBoard :: Panel() -> Panel() -> Panel() -> PColor -> Layout
+layoutBoard board white black color = column 0 [ hfill $ widget (if color == White then black else white)
+                                               , fill $ minsize (Size 320 320) $ widget board
+                                               , hfill $ widget (if color == White then white else black)]
 
 
 unsetKeyHandler :: Panel () -> IO ()
@@ -162,3 +163,6 @@ addMove m moves@(m':_)
 
 frameTitle move = "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move
 
+updateBoardState s m = s { Board._position = position m
+                       , Board.isInteractive = isNextMoveUser m
+                       , Board.lastMove = m}

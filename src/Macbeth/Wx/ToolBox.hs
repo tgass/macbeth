@@ -78,7 +78,6 @@ wxToolBox h chan = do
     m_help    <- menuHelp []
     _         <- menuAbout m_help [help := "About Macbeth", on command := wxAbout ]
 
-    set nb [on click := (onMouse nb >=> clickHandler h nb)]
     set f [ layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
@@ -110,7 +109,8 @@ wxToolBox h chan = do
 
         InvalidPassword  -> void $ set status [text := "Invalid password."]
 
-        LoggedIn userName -> hPutStrLn h `mapM_` defaultParams >>
+        LoggedIn userName -> set nb [on click := (onMouse nb >=> clickHandler h nb)] >>
+                             hPutStrLn h `mapM_` defaultParams >>
                              set f [ text := "Macbeth - Logged in as " ++ userName ] >>
                              set tbarItem_seek [ enabled := True ] >>
                              set tbarItem_match [ enabled := True ] >>

@@ -15,6 +15,9 @@ import Data.Maybe
 import qualified Data.Attoparsec.ByteString.Char8 as A (take, )
 import qualified Data.ByteString.Char8 as BS
 
+--test = BS.pack "<12> --kr-bnr ppp-pppp --nqb--- ---p---- ---P-B-- --NQ---P PPP-PPP- R---KBNR W -1 1 1 0 0 1 345 GuestTVTH GuestPYFX -1 5 0 39 39 282 288 6 o-o-o (0:03) O-O-O 1 1 0"
+--test2 = BS.pack "<12> --kr-bnr ppp-pppp --nqb--- ---p---- ---P-B-- --NQ---P PPP-PPP- R---KBNR W -1 1 1 0 0 1 345 GuestTVTH GuestPYFX -1 5 0 39 39 282 288 6 o-o (0:03) O-O-O 1 1 0"
+
 move :: Parser Move
 move = do
   pos <- BS.unpack `fmap` (takeTill (== '<') *> "<12>" *> space *> A.take 71)
@@ -59,9 +62,12 @@ move = do
                 movePretty
 
 --P/c7-c5
-parseVerboseMove :: Parser (Maybe (Square, Square))
+-- P/f2-f1=R
+parseVerboseMove :: Parser (Maybe MoveDetailed)
 parseVerboseMove = ("none" *> pure Nothing) <|>
-  Just `liftM` ((,) <$> (anyChar *> anyChar *> square) <*> ("-" *> square))
+  (Just `liftM` (Simple <$> (anyChar *> anyChar *> square) <*> ("-" *> square <* takeTill (== ' ')))) <|>
+  (Just `liftM` ("o-o-o" *> pure CastleLong)) <|>
+  (Just `liftM` ("o-o" *> pure CastleShort))
 
 
 square :: Parser Square

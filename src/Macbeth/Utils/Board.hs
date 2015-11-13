@@ -19,9 +19,8 @@ import System.IO.Unsafe
 
 
 data BoardState = BoardState { _panel :: Panel()
-                             , lastMove :: Maybe (Square, Square)
+                             , lastMove :: Move
                              , _position :: Position
-                             , playerColor :: Macbeth.Api.Api.PColor
                              , perspective :: Macbeth.Api.Api.PColor
                              , selSquare :: Square
                              , draggedPiece :: Maybe DraggedPiece
@@ -35,9 +34,8 @@ data DraggedPiece = DraggedPiece { _point :: Point
 
 initBoardState panel move = BoardState {
       _panel = panel
-    , lastMove = moveVerbose move
+    , lastMove = move
     , _position = Macbeth.Api.Move.position move
-    , Macbeth.Utils.Board.playerColor = colorUser move
     , perspective = if relation move == Observing then White else colorUser move
     , selSquare = Square A One
     , draggedPiece = Nothing
@@ -49,16 +47,17 @@ draw vState dc _ = do
   scale <- calcScale `liftA` get (_panel state) size
   dcSetUserScale dc scale scale
   drawBoard dc
-  when(isJust $ lastMove state) $ highlightLastMove dc (fromJust $ lastMove state) (perspective state)
+  when((isJust . moveVerbose) (lastMove state) && wasOponentMove (lastMove state)) $
+    highlightLastMove dc (perspective state) (turn $ lastMove state) (fromJust $ moveVerbose $ lastMove state)
   mapM_ (drawPiece dc (perspective state)) (_position state)
   when (isInteractive state) $ do
     set dc [penColor := rgb 255 0 (0 :: Int) ]
-    paintSquare (selSquare state) (perspective state) dc
+    paintSquare dc (perspective state)  (selSquare state)
     drawDraggedPiece scale (draggedPiece state) dc
 
 
-paintSquare :: Square -> PColor -> DC a -> IO ()
-paintSquare sq color dc = drawRect dc (squareToRect sq color) []
+paintSquare :: DC a -> PColor -> Square -> IO ()
+paintSquare dc color sq = drawRect dc (squareToRect sq color) []
 
 
 drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> IO ()
@@ -82,7 +81,7 @@ onMouseEvent h vState evtMouse = do
 
     MouseLeftDown pt _ -> when (isInteractive state) $ do
         let square' = toSquare pt
-        case getPiece (_position state) square' (Macbeth.Utils.Board.playerColor state) of
+        case getPiece (_position state) square' (colorUser $ lastMove state) of
           Just piece -> varSet vState state { _position = removePiece (_position state) square'
                                             , draggedPiece = Just $ DraggedPiece pt piece square'}
           _ -> return ()
@@ -184,14 +183,22 @@ toBitmap :: Piece -> Bitmap ()
 toBitmap p = bitmap $ unsafePerformIO getDataDir ++ pieceToFile p
 
 
-highlightLastMove :: DC a -> (Square, Square) -> PColor -> IO ()
-highlightLastMove dc (s1, s2) perspective = do
+highlightLastMove :: DC a -> PColor -> PColor -> MoveDetailed -> IO ()
+highlightLastMove dc perspective turn m  = do
+  let (s1, s2) = convertMoveDt turn m
   set dc [penColor := blue ]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) blue) $ \brushBg -> do
     dcSetBrush dc brushBg
-    paintSquare s1 perspective dc
-    paintSquare s2 perspective dc
+    paintSquare dc perspective s1
+    paintSquare dc perspective s2
   withBrushStyle (BrushStyle BrushSolid blue) $ \brushArrow -> do
     dcSetBrush dc brushArrow
     drawArrow dc s1 s2 perspective
+  withBrushStyle brushTransparent $ \transparent -> dcSetBrush dc transparent
+
+convertMoveDt _ (Simple s1 s2) = (s1, s2)
+convertMoveDt Black CastleShort = (Square E One, Square G One)
+convertMoveDt Black CastleLong = (Square E One, Square C One)
+convertMoveDt White CastleShort = (Square E Eight, Square G Eight)
+convertMoveDt White CastleLong = (Square E Eight, Square C Eight)
 

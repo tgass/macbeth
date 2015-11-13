@@ -8,7 +8,9 @@ module Macbeth.Api.Move (
   colorUser,
   namePlayer,
   isGameUser,
+  isNextMoveUser,
   isNewGameUser,
+  wasOponentMove,
   playerColor,
   nameOponent,
   isCheckmate,
@@ -33,7 +35,7 @@ data Move = Move {
   , nameB :: String
   , relation :: Relation
   , moveNumber :: Int
-  , moveVerbose :: Maybe (Square, Square)
+  , moveVerbose :: Maybe MoveDetailed
   , timeTaken :: String
   , remainingTimeW :: Int
   , remainingTimeB :: Int
@@ -64,9 +66,15 @@ colorUser m = if relation m == MyMove then turn m else Macbeth.Api.Api.invert $ 
 isGameUser :: Move -> Bool
 isGameUser m = relation m `elem` [MyMove, OponentsMove]
 
+isNextMoveUser :: Move -> Bool
+isNextMoveUser m = relation m == MyMove
+
 
 isNewGameUser :: Move -> Bool
 isNewGameUser m = isGameUser m && isNothing (movePretty m)
+
+wasOponentMove :: Move -> Bool
+wasOponentMove m = colorUser m == turn m
 
 
 namePlayer :: Macbeth.Api.Api.PColor -> Move -> String
