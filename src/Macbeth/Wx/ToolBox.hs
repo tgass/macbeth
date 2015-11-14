@@ -39,16 +39,15 @@ wxToolBox h chan = do
     -- main frame
     f  <- frame [ text := "Macbeth" ]
 
-
-    tbar   <- toolBar f []
+    tbar   <- toolBarEx f False False []
     tbarItem_seek <- toolItem tbar "Seek" False (unsafePerformIO $ getDataFileName "bullhorn.gif")
-      [ on command := wxSeek h False, enabled := False ]
+      [ on command := wxSeek h False, enabled := False, tooltip := "Seek" ]
 
     tbarItem_match <- toolItem tbar "Match" False  (unsafePerformIO $ getDataFileName "dot-circle-o.gif")
-      [ on command := wxMatch h False, enabled := False]
+      [ on command := wxMatch h False, enabled := False, tooltip := "Match" ]
 
     tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName "fa-question.png")
-      [ on command := hPutStrLn h "4 finger", enabled := False]
+      [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
 
     status <- statusField []
 

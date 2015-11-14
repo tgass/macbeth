@@ -47,7 +47,7 @@ draw vState dc _ = do
   scale <- calcScale `liftA` get (_panel state) size
   dcSetUserScale dc scale scale
   drawBoard dc
-  when((isJust . moveVerbose) (lastMove state) && wasOponentMove (lastMove state)) $
+  when(isHighlightMove $ lastMove state) $
     highlightLastMove dc (perspective state) (turn $ lastMove state) (fromJust $ moveVerbose $ lastMove state)
   mapM_ (drawPiece dc (perspective state)) (_position state)
   when (isInteractive state) $ do

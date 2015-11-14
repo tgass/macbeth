@@ -69,8 +69,8 @@ createObservedGame h move chan = do
   status <- statusField []
   -- layout
 
-  set f [ layout := fill $ vsplit sw 0 0 (fill $ container p_back $ layoutBoardF (Board.perspective boardState))
-                                         (widget p_moves)
+  set f [ layout := vsplit sw 0 0 (container p_back $ layoutBoardF (Board.perspective boardState))
+                                  (minsize (sz 200 350) $ widget p_moves)
         , statusBar := [status]]
   refit p_back
 
@@ -142,9 +142,9 @@ createStatusPanel p color move = do
   return (p_status, cl)
 
 layoutBoard :: Panel() -> Panel() -> Panel() -> PColor -> Layout
-layoutBoard board white black color = column 0 [ hfill $ widget (if color == White then black else white)
-                                               , fill $ minsize (Size 320 320) $ widget board
-                                               , hfill $ widget (if color == White then white else black)]
+layoutBoard board white black color = column 0 [ widget (if color == White then black else white)
+                                               , minsize (Size 320 320) $ widget board
+                                               , widget (if color == White then white else black)]
 
 
 unsetKeyHandler :: Panel () -> IO ()
@@ -164,5 +164,5 @@ addMove m moves@(m':_)
 frameTitle move = "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move
 
 updateBoardState s m = s { Board._position = position m
-                       , Board.isInteractive = isNextMoveUser m
-                       , Board.lastMove = m}
+                         , Board.isInteractive = isNextMoveUser m
+                         , Board.lastMove = m}

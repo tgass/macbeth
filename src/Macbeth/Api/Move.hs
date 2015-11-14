@@ -15,13 +15,14 @@ module Macbeth.Api.Move (
   nameOponent,
   isCheckmate,
   toGameResultTuple,
+  isHighlightMove,
   dummyMove
 ) where
 
 import Macbeth.Api.Api
 import qualified Macbeth.Api.Game as Game
 
-import Data.Maybe (isNothing)
+import Data.Maybe
 
 data Move = Move {
     positionRaw :: String
@@ -101,6 +102,9 @@ toGameResultTuple move = (gameId move, namePlayer colorTurn move ++ " checkmated
     colorTurn = turn move
     turnToGameResult Black = Game.WhiteWins
     turnToGameResult White = Game.BlackWins
+
+isHighlightMove :: Move -> Bool
+isHighlightMove m = (isJust . moveVerbose) m && (wasOponentMove m || relation m == Observing)
 
 dummyMove :: Move
 dummyMove = Move {
