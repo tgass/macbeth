@@ -31,7 +31,7 @@ createObservedGame h move chan = do
   vMoves <- newTVarIO [move | isJust $ movePretty move]
   vGameResult <- newMVar Nothing
 
-  f <- frameFixed [ text := frameTitle move ]
+  f <- frame [ text := frameTitle move ]
   sw <- splitterWindow f []
   (p_moves, updateMoves) <- wxGameMoves sw vMoves
 
@@ -69,10 +69,10 @@ createObservedGame h move chan = do
   status <- statusField []
   -- layout
 
-  set f [ layout := vsplit sw 0 0 (container p_back $ layoutBoardF (Board.perspective boardState))
-                                  (minsize (sz 200 350) $ widget p_moves)
+  set f [ layout := (minsize $ sz 500 400) $  vsplit sw 0 0 (container p_back $ layoutBoardF (Board.perspective boardState))
+                                                            (margin 30 $ widget p_moves)
         , statusBar := [status]]
-  refit p_back
+  refit f
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
@@ -85,7 +85,6 @@ createObservedGame h move chan = do
                                    set status [text := ""]
                                    atomically $ modifyTVar vMoves $ addMove move'
                                    updateMoves
-                                   set f [ layout := row 5 [layoutBoardF (Board.perspective boardState), widget p_moves] ]
 
     GameResult id reason result -> when (id == gameId move) $ do
                               atomically $ modifyTVar vBoardState (\s -> s{Board.isInteractive = False})
