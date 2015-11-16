@@ -5,6 +5,7 @@ module Macbeth.Wx.GameMoves (
 import Macbeth.Api.Api
 import Macbeth.Api.Move
 
+import Control.Applicative hiding (empty)
 import Control.Concurrent.STM
 import Control.Monad
 import Data.Maybe
@@ -23,7 +24,7 @@ wxGameMoves f t = do
   txtCtrls <- replicateM 250 (staticTextSmall p "")
   let update = do
             moves <- readTVarIO t
-            let mx = reverse $ fmap moveShort $ filter (isJust . movePretty) moves
+            let mx = reverse $ moveShort <$> filter (isJust . movePretty) moves
             let labels = layoutMoves mx
             zipWithM_ (\tCtrl mv -> set tCtrl [text := mv, visible := True]) txtCtrls labels
             sizerX <- sizerFromLayout sw  (if null mx then empty
@@ -44,10 +45,10 @@ layoutSt _ = []
 layoutMoves :: [MoveShort] -> [String]
 layoutMoves [] = []
 layoutMoves [s1]
-  | turnColor s1 == White = [show (num s1) ++ ".", "...", move s1]
+  | turnColor s1 == White = [show (num s1 - 1) ++ ".", "...", move s1]
   | otherwise = [show (num s1) ++ ".", move s1, ""]
 layoutMoves (s1:s2:sx)
-  | turnColor s1 == White = [show (num s1) ++ ".", "...", move s1] ++ layoutMoves (s2:sx)
+  | turnColor s1 == White = [show (num s1 - 1) ++ ".", "...", move s1] ++ layoutMoves (s2:sx)
   | otherwise = [show (num s1) ++ ".", move s1, move s2] ++ layoutMoves sx
 
 

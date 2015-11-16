@@ -104,7 +104,7 @@ wxToolBox h chan = do
 
         TextMessage text -> appendText ct $ text ++ "\n"
 
-        SettingsDone -> hPutStrLn h "4 iset seekinfo 1"
+        SettingsDone -> hPutStrLn h `mapM_` ["4 iset seekinfo 1", "4 games", "4 pending"]
 
         InvalidPassword  -> void $ set status [text := "Invalid password."]
 

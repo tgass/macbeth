@@ -72,7 +72,6 @@ createObservedGame h move chan = do
   set f [ layout := (minsize $ sz 500 400) $  vsplit sw 0 0 (container p_back $ layoutBoardF (Board.perspective boardState))
                                                             (margin 30 $ widget p_moves)
         , statusBar := [status]]
-  refit f
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
@@ -125,7 +124,6 @@ turnBoard vState f p layoutF = do
   atomically $ modifyTVar vState (\s -> s{Board.perspective = invert $ Board.perspective s})
   state <- readTVarIO vState
   set p [ layout := layoutF (Board.perspective state) ]
-  refit f
 
 
 createStatusPanel :: Panel () -> PColor -> Move -> IO (Panel (), Clock)
