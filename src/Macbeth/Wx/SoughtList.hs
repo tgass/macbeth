@@ -58,7 +58,7 @@ deleteSeek _ _ = return ()
 
 
 toList :: Seek -> [String]
-toList (Seek id name rating time inc isRated gameType _ _) =
+toList (Seek id name _ rating time inc isRated gameType _ _) =
   [show id, name, show rating, show time ++ " " ++ show inc, show gameType ++ " " ++ showIsRated isRated]
   where showIsRated True = "rated"
         showIsRated False = "unrated"

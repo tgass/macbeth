@@ -11,9 +11,11 @@ import Macbeth.Api.CommandMsg
 import Macbeth.Api.Game
 import Macbeth.Api.Rating
 import Macbeth.Api.Seek
+import Macbeth.Utils.Utils
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
+import Numeric
 
 clearSeek :: Parser CommandMsg
 clearSeek = "<sc>" *> pure ClearSeek
@@ -28,7 +30,8 @@ seek' :: Parser Seek
 seek' = Seek
   <$> ("<s>" *> space *> decimal)
   <*> (space *> "w=" *> manyTill anyChar space)
-  <*> ("ti=" *> manyTill anyChar space *> "rt=" *> rating')
+  <*> ("ti=" *> titles')
+  <*> ("rt=" *> rating')
   <*> (space *> "t=" *> decimal)
   <*> (space *> "i=" *> decimal)
   <*> (space *> "r=" *> ("r" *> pure True <|> "u" *> pure False))
@@ -55,5 +58,14 @@ gameType' =
 
 
 rating' :: Parser Rating
-rating' = Rating <$> decimal >>= \r -> " " *> pure r <|> "E" *> pure r <|> "P" *> pure Guest
+rating' = Rating <$> decimal <*> provShow'
 
+
+provShow' :: Parser ProvShow
+provShow' = " " *> pure None <|>
+            "E" *> pure Estimated <|>
+            "P" *> pure Provisional
+
+
+titles' :: Parser [Title]
+titles' = manyTill anyChar space >>= pure . fromBitMask . fst . head . readHex

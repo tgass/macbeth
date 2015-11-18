@@ -10,4 +10,4 @@ import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
 
 rating :: Parser Rating
-rating = Rating <$> decimal <|> "++++" *> pure Guest <|> "----" *> pure Unrated
+rating = (Rating <$> decimal <*> pure None) <|> "++++" *> pure Guest <|> "----" *> pure Unrated
