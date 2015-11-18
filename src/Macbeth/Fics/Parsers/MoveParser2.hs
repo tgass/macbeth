@@ -98,9 +98,9 @@ row =
   "8" *> pure Eight
 
 parseRelation =
-  "-3" *> pure Other <|>
-  "-2" *> pure Other <|>
-  "2"  *> pure Other <|>
+  "-3" *> pure IsolatedPosition <|>
+  "-2" *> pure ObservingExaminedGame <|>
+  "2"  *> pure Examiner <|>
   "-1" *> pure OponentsMove <|>
   "1"  *> pure MyMove <|>
   "0"  *> pure Observing

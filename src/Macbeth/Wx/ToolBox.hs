@@ -120,6 +120,8 @@ wxToolBox h chan = do
 
         Finger name stats -> wxFinger name stats
 
+        LoginTimeout -> set f [ text := "Login Timeout." ]
+
         Login -> dupChan chan >>= wxLogin h
 
         Observe move -> dupChan chan >>= createObservedGame h move

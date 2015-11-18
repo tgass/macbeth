@@ -38,6 +38,7 @@ data CommandMsg =   GameMove Move
                   | Finger String String
 
                   | Login
+                  | LoginTimeout
                   | Password
                   | GuestLogin String
                   | LoggedIn String

@@ -43,7 +43,7 @@ data Move = Move {
   , movePretty :: Maybe String
   } deriving (Eq, Show)
 
-data Relation = MyMove | OponentsMove | Observing | Other deriving (Show, Eq)
+data Relation = IsolatedPosition | ObservingExaminedGame | Examiner | MyMove | OponentsMove | Observing deriving (Show, Eq)
 
 data Castling = WhiteLong | WhiteShort | BlackLong | BlackShort deriving (Show, Eq)
 

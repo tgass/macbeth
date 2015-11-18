@@ -6,8 +6,7 @@ import Macbeth.Wx.ToolBox
 import Graphics.UI.WX
 import Paths_Macbeth
 -- TODO: application icon
--- TODO: Login Timeout
--- TODO: Highlight rook if castle
+-- TODO: let clock never go under 0
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes

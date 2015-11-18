@@ -47,6 +47,7 @@ okBtnHandler wxInputs f h chan = get (name wxInputs) text >>= hPutStrLn h >> loo
 
     handlePw Password = get (password wxInputs) text >>= hPutStrLn h
     handlePw (GuestLogin _) = hPutStrLn h ""
+    handlePw LoginTimeout = close f
     handlePw _ = loop
 
 

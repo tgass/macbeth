@@ -38,7 +38,9 @@ updateClock move color clock = do
   atomically $ swapTVar (time clock) time'
   set (clockTxt clock) [text := formatTime time']
   set (timerCtrl clock) [enabled := isActive]
-  where isActive = (moveNumber move /= 1) && (turn move == color)
+  where isActive = (moveNumber move /= 1) &&
+                   (turn move == color) &&
+                   (relation move `elem` [OponentsMove, MyMove, Observing])
 
 
 newClock :: Panel () -> PColor -> Move -> IO Clock

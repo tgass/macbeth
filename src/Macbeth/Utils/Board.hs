@@ -184,8 +184,12 @@ toBitmap p = bitmap $ unsafePerformIO getDataDir ++ pieceToFile p
 
 
 highlightLastMove :: DC a -> PColor -> PColor -> MoveDetailed -> IO ()
-highlightLastMove dc perspective turn m  = do
-  let (s1, s2) = convertMoveDt turn m
+highlightLastMove dc perspective turn m =
+  sequence_ $ paintHighlight dc perspective `fmap` convertMoveDt turn m
+
+
+paintHighlight :: DC a -> PColor -> (Square, Square) -> IO ()
+paintHighlight dc perspective (s1, s2) = do
   set dc [penColor := blue ]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) blue) $ \brushBg -> do
     dcSetBrush dc brushBg
@@ -196,9 +200,13 @@ highlightLastMove dc perspective turn m  = do
     drawArrow dc s1 s2 perspective
   withBrushStyle brushTransparent $ \transparent -> dcSetBrush dc transparent
 
-convertMoveDt _ (Simple s1 s2) = (s1, s2)
-convertMoveDt Black CastleShort = (Square E One, Square G One)
-convertMoveDt Black CastleLong = (Square E One, Square C One)
-convertMoveDt White CastleShort = (Square E Eight, Square G Eight)
-convertMoveDt White CastleLong = (Square E Eight, Square C Eight)
+convertMoveDt _ (Simple s1 s2) = [(s1, s2)]
+convertMoveDt Black CastleShort = [ (Square E One, Square G One)
+                                  , (Square H One, Square F One)]
+convertMoveDt Black CastleLong = [ (Square E One, Square C One)
+                                 , (Square A One, Square D One)]
+convertMoveDt White CastleShort = [ (Square E Eight, Square G Eight)
+                                  , (Square H Eight, Square F Eight)]
+convertMoveDt White CastleLong = [ (Square E Eight, Square C Eight)
+                                 , (Square A Eight, Square D Eight)]
 

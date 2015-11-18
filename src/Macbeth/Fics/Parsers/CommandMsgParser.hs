@@ -63,6 +63,7 @@ parseCommandMsg = parseOnly parser where
                   , abortedGame2
 
                   , login
+                  , loginTimeout
                   , password
                   , guestLogin
                   , unknownUsername
@@ -198,6 +199,9 @@ abortedGame2 = commandHead 10 *> "The game has been aborted on move one.\n\n" *>
 
 login :: Parser CommandMsg
 login = "login: " *> pure Login
+
+loginTimeout :: Parser CommandMsg
+loginTimeout = "**** LOGIN TIMEOUT ****" *> pure LoginTimeout
 
 password :: Parser CommandMsg
 password = "password: " *> pure Password
