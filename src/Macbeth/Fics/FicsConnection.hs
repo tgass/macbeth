@@ -86,7 +86,7 @@ toGameResult move = GameResult id reason result
 
 printCmdMsg :: CommandMsg -> IO ()
 printCmdMsg Prompt = return ()
-printCmdMsg (NewSeek _) = return ()
+--printCmdMsg (NewSeek _) = return ()
 printCmdMsg (RemoveSeeks _) = return ()
 -- printCmdMsg (GameMove m) = print $ movePretty m
 printCmdMsg cmd = print cmd
