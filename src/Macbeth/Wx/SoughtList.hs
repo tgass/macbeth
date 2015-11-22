@@ -44,11 +44,16 @@ wxSoughtList slp h = do
                 pt <- listEventGetPoint evt
                 menuPopup ctxMenu pt sl)
 
+    imagePaths <- mapM getAbsoluteFilePath imageFiles  -- make relative to application
+    images     <- imageListFromFiles (sz 16 16) imagePaths
+
+    listCtrlAssignImageList sl images wxIMAGE_LIST_SMALL
+
     let handler cmd = case cmd of
             NewSeek seek -> do
               atomically $ modifyTVar vSoughtList (\sl -> sl ++ [seek])
               showSeek' <- showSeek soughtOpts
-              when (showSeek' seek) $ itemAppend sl $ toList seek
+              when (showSeek' seek) $ addSeek sl seek
 
             ClearSeek -> itemsDelete sl
 
@@ -59,6 +64,25 @@ wxSoughtList slp h = do
             _ -> return ()
 
     return (sl, handler)
+
+imageNames = ["fa-user", "fa-desktop"]
+
+
+imageFiles = map (\name -> "resources/icons/" ++ name ++ ".png") imageNames
+
+
+addSeek :: ListCtrl () -> Seek -> IO ()
+addSeek l seek = do
+  count <- listCtrlGetItemCount l
+
+  item <- listItemCreate
+  listItemSetId item count
+  --when (Computer `elem` titles seek) $ listItemSetBackgroundColour item (colorRGB 125 149 184)
+  listItemSetImage item $ if Computer `elem` titles seek then 1 else 0
+
+  listCtrlInsertItem l item
+  mapM_ (\(column,txt) -> listCtrlSetItem l count column txt (-1)) (zip [0..] (toList seek))
+
 
 showSeek :: SoughtOpts -> IO (Seek -> Bool)
 showSeek opts = do
@@ -81,7 +105,8 @@ filterSoughtList :: ListCtrl () -> SoughtOpts -> TVar [Seek] -> IO ()
 filterSoughtList sl opts vSoughtList = do
   showSeek' <- showSeek opts
   soughts <- readTVarIO vSoughtList
-  set sl [items := [ toList s | s <- soughts, showSeek' s]]
+  listCtrlDeleteAllItems sl
+  mapM_ (\s -> when (showSeek' s) $ addSeek sl s) soughts
 
 
 onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
