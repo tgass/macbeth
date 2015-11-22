@@ -33,10 +33,11 @@ toPGN :: [Move] -> Maybe GameResult -> ZonedTime -> String
 toPGN [] _ _ = ""
 toPGN moves@(m:_) mGameResult dateTime =
   tagsSection m mGameResult dateTime ++ "\n\n" ++
-  moveSection (if FEN.available $ head moves then tail moves else moves) ++ " " ++ maybe "" show mGameResult ++ "\n\n"
+  moveSection (if FEN.available $ head moves then tail moves else moves) ++
+  " " ++ maybe "" show mGameResult ++ "\n\n"
 
 moveSection :: [Move] -> String
-moveSection = unwords . fmap (toString . toSAN) . filter realMove
+moveSection = unwords . fmap (toString . toSAN)
 
 tagsSection :: Move -> Maybe GameResult -> ZonedTime -> String
 tagsSection m mGameResult dateTime =
@@ -45,8 +46,8 @@ tagsSection m mGameResult dateTime =
   \[Date \"" ++ formatTime defaultTimeLocale "%Y.%m.%d" dateTime ++ "\"]\n\
   \[Time \"" ++ formatTime defaultTimeLocale "%T" dateTime ++ "\"]\n\
   \[Round \"?\"]\n\
-  \[White \"" ++ Macbeth.Api.Move.nameW m ++ "\"]\n\
-  \[Black \"" ++ Macbeth.Api.Move.nameB m ++ "\"]\n\
+  \[White \"" ++ nameW m ++ "\"]\n\
+  \[Black \"" ++ nameB m ++ "\"]\n\
   \[Result \"" ++ maybe "?" show mGameResult ++ "\"]\n\
   \[BlackElo \"?\"]\n\
   \[WhiteElo \"?\"]\n\
@@ -54,9 +55,6 @@ tagsSection m mGameResult dateTime =
   \[TimeControl \"?\"]\n\
   \[SetUp \"" ++ (if FEN.available m then "1" else "?") ++ "\"]\n\
   \[FEN \"" ++ (if FEN.available m then FEN.convert m else "?") ++ "\"]\n"
-
-realMove :: Move -> Bool
-realMove m = isJust $ movePretty m
 
 toSAN :: Move -> (Int, PColor, String)
 toSAN m = (moveNumber m, turn m, fromJust $ movePretty m)

@@ -6,7 +6,6 @@ module Macbeth.Utils.FEN (
 import Macbeth.Api.Api
 import Macbeth.Api.Move
 
-import Data.Maybe
 import Data.List.Utils
 
 
@@ -19,7 +18,9 @@ convert m = piecePlacement (positionRaw m) ++ " " ++
         show (moveNumber m)
 
 available :: Move -> Bool
-available = isJust . movePretty
+available m
+  | moveNumber m == 1 && turn m == Black = False
+  | otherwise = True
 
 enPassant :: PColor -> Maybe Column -> String
 enPassant Black (Just c) = show $ Square c Three
