@@ -27,6 +27,9 @@ parseCommandMsg = parseOnly parser where
                   , SP.newSeek
                   , SP.removeSeeks
 
+                  , gameMove
+                  , confirmGameMove
+
                   , matchRequested
                   , declinedChallenge
                   , drawOffered
@@ -45,10 +48,8 @@ parseCommandMsg = parseOnly parser where
                   , gameResultMutualDraw
                   , gameResultAcceptDraw
 
-                  , confirmGameMove
                   , seekInfoBlock
                   , seekMatchesAlreadyPosted
-                  , gameMove
 
                   , finger
                   , pendingOffers
