@@ -4,16 +4,17 @@ module Macbeth.Fics.FicsConnection (
   ficsConnection
 ) where
 
-import Macbeth.Api.CommandMsg
+import Macbeth.Api.CommandMsg hiding (gameId)
 import Macbeth.Api.Move
 import Macbeth.Fics.Parsers.CommandMsgParser
 
 import Control.Concurrent.Chan (Chan, newChan, writeChan)
-import Control.Monad (when)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Resource (runResourceT, allocate, resourceForkIO)
-import Data.Char
+import Control.Monad
+import Control.Monad.State
+import Control.Monad.Trans.Resource
 import Data.Conduit
+import Data.Char
+import Data.Maybe
 import Network (connectTo, PortID (..))
 import System.IO (Handle, BufferMode (..), hSetBuffering, hClose)
 
@@ -21,6 +22,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.List as CL
 
+data HelperState = HelperState { gameId' :: Maybe Int }
 
 ficsConnection :: IO (Handle, Chan CommandMsg)
 ficsConnection = runResourceT $ do
@@ -32,8 +34,8 @@ ficsConnection = runResourceT $ do
 
 
 chain :: Handle -> Chan CommandMsg -> IO ()
-chain h chan =
-  CB.sourceHandle h $$
+chain h chan = flip evalStateT (HelperState Nothing) $ transPipe lift
+  (CB.sourceHandle h) $$
   toCharC =$
   blockC (False, BS.empty) =$
   parseC =$
@@ -42,20 +44,28 @@ chain h chan =
   sink chan
 
 
-sink :: Chan CommandMsg -> Sink CommandMsg IO ()
+sink :: Chan CommandMsg -> Sink CommandMsg (StateT HelperState IO) ()
 sink chan = awaitForever $ liftIO . writeChan chan
 
 
-loggingC :: Conduit CommandMsg IO CommandMsg
+loggingC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 loggingC = awaitForever $ \cmd -> liftIO (printCmdMsg cmd) >> yield cmd
 
 
-extractC :: Conduit CommandMsg IO CommandMsg
-extractC = awaitForever $ \cmd -> case cmd of
-  m@(GameMove move) -> CL.sourceList $ m : [toGameResult move | isCheckmate move && relation move == OponentsMove]
-  Boxed cmds -> CL.sourceList cmds
-  _ -> yield cmd
+extractC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
+extractC = awaitForever $ \cmd -> do
+  state <- get
+  case cmd of
+    m@(GameMove move) -> CL.sourceList $ foo (gameId' state) m move
+    Boxed cmds -> CL.sourceList cmds
 
+    _ -> yield cmd
+
+foo :: Maybe Int -> CommandMsg -> Move -> [CommandMsg]
+foo mId cmd move
+  | isCheckmate move && relation move == OponentsMove = cmd : [toGameResult move]
+  | isNewGameUser move && isJust mId = if fromJust mId == gameId move then [MatchAccepted move] else [cmd]
+  | otherwise = [cmd]
 
 parseC :: (Monad m) => Conduit BS.ByteString m CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
