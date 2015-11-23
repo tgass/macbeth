@@ -17,9 +17,9 @@ data CommandMsg =   GameMove Move
                   | MatchRequested Challenge
                   | MatchAccepted Move
                   | MatchDeclined
+                  | MatchUserNotLoggedIn {user :: String}
                   | DrawOffered
                   | DrawDeclined
-                  | GameCreation { gameId :: Int, description :: String }
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
                   | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }
@@ -53,5 +53,6 @@ data CommandMsg =   GameMove Move
                   | UnkownUsername String
 
                   {- Internal -}
+                  | GameCreation { gameId :: Int, description :: String }
                   | Boxed [CommandMsg] deriving (Show, Eq)
 

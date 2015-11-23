@@ -5,7 +5,6 @@ module Macbeth.Wx.ToolBox (
 ) where
 
 import Macbeth.Api.CommandMsg
-import Macbeth.Api.Move
 import Macbeth.Wx.About
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList
@@ -97,6 +96,8 @@ wxToolBox h chan = do
     evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd ->
       glHandler cmd >> slHandler cmd >> pendingHandler cmd >> case cmd of
 
+        MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
+
         NoSuchGame -> do
           set status [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
@@ -126,8 +127,6 @@ wxToolBox h chan = do
         Observe move -> dupChan chan >>= createObservedGame h move
 
         MatchAccepted move -> dupChan chan >>= createObservedGame h move
-
-        GameMove move -> when (isNewGameUser move) $ dupChan chan >>= createObservedGame h move
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 

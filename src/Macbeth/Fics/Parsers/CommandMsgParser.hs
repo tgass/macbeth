@@ -54,6 +54,7 @@ parseCommandMsg = parseOnly parser where
                   , pendingOffers
                   , offerAccepted
                   , offerDeclined
+                  , matchUserNotLoggedIn
                   , identicalOffer
 
                   , abortRequested
@@ -178,6 +179,10 @@ offerDeclined = manyTill anyChar " " *> "declines the match offer." *> pure Offe
 
 identicalOffer :: Parser CommandMsg
 identicalOffer = commandHead 73 *> "You are already offering an identical match to" *> pure IdenticalOffer
+
+matchUserNotLoggedIn :: Parser CommandMsg
+matchUserNotLoggedIn = MatchUserNotLoggedIn
+  <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
 
 abortRequest :: Parser CommandMsg
 abortRequest = commandHead 10 *> "Abort request sent." *> pure AbortRequest

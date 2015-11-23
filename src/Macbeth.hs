@@ -6,8 +6,6 @@ import Macbeth.Wx.ToolBox
 import Graphics.UI.WX
 import Paths_Macbeth
 -- TODO: application icon
--- TODO: time is up, but no GameResult?
--- TODO: New observing game opens, if first move is invalid!
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes

@@ -58,7 +58,7 @@ extractC = awaitForever $ \cmd -> do
   case cmd of
     m@(GameMove move) -> CL.sourceList $ foo (gameId' state) m move
     Boxed cmds -> CL.sourceList cmds
-
+    GameCreation id _ -> put (HelperState $ Just id) >> CL.sourceList []
     _ -> yield cmd
 
 foo :: Maybe Int -> CommandMsg -> Move -> [CommandMsg]
