@@ -19,6 +19,7 @@ data CommandMsg =   GameMove Move
                   | MatchDeclined
                   | DrawOffered
                   | DrawDeclined
+                  | GameCreation { gameId :: Int, description :: String }
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
                   | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }

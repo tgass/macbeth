@@ -39,6 +39,7 @@ parseCommandMsg = parseOnly parser where
                   , removingObservedGame2
                   , noSuchGame
                   , accept
+                  , gameCreation
                   , gameResult
                   , gameResult'
                   , gameResultMutualDraw
@@ -134,6 +135,11 @@ drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered
 drawDeclined :: Parser CommandMsg
 drawDeclined = manyTill anyChar space *> "declines the draw request." *> pure DrawDeclined
 
+gameCreation :: Parser CommandMsg
+gameCreation = GameCreation
+  <$> (skipSpace *> "{Game" *> space *> decimal)
+  <*> (takeTill (== ')') *> ") Creating " *> manyTill anyChar "}")
+
 gameResult :: Parser CommandMsg
 gameResult = commandHead 103 *> gameResult'
 
@@ -191,7 +197,7 @@ abortAccepted = ((commandHead 11 *> "You accept the abort request from") <|>
 abortedGame :: Parser CommandMsg
 abortedGame = GameResult
   <$> ("{Game " *> decimal <* manyTill anyChar ") ")
-  <*> (manyTill anyChar "}")
+  <*> manyTill anyChar "} *"
   <*> pure Aborted
 
 abortedGame2 :: Parser CommandMsg
