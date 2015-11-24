@@ -4,7 +4,7 @@ import Macbeth.Fics.FicsConnection
 import Macbeth.Wx.ToolBox
 
 import Graphics.UI.WX
-import Paths_Macbeth
+
 -- TODO: application icon
 -- command moves to get first moves in observed game?
 -- newtype for perspective == view

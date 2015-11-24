@@ -25,11 +25,11 @@ move = do
   pos <- BS.unpack `fmap` ("<12>" *> space *> A.take 71)
   turn <- space *> ("B" *> pure Black <|> "W" *> pure White)
   doublePawnPush <- space *> ("-1" *> pure Nothing <|> liftM Just column)
-  castling <- toList
-                 <$> (space *> ("0" *> pure Nothing <|> "1" *> pure (Just WhiteShort)))
-                 <*> (space *> ("0" *> pure Nothing <|> "1" *> pure (Just WhiteLong)))
-                 <*> (space *> ("0" *> pure Nothing <|> "1" *> pure (Just BlackShort)))
-                 <*> (space *> ("0" *> pure Nothing <|> "1" *> pure (Just BlackLong)))
+  castling <- sequence [ (space *> ("0" *> pure Nothing <|> "1" *> pure (Just WhiteShort)))
+                       , (space *> ("0" *> pure Nothing <|> "1" *> pure (Just WhiteLong)))
+                       , (space *> ("0" *> pure Nothing <|> "1" *> pure (Just BlackShort)))
+                       , (space *> ("0" *> pure Nothing <|> "1" *> pure (Just BlackLong)))]
+
   ply <- space *> decimal -- the number of moves made since the last irreversible move, halfmove clock
   gameId <- space *> decimal
   nameW <- space *> manyTill anyChar space
@@ -50,7 +50,7 @@ move = do
                 (parsePosition pos)
                 turn
                 doublePawnPush
-                castling
+                (catMaybes castling)
                 ply
                 gameId
                 nameW
@@ -118,9 +118,6 @@ column =
   "6" *> pure G <|>
   "7" *> pure H
 
-
-toList a b c d = catMaybes [a, b, c, d]
-
 -- <b1> game 455 white [PP] black []
 pieceHolding :: Parser CommandMsg
 pieceHolding = PieceHolding
@@ -136,8 +133,5 @@ dropablePiece =
   "N" *> pure Knight <|>
   "B" *> pure Bishop <|>
   "Q" *> pure Queen
-
-
-
 
 
