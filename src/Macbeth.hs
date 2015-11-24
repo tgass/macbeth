@@ -7,8 +7,9 @@ import Graphics.UI.WX
 import Paths_Macbeth
 -- TODO: application icon
 -- command moves to get first moves in observed game?
--- dont paint selected square if observing
 -- newtype for perspective == view
+-- declinedChallenge / offerDeclined
+-- ESC deletes preMoves
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes
@@ -20,7 +21,6 @@ import Paths_Macbeth
 -- TODO: Seek auto match ?! Bug?
 
 -- FEATURES
--- TODO: Pre-Moves
 -- TODO: takeback
 
 -- MINOR
@@ -28,7 +28,5 @@ import Paths_Macbeth
 
 main :: IO ()
 main = do
-  dir <- getDataDir
-  print dir
   (h, chan) <- ficsConnection
   start $ wxToolBox h chan

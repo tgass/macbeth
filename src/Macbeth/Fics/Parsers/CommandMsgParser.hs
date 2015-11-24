@@ -29,6 +29,10 @@ parseCommandMsg = parseOnly parser where
 
                   , gameMove
                   , confirmGameMove
+                  , accept
+                  , playSeek
+                  , observe
+                  , pieceHolding
 
                   , matchRequested
                   , declinedChallenge
@@ -36,12 +40,9 @@ parseCommandMsg = parseOnly parser where
                   , drawDeclined
 
                   , games
-                  , playSeek
-                  , observe
                   , removingObservedGame
                   , removingObservedGame2
                   , noSuchGame
-                  , accept
                   , gameCreation
                   , gameResult
                   , gameResult'
@@ -77,11 +78,38 @@ parseCommandMsg = parseOnly parser where
                   , settingsDone
                   ]
 
-games :: Parser CommandMsg
-games = Games <$> (commandHead 43 *> parseGamesList)
+gameMove :: Parser CommandMsg
+gameMove = GameMove <$> move
+
+confirmGameMove :: Parser CommandMsg
+confirmGameMove = Boxed <$> sequence [ commandHead 1 *> option NullCommand (takeTill (=='<') *> pieceHolding)
+                                     , GameMove <$> (takeTill (=='<') *> move)
+                                     ]
+
+accept :: Parser CommandMsg
+accept = MatchAccepted <$> (commandHead 11 *> takeTill (== '<') *> move)
+
+playSeek :: Parser CommandMsg
+playSeek = Boxed
+  <$> sequence [ commandHead 158 *> "\n" *> SP.removeSeeks <* "\n"
+               , takeTill (=='<') *> (MatchAccepted <$> move)]
+
+seekMatchesAlreadyPosted :: Parser CommandMsg
+seekMatchesAlreadyPosted = do
+  commandHead 155
+  option "" "You are unregistered - setting to unrated.\n"
+  rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks <* "\n"
+  mv <- takeTill (=='<') *> (MatchAccepted <$> move)
+  return $ Boxed [rs, mv]
 
 observe :: Parser CommandMsg
-observe = Observe <$> (commandHead 80 *> takeTill (=='<') *>move)
+observe = Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
+
+
+
+
+games :: Parser CommandMsg
+games = Games <$> (commandHead 43 *> parseGamesList)
 
 removingObservedGame :: Parser CommandMsg
 removingObservedGame = "Removing game " *> decimal *> " from observation list." *> pure RemovingObservedGame
@@ -92,18 +120,6 @@ removingObservedGame2 = commandHead 138 *> removingObservedGame
 noSuchGame :: Parser CommandMsg
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
 
-confirmGameMove :: Parser CommandMsg
-confirmGameMove = GameMove <$> (commandHead 1 *> takeTill (=='<') *> move)
-
-gameMove :: Parser CommandMsg
-gameMove = GameMove <$> move
-
-playSeek :: Parser CommandMsg
-playSeek = do
-  commandHead 158
-  rs <- "\n" *> SP.removeSeeks <* "\n"
-  mv <- takeTill (=='<') *> (MatchAccepted <$> move)
-  return $ Boxed [rs, mv]
 
 matchRequested :: Parser CommandMsg
 matchRequested = MatchRequested <$> (Challenge
@@ -113,24 +129,12 @@ matchRequested = MatchRequested <$> (Challenge
   <*> ("(" *> rating)
   <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
 
-accept :: Parser CommandMsg
-accept = MatchAccepted
-  <$> (commandHead 11 *> takeTill (== '<') *> move)
-
 declinedChallenge :: Parser CommandMsg
 declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure MatchDeclined
 
 seekInfoBlock :: Parser CommandMsg
 seekInfoBlock = Boxed
   <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ SP.clearSeek, SP.newSeek <* takeTill (== '\n')]) "\n")
-
-seekMatchesAlreadyPosted :: Parser CommandMsg
-seekMatchesAlreadyPosted = do
-  commandHead 155
-  option "" "You are unregistered - setting to unrated.\n"
-  rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks <* "\n"
-  mv <- takeTill (=='<') *> (MatchAccepted <$> move)
-  return $ Boxed [rs, mv]
 
 drawOffered :: Parser CommandMsg
 drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered

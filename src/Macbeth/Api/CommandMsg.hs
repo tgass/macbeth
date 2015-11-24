@@ -9,6 +9,7 @@ import Macbeth.Api.Move
 import Macbeth.Api.Seek
 
 data CommandMsg =   GameMove Move
+                  | PieceHolding { gameId :: Int, h_white :: [PType], h_black :: [PType] }
                   | Games [Game]
                   | Observe Move
                   | RemovingObservedGame
@@ -53,6 +54,7 @@ data CommandMsg =   GameMove Move
                   | UnkownUsername String
 
                   {- Internal -}
+                  | NullCommand
                   | GameCreation { gameId :: Int, description :: String }
                   | Boxed [CommandMsg] deriving (Show, Eq)
 

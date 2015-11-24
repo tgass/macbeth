@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Macbeth.Fics.Parsers.MoveParser2 (
-  move
+  move,
+  pieceHolding
 ) where
 
 import Macbeth.Api.Api
+import Macbeth.Api.CommandMsg
 import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Api.Move
 
@@ -118,3 +120,24 @@ column =
 
 
 toList a b c d = catMaybes [a, b, c, d]
+
+-- <b1> game 455 white [PP] black []
+pieceHolding :: Parser CommandMsg
+pieceHolding = PieceHolding
+  <$> ("<b1> game " *> decimal <* " ")
+  <*> ("white [" *> many' dropablePiece <* "] ")
+  <*> ("black [" *> many' dropablePiece <* "]" <* option "" " <-")
+
+
+dropablePiece :: Parser PType
+dropablePiece =
+  "P" *> pure Pawn <|>
+  "R" *> pure Rook <|>
+  "N" *> pure Knight <|>
+  "B" *> pure Bishop <|>
+  "Q" *> pure Queen
+
+
+
+
+

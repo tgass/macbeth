@@ -46,10 +46,10 @@ commandMessageParserTest = [
       , (MatchRequested $ Challenge "GuestYWYK" Unrated "GuestMGSD" Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
       , (GuestLogin "FOOBAR", "Press return to enter the server as \"FOOBAR\":")
       -- playSeek
-      , (Boxed [RemoveSeeks [25], GameMove defaultMove], "\NAK4\SYN158\SYN\n<sr> 25\nfics% \nCreating: chicapucp (1658) GuestFTYL (++++) unrated blitz 3 0\n{Game 18 (chicapucp vs. GuestFTYL) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\nGame 18: A disconnection will be considered a forfeit.\n\ETB")
+      , (Boxed [RemoveSeeks [25], MatchAccepted defaultMove], "\NAK4\SYN158\SYN\n<sr> 25\nfics% \nCreating: chicapucp (1658) GuestFTYL (++++) unrated blitz 3 0\n{Game 18 (chicapucp vs. GuestFTYL) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\nGame 18: A disconnection will be considered a forfeit.\n\ETB")
       -- seekMatchesAlreadyPosted
-      , (Boxed [RemoveSeeks [130], GameMove defaultMove], "\NAK4\SYN155\SYNYou are unregistered - setting to unrated.\nYour seek matches one already posted by GuestLQFZ.\n\n<sr> 130\nfics% \nCreating: GuestLQFZ (++++) GuestSFKS (++++) unrated blitz 5 0\n{Game 214 (GuestLQFZ vs. GuestSFKS) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\nGame 214: A disconnection will be considered a forfeit.\n\ETB")
-      , (Boxed [RemoveSeeks [119], GameMove defaultMove], "\NAK4\SYN155\SYNYour seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n")
+      , (Boxed [RemoveSeeks [130], MatchAccepted defaultMove], "\NAK4\SYN155\SYNYou are unregistered - setting to unrated.\nYour seek matches one already posted by GuestLQFZ.\n\n<sr> 130\nfics% \nCreating: GuestLQFZ (++++) GuestSFKS (++++) unrated blitz 5 0\n{Game 214 (GuestLQFZ vs. GuestSFKS) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\nGame 214: A disconnection will be considered a forfeit.\n\ETB")
+      , (Boxed [RemoveSeeks [119], MatchAccepted defaultMove], "\NAK4\SYN155\SYNYour seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n")
       -- seekInfoBlock
       , (Boxed [ClearSeek, NewSeek $ Seek 16 "CatNail" [Computer] (Rating 1997 None) 3 0 False Suicide Nothing (0, 9999)], "\NAK4\SYN56\SYNseekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n")
       , (Observe defaultMove, "\NAK5\SYN80\SYNYou are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0" ++ defaultMoveStr)
@@ -68,6 +68,7 @@ commandMessageParserTest = [
       , (GameResult 112 "Game aborted on move 1" Aborted, "{Game 112 (GuestSPLL vs. GuestTKHJ) Game aborted on move 1} *")
       , (GameResult 297 "Game aborted by mutual agreement" Aborted, "{Game 297 (GuestSPLL vs. GuestTKHJ) Game aborted by mutual agreement} *")
       , (MatchUserNotLoggedIn "GuestLHDG", "\NAK4\SYN73\SYNGuestLHDG is not logged in.\n\ETB")
+      , (PieceHolding 455 [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
       ]
 
 defaultMove = Move "-------- -------- -------- -------- -------- -------- -------- --------" [] White Nothing [WhiteShort,WhiteLong,BlackShort,BlackLong] 0 18 "nameWhite" "nameBlack" OponentsMove 1 Nothing "(0:00)" 180 180 Nothing
