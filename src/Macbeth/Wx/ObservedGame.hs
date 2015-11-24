@@ -130,7 +130,7 @@ handlePreMoves vBoardState h = do
   hPutStrLn h $ "6 " ++ show (head preMoves' )
 
 
-adjustPosition vBoardState = atomically $ modifyTVar vBoardState (\s -> s {
+adjustPosition vBoardState move = atomically $ modifyTVar vBoardState (\s -> s {
   Board._position = movePieces (Board.preMoves s) (Board._position s)})
 
 
@@ -177,6 +177,5 @@ frameTitle move = "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs "
 
 updateBoardState vBoardState move =
   atomically $ modifyTVar vBoardState (\s -> s {
-    Board._position = position move
-  , Board.isWaiting = isNextMoveUser move
+    Board.isWaiting = isNextMoveUser move
   , Board.lastMove = move})

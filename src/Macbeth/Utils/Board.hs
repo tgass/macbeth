@@ -51,13 +51,11 @@ draw vState dc _ = do
   scale <- calcScale `liftA` get (_panel state) size
   dcSetUserScale dc scale scale
   drawBoard dc
-  when(isHighlightMove $ lastMove state) $
-    highlightLastMove dc (perspective state) (turn $ lastMove state) (fromJust $ moveVerbose $ lastMove state)
+  when (isHighlightMove $ lastMove state) $ highlightLastMove dc state
   mapM_ (highlightPreMove dc (perspective state)) (preMoves state)
   mapM_ (drawPiece dc (perspective state)) (_position state)
-
   paintSelectedSquare dc (perspective state)  (selSquare state)
-  drawDraggedPiece scale (draggedPiece state) dc
+  drawDraggedPiece dc scale (draggedPiece state)
 
 
 paintSelectedSquare :: DC a -> PColor -> Square -> IO ()
@@ -68,8 +66,8 @@ paintSelectedSquare dc perspective sq =
     paintSquare dc perspective sq
 
 
-drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> IO ()
-drawDraggedPiece scale mDraggedPiece dc = case mDraggedPiece of
+drawDraggedPiece :: DC a -> Double -> Maybe DraggedPiece -> IO ()
+drawDraggedPiece dc scale mDraggedPiece = case mDraggedPiece of
   Nothing -> return ()
   Just (DraggedPiece pt piece _) -> drawBitmap dc (toBitmap piece) (scalePoint pt) True []
   where
@@ -109,10 +107,12 @@ onMouseEvent h vState evtMouse = do
 
     _ -> return ()
 
-  state' <- varGet vState
-  repaint (_panel state')
+  repaint $ _panel state
 
   where
+    removePiece :: Position -> Square -> Position
+    removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
+
     setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
     setNewPoint pt (DraggedPiece _ p s) = Just $ DraggedPiece pt p s
 
@@ -122,11 +122,9 @@ onMouseEvent h vState evtMouse = do
         checkColor :: PColor -> Piece -> Maybe Piece
         checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 
+
 paintSquare :: DC a -> PColor -> Square -> IO ()
 paintSquare dc perspective sq = drawRect dc (squareToRect sq perspective) []
-
-removePiece :: Position -> Square -> Position
-removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
 
 
 calcScale :: Size -> Double
@@ -146,7 +144,7 @@ drawBoard :: DC a -> IO ()
 drawBoard dc = drawBitmap dc board (point 0 0) False []
 
 
-intToRow :: Macbeth.Api.Api.PColor -> Int -> Row
+intToRow :: PColor -> Int -> Row
 intToRow White = toEnum . abs . (7-)
 intToRow Black = toEnum
 
@@ -179,9 +177,12 @@ toBitmap :: Piece -> Bitmap ()
 toBitmap p = bitmap $ unsafePerformIO getDataDir ++ pieceToFile p
 
 
-highlightLastMove :: DC a -> PColor -> PColor -> MoveDetailed -> IO ()
-highlightLastMove dc perspective turn m =
-  sequence_ $ paintHighlight dc perspective blue `fmap` convertMoveDt turn m
+highlightLastMove :: DC a -> BoardState -> IO ()
+highlightLastMove dc state = let
+  perspective' = perspective state
+  turn' = turn $ lastMove state
+  move' =  (fromJust $ moveVerbose $ lastMove state)
+  in sequence_ $ paintHighlight dc perspective' blue `fmap` convertMoveDt turn' move'
 
 
 highlightPreMove :: DC a -> PColor -> PieceMove -> IO ()
