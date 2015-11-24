@@ -10,6 +10,9 @@ module Macbeth.Api.Api (
   Position,
   PendingOffer (..),
   MoveDetailed (..),
+  PieceMove (..),
+  movePiece,
+  movePieces,
   pColor,
   invert
 ) where
@@ -32,6 +35,26 @@ instance Show Square where
   show (Square s y) = fmap toLower (show s) ++ show (fromEnum y + 1)
 
 type Position = [(Square, Piece)]
+
+data PieceMove = PieceMove { piece :: Piece, from :: Square, to :: Square }
+
+movePiece :: PieceMove -> Position -> Position
+movePiece (PieceMove piece from to) position =
+  filter (\(s, _) -> s /= from && s /= to) position ++ [(to, piece)]
+
+movePieces :: [PieceMove] -> Position -> Position
+movePieces [] pos = pos
+movePieces (x:xs) pos = movePieces xs (movePiece x pos)
+
+
+instance Show PieceMove where
+    show (PieceMove (Piece King White) (Square E One) (Square G One)) = "O-O"
+    show (PieceMove (Piece King White) (Square E One) (Square C One)) = "O-O-O"
+    show (PieceMove (Piece King Black) (Square E Eight) (Square G Eight)) = "O-O"
+    show (PieceMove (Piece King Black) (Square E Eight) (Square C Eight)) = "O-O-O"
+    show (PieceMove _ s1 s2) = show s1 ++ show s2
+
+
 
 data PendingOffer = PendingOffer { offerId :: Int, offer :: String } deriving (Show, Eq)
 

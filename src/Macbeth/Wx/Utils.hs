@@ -75,8 +75,8 @@ drawArrow dc s1 s2 perspective = drawArrowPt dc (pt (x1+20) (y1+20)) (pt (x2'+20
              | otherwise = y2
 
 drawArrowPt dc p1 p2 = do
-  line dc p1 p2 [pen := penColored blue 1]
-  polygon dc (fmap (movePt (pointX p2) (pointY p2) . rotate (dfix-90)) triangle) [pen := penColored blue 1]
+  line dc p1 p2 []
+  polygon dc (fmap (movePt (pointX p2) (pointY p2) . rotate (dfix-90)) triangle) []
   where
     triangle = [(0, 0), (-2, -7), (2, -7)]
     movePt x y (Point px py) = pt (x + px) (y + py)

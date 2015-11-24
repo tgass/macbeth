@@ -6,6 +6,9 @@ import Macbeth.Wx.ToolBox
 import Graphics.UI.WX
 import Paths_Macbeth
 -- TODO: application icon
+-- command moves to get first moves in observed game?
+-- dont paint selected square if observing
+-- newtype for perspective == view
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes

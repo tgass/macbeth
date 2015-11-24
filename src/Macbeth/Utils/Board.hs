@@ -2,6 +2,7 @@ module Macbeth.Utils.Board (
   draw,
   onMouseEvent,
   initBoardState,
+  PieceMove (..),
   BoardState(..)
 ) where
 
@@ -12,6 +13,7 @@ import Paths_Macbeth
 
 import Control.Applicative
 import Data.Maybe
+import Control.Concurrent.STM
 import Graphics.UI.WX
 import Graphics.UI.WXCore hiding (Row, Column)
 import System.IO
@@ -21,10 +23,11 @@ import System.IO.Unsafe
 data BoardState = BoardState { _panel :: Panel()
                              , lastMove :: Move
                              , _position :: Position
+                             , preMoves :: [PieceMove]
                              , perspective :: Macbeth.Api.Api.PColor
                              , selSquare :: Square
                              , draggedPiece :: Maybe DraggedPiece
-                             , isInteractive :: Bool
+                             , isWaiting :: Bool
                              }
 
 
@@ -36,10 +39,11 @@ initBoardState panel move = BoardState {
       _panel = panel
     , lastMove = move
     , _position = Macbeth.Api.Move.position move
+    , preMoves = []
     , perspective = if relation move == Observing then White else colorUser move
     , selSquare = Square A One
     , draggedPiece = Nothing
-    , isInteractive = relation move == MyMove}
+    , isWaiting = relation move == MyMove}
 
 draw :: Var BoardState -> DC a -> t -> IO ()
 draw vState dc _ = do
@@ -49,15 +53,19 @@ draw vState dc _ = do
   drawBoard dc
   when(isHighlightMove $ lastMove state) $
     highlightLastMove dc (perspective state) (turn $ lastMove state) (fromJust $ moveVerbose $ lastMove state)
+  mapM_ (highlightPreMove dc (perspective state)) (preMoves state)
   mapM_ (drawPiece dc (perspective state)) (_position state)
-  when (isInteractive state) $ do
-    set dc [penColor := rgb 255 0 (0 :: Int) ]
-    paintSquare dc (perspective state)  (selSquare state)
-    drawDraggedPiece scale (draggedPiece state) dc
+
+  paintSelectedSquare dc (perspective state)  (selSquare state)
+  drawDraggedPiece scale (draggedPiece state) dc
 
 
-paintSquare :: DC a -> PColor -> Square -> IO ()
-paintSquare dc color sq = drawRect dc (squareToRect sq color) []
+paintSelectedSquare :: DC a -> PColor -> Square -> IO ()
+paintSelectedSquare dc perspective sq =
+  withBrushStyle brushTransparent $ \transparent -> do
+    dcSetBrush dc transparent
+    set dc [penColor := red ]
+    paintSquare dc perspective sq
 
 
 drawDraggedPiece :: Double -> Maybe DraggedPiece -> DC a -> IO ()
@@ -79,7 +87,7 @@ onMouseEvent h vState evtMouse = do
 
     MouseMotion pt _ -> varSet vState $ state {selSquare = toSquare pt}
 
-    MouseLeftDown pt _ -> when (isInteractive state) $ do
+    MouseLeftDown pt _ -> do
         let square' = toSquare pt
         case getPiece (_position state) square' (colorUser $ lastMove state) of
           Just piece -> varSet vState state { _position = removePiece (_position state) square'
@@ -87,11 +95,13 @@ onMouseEvent h vState evtMouse = do
           _ -> return ()
 
     MouseLeftUp click_pt _ -> case draggedPiece state of
-      Just dp@(DraggedPiece _ piece dp_sq) -> do
+      Just (DraggedPiece _ piece dp_sq) -> do
         let clicked_sq = toSquare click_pt
-        let newPosition = movePiece (_position state) clicked_sq dp
+        let newPosition = movePiece (PieceMove piece dp_sq clicked_sq) (_position state)
         varSet vState state { _position = newPosition, draggedPiece = Nothing}
-        hPutStrLn h $ "6 " ++ emitMove piece dp_sq clicked_sq
+        if isWaiting state
+          then hPutStrLn h $ "6 " ++ show (PieceMove piece dp_sq clicked_sq)
+          else atomically $ modifyTVar vState (\s -> s {preMoves = preMoves state ++ [PieceMove piece dp_sq clicked_sq]})
       _ -> return ()
 
     MouseLeftDrag pt _ -> varSet vState state { selSquare = toSquare pt
@@ -99,7 +109,8 @@ onMouseEvent h vState evtMouse = do
 
     _ -> return ()
 
-  repaint (_panel state)
+  state' <- varGet vState
+  repaint (_panel state')
 
   where
     setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
@@ -111,23 +122,8 @@ onMouseEvent h vState evtMouse = do
         checkColor :: PColor -> Piece -> Maybe Piece
         checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 
-
-emitMove :: Piece -> Square -> Square -> String
-emitMove (Piece King White) (Square E One) (Square G One) = "O-O"
-emitMove (Piece King White) (Square E One) (Square C One) = "O-O-O"
-emitMove (Piece King Black) (Square E Eight) (Square G Eight) = "O-O"
-emitMove (Piece King Black) (Square E Eight) (Square C Eight) = "O-O-O"
-emitMove _ s1 s2 = show s1 ++ show s2
-
-
-movePiece :: Position -> Square -> DraggedPiece -> Position
-movePiece pos sq (DraggedPiece _ dp_piece dp_sq) = foo $ sq `lookup` pos
-  where
-    foo :: Maybe Piece -> Position
-    foo Nothing = pos ++ [(sq, dp_piece)]
-    foo (Just (Piece _ c')) = if pColor dp_piece == c' then pos ++ [(dp_sq, dp_piece)]
-                                                       else removePiece pos sq ++ [(sq, dp_piece)]
-
+paintSquare :: DC a -> PColor -> Square -> IO ()
+paintSquare dc perspective sq = drawRect dc (squareToRect sq perspective) []
 
 removePiece :: Position -> Square -> Position
 removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
@@ -137,7 +133,7 @@ calcScale :: Size -> Double
 calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
-drawPiece :: DC a -> Macbeth.Api.Api.PColor -> (Square, Piece) -> IO ()
+drawPiece :: DC a -> PColor -> (Square, Piece) -> IO ()
 drawPiece dc color (square, p) = drawBitmap dc (toBitmap p) (toPos square color) True []
 
 
@@ -185,20 +181,22 @@ toBitmap p = bitmap $ unsafePerformIO getDataDir ++ pieceToFile p
 
 highlightLastMove :: DC a -> PColor -> PColor -> MoveDetailed -> IO ()
 highlightLastMove dc perspective turn m =
-  sequence_ $ paintHighlight dc perspective `fmap` convertMoveDt turn m
+  sequence_ $ paintHighlight dc perspective blue `fmap` convertMoveDt turn m
 
 
-paintHighlight :: DC a -> PColor -> (Square, Square) -> IO ()
-paintHighlight dc perspective (s1, s2) = do
-  set dc [penColor := blue ]
-  withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) blue) $ \brushBg -> do
+highlightPreMove :: DC a -> PColor -> PieceMove -> IO ()
+highlightPreMove dc perspective preMove = paintHighlight dc perspective yellow (from preMove, to preMove)
+
+paintHighlight :: DC a -> PColor -> Color -> (Square, Square) -> IO ()
+paintHighlight dc perspective color (s1, s2) = do
+  set dc [penColor := color ]
+  withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
     dcSetBrush dc brushBg
     paintSquare dc perspective s1
     paintSquare dc perspective s2
-  withBrushStyle (BrushStyle BrushSolid blue) $ \brushArrow -> do
+  withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
     drawArrow dc s1 s2 perspective
-  withBrushStyle brushTransparent $ \transparent -> dcSetBrush dc transparent
 
 convertMoveDt _ (Simple s1 s2) = [(s1, s2)]
 convertMoveDt Black CastleShort = [ (Square E One, Square G One)

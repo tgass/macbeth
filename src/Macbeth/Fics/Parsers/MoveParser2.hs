@@ -20,7 +20,7 @@ import qualified Data.ByteString.Char8 as BS
 
 move :: Parser Move
 move = do
-  pos <- BS.unpack `fmap` (takeTill (== '<') *> "<12>" *> space *> A.take 71)
+  pos <- BS.unpack `fmap` ("<12>" *> space *> A.take 71)
   turn <- space *> ("B" *> pure Black <|> "W" *> pure White)
   doublePawnPush <- space *> ("-1" *> pure Nothing <|> liftM Just column)
   castling <- toList

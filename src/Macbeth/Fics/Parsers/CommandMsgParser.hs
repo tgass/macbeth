@@ -81,7 +81,7 @@ games :: Parser CommandMsg
 games = Games <$> (commandHead 43 *> parseGamesList)
 
 observe :: Parser CommandMsg
-observe = Observe <$> (commandHead 80 *> move)
+observe = Observe <$> (commandHead 80 *> takeTill (=='<') *>move)
 
 removingObservedGame :: Parser CommandMsg
 removingObservedGame = "Removing game " *> decimal *> " from observation list." *> pure RemovingObservedGame
@@ -93,7 +93,7 @@ noSuchGame :: Parser CommandMsg
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
 
 confirmGameMove :: Parser CommandMsg
-confirmGameMove = GameMove <$> (commandHead 1 *> move)
+confirmGameMove = GameMove <$> (commandHead 1 *> takeTill (=='<') *> move)
 
 gameMove :: Parser CommandMsg
 gameMove = GameMove <$> move
@@ -114,7 +114,8 @@ matchRequested = MatchRequested <$> (Challenge
   <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
 
 accept :: Parser CommandMsg
-accept = MatchAccepted <$> (commandHead 11 *> move)
+accept = MatchAccepted
+  <$> (commandHead 11 *> takeTill (== '<') *> move)
 
 declinedChallenge :: Parser CommandMsg
 declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure MatchDeclined

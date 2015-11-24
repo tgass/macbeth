@@ -42,7 +42,6 @@ createObservedGame h move chan = do
   let boardState = Board.initBoardState p_board move
   vBoardState <- newTVarIO boardState
   set p_board [ on paint := Board.draw vBoardState ]
-  windowOnMouse p_board True $ Board.onMouseEvent h vBoardState
 
   -- player panels
   (p_white, cw) <- createStatusPanel p_back White move
@@ -55,11 +54,12 @@ createObservedGame h move chan = do
 
   -- context menu
   ctxMenu <- menuPane []
-  menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState f p_back layoutBoardF ]
+  menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState p_back layoutBoardF ]
   when (relation move `elem` [MyMove, OponentsMove]) $ do
                  menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
                  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
                  void $ menuItem ctxMenu [ text := "Abort", on command := hPutStrLn h "4 abort"]
+                 windowOnMouse p_board True (Board.onMouseEvent h vBoardState)
 
 
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
@@ -78,15 +78,19 @@ createObservedGame h move chan = do
 
     GameMove move' -> when (gameId move' == gameId move) $ do
                                    state <- varGet vBoardState
-                                   varSet vBoardState $ updateBoardState state move'
-                                   repaint (Board._panel state)
                                    updateChessClock move' cc
                                    set status [text := ""]
                                    atomically $ modifyTVar vMoves $ addMove move'
                                    updateMoves
+                                   updateBoardState vBoardState move'
+                                   when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
+                                     handlePreMoves vBoardState h
+                                   adjustPosition vBoardState
+                                   repaint (Board._panel state)
+
 
     GameResult id reason result -> when (id == gameId move) $ do
-                              atomically $ modifyTVar vBoardState (\s -> s{Board.isInteractive = False})
+                              windowOnMouse p_board True (\ _ -> return ())
                               stopChessClock cc
                               set status [text := (show result ++ " " ++ reason)]
                               swapMVar vGameResult $ Just result
@@ -118,9 +122,20 @@ createObservedGame h move chan = do
                            Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
                            _ -> return ()
 
+handlePreMoves vBoardState h = do
+  preMoves' <- Board.preMoves `fmap` readTVarIO vBoardState
+  atomically $ modifyTVar vBoardState (\s -> s {
+    Board.isWaiting = False,
+    Board.preMoves = tail preMoves'})
+  hPutStrLn h $ "6 " ++ show (head preMoves' )
 
-turnBoard :: TVar Board.BoardState -> Frame () -> Panel () -> (PColor -> Layout) -> IO ()
-turnBoard vState f p layoutF = do
+
+adjustPosition vBoardState = atomically $ modifyTVar vBoardState (\s -> s {
+  Board._position = movePieces (Board.preMoves s) (Board._position s)})
+
+
+turnBoard :: TVar Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()
+turnBoard vState p layoutF = do
   atomically $ modifyTVar vState (\s -> s{Board.perspective = invert $ Board.perspective s})
   state <- readTVarIO vState
   set p [ layout := layoutF (Board.perspective state) ]
@@ -160,6 +175,8 @@ addMove m moves@(m':_)
 
 frameTitle move = "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move
 
-updateBoardState s m = s { Board._position = position m
-                         , Board.isInteractive = isNextMoveUser m
-                         , Board.lastMove = m}
+updateBoardState vBoardState move =
+  atomically $ modifyTVar vBoardState (\s -> s {
+    Board._position = position move
+  , Board.isWaiting = isNextMoveUser move
+  , Board.lastMove = move})
