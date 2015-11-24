@@ -102,7 +102,7 @@ playSeek :: Parser CommandMsg
 playSeek = do
   commandHead 158
   rs <- "\n" *> SP.removeSeeks <* "\n"
-  mv <- takeTill (=='<') *> (GameMove <$> move)
+  mv <- takeTill (=='<') *> (MatchAccepted <$> move)
   return $ Boxed [rs, mv]
 
 matchRequested :: Parser CommandMsg
@@ -129,7 +129,7 @@ seekMatchesAlreadyPosted = do
   commandHead 155
   option "" "You are unregistered - setting to unrated.\n"
   rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks <* "\n"
-  mv <- takeTill (=='<') *> (GameMove <$> move)
+  mv <- takeTill (=='<') *> (MatchAccepted <$> move)
   return $ Boxed [rs, mv]
 
 drawOffered :: Parser CommandMsg

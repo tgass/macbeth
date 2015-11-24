@@ -54,7 +54,7 @@ draw vState dc _ = do
   when (isHighlightMove $ lastMove state) $ highlightLastMove dc state
   mapM_ (highlightPreMove dc (perspective state)) (preMoves state)
   mapM_ (drawPiece dc (perspective state)) (_position state)
-  paintSelectedSquare dc (perspective state)  (selSquare state)
+  when (isGameUser $ lastMove state) $ paintSelectedSquare dc (perspective state) (selSquare state)
   drawDraggedPiece dc scale (draggedPiece state)
 
 
@@ -193,8 +193,7 @@ paintHighlight dc perspective color (s1, s2) = do
   set dc [penColor := color ]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
     dcSetBrush dc brushBg
-    paintSquare dc perspective s1
-    paintSquare dc perspective s2
+    mapM_ (paintSquare dc perspective) [s1, s2]
   withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
     drawArrow dc s1 s2 perspective

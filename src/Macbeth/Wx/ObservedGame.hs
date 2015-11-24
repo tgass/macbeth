@@ -9,7 +9,6 @@ import Macbeth.Api.Move
 import Macbeth.Utils.PGN
 import Macbeth.Wx.Utils
 import Macbeth.Wx.Clock
-import Macbeth.Wx.GameMoves
 import qualified Macbeth.Utils.Board as Board
 
 import Control.Concurrent
@@ -31,11 +30,9 @@ createObservedGame h move chan = do
   vMoves <- newTVarIO [move | isJust $ movePretty move]
   vGameResult <- newMVar Nothing
 
-  f <- frame [ text := frameTitle move ]
-  sw <- splitterWindow f []
-  (p_moves, updateMoves) <- wxGameMoves sw vMoves
+  f <- frameFixed [ text := frameTitle move ]
 
-  p_back <- panel sw []
+  p_back <- panel f []
 
   -- board
   p_board <- panel p_back []
@@ -67,11 +64,11 @@ createObservedGame h move chan = do
 
   -- status line
   status <- statusField []
-  -- layout
 
-  set f [ layout := (minsize $ sz 500 400) $  vsplit sw 0 0 (container p_back $ layoutBoardF (Board.perspective boardState))
-                                                            (margin 30 $ widget p_moves)
-        , statusBar := [status]]
+
+  set f [ statusBar := [status]
+        , layout := container p_back $ layoutBoardF (Board.perspective boardState)
+        ]
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
@@ -81,7 +78,6 @@ createObservedGame h move chan = do
                                    updateChessClock move' cc
                                    set status [text := ""]
                                    atomically $ modifyTVar vMoves $ addMove move'
-                                   updateMoves
                                    updateBoardState vBoardState move'
                                    adjustPosition vBoardState move'
                                    when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
@@ -154,9 +150,9 @@ createStatusPanel p color move = do
   return (p_status, cl)
 
 layoutBoard :: Panel() -> Panel() -> Panel() -> PColor -> Layout
-layoutBoard board white black color = column 0 [ widget (if color == White then black else white)
-                                               , minsize (Size 320 320) $ widget board
-                                               , widget (if color == White then white else black)]
+layoutBoard board white black color = column 0 [ hfill $ widget (if color == White then black else white)
+                                               , stretch $ minsize (Size 320 320) $ shaped $ widget board
+                                               , hfill $ widget (if color == White then white else black)]
 
 
 unsetKeyHandler :: Panel () -> IO ()
