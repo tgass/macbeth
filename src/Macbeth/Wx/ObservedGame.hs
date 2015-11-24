@@ -83,9 +83,9 @@ createObservedGame h move chan = do
                                    atomically $ modifyTVar vMoves $ addMove move'
                                    updateMoves
                                    updateBoardState vBoardState move'
+                                   adjustPosition vBoardState move'
                                    when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
                                      handlePreMoves vBoardState h
-                                   adjustPosition vBoardState
                                    repaint (Board._panel state)
 
 
@@ -131,7 +131,7 @@ handlePreMoves vBoardState h = do
 
 
 adjustPosition vBoardState move = atomically $ modifyTVar vBoardState (\s -> s {
-  Board._position = movePieces (Board.preMoves s) (Board._position s)})
+  Board._position = movePieces (Board.preMoves s) (position move)})
 
 
 turnBoard :: TVar Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()
