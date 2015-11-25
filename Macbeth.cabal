@@ -24,7 +24,7 @@ library
                      Macbeth.Fics.FicsConnection
                      Macbeth.Fics.Parsers.CommandMsgParser,
                      Macbeth.Fics.Parsers.GamesParser,
-                     Macbeth.Fics.Parsers.MoveParser2,
+                     Macbeth.Fics.Parsers.MoveParser,
                      Macbeth.Fics.Parsers.PositionParser,
                      Macbeth.Fics.Parsers.RatingParser,
                      Macbeth.Fics.Parsers.SeekMsgParsers,

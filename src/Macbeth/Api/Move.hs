@@ -35,11 +35,15 @@ data Move = Move {
   , nameW :: String
   , nameB :: String
   , relation :: Relation
+  , initialTime :: Int
+  , incPerMove :: Int
+  , whiteRelStrength :: Int
+  , blackRelStrength :: Int
+  , remainingTimeW :: Int
+  , remainingTimeB :: Int
   , moveNumber :: Int
   , moveVerbose :: Maybe MoveDetailed
   , timeTaken :: String
-  , remainingTimeW :: Int
-  , remainingTimeB :: Int
   , movePretty :: Maybe String
   } deriving (Eq, Show)
 

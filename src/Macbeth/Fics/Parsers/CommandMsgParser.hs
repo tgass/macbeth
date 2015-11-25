@@ -9,7 +9,7 @@ import Macbeth.Api.Challenge
 import Macbeth.Api.CommandMsg
 import Macbeth.Api.Game
 import Macbeth.Fics.Parsers.GamesParser
-import Macbeth.Fics.Parsers.MoveParser2
+import Macbeth.Fics.Parsers.MoveParser
 import Macbeth.Fics.Parsers.RatingParser
 import qualified Macbeth.Fics.Parsers.SeekMsgParsers as SP
 
