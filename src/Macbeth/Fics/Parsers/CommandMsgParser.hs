@@ -134,13 +134,23 @@ seekInfoBlock :: Parser CommandMsg
 seekInfoBlock = Boxed
   <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ SP.clearSeek, SP.newSeek <* takeTill (== '\n')]) "\n")
 
-drawRequest :: Parser CommandMsg
-drawRequest = manyTill anyChar space *> "offers you a draw." *> pure DrawRequest
-
 gameCreation :: Parser CommandMsg
 gameCreation = GameCreation
   <$> (skipSpace *> "{Game" *> space *> decimal)
   <*> (takeTill (== ')') *> ") Creating " *> manyTill anyChar "}")
+
+
+drawRequest :: Parser CommandMsg
+drawRequest = manyTill anyChar space *> "offers you a draw." *> pure DrawRequest
+
+abortRequest :: Parser CommandMsg
+abortRequest = AbortRequest <$> (manyTill anyChar " " <* "would like to abort the game;")
+
+takebackRequest :: Parser CommandMsg
+takebackRequest = TakebackRequest
+  <$> manyTill anyChar " " <* "would like to take back "
+  <*> decimal <* " half move(s)."
+
 
 gameResult :: Parser CommandMsg
 gameResult = commandHead 103 *> gameResult'
@@ -194,14 +204,6 @@ identicalOffer = commandHead 73 *> "You are already offering an identical match 
 matchUserNotLoggedIn :: Parser CommandMsg
 matchUserNotLoggedIn = MatchUserNotLoggedIn
   <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
-
-abortRequest :: Parser CommandMsg
-abortRequest = AbortRequest <$> (manyTill anyChar " " <* "would like to abort the game;")
-
-takebackRequest :: Parser CommandMsg
-takebackRequest = TakebackRequest
-  <$> manyTill anyChar " " <* "would like to take back "
-  <*> decimal <* " half move(s)."
 
 login :: Parser CommandMsg
 login = "login: " *> pure Login

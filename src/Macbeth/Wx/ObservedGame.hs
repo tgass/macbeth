@@ -61,13 +61,25 @@ createObservedGame h move chan = do
      menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
      menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
      windowOnMouse p_board True (Board.onMouseEvent h vBoardState)
-     windowOnKeyChar p_board $ onKeysDefault vBoardState p_back
-
-  set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
-  set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
+     windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
 
   -- status line
   status <- statusField []
+
+  -- key handler
+  let acceptDeclineKeyHandler keyboard = case keyKey keyboard of
+       KeyChar 'y' -> do
+         hPutStrLn h "5 accept"
+         set status [ text := ""]
+         windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
+       KeyChar 'n' -> do
+         hPutStrLn h "5 decline"
+         set status [ text := ""]
+         windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
+       _ -> return ()
+
+  set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
+  set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
   set f [ statusBar := [status]
         , layout := container p_back $ layoutBoardF (Board.perspective boardState)]
@@ -96,18 +108,15 @@ createObservedGame h move chan = do
 
     DrawRequest -> do
       set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
-      keyCommand vBoardState h 'y' "accept" p_back status
-      keyCommand vBoardState h 'n' "decline" p_back status
+      windowOnKeyChar p_back acceptDeclineKeyHandler
 
     AbortRequest user -> do
       set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
-      keyCommand vBoardState h 'y' "abort" p_back status
-      keyCommand vBoardState h 'n' "decline" p_back status
+      windowOnKeyChar p_back acceptDeclineKeyHandler
 
     TakebackRequest user numTakeback -> do
       set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
-      keyCommand vBoardState h 'y' "accept" p_back status
-      keyCommand vBoardState h 'n' "decline" p_back status
+      windowOnKeyChar p_back acceptDeclineKeyHandler
 
     _ -> return ()
 
@@ -123,21 +132,13 @@ createObservedGame h move chan = do
       _ -> return ()
 
 
-keyCommand :: TVar Board.BoardState -> Handle -> Char -> String -> Panel () -> StatusField -> IO ()
-keyCommand vBoardState h c command panel status = set panel [on (charKey c) := do
-  print ("5 " ++ command)
-  hPutStrLn h ("5 " ++ command)
-  set status [ text := ""]
-  windowOnKeyChar panel $ onKeysDefault vBoardState panel]
-
-
-onKeysDefault :: TVar Board.BoardState -> Panel () -> EventKey -> IO ()
-onKeysDefault vBoardState panel keyboard = case keyKey keyboard of
-  KeyChar 'x' -> print "x" >> cancelLastPreMove vBoardState >> repaint panel
+cancelLastPreMove :: TVar Board.BoardState -> Panel () -> EventKey -> IO ()
+cancelLastPreMove vBoardState panel keyboard = case keyKey keyboard of
+  KeyChar 'x' -> cancelLastPreMove' vBoardState >> repaint panel
   _ -> return ()
   where
-    cancelLastPreMove :: TVar Board.BoardState -> IO ()
-    cancelLastPreMove vBoardState =
+    cancelLastPreMove' :: TVar Board.BoardState -> IO ()
+    cancelLastPreMove' vBoardState =
       atomically $ modifyTVar vBoardState (\s ->
         let preMoves' = fromMaybe [] $ initMay (Board.preMoves s) in s {
         Board.preMoves = preMoves'
