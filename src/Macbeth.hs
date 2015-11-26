@@ -21,7 +21,6 @@ import Graphics.UI.WX
 -- TODO: Seek auto match ?! Bug?
 
 -- FEATURES
--- TODO: takeback
 -- command moves to get first moves in observed game?
 
 -- MINOR

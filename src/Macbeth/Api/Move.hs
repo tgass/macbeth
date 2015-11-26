@@ -10,6 +10,7 @@ module Macbeth.Api.Move (
   isGameUser,
   isNextMoveUser,
   isNewGameUser,
+  isOponentMove,
   wasOponentMove,
   playerColor,
   nameOponent,
@@ -77,6 +78,9 @@ isNextMoveUser m = relation m == MyMove
 
 isNewGameUser :: Move -> Bool
 isNewGameUser m = isGameUser m && isNothing (movePretty m)
+
+isOponentMove :: Move -> Bool
+isOponentMove m = relation m == OponentsMove
 
 wasOponentMove :: Move -> Bool
 wasOponentMove m = colorUser m == turn m

@@ -8,6 +8,7 @@ import Macbeth.Api.CommandMsg hiding (gameId)
 import Macbeth.Api.Move
 import Macbeth.Fics.Parsers.CommandMsgParser
 
+import Control.Applicative
 import Control.Concurrent.Chan (Chan, newChan, writeChan)
 import Control.Monad
 import Control.Monad.State
@@ -22,7 +23,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.List as CL
 
-data HelperState = HelperState { gameId' :: Maybe Int }
+data HelperState = HelperState { gameId' :: Maybe Int, isPlaying :: Bool }
 
 ficsConnection :: IO (Handle, Chan CommandMsg)
 ficsConnection = runResourceT $ do
@@ -34,7 +35,7 @@ ficsConnection = runResourceT $ do
 
 
 chain :: Handle -> Chan CommandMsg -> IO ()
-chain h chan = flip evalStateT (HelperState Nothing) $ transPipe lift
+chain h chan = flip evalStateT (HelperState Nothing False) $ transPipe lift
   (CB.sourceHandle h) $$
   toCharC =$
   blockC (False, BS.empty) =$
@@ -56,16 +57,19 @@ extractC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 extractC = awaitForever $ \cmd -> do
   state <- get
   case cmd of
-    m@(GameMove move) -> CL.sourceList $ foo (gameId' state) m move
+    GameCreation id _ -> put (state {gameId' = Just id}) >> CL.sourceList []
+    GameMove move
+      | isCheckmate move && isOponentMove move -> CL.sourceList $ cmd : [toGameResult move]
+      | isNewGameUser move && fromMaybe False ((== gameId move) <$> gameId' state) -> do
+          put (state {gameId' = Nothing }); CL.sourceList [MatchAccepted move]
+      | otherwise -> CL.sourceList [cmd]
     Boxed cmds -> CL.sourceList cmds
-    GameCreation id _ -> put (HelperState $ Just id) >> CL.sourceList []
+    MatchAccepted move -> if isPlaying state
+      then CL.sourceList [GameMove move]
+      else do put (state {isPlaying = True}); CL.sourceList [cmd]
+    g@GameResult {} -> do put (state {isPlaying = False}); CL.sourceList [g]
     _ -> yield cmd
 
-foo :: Maybe Int -> CommandMsg -> Move -> [CommandMsg]
-foo mId cmd move
-  | isCheckmate move && relation move == OponentsMove = cmd : [toGameResult move]
-  | isNewGameUser move && isJust mId = if fromJust mId == gameId move then [MatchAccepted move] else [cmd]
-  | otherwise = [cmd]
 
 parseC :: (Monad m) => Conduit BS.ByteString m CommandMsg
 parseC = awaitForever $ \str -> case parseCommandMsg str of
