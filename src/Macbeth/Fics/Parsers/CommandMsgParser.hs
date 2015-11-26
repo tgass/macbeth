@@ -36,18 +36,23 @@ parseCommandMsg = parseOnly parser where
 
                   , matchRequested
                   , declinedChallenge
-                  , drawOffered
-                  , drawDeclined
 
                   , games
                   , removingObservedGame
                   , removingObservedGame2
                   , noSuchGame
                   , gameCreation
+
+                  , abortRequest
+                  , takebackRequest
+                  , drawRequest
+
                   , gameResult
                   , gameResult'
                   , gameResultMutualDraw
-                  , gameResultAcceptDraw
+                  , gameResultAcceptDrawOrAbort
+                  , gameResultAbortGame
+                  , gameResultAbortGame2
 
                   , seekInfoBlock
                   , seekMatchesAlreadyPosted
@@ -58,13 +63,6 @@ parseCommandMsg = parseOnly parser where
                   , offerDeclined
                   , matchUserNotLoggedIn
                   , identicalOffer
-
-                  , abortRequested
-                  , abortRequest
-                  , abortDeclined
-                  , abortAccepted
-                  , abortedGame
-                  , abortedGame2
 
                   , login
                   , loginTimeout
@@ -136,11 +134,8 @@ seekInfoBlock :: Parser CommandMsg
 seekInfoBlock = Boxed
   <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ SP.clearSeek, SP.newSeek <* takeTill (== '\n')]) "\n")
 
-drawOffered :: Parser CommandMsg
-drawOffered = manyTill anyChar space *> "offers you a draw." *> pure DrawOffered
-
-drawDeclined :: Parser CommandMsg
-drawDeclined = manyTill anyChar space *> "declines the draw request." *> pure DrawDeclined
+drawRequest :: Parser CommandMsg
+drawRequest = manyTill anyChar space *> "offers you a draw." *> pure DrawRequest
 
 gameCreation :: Parser CommandMsg
 gameCreation = GameCreation
@@ -153,14 +148,24 @@ gameResult = commandHead 103 *> gameResult'
 gameResultMutualDraw :: Parser CommandMsg
 gameResultMutualDraw = commandHead 34 *> gameResult'
 
-gameResultAcceptDraw :: Parser CommandMsg
-gameResultAcceptDraw = commandHead 11 *> takeTill (== '{') *> gameResult'
+gameResultAcceptDrawOrAbort :: Parser CommandMsg
+gameResultAcceptDrawOrAbort = commandHead 11 *> takeTill (== '{') *> (gameResult' <|> gameResultAbortGame)
 
 gameResult' :: Parser CommandMsg
 gameResult' = GameResult
   <$> (skipSpace *> "{Game" *> space *> decimal)
   <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
+
+gameResultAbortGame :: Parser CommandMsg
+gameResultAbortGame = GameResult
+  <$> ("{Game " *> decimal <* manyTill anyChar ") ")
+  <*> manyTill anyChar "} *"
+  <*> pure Aborted
+
+gameResultAbortGame2 :: Parser CommandMsg
+gameResultAbortGame2 = commandHead 10 *> choice ["\n", "The game has been aborted on move one.\n\n"] *> gameResultAbortGame
+
 
 finger :: Parser CommandMsg
 finger = Finger
@@ -191,28 +196,12 @@ matchUserNotLoggedIn = MatchUserNotLoggedIn
   <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
 
 abortRequest :: Parser CommandMsg
-abortRequest = commandHead 10 *> "Abort request sent." *> pure AbortRequest
+abortRequest = AbortRequest <$> (manyTill anyChar " " <* "would like to abort the game;")
 
-abortRequested :: Parser CommandMsg
-abortRequested = AbortRequested
-  <$> (manyTill anyChar " " <* "would like to abort the game;")
-
-abortDeclined :: Parser CommandMsg
-abortDeclined = ((commandHead 33 *> "You decline the abort request from") <|>
-  (manyTill anyChar " " *> "declines the abort request.")) *> pure AbortDeclined
-
-abortAccepted :: Parser CommandMsg
-abortAccepted = ((commandHead 11 *> "You accept the abort request from") <|>
-  (manyTill anyChar " " *> "accepts the abort request.")) *> pure AbortAccepted
-
-abortedGame :: Parser CommandMsg
-abortedGame = GameResult
-  <$> ("{Game " *> decimal <* manyTill anyChar ") ")
-  <*> manyTill anyChar "} *"
-  <*> pure Aborted
-
-abortedGame2 :: Parser CommandMsg
-abortedGame2 = commandHead 10 *> choice ["\n", "The game has been aborted on move one.\n\n"] *> abortedGame
+takebackRequest :: Parser CommandMsg
+takebackRequest = TakebackRequest
+  <$> manyTill anyChar " " <* "would like to take back "
+  <*> decimal <* " half move(s)."
 
 login :: Parser CommandMsg
 login = "login: " *> pure Login

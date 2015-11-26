@@ -19,8 +19,7 @@ data CommandMsg =   GameMove Move
                   | MatchAccepted Move
                   | MatchDeclined
                   | MatchUserNotLoggedIn {user :: String}
-                  | DrawOffered
-                  | DrawDeclined
+
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
                   | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }
@@ -28,10 +27,9 @@ data CommandMsg =   GameMove Move
                   | OfferDeclined
                   | IdenticalOffer
 
-                  | AbortRequest
-                  | AbortRequested String
-                  | AbortDeclined
-                  | AbortAccepted
+                  | DrawRequest
+                  | AbortRequest String
+                  | TakebackRequest String Int
 
                   | NewSeek Seek
                   | RemoveSeeks [Int]

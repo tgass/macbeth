@@ -54,12 +54,14 @@ createObservedGame h move chan = do
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState p_back layoutBoardF ]
   when (relation move `elem` [MyMove, OponentsMove]) $ do
-                 menuLine ctxMenu
-                 menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
-                 menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
-                 menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
-                 windowOnMouse p_board True (Board.onMouseEvent h vBoardState)
-                 windowOnKeyChar p_board $ onKeysDefault vBoardState p_back
+     menuLine ctxMenu
+     menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
+     menuItem ctxMenu [ text := "Request takeback 2", on command := hPutStrLn h "4 takeback 2"]
+     menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
+     menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+     menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
+     windowOnMouse p_board True (Board.onMouseEvent h vBoardState)
+     windowOnKeyChar p_board $ onKeysDefault vBoardState p_back
 
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
@@ -68,52 +70,57 @@ createObservedGame h move chan = do
   status <- statusField []
 
   set f [ statusBar := [status]
-        , layout := container p_back $ layoutBoardF (Board.perspective boardState)
-        ]
+        , layout := container p_back $ layoutBoardF (Board.perspective boardState)]
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
     GameMove move' -> when (gameId move' == gameId move) $ do
-                                   state <- varGet vBoardState
-                                   updateChessClock move' cc
-                                   set status [text := ""]
-                                   atomically $ modifyTVar vMoves $ addMove move'
-                                   updateBoardState vBoardState move'
-                                   when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
-                                     handlePreMoves vBoardState h
-                                   repaint (Board._panel state)
+      state <- varGet vBoardState
+      updateChessClock move' cc
+      set status [text := ""]
+      atomically $ modifyTVar vMoves $ addMove move'
+      updateBoardState vBoardState move'
+      when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
+        handlePreMoves vBoardState h
+      repaint (Board._panel state)
 
     GameResult id reason result -> when (id == gameId move) $ do
-                              windowOnMouse p_board True (\_ -> return ())
-                              windowOnKeyChar p_board (\_ -> return ())
-                              stopChessClock cc
-                              set status [text := (show result ++ " " ++ reason)]
-                              swapMVar vGameResult $ Just result
-                              hPutStrLn h "4 iset seekinfo 1"
-                              killThread threadId
+      windowOnMouse p_board True (\_ -> return ())
+      windowOnKeyChar p_board (\_ -> return ())
+      stopChessClock cc
+      set status [text := (show result ++ " " ++ reason)]
+      swapMVar vGameResult $ Just result
+      hPutStrLn h "4 iset seekinfo 1"
+      killThread threadId
 
-    DrawOffered -> when (isGameUser move) $ do
-                     set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
-                     keyCommand vBoardState h 'y' "accept" p_back status
-                     keyCommand vBoardState h 'n' "decline" p_back status
+    DrawRequest -> do
+      set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
+      keyCommand vBoardState h 'y' "accept" p_back status
+      keyCommand vBoardState h 'n' "decline" p_back status
 
-    AbortRequested user -> when (isGameUser move) $ do
-                     set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
-                     keyCommand vBoardState h 'y' "abort" p_back status
-                     keyCommand vBoardState h 'n' "decline" p_back status
+    AbortRequest user -> do
+      set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
+      keyCommand vBoardState h 'y' "abort" p_back status
+      keyCommand vBoardState h 'n' "decline" p_back status
+
+    TakebackRequest user numTakeback -> do
+      set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
+      keyCommand vBoardState h 'y' "accept" p_back status
+      keyCommand vBoardState h 'n' "decline" p_back status
 
     _ -> return ()
 
-  windowOnDestroy f $ do catch (killThread threadId) (\e -> print $ show (e :: IOException))
-                         gameResult <- readMVar vGameResult
-                         moves <- readTVarIO vMoves
-                         saveAsPGN (reverse moves) gameResult
-                         unless (isJust gameResult) $ case relation move of
-                           MyMove -> hPutStrLn h "5 resign"
-                           OponentsMove -> hPutStrLn h "5 resign"
-                           Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
-                           _ -> return ()
+  windowOnDestroy f $ do
+    catch (killThread threadId) (\e -> print $ show (e :: IOException))
+    gameResult <- readMVar vGameResult
+    moves <- readTVarIO vMoves
+    saveAsPGN (reverse moves) gameResult
+    unless (isJust gameResult) $ case relation move of
+      MyMove -> hPutStrLn h "5 resign"
+      OponentsMove -> hPutStrLn h "5 resign"
+      Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
+      _ -> return ()
 
 
 keyCommand :: TVar Board.BoardState -> Handle -> Char -> String -> Panel () -> StatusField -> IO ()

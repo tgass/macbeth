@@ -34,8 +34,7 @@ succeeds result = TestInstance
 
 commandMessageParserTest :: [(CommandMsg, String)]
 commandMessageParserTest = [
-        (DrawDeclined, "GuestXDXP declines the draw request.")
-      , (DrawOffered, "GuestDWXY offers you a draw.")
+        (DrawRequest, "GuestDWXY offers you a draw.")
       , (GameResult 368 "CalicoCat resigns" WhiteWins, "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0")
       , (GameResult 406 "GuestQLHT resigns" BlackWins, "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done.")
       , (GameResult 181 "Danimateit forfeits on time" BlackWins, "{Game 181 (Danimateit vs. WhatKnight) Danimateit forfeits on time} 0-1")
@@ -58,12 +57,9 @@ commandMessageParserTest = [
       , (PendingOffers [PendingOffer 45 "You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0"] [], "\NAK5\SYN87\SYNOffers to other players:\n\n  45: You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0.\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\nThere are no offers pending from other players.\n\ETB")
       , (PendingOffers [] [PendingOffer 43 "GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0"], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nOffers from other players:\n\n  43: GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0.\n\nIf you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".\n\ETB")
       , (IdenticalOffer, "\NAK4\SYN73\SYNYou are already offering an identical match to GuestSPLL.\n\ETB")
-      , (AbortRequest, "\NAK4\SYN10\SYNAbort request sent.\n\ETB")
-      , (AbortRequested "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
-      , (AbortDeclined, "\NAK5\SYN33\SYNYou decline the abort request from GuestSPLL.\n\ETB")
-      , (AbortDeclined, "GuestTKHJ declines the abort request.")
-      , (AbortAccepted, "\NAK5\SYN11\SYNYou accept the abort request from GuestSPLL.\n\n{Game 82 (GuestTKHJ vs. GuestSPLL) Game aborted by mutual agreement} *\n\ETB")
-      , (AbortAccepted, "GuestTKHJ accepts the abort request.")
+      , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
+      , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
+      , (GameResult 82 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN11\SYNYou accept the abort request from GuestSPLL.\n\n{Game 82 (GuestTKHJ vs. GuestSPLL) Game aborted by mutual agreement} *\n\ETB")
       , (GameResult 112 "Game aborted on move 1" Aborted, "\NAK4\SYN10\SYNThe game has been aborted on move one.\n\n{Game 112 (GuestSPLL vs. GuestTKHJ) Game aborted on move 1} *\n\ETB")
       , (GameResult 383 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN10\SYN\n{Game 383 (GuestRVNY vs. GuestZTNM) Game aborted by mutual agreement} *\n\ETB")
       , (GameResult 112 "Game aborted on move 1" Aborted, "{Game 112 (GuestSPLL vs. GuestTKHJ) Game aborted on move 1} *")
