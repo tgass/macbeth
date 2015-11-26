@@ -12,7 +12,7 @@ library
                    transformers, resourcet, bytestring, split,
                    attoparsec, filepath, containers, split,
                    mtl, stm, sodium, directory, filepath,
-                   time, MissingH, old-locale
+                   time, MissingH, old-locale, safe
     hs-source-dirs: src
     exposed-modules: Macbeth.Api.Api,
                      Macbeth.Api.Challenge,

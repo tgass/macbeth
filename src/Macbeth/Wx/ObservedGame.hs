@@ -19,6 +19,7 @@ import Control.Monad
 import Data.Maybe
 import Graphics.UI.WX hiding (when, position)
 import Graphics.UI.WXCore hiding (when, Timer)
+import Safe
 import System.IO
 
 
@@ -53,18 +54,18 @@ createObservedGame h move chan = do
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState p_back layoutBoardF ]
   when (relation move `elem` [MyMove, OponentsMove]) $ do
-                 menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+                 menuLine ctxMenu
                  menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
-                 void $ menuItem ctxMenu [ text := "Abort", on command := hPutStrLn h "4 abort"]
+                 menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+                 menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
                  windowOnMouse p_board True (Board.onMouseEvent h vBoardState)
-
+                 windowOnKeyChar p_board $ onKeysDefault vBoardState p_back
 
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
   -- status line
   status <- statusField []
-
 
   set f [ statusBar := [status]
         , layout := container p_back $ layoutBoardF (Board.perspective boardState)
@@ -79,32 +80,28 @@ createObservedGame h move chan = do
                                    set status [text := ""]
                                    atomically $ modifyTVar vMoves $ addMove move'
                                    updateBoardState vBoardState move'
-                                   adjustPosition vBoardState move'
                                    when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
                                      handlePreMoves vBoardState h
                                    repaint (Board._panel state)
 
-
     GameResult id reason result -> when (id == gameId move) $ do
-                              windowOnMouse p_board True (\ _ -> return ())
+                              windowOnMouse p_board True (\_ -> return ())
+                              windowOnKeyChar p_board (\_ -> return ())
                               stopChessClock cc
                               set status [text := (show result ++ " " ++ reason)]
                               swapMVar vGameResult $ Just result
                               hPutStrLn h "4 iset seekinfo 1"
                               killThread threadId
 
-    DrawOffered -> when (isGameUser move) $
-                     set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"] >>
-                     set p_back [on (charKey 'y') := hPutStrLn h "5 accept" >> unsetKeyHandler p_back] >>
-                     set p_back [on (charKey 'n') := hPutStrLn h "5 decline" >> unsetKeyHandler p_back]
+    DrawOffered -> when (isGameUser move) $ do
+                     set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
+                     keyCommand vBoardState h 'y' "accept" p_back status
+                     keyCommand vBoardState h 'n' "decline" p_back status
 
-    DrawDeclined -> when (isGameUser move) $
-                      set status [text := nameOponent move ++ " declined your draw offer."]
-
-    AbortRequested user -> when (isGameUser move) $
-                     set status [text := user ++ " would like to abort the game. Accept? (y/n)"] >>
-                     set p_back [on (charKey 'y') := hPutStrLn h "5 abort" >> unsetKeyHandler p_back] >>
-                     set p_back [on (charKey 'n') := hPutStrLn h "5 decline" >> unsetKeyHandler p_back]
+    AbortRequested user -> when (isGameUser move) $ do
+                     set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
+                     keyCommand vBoardState h 'y' "abort" p_back status
+                     keyCommand vBoardState h 'n' "decline" p_back status
 
     _ -> return ()
 
@@ -118,6 +115,29 @@ createObservedGame h move chan = do
                            Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
                            _ -> return ()
 
+
+keyCommand :: TVar Board.BoardState -> Handle -> Char -> String -> Panel () -> StatusField -> IO ()
+keyCommand vBoardState h c command panel status = set panel [on (charKey c) := do
+  print ("5 " ++ command)
+  hPutStrLn h ("5 " ++ command)
+  set status [ text := ""]
+  windowOnKeyChar panel $ onKeysDefault vBoardState panel]
+
+
+onKeysDefault :: TVar Board.BoardState -> Panel () -> EventKey -> IO ()
+onKeysDefault vBoardState panel keyboard = case keyKey keyboard of
+  KeyChar 'x' -> print "x" >> cancelLastPreMove vBoardState >> repaint panel
+  _ -> return ()
+  where
+    cancelLastPreMove :: TVar Board.BoardState -> IO ()
+    cancelLastPreMove vBoardState =
+      atomically $ modifyTVar vBoardState (\s ->
+        let preMoves' = fromMaybe [] $ initMay (Board.preMoves s) in s {
+        Board.preMoves = preMoves'
+      , Board._position = movePieces preMoves' (position $ Board.lastMove s)})
+
+
+handlePreMoves :: TVar Board.BoardState -> Handle -> IO ()
 handlePreMoves vBoardState h = do
   preMoves' <- Board.preMoves `fmap` readTVarIO vBoardState
   atomically $ modifyTVar vBoardState (\s -> s {
@@ -126,15 +146,12 @@ handlePreMoves vBoardState h = do
   hPutStrLn h $ "6 " ++ show (head preMoves' )
 
 
-adjustPosition vBoardState move = atomically $ modifyTVar vBoardState (\s -> s {
-  Board._position = movePieces (Board.preMoves s) (position move)})
-
-
 turnBoard :: TVar Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()
 turnBoard vState p layoutF = do
   atomically $ modifyTVar vState (\s -> s{Board.perspective = invert $ Board.perspective s})
   state <- readTVarIO vState
   set p [ layout := layoutF (Board.perspective state) ]
+  repaint p
 
 
 createStatusPanel :: Panel () -> PColor -> Move -> IO (Panel (), Clock)
@@ -149,15 +166,11 @@ createStatusPanel p color move = do
                                   , widget st_playerName] ]
   return (p_status, cl)
 
+
 layoutBoard :: Panel() -> Panel() -> Panel() -> PColor -> Layout
 layoutBoard board white black color = column 0 [ hfill $ widget (if color == White then black else white)
                                                , stretch $ minsize (Size 320 320) $ shaped $ widget board
                                                , hfill $ widget (if color == White then white else black)]
-
-
-unsetKeyHandler :: Panel () -> IO ()
-unsetKeyHandler p = set p [on (charKey 'y') := return ()] >>
-                    set p [on (charKey 'n') := return ()]
 
 
 {- Add new moves in the front, so I can check for duplicates. -}
@@ -174,4 +187,5 @@ frameTitle move = "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs "
 updateBoardState vBoardState move =
   atomically $ modifyTVar vBoardState (\s -> s {
     Board.isWaiting = isNextMoveUser move
-  , Board.lastMove = move})
+  , Board.lastMove = move
+  , Board._position = movePieces (Board.preMoves s) (position move)})

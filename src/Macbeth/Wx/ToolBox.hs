@@ -49,7 +49,6 @@ wxToolBox h chan = do
 
     status <- statusField []
 
-
     nb <- notebook f []
 
     -- Sought list

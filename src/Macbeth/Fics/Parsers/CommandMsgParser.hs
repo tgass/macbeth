@@ -212,7 +212,7 @@ abortedGame = GameResult
   <*> pure Aborted
 
 abortedGame2 :: Parser CommandMsg
-abortedGame2 = commandHead 10 *> "The game has been aborted on move one.\n\n" *> abortedGame
+abortedGame2 = commandHead 10 *> choice ["\n", "The game has been aborted on move one.\n\n"] *> abortedGame
 
 login :: Parser CommandMsg
 login = "login: " *> pure Login

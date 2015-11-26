@@ -6,22 +6,22 @@ import Macbeth.Wx.ToolBox
 import Graphics.UI.WX
 
 -- TODO: application icon
--- command moves to get first moves in observed game?
--- newtype for perspective == view
--- declinedChallenge / offerDeclined
--- ESC deletes preMoves
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes
+-- newtype for perspective == view
 -- TODO: user frameCreateTopFrame for background / hibernation /network conn evnt
 -- TODO: provide more logging choice
 -- TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
+-- declinedChallenge / offerDeclined
+
 
 -- BUGS
 -- TODO: Seek auto match ?! Bug?
 
 -- FEATURES
 -- TODO: takeback
+-- command moves to get first moves in observed game?
 
 -- MINOR
 
