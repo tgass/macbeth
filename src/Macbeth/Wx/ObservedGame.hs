@@ -44,11 +44,15 @@ createObservedGame h move chan = do
   updateChessClock move cc
 
   -- layout helper
-  let layoutBoardF = layoutBoard p_board p_white p_black
+  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState
+  updateBoardLayoutIO
 
   -- context menu
   ctxMenu <- menuPane []
-  menuItem ctxMenu [ text := "Turn board", on command := turnBoard vBoardState p_back layoutBoardF ]
+  menuItem ctxMenu [ text := "Turn board", on command := Board.invertPerspective vBoardState >> updateBoardLayoutIO]
+  menuItem ctxMenu [ text := "Zoom 100%" , on command := Board.zoomBoard vBoardState Board.Small >> updateBoardLayoutIO ]
+  menuItem ctxMenu [ text := "Zoom 150%" , on command := Board.zoomBoard vBoardState Board.Medium >> updateBoardLayoutIO ]
+  menuItem ctxMenu [ text := "Zoom 200%" , on command := Board.zoomBoard vBoardState Board.Large >> updateBoardLayoutIO ]
   when (relation move `elem` [MyMove, OponentsMove]) $ do
      menuLine ctxMenu
      menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
@@ -77,8 +81,7 @@ createObservedGame h move chan = do
   set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
-  set f [ statusBar := [status]
-        , layout := container p_back $ layoutBoardF (Board.perspective boardState)]
+  set f [ statusBar := [status], layout := widget p_back]
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
@@ -148,14 +151,6 @@ handlePreMoves vBoardState h = do
   hPutStrLn h $ "6 " ++ show (head preMoves' )
 
 
-turnBoard :: TVar Board.BoardState -> Panel () -> (PColor -> Layout) -> IO ()
-turnBoard vState p layoutF = do
-  atomically $ modifyTVar vState (\s -> s{Board.perspective = invert $ Board.perspective s})
-  state <- readTVarIO vState
-  set p [ layout := layoutF (Board.perspective state) ]
-  repaint p
-
-
 createStatusPanel :: Panel () -> PColor -> Move -> IO (Panel (), Clock)
 createStatusPanel p color move = do
   p_status <- panel p []
@@ -169,11 +164,16 @@ createStatusPanel p color move = do
   return (p_status, cl)
 
 
-layoutBoard :: Panel() -> Panel() -> Panel() -> PColor -> Layout
-layoutBoard board white black color = column 0 [ hfill $ widget (if color == White then black else white)
-                                               , stretch $ minsize (Size 320 320) $ shaped $ widget board
-                                               , hfill $ widget (if color == White then white else black)]
-
+updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar Board.BoardState -> IO ()
+updateBoardLayout pback board white black vBoardState = do
+  state <- readTVarIO vBoardState
+  set pback [ layout := column 0 [ hfill $ widget (if Board.perspective state == White then black else white)
+                                 , stretch $ minsize (convert $ Board.zoom state)  $ shaped $ widget board
+                                 , hfill $ widget (if Board.perspective state == White then white else black)]]
+  repaint pback
+  where convert Board.Small = Size 320 320
+        convert Board.Medium = Size 480 480
+        convert Board.Large = Size 640 640
 
 {- Add new moves in the front, so I can check for duplicates. -}
 addMove :: Move -> [Move] -> [Move]

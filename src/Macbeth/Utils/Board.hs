@@ -2,8 +2,11 @@ module Macbeth.Utils.Board (
   draw,
   onMouseEvent,
   initBoardState,
+  invertPerspective,
+  zoomBoard,
   PieceMove (..),
-  BoardState(..)
+  BoardState(..),
+  Zoom(..)
 ) where
 
 import Macbeth.Api.Api
@@ -25,6 +28,7 @@ data BoardState = BoardState { _panel :: Panel()
                              , lastMove :: Move
                              , gameResult :: Maybe GameResult
                              , moves :: [Move]
+                             , zoom :: Zoom
                              , _position :: Position
                              , preMoves :: [PieceMove]
                              , perspective :: Macbeth.Api.Api.PColor
@@ -33,6 +37,7 @@ data BoardState = BoardState { _panel :: Panel()
                              , isWaiting :: Bool
                              }
 
+data Zoom = Small | Medium | Large
 
 data DraggedPiece = DraggedPiece { _point :: Point
                                  , _piece :: Piece
@@ -43,12 +48,19 @@ initBoardState panel move = BoardState {
     , lastMove = move
     , gameResult = Nothing
     , moves = [move | isJust $ movePretty move]
+    , zoom = Small
     , _position = Macbeth.Api.Move.position move
     , preMoves = []
     , perspective = if relation move == Observing then White else colorUser move
     , selSquare = Square A One
     , draggedPiece = Nothing
     , isWaiting = relation move == MyMove}
+
+invertPerspective ::  TVar BoardState -> IO ()
+invertPerspective vState = atomically $ modifyTVar vState (\s -> s{perspective = invert $ perspective s})
+
+zoomBoard :: TVar BoardState -> Zoom -> IO ()
+zoomBoard vBoardState z = atomically $ modifyTVar vBoardState (\s -> s{zoom = z})
 
 draw :: Var BoardState -> DC a -> t -> IO ()
 draw vState dc _ = do
