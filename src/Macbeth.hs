@@ -6,7 +6,6 @@ import Macbeth.Wx.ToolBox
 import Graphics.UI.WX
 
 -- TODO: application icon
--- TODO: zoom
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes

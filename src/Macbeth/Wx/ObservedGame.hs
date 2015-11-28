@@ -28,7 +28,7 @@ eventId = wxID_HIGHEST + 53
 createObservedGame :: Handle -> Move -> Chan CommandMsg -> IO ()
 createObservedGame h move chan = do
   vCmd <- newEmptyMVar
-  f <- frameFixed [ text := frameTitle move ]
+  f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move ]
   p_back <- panel f []
 
   -- board
@@ -44,15 +44,12 @@ createObservedGame h move chan = do
   updateChessClock move cc
 
   -- layout helper
-  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState
+  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f
   updateBoardLayoutIO
 
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command := Board.invertPerspective vBoardState >> updateBoardLayoutIO]
-  menuItem ctxMenu [ text := "Zoom 100%" , on command := Board.zoomBoard vBoardState Board.Small >> updateBoardLayoutIO ]
-  menuItem ctxMenu [ text := "Zoom 150%" , on command := Board.zoomBoard vBoardState Board.Medium >> updateBoardLayoutIO ]
-  menuItem ctxMenu [ text := "Zoom 200%" , on command := Board.zoomBoard vBoardState Board.Large >> updateBoardLayoutIO ]
   when (relation move `elem` [MyMove, OponentsMove]) $ do
      menuLine ctxMenu
      menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
@@ -78,10 +75,9 @@ createObservedGame h move chan = do
          windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
        _ -> return ()
 
-  set p_back [ on clickRight := (\pt -> menuPopup ctxMenu pt p_back)]
-  set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
-  set f [ statusBar := [status], layout := widget p_back]
+  set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
+  set f [ statusBar := [status], layout := fill $ widget p_back, on resize := resizeFrame f]
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
@@ -129,6 +125,14 @@ createObservedGame h move chan = do
       _ -> return ()
 
 
+resizeFrame :: Frame () -> IO ()
+resizeFrame f = do
+  (Size w h) <- windowGetClientSize f
+  let x = max w (h-66)
+  windowSetClientSize f $ Size x (x+66)
+  void $ windowLayout f
+
+
 cancelLastPreMove :: TVar Board.BoardState -> Panel () -> EventKey -> IO ()
 cancelLastPreMove vBoardState panel keyboard = case keyKey keyboard of
   KeyChar 'x' -> cancelLastPreMove' vBoardState >> repaint panel
@@ -168,12 +172,18 @@ updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar Board.Boar
 updateBoardLayout pback board white black vBoardState = do
   state <- readTVarIO vBoardState
   set pback [ layout := column 0 [ hfill $ widget (if Board.perspective state == White then black else white)
-                                 , stretch $ minsize (convert $ Board.zoom state)  $ shaped $ widget board
+                                 , stretch $ minsize (Size 320 320) $ shaped $ widget board
                                  , hfill $ widget (if Board.perspective state == White then white else black)]]
-  repaint pback
-  where convert Board.Small = Size 320 320
-        convert Board.Medium = Size 480 480
-        convert Board.Large = Size 640 640
+
+
+updateBoardState :: TVar Board.BoardState -> Move -> IO ()
+updateBoardState vBoardState move =
+  atomically $ modifyTVar vBoardState (\s -> s {
+    Board.isWaiting = isNextMoveUser move
+  , Board.moves = addMove move (Board.moves s)
+  , Board.lastMove = move
+  , Board._position = movePieces (Board.preMoves s) (position move)})
+
 
 {- Add new moves in the front, so I can check for duplicates. -}
 addMove :: Move -> [Move] -> [Move]
@@ -183,12 +193,3 @@ addMove m moves@(m':_)
   | otherwise = m : moves
     where areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
 
-
-frameTitle move = "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move
-
-updateBoardState vBoardState move =
-  atomically $ modifyTVar vBoardState (\s -> s {
-    Board.isWaiting = isNextMoveUser move
-  , Board.moves = addMove move (Board.moves s)
-  , Board.lastMove = move
-  , Board._position = movePieces (Board.preMoves s) (position move)})
