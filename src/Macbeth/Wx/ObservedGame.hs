@@ -28,11 +28,7 @@ eventId = wxID_HIGHEST + 53
 createObservedGame :: Handle -> Move -> Chan CommandMsg -> IO ()
 createObservedGame h move chan = do
   vCmd <- newEmptyMVar
-  vMoves <- newTVarIO [move | isJust $ movePretty move]
-  vGameResult <- newMVar Nothing
-
   f <- frameFixed [ text := frameTitle move ]
-
   p_back <- panel f []
 
   -- board
@@ -91,7 +87,6 @@ createObservedGame h move chan = do
       state <- varGet vBoardState
       updateChessClock move' cc
       set status [text := ""]
-      atomically $ modifyTVar vMoves $ addMove move'
       updateBoardState vBoardState move'
       when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
         handlePreMoves vBoardState h
@@ -102,7 +97,7 @@ createObservedGame h move chan = do
       windowOnKeyChar p_board (\_ -> return ())
       stopChessClock cc
       set status [text := (show result ++ " " ++ reason)]
-      swapMVar vGameResult $ Just result
+      atomically $ modifyTVar vBoardState (\s -> s{Board.gameResult = Just result})
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
@@ -122,10 +117,9 @@ createObservedGame h move chan = do
 
   windowOnDestroy f $ do
     catch (killThread threadId) (\e -> print $ show (e :: IOException))
-    gameResult <- readMVar vGameResult
-    moves <- readTVarIO vMoves
-    saveAsPGN (reverse moves) gameResult
-    unless (isJust gameResult) $ case relation move of
+    boardState <- readTVarIO vBoardState
+    saveAsPGN boardState
+    unless (isJust $ Board.gameResult boardState) $ case relation move of
       MyMove -> hPutStrLn h "5 resign"
       OponentsMove -> hPutStrLn h "5 resign"
       Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
@@ -195,5 +189,6 @@ frameTitle move = "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs "
 updateBoardState vBoardState move =
   atomically $ modifyTVar vBoardState (\s -> s {
     Board.isWaiting = isNextMoveUser move
+  , Board.moves = addMove move (Board.moves s)
   , Board.lastMove = move
   , Board._position = movePieces (Board.preMoves s) (position move)})

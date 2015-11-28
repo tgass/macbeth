@@ -8,6 +8,7 @@ module Macbeth.Utils.Board (
 
 import Macbeth.Api.Api
 import Macbeth.Api.Move
+import Macbeth.Api.Game
 import Macbeth.Wx.Utils
 import Paths_Macbeth
 
@@ -22,6 +23,8 @@ import System.IO.Unsafe
 
 data BoardState = BoardState { _panel :: Panel()
                              , lastMove :: Move
+                             , gameResult :: Maybe GameResult
+                             , moves :: [Move]
                              , _position :: Position
                              , preMoves :: [PieceMove]
                              , perspective :: Macbeth.Api.Api.PColor
@@ -38,6 +41,8 @@ data DraggedPiece = DraggedPiece { _point :: Point
 initBoardState panel move = BoardState {
       _panel = panel
     , lastMove = move
+    , gameResult = Nothing
+    , moves = [move | isJust $ movePretty move]
     , _position = Macbeth.Api.Move.position move
     , preMoves = []
     , perspective = if relation move == Observing then White else colorUser move

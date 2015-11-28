@@ -5,6 +5,7 @@ module Macbeth.Utils.PGN (
 import Macbeth.Api.Api
 import Macbeth.Api.Move
 import Macbeth.Api.Game (GameResult)
+import Macbeth.Utils.Board
 import qualified Macbeth.Utils.FEN as FEN
 
 import Data.Maybe
@@ -14,9 +15,12 @@ import System.FilePath
 import System.Locale
 
 
-saveAsPGN :: [Move] -> Maybe GameResult ->  IO ()
-saveAsPGN [] _ = return ()
-saveAsPGN moves mGameResult = do
+saveAsPGN :: BoardState ->  IO ()
+saveAsPGN b = saveAsPGN' (reverse $ moves b) (gameResult b)
+
+
+saveAsPGN' [] _ = return ()
+saveAsPGN' moves mGameResult = do
   rootDir <- getUserDocumentsDirectory
   createDirectoryIfMissing False $ rootDir </> "Macbeth"
   dateTime <- getZonedTime
