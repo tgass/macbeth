@@ -20,6 +20,8 @@ import Data.Maybe
 import Control.Concurrent.STM
 import Graphics.UI.WX
 import Graphics.UI.WXCore hiding (Row, Column)
+import Safe
+import System.FilePath
 import System.IO
 import System.IO.Unsafe
 
@@ -35,6 +37,7 @@ data BoardState = BoardState { _panel :: Panel()
                              , selSquare :: Square
                              , draggedPiece :: Maybe DraggedPiece
                              , isWaiting :: Bool
+                             , psize :: Int
                              }
 
 data Zoom = Small | Medium | Large
@@ -54,7 +57,8 @@ initBoardState panel move = BoardState {
     , perspective = if relation move == Observing then White else colorUser move
     , selSquare = Square A One
     , draggedPiece = Nothing
-    , isWaiting = relation move == MyMove}
+    , isWaiting = relation move == MyMove
+    , psize = 40}
 
 invertPerspective ::  TVar BoardState -> IO ()
 invertPerspective vState = atomically $ modifyTVar vState (\s -> s{perspective = invert $ perspective s})
@@ -64,32 +68,37 @@ zoomBoard vBoardState z = atomically $ modifyTVar vBoardState (\s -> s{zoom = z}
 
 draw :: Var BoardState -> DC a -> t -> IO ()
 draw vState dc _ = do
-  state <- varGet vState
+  state <- readTVarIO vState
   scale <- calcScale `liftA` get (_panel state) size
+  state <- atomically (modifyTVar vState (\state ->
+    state { psize = findSize $ round (40 * scale) :: Int}) >> readTVar vState)
+  let scale2 = 40 * scale / fromIntegral (psize state)
   dcSetUserScale dc scale scale
   drawBoard dc
+  dcSetUserScale dc scale2 scale2
   when (isHighlightMove $ lastMove state) $ highlightLastMove dc state
-  mapM_ (highlightPreMove dc (perspective state)) (preMoves state)
-  mapM_ (drawPiece dc (perspective state)) (_position state)
-  when (isGameUser $ lastMove state) $ paintSelectedSquare dc (perspective state) (selSquare state)
-  drawDraggedPiece dc scale (draggedPiece state)
+  mapM_ (highlightPreMove dc state) (preMoves state)
+  mapM_ (drawPiece dc state) (_position state)
+  when (isGameUser $ lastMove state) $ paintSelectedSquare dc state
+  drawDraggedPiece dc state scale2 (draggedPiece state)
 
 
-paintSelectedSquare :: DC a -> PColor -> Square -> IO ()
-paintSelectedSquare dc perspective sq =
+paintSelectedSquare :: DC a -> BoardState -> IO ()
+paintSelectedSquare dc state =
   withBrushStyle brushTransparent $ \transparent -> do
     dcSetBrush dc transparent
     set dc [penColor := red ]
-    paintSquare dc perspective sq
+    paintSquare dc (psize state) (perspective state) (selSquare state)
 
 
-drawDraggedPiece :: DC a -> Double -> Maybe DraggedPiece -> IO ()
-drawDraggedPiece dc scale mDraggedPiece = case mDraggedPiece of
+drawDraggedPiece :: DC a -> BoardState -> Double -> Maybe DraggedPiece -> IO ()
+drawDraggedPiece dc state scale mDraggedPiece = case mDraggedPiece of
   Nothing -> return ()
-  Just (DraggedPiece pt piece _) -> drawBitmap dc (toBitmap piece) (scalePoint pt) True []
+  Just (DraggedPiece pt piece _) -> drawBitmap dc (toBitmap size piece) (scalePoint pt) True []
   where
+    size = psize state
     scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
-    scaleValue value = round $ (fromIntegral value - 20 * scale) / scale
+    scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale) / scale
 
 
 onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
@@ -140,16 +149,18 @@ onMouseEvent h vState evtMouse = do
         checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 
 
-paintSquare :: DC a -> PColor -> Square -> IO ()
-paintSquare dc perspective sq = drawRect dc (squareToRect sq perspective) []
+paintSquare :: DC a -> Int -> PColor -> Square -> IO ()
+paintSquare dc size perspective sq = drawRect dc (squareToRect' size sq perspective) []
 
 
 calcScale :: Size -> Double
 calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
-drawPiece :: DC a -> PColor -> (Square, Piece) -> IO ()
-drawPiece dc color (square, p) = drawBitmap dc (toBitmap p) (toPos square color) True []
+drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
+drawPiece dc state (square, p) = drawBitmap dc (toBitmap size p) (toPos' size square color) True []
+  where size = psize state
+        color = perspective state
 
 
 scalePoint :: Double -> Point -> Point
@@ -174,46 +185,46 @@ intToCol Black = toEnum . abs . (7-)
 board :: Bitmap ()
 board = bitmap $ unsafePerformIO $ getDataFileName "board_empty.gif"
 
+pieceToFileName p = pieceToFile p ++ ".png"
 
 pieceToFile :: Piece -> String
-pieceToFile (Piece King Black) = "bk.gif"
-pieceToFile (Piece Queen Black) = "bq.gif"
-pieceToFile (Piece Rook Black) = "br.gif"
-pieceToFile (Piece Knight Black) = "bn.gif"
-pieceToFile (Piece Bishop Black) = "bb.gif"
-pieceToFile (Piece Pawn Black) = "bp.gif"
-pieceToFile (Piece King White) = "wk.gif"
-pieceToFile (Piece Queen White) = "wq.gif"
-pieceToFile (Piece Rook White) = "wr.gif"
-pieceToFile (Piece Knight White) = "wn.gif"
-pieceToFile (Piece Bishop White) = "wb.gif"
-pieceToFile (Piece Pawn White) = "wp.gif"
+pieceToFile (Piece King Black) = "bk"
+pieceToFile (Piece Queen Black) = "bq"
+pieceToFile (Piece Rook Black) = "br"
+pieceToFile (Piece Knight Black) = "bn"
+pieceToFile (Piece Bishop Black) = "bb"
+pieceToFile (Piece Pawn Black) = "bp"
+pieceToFile (Piece King White) = "wk"
+pieceToFile (Piece Queen White) = "wq"
+pieceToFile (Piece Rook White) = "wr"
+pieceToFile (Piece Knight White) = "wn"
+pieceToFile (Piece Bishop White) = "wb"
+pieceToFile (Piece Pawn White) = "wp"
 
 
-toBitmap :: Piece -> Bitmap ()
-toBitmap p = bitmap $ unsafePerformIO getDataDir ++ pieceToFile p
-
+toBitmap :: Int -> Piece -> Bitmap ()
+toBitmap size p = bitmap $ unsafePerformIO getDataDir </> "alpha.ead-01" </> show size </> pieceToFileName p
 
 highlightLastMove :: DC a -> BoardState -> IO ()
 highlightLastMove dc state = let
-  perspective' = perspective state
   turn' = turn $ lastMove state
   move' =  (fromJust $ moveVerbose $ lastMove state)
-  in sequence_ $ paintHighlight dc perspective' blue `fmap` convertMoveDt turn' move'
+  in sequence_ $ paintHighlight dc state blue `fmap` convertMoveDt turn' move'
 
 
-highlightPreMove :: DC a -> PColor -> PieceMove -> IO ()
-highlightPreMove dc perspective preMove = paintHighlight dc perspective yellow (from preMove, to preMove)
+highlightPreMove :: DC a -> BoardState -> PieceMove -> IO ()
+highlightPreMove dc state preMove = paintHighlight dc state yellow (from preMove, to preMove)
 
-paintHighlight :: DC a -> PColor -> Color -> (Square, Square) -> IO ()
-paintHighlight dc perspective color (s1, s2) = do
+paintHighlight :: DC a -> BoardState -> Color -> (Square, Square) -> IO ()
+paintHighlight dc state color (s1, s2) = do
   set dc [penColor := color ]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
     dcSetBrush dc brushBg
-    mapM_ (paintSquare dc perspective) [s1, s2]
+    mapM_ (paintSquare dc (psize state) (perspective state)) [s1, s2]
   withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
-    drawArrow dc s1 s2 perspective
+    drawArrow dc (psize state) s1 s2 (perspective state)
+
 
 convertMoveDt _ (Simple s1 s2) = [(s1, s2)]
 convertMoveDt Black CastleShort = [ (Square E One, Square G One)
@@ -224,4 +235,9 @@ convertMoveDt White CastleShort = [ (Square E Eight, Square G Eight)
                                   , (Square H Eight, Square F Eight)]
 convertMoveDt White CastleLong = [ (Square E Eight, Square C Eight)
                                  , (Square A Eight, Square D Eight)]
+
+sizes = [20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,52,56,60,64,72,80,88,96,112,128,144,300]
+
+findSize :: Int -> Int
+findSize x = fromMaybe 300 $ headMay $ dropWhile (< x) sizes
 

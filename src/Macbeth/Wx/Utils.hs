@@ -4,8 +4,8 @@ module Macbeth.Wx.Utils (
   toWxColor,
   staticTextFormatted,
   drawArrow,
-  squareToRect,
-  toPos,
+  squareToRect',
+  toPos',
   rowToInt,
   colToInt
 ) where
@@ -33,7 +33,7 @@ listItemRightClickEvent listCtrl eventHandler
       listHandler evt = eventHandler $ objectCast evt
 
 
-toWxColor :: Macbeth.Api.Api.PColor -> Graphics.UI.WXCore.Color
+toWxColor :: PColor -> Graphics.UI.WXCore.Color
 toWxColor White = white
 toWxColor Black = black
 
@@ -53,25 +53,28 @@ colToInt White = fromEnum
 colToInt Black = abs . (7-) . fromEnum
 
 
-toPos :: Square -> Macbeth.Api.Api.PColor -> Point
-toPos (Square c r) color = point (colToInt color c * 40) (rowToInt color r * 40)
+toPos' :: Int -> Square -> PColor -> Point
+toPos' size (Square c r) color = point (colToInt color c * size) (rowToInt color r * size)
 
 
-squareToRect :: Square -> PColor -> Rect
-squareToRect sq color = Rect pointX' pointY' 40 40
-  where pointX' = pointX $ toPos sq color
-        pointY' = pointY $ toPos sq color
+squareToRect' :: Int -> Square -> PColor -> Rect
+squareToRect' size sq color = Rect pointX' pointY' size size
+  where pointX' = pointX $ toPos' size sq color
+        pointY' = pointY $ toPos' size sq color
 
-drawArrow dc s1 s2 perspective = drawArrowPt dc (pt (x1+20) (y1+20)) (pt (x2'+20) (y2'+20))
-    where (Rect x1 y1 _ _ ) = squareToRect s1 perspective
-          (Rect x2 y2 _ _ ) = squareToRect s2 perspective
+
+drawArrow dc size s1 s2 perspective =
+  drawArrowPt dc (pt (x1+size_half) (y1+size_half)) (pt (x2'+size_half) (y2'+size_half))
+    where (Rect x1 y1 _ _ ) = squareToRect' size s1 perspective
+          (Rect x2 y2 _ _ ) = squareToRect' size s2 perspective
+          size_half = round $ fromIntegral size / 2
           x2'
-             | x2 > x1 = x2 - 20
-             | x2 < x1 = x2 + 20
+             | x2 > x1 = x2 - size_half
+             | x2 < x1 = x2 + size_half
              | otherwise = x2
           y2'
-             | y2 > y1 = y2 - 20
-             | y2 < y1 = y2 + 20
+             | y2 > y1 = y2 - size_half
+             | y2 < y1 = y2 + size_half
              | otherwise = y2
 
 drawArrowPt dc p1 p2 = do

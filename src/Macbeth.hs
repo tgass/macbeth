@@ -6,6 +6,10 @@ import Macbeth.Wx.ToolBox
 import Graphics.UI.WX
 
 -- TODO: application icon
+-- TODO: Cmd+W, Cmd+Q
+-- while observing: TextMessage "Game 84: Paet offers a draw."
+-- unobserve does not work?
+-- paint board background with Rects
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes
