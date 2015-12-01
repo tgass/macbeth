@@ -22,20 +22,19 @@ import Graphics.UI.WXCore hiding (when, Timer)
 import Safe
 import System.IO
 
-
 eventId = wxID_HIGHEST + 53
 
 createObservedGame :: Handle -> Move -> Chan CommandMsg -> IO ()
 createObservedGame h move chan = do
   vCmd <- newEmptyMVar
-  f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move ]
+  f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move]
   p_back <- panel f []
 
   -- board
   p_board <- panel p_back []
-  let boardState = Board.initBoardState p_board move
+  let boardState = Board.initBoardState move
   vBoardState <- newTVarIO boardState
-  set p_board [ on paint := Board.draw vBoardState ]
+  set p_board [ on paint := Board.draw p_board vBoardState ]
 
   -- player panels
   (p_white, cw) <- createStatusPanel p_back White move
@@ -49,7 +48,8 @@ createObservedGame h move chan = do
 
   -- context menu
   ctxMenu <- menuPane []
-  menuItem ctxMenu [ text := "Turn board", on command := Board.invertPerspective vBoardState >> updateBoardLayoutIO]
+  menuItem ctxMenu [ text := "Turn board", on command :=
+    Board.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board]
   when (relation move `elem` [MyMove, OponentsMove]) $ do
      menuLine ctxMenu
      menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
@@ -57,7 +57,7 @@ createObservedGame h move chan = do
      menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
      menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
      menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
-     windowOnMouse p_board True (Board.onMouseEvent h vBoardState)
+     windowOnMouse p_board True (Board.onMouseEvent p_board h vBoardState)
      windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
 
   -- status line
@@ -89,7 +89,7 @@ createObservedGame h move chan = do
       updateBoardState vBoardState move'
       when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
         handlePreMoves vBoardState h
-      repaint (Board._panel state)
+      repaint p_board
 
     GameResult id reason result -> when (id == gameId move) $ do
       windowOnMouse p_board True (\_ -> return ())

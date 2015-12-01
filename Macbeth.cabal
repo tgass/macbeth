@@ -45,13 +45,14 @@ library
                      Macbeth.Wx.GamesList,
                      Macbeth.Wx.SoughtList,
                      Macbeth.Wx.Clock,
-                     Macbeth.Wx.GameMoves
+                     Macbeth.Wx.GameMoves,
+                     Macbeth.Wx.PieceSet
   other-modules: Paths_Macbeth
   ghc-options: -O3 -threaded -W
 
 executable MacbethRun
   main-is: src/Macbeth.hs
-  build-depends: base  >= 4.2, wx, wxcore, Macbeth, stm
+  build-depends: base  >= 4.2, wx, wxcore, Macbeth, stm, safe
   ghc-options: -O3 -threaded -W
 
 Test-Suite MacbethTestSuite
