@@ -4,7 +4,7 @@ cabal-version: >= 1.8
 build-type: Simple
 license: AllRightsReserved
 license-file: ""
-data-files: resources/*.gif, resources/*.png, resources/*.jpg
+data-files: resources/*.png, resources/*.jpg
 
 library
     build-depends: base >=4.2 && <5, cabal-macosx, wxcore, wx,
@@ -46,7 +46,8 @@ library
                      Macbeth.Wx.SoughtList,
                      Macbeth.Wx.Clock,
                      Macbeth.Wx.GameMoves,
-                     Macbeth.Wx.PieceSet
+                     Macbeth.Wx.PieceSet,
+                     Macbeth.Wx.Api
   other-modules: Paths_Macbeth
   ghc-options: -O3 -threaded -W
 

@@ -4,12 +4,11 @@ module Macbeth.Utils.Board (
   initBoardState,
   invertPerspective,
   PieceMove (..),
-  BoardState(..)
 ) where
 
 import Macbeth.Api.Api
 import Macbeth.Api.Move
-import Macbeth.Api.Game
+import Macbeth.Wx.Api
 import Macbeth.Wx.Utils
 import Macbeth.Wx.PieceSet
 import Paths_Macbeth
@@ -24,21 +23,6 @@ import System.IO
 import System.IO.Unsafe
 
 
-data BoardState = BoardState { lastMove :: Move
-                             , gameResult :: Maybe GameResult
-                             , moves :: [Move]
-                             , _position :: Position
-                             , preMoves :: [PieceMove]
-                             , perspective :: PColor
-                             , selSquare :: Square
-                             , draggedPiece :: Maybe DraggedPiece
-                             , isWaiting :: Bool
-                             , psize :: Int }
-
-data DraggedPiece = DraggedPiece { _point :: Point
-                                 , _piece :: Piece
-                                 , _square :: Square } deriving (Show)
-
 initBoardState move = BoardState {
       lastMove = move
     , gameResult = Nothing
@@ -49,7 +33,8 @@ initBoardState move = BoardState {
     , selSquare = Square A One
     , draggedPiece = Nothing
     , isWaiting = relation move == MyMove
-    , psize = 40}
+    , psize = 40
+    , pieceSet = head pieceSets}
 
 
 invertPerspective ::  TVar BoardState -> IO ()
@@ -59,7 +44,7 @@ invertPerspective vState = atomically $ modifyTVar vState (\s -> s{perspective =
 draw :: Panel () -> Var BoardState -> DC a -> t -> IO ()
 draw _panel vState dc _ = do
   (Size x _) <- get _panel size
-  state <- atomically $ modifyTVar vState (\s -> s { psize = pieceSetFindSize alpha_ead01 x}) >> readTVar vState
+  state <- atomically $ modifyTVar vState (\s -> s { psize = pieceSetFindSize x}) >> readTVar vState
   let scale = fromIntegral x / 8 / fromIntegral (psize state)
   dcSetUserScale dc scale scale
   drawBoard dc state
@@ -77,7 +62,7 @@ drawBoard dc state = do
        where seed = if perspective' == White then [Black, White] else [White, Black]
   let sq = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
   set dc [ pen := penTransparent ]
-  withBrushStyle (BrushStyle BrushSolid lightgrey) $ \blackBrush ->
+  withBrushStyle (BrushStyle BrushSolid (rgb 180 150 100)) $ \blackBrush ->
     withBrushStyle (BrushStyle BrushSolid white) $ \whiteBrush ->
       mapM_ (\(c,sq) -> do
         dcSetBrush dc $ if c == White then whiteBrush else blackBrush
@@ -107,11 +92,12 @@ paintSelectedSquare dc state =
 drawDraggedPiece :: DC a -> BoardState -> Double -> Maybe DraggedPiece -> IO ()
 drawDraggedPiece dc state scale mDraggedPiece = case mDraggedPiece of
   Nothing -> return ()
-  Just (DraggedPiece pt piece _) -> drawBitmap dc (toBitmap size piece) (scalePoint pt) True []
-  where
-    size = psize state
-    scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
-    scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale) / scale
+  Just (DraggedPiece pt piece _) ->
+    drawBitmap dc (toBitmap size (pieceSet state) piece) (scalePoint pt) True []
+    where
+      size = psize state
+      scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
+      scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale) / scale
 
 
 onMouseEvent :: Panel () -> Handle -> Var BoardState -> EventMouse -> IO ()
@@ -175,7 +161,8 @@ calcScale (Size x y) = min (fromIntegral y / 320) (fromIntegral x / 320)
 
 
 drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
-drawPiece dc state (square, p) = drawBitmap dc (toBitmap size p) (toPos' size square (perspective state)) True []
+drawPiece dc state (square, p) =
+  drawBitmap dc (toBitmap size (pieceSet state) p) (toPos' size square (perspective state)) True []
   where size = psize state
 
 
@@ -204,8 +191,8 @@ pieceToFile (Piece Bishop White) = "wb"
 pieceToFile (Piece Pawn White) = "wp"
 
 
-toBitmap :: Int -> Piece -> Bitmap ()
-toBitmap size p = bitmap $ unsafePerformIO getDataDir </> path alpha_ead01 </> show size </> pieceToFile p ++ ".png"
+toBitmap :: Int -> PieceSet -> Piece -> Bitmap ()
+toBitmap size pieceSet p = bitmap $ unsafePerformIO getDataDir </> path pieceSet </> show size </> pieceToFile p ++ ".png"
 
 
 paintHighlight :: DC a -> BoardState -> Color -> (Square, Square) -> IO ()

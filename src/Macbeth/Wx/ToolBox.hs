@@ -28,6 +28,7 @@ import Foreign.Ptr
 import Foreign.C.Types
 import Graphics.UI.WX hiding (when)
 import Graphics.UI.WXCore hiding (when)
+import System.FilePath
 import System.IO
 import System.IO.Unsafe
 
@@ -38,13 +39,13 @@ wxToolBox h chan = do
     f  <- frame [ text := "Macbeth" ]
 
     tbar   <- toolBarEx f False False []
-    tbarItem_seek <- toolItem tbar "Seek" False (unsafePerformIO $ getDataFileName "bullhorn.gif")
+    tbarItem_seek <- toolItem tbar "Seek" False (unsafePerformIO $ getDataFileName $ "icons" </> "bullhorn.gif")
       [ on command := wxSeek h False, enabled := False, tooltip := "Seek" ]
 
-    tbarItem_match <- toolItem tbar "Match" False  (unsafePerformIO $ getDataFileName "dot-circle-o.gif")
+    tbarItem_match <- toolItem tbar "Match" False  (unsafePerformIO $ getDataFileName $ "icons" </> "dot-circle-o.gif")
       [ on command := wxMatch h False, enabled := False, tooltip := "Match" ]
 
-    tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName "fa-question.png")
+    tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName $ "icons" </> "fa-question.png")
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
 
     status <- statusField []

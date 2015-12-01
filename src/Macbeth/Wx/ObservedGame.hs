@@ -7,8 +7,10 @@ import Macbeth.Api.Api
 import Macbeth.Api.CommandMsg hiding (gameId)
 import Macbeth.Api.Move
 import Macbeth.Utils.PGN
+import Macbeth.Wx.Api
 import Macbeth.Wx.Utils
 import Macbeth.Wx.Clock
+import Macbeth.Wx.PieceSet
 import qualified Macbeth.Utils.Board as Board
 
 import Control.Concurrent
@@ -59,7 +61,8 @@ createObservedGame h move chan = do
      menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
      windowOnMouse p_board True (Board.onMouseEvent p_board h vBoardState)
      windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
-
+  menuLine ctxMenu
+  wxPieceSetsMenu ctxMenu vBoardState p_board
   -- status line
   status <- statusField []
 
@@ -87,7 +90,7 @@ createObservedGame h move chan = do
       updateChessClock move' cc
       set status [text := ""]
       updateBoardState vBoardState move'
-      when (isNextMoveUser move' && not (null $ Board.preMoves state)) $
+      when (isNextMoveUser move' && not (null $ preMoves state)) $
         handlePreMoves vBoardState h
       repaint p_board
 
@@ -96,7 +99,7 @@ createObservedGame h move chan = do
       windowOnKeyChar p_board (\_ -> return ())
       stopChessClock cc
       set status [text := (show result ++ " " ++ reason)]
-      atomically $ modifyTVar vBoardState (\s -> s{Board.gameResult = Just result})
+      atomically $ modifyTVar vBoardState (\s -> s{gameResult = Just result})
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
@@ -118,7 +121,7 @@ createObservedGame h move chan = do
     catch (killThread threadId) (\e -> print $ show (e :: IOException))
     boardState <- readTVarIO vBoardState
     saveAsPGN boardState
-    unless (isJust $ Board.gameResult boardState) $ case relation move of
+    unless (isJust $ gameResult boardState) $ case relation move of
       MyMove -> hPutStrLn h "5 resign"
       OponentsMove -> hPutStrLn h "5 resign"
       Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
@@ -133,25 +136,25 @@ resizeFrame f = do
   void $ windowLayout f
 
 
-cancelLastPreMove :: TVar Board.BoardState -> Panel () -> EventKey -> IO ()
+cancelLastPreMove :: TVar BoardState -> Panel () -> EventKey -> IO ()
 cancelLastPreMove vBoardState panel keyboard = case keyKey keyboard of
   KeyChar 'x' -> cancelLastPreMove' vBoardState >> repaint panel
   _ -> return ()
   where
-    cancelLastPreMove' :: TVar Board.BoardState -> IO ()
+    cancelLastPreMove' :: TVar BoardState -> IO ()
     cancelLastPreMove' vBoardState =
       atomically $ modifyTVar vBoardState (\s ->
-        let preMoves' = fromMaybe [] $ initMay (Board.preMoves s) in s {
-        Board.preMoves = preMoves'
-      , Board._position = movePieces preMoves' (position $ Board.lastMove s)})
+        let preMoves' = fromMaybe [] $ initMay (preMoves s) in s {
+        preMoves = preMoves'
+      , _position = movePieces preMoves' (position $ lastMove s)})
 
 
-handlePreMoves :: TVar Board.BoardState -> Handle -> IO ()
+handlePreMoves :: TVar BoardState -> Handle -> IO ()
 handlePreMoves vBoardState h = do
-  preMoves' <- Board.preMoves `fmap` readTVarIO vBoardState
+  preMoves' <- preMoves `fmap` readTVarIO vBoardState
   atomically $ modifyTVar vBoardState (\s -> s {
-    Board.isWaiting = False,
-    Board.preMoves = tail preMoves'})
+    isWaiting = False,
+    preMoves = tail preMoves'})
   hPutStrLn h $ "6 " ++ show (head preMoves' )
 
 
@@ -168,21 +171,21 @@ createStatusPanel p color move = do
   return (p_status, cl)
 
 
-updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar Board.BoardState -> IO ()
+updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar BoardState -> IO ()
 updateBoardLayout pback board white black vBoardState = do
   state <- readTVarIO vBoardState
-  set pback [ layout := column 0 [ hfill $ widget (if Board.perspective state == White then black else white)
+  set pback [ layout := column 0 [ hfill $ widget (if perspective state == White then black else white)
                                  , stretch $ minsize (Size 320 320) $ shaped $ widget board
-                                 , hfill $ widget (if Board.perspective state == White then white else black)]]
+                                 , hfill $ widget (if perspective state == White then white else black)]]
 
 
-updateBoardState :: TVar Board.BoardState -> Move -> IO ()
+updateBoardState :: TVar BoardState -> Move -> IO ()
 updateBoardState vBoardState move =
   atomically $ modifyTVar vBoardState (\s -> s {
-    Board.isWaiting = isNextMoveUser move
-  , Board.moves = addMove move (Board.moves s)
-  , Board.lastMove = move
-  , Board._position = movePieces (Board.preMoves s) (position move)})
+    isWaiting = isNextMoveUser move
+  , moves = addMove move (moves s)
+  , lastMove = move
+  , _position = movePieces (preMoves s) (position move)})
 
 
 {- Add new moves in the front, so I can check for duplicates. -}

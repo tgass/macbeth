@@ -7,8 +7,8 @@ import Graphics.UI.WX
 
 -- TODO: application icon
 -- TODO: Cmd+W, Cmd+Q
--- while observing: TextMessage "Game 84: Paet offers a draw."
 -- unobserve does not work?
+-- out of time msg did not show (Schoon vs..)
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes
@@ -24,6 +24,7 @@ import Graphics.UI.WX
 
 -- FEATURES
 -- command moves to get first moves in observed game?
+-- while observing: TextMessage "Game 84: Paet offers a draw."
 
 -- MINOR
 

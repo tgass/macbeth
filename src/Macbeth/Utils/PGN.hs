@@ -5,8 +5,8 @@ module Macbeth.Utils.PGN (
 import Macbeth.Api.Api
 import Macbeth.Api.Move
 import Macbeth.Api.Game (GameResult)
-import Macbeth.Utils.Board
 import qualified Macbeth.Utils.FEN as FEN
+import Macbeth.Wx.Api
 
 import Data.Maybe
 import Data.Time
