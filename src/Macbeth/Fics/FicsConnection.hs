@@ -9,21 +9,27 @@ import Macbeth.Api.Move
 import Macbeth.Fics.Parsers.CommandMsgParser
 
 import Control.Applicative
-import Control.Concurrent.Chan (Chan, newChan, writeChan)
+import Control.Concurrent.Chan
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Trans.Resource
-import Data.Conduit
 import Data.Char
+import Data.Conduit
+import Data.Conduit.Binary
+import Data.Conduit.List
 import Data.Maybe
-import Network (connectTo, PortID (..))
-import System.IO (Handle, BufferMode (..), hSetBuffering, hClose)
+import Data.Time
+import Network
+import System.Directory
+import System.FilePath
+import System.Locale
+import System.IO
 
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.Conduit.Binary as CB
-import qualified Data.Conduit.List as CL
+
 
 data HelperState = HelperState { gameId' :: Maybe Int, isPlaying :: Bool }
+
 
 ficsConnection :: IO (Handle, Chan CommandMsg)
 ficsConnection = runResourceT $ do
@@ -36,7 +42,8 @@ ficsConnection = runResourceT $ do
 
 chain :: Handle -> Chan CommandMsg -> IO ()
 chain h chan = flip evalStateT (HelperState Nothing False) $ transPipe lift
-  (CB.sourceHandle h) $$
+  (sourceHandle h) $$
+  fileLoggerC =$
   toCharC =$
   blockC (False, BS.empty) =$
   parseC =$
@@ -57,27 +64,27 @@ extractC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 extractC = awaitForever $ \cmd -> do
   state <- get
   case cmd of
-    GameCreation id _ -> put (state {gameId' = Just id}) >> CL.sourceList []
+    GameCreation id _ -> put (state {gameId' = Just id}) >> sourceList []
     GameMove move
-      | isCheckmate move && isOponentMove move -> CL.sourceList $ cmd : [toGameResult move]
+      | isCheckmate move && isOponentMove move -> sourceList $ cmd : [toGameResult move]
       | isNewGameUser move && fromMaybe False ((== gameId move) <$> gameId' state) -> do
-          put (state {gameId' = Nothing }); CL.sourceList [MatchAccepted move]
-      | otherwise -> CL.sourceList [cmd]
-    Boxed cmds -> CL.sourceList cmds
+          put (state {gameId' = Nothing }); sourceList [MatchAccepted move]
+      | otherwise -> sourceList [cmd]
+    Boxed cmds -> sourceList cmds
     MatchAccepted move -> if isPlaying state
-      then CL.sourceList [GameMove move]
-      else do put (state {isPlaying = True}); CL.sourceList [cmd]
-    g@GameResult {} -> do put (state {isPlaying = False}); CL.sourceList [g]
+      then sourceList [GameMove move]
+      else do put (state {isPlaying = True}); sourceList [cmd]
+    g@GameResult {} -> do put (state {isPlaying = False}); sourceList [g]
     _ -> yield cmd
 
 
-parseC :: (Monad m) => Conduit BS.ByteString m CommandMsg
-parseC = awaitForever $ \str -> case parseCommandMsg str of
+parseC :: Conduit BS.ByteString (StateT HelperState IO) CommandMsg
+parseC = awaitForever $ \str ->case parseCommandMsg str of
   Left _    -> yield $ TextMessage $ BS.unpack str
   Right cmd -> yield cmd
 
 
-blockC :: (Monad m) => (Bool, BS.ByteString) -> Conduit Char m BS.ByteString
+blockC :: (Bool, BS.ByteString) -> Conduit Char (StateT HelperState IO) BS.ByteString
 blockC (block, p) = awaitForever $ \c -> case p of
   "login:" -> yield "login: " >> blockC (False, BS.empty)
   "password:" -> yield "password: " >> blockC (False, BS.empty)
@@ -90,17 +97,31 @@ blockC (block, p) = awaitForever $ \c -> case p of
     _  -> blockC (block, p `BS.append` BS.singleton c)
 
 
-toCharC :: (Monad m) => Conduit BS.ByteString m Char
-toCharC = awaitForever $ CL.sourceList . BS.unpack
+toCharC :: Conduit BS.ByteString (StateT HelperState IO) Char
+toCharC = awaitForever $ sourceList . BS.unpack
+
+
+fileLoggerC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+fileLoggerC = awaitForever $ \chunk -> liftIO (logFile chunk) >> yield chunk
 
 
 toGameResult :: Move -> CommandMsg
 toGameResult move = GameResult id reason result
-  where (id, reason, result) = Macbeth.Api.Move.toGameResultTuple move
+  where (id, reason, result) = toGameResultTuple move
+
 
 printCmdMsg :: CommandMsg -> IO ()
 printCmdMsg Prompt = return ()
-printCmdMsg (NewSeek _) = return ()
-printCmdMsg (RemoveSeeks _) = return ()
+printCmdMsg NewSeek {} = return ()
+printCmdMsg RemoveSeeks {} = return ()
 printCmdMsg cmd = print cmd
+
+
+logFile :: BS.ByteString -> IO ()
+logFile chunk = do
+  rootDir <- getUserDocumentsDirectory
+  createDirectoryIfMissing False $ rootDir </> "Macbeth"
+  dateTime <- fmap (formatTime defaultTimeLocale "%Y-%m-%d %H-%M-%S: ") getZonedTime
+  appendFile (rootDir </> "Macbeth" </> "macbeth.log") $
+    (foldr (.) (showString dateTime) $ fmap showLitChar (BS.unpack chunk)) "\n"
 

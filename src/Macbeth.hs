@@ -9,14 +9,17 @@ import Graphics.UI.WX
 -- TODO: Cmd+W, Cmd+Q
 -- unobserve does not work?
 -- out of time msg did not show (Schoon vs..)
+-- save game if observing optional
+-- wild games
+-- crazyhouse / bughouse
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes
 -- newtype for perspective == view
 -- TODO: user frameCreateTopFrame for background / hibernation /network conn evnt
--- TODO: provide more logging choice
 -- TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 -- declinedChallenge / offerDeclined
+-- refactor FicsConnection (performance)
 
 
 -- BUGS
