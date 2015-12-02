@@ -4,7 +4,7 @@ cabal-version: >= 1.8
 build-type: Simple
 license: AllRightsReserved
 license-file: ""
-data-files: resources/*.png, resources/*.jpg
+data-dir: resources
 
 library
     build-depends: base >=4.2 && <5, cabal-macosx, wxcore, wx,

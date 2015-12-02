@@ -12,6 +12,7 @@ import Graphics.UI.WX
 -- save game if observing optional
 -- wild games
 -- crazyhouse / bughouse
+-- status bar with multiple fields!
 
 -- ARCHITEX
 -- TODO: close all windows if ToolBox closes
