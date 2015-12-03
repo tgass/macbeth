@@ -6,6 +6,7 @@ import Macbeth.Api.Seek
 import Macbeth.Api.Game hiding (gameType, isRated)
 import Macbeth.Api.CommandMsg
 import Macbeth.Wx.Utils
+import Paths
 
 import Control.Concurrent.STM
 import Control.Applicative
@@ -44,7 +45,7 @@ wxSoughtList slp h = do
                 pt <- listEventGetPoint evt
                 menuPopup ctxMenu pt sl)
 
-    imagePaths <- mapM getAbsoluteFilePath imageFiles  -- make relative to application
+    imagePaths <- mapM getDataFileName imageFiles
     images     <- imageListFromFiles (sz 16 16) imagePaths
 
     listCtrlAssignImageList sl images wxIMAGE_LIST_SMALL

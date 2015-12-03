@@ -1,5 +1,5 @@
 name: Macbeth
-version: 0.0.1
+version: 0.0.3
 cabal-version: >= 1.8
 build-type: Simple
 license: AllRightsReserved
