@@ -11,7 +11,7 @@ import Macbeth.Api.Move
 import Macbeth.Wx.Api
 import Macbeth.Wx.Utils
 import Macbeth.Wx.PieceSet
-import Paths_Macbeth
+import Paths
 
 import Control.Applicative
 import Data.Maybe
@@ -192,7 +192,7 @@ pieceToFile (Piece Pawn White) = "wp"
 
 
 toBitmap :: Int -> PieceSet -> Piece -> Bitmap ()
-toBitmap size pieceSet p = bitmap $ unsafePerformIO getDataDir </> path pieceSet </> show size </> pieceToFile p ++ ".png"
+toBitmap size pieceSet p = bitmap $ unsafePerformIO $ getDataFileName $ path pieceSet </> show size </> pieceToFile p ++ ".png"
 
 
 paintHighlight :: DC a -> BoardState -> Color -> (Square, Square) -> IO ()

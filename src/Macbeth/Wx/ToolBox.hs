@@ -16,8 +16,7 @@ import Macbeth.Wx.SoughtList
 import Macbeth.Wx.ObservedGame
 import Macbeth.Wx.Challenge
 import Macbeth.Wx.Pending
-
-import Paths_Macbeth
+import Paths
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
@@ -36,7 +35,7 @@ ficsEventId = wxID_HIGHEST + 51
 
 wxToolBox :: Handle -> Chan CommandMsg -> IO ()
 wxToolBox h chan = do
-    f  <- frame [ text := "Macbeth" ]
+    f  <- frame [ text := "Macbeth"]
 
     tbar   <- toolBarEx f False False []
     tbarItem_seek <- toolItem tbar "Seek" False (unsafePerformIO $ getDataFileName $ "icons" </> "bullhorn.gif")

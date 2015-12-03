@@ -32,7 +32,6 @@ import Graphics.UI.WX
 
 -- MINOR
 
-
 main :: IO ()
 main = do
   (h, chan) <- ficsConnection

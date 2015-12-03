@@ -2,7 +2,8 @@ module Macbeth.Wx.About (
   wxAbout
 ) where
 
-import Paths_Macbeth
+import Paths
+
 import Graphics.UI.WX
 import System.IO.Unsafe
 

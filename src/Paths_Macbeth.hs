@@ -1,12 +1,8 @@
 module Paths_Macbeth (
-  getDataDir,
   getDataFileName
 ) where
 
-root = "resources/"
-
-getDataDir :: IO FilePath
-getDataDir = return root
+import System.FilePath
 
 getDataFileName :: FilePath -> IO FilePath
-getDataFileName name = return $ root ++ name
+getDataFileName f = return $ "resources" </> f

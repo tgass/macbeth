@@ -12,9 +12,10 @@ library
                    transformers, resourcet, bytestring, split,
                    attoparsec, filepath, containers, split,
                    mtl, stm, sodium, directory, filepath,
-                   time, MissingH, old-locale, safe
+                   time, MissingH, old-locale, safe, FindBin
     hs-source-dirs: src
-    exposed-modules: Macbeth.Api.Api,
+    exposed-modules: Paths,
+                     Macbeth.Api.Api,
                      Macbeth.Api.Challenge,
                      Macbeth.Api.CommandMsg,
                      Macbeth.Api.Game,
@@ -53,7 +54,7 @@ library
 
 executable MacbethRun
   main-is: src/Macbeth.hs
-  build-depends: base  >= 4.2, wx, wxcore, Macbeth, stm, safe
+  build-depends: base  >= 4.2, wx, wxcore, Macbeth, stm
   ghc-options: -O3 -threaded -W
 
 Test-Suite MacbethTestSuite
