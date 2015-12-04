@@ -6,7 +6,6 @@
 -- wild games
 -- crazyhouse / bughouse
 -- status bar with multiple fields!
--- on gameResult : remove higlight square, remove dragged piece, repaint
 
 
 -- ARCHITEX

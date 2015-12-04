@@ -99,7 +99,7 @@ createObservedGame h move chan = do
       windowOnKeyChar p_board (\_ -> return ())
       stopChessClock cc
       set status [text := (show result ++ " " ++ reason)]
-      atomically $ modifyTVar vBoardState (\s -> s{gameResult = Just result})
+      Board.resetPositionWithResult vBoardState result >> repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 

@@ -3,11 +3,13 @@ module Macbeth.Utils.Board (
   onMouseEvent,
   initBoardState,
   invertPerspective,
+  resetPositionWithResult,
   PieceMove (..),
 ) where
 
 import Macbeth.Api.Api
 import Macbeth.Api.Move
+import Macbeth.Api.Game
 import Macbeth.Wx.Api
 import Macbeth.Wx.Utils
 import Macbeth.Wx.PieceSet
@@ -16,7 +18,7 @@ import Paths
 import Control.Applicative
 import Data.Maybe
 import Control.Concurrent.STM
-import Graphics.UI.WX
+import Graphics.UI.WX hiding (position)
 import Graphics.UI.WXCore hiding (Row, Column)
 import System.FilePath
 import System.IO
@@ -41,6 +43,13 @@ invertPerspective ::  TVar BoardState -> IO ()
 invertPerspective vState = atomically $ modifyTVar vState (\s -> s{perspective = invert $ perspective s})
 
 
+resetPositionWithResult :: TVar BoardState -> GameResult -> IO ()
+resetPositionWithResult vState r = atomically $ modifyTVar vState
+  (\s -> s{ gameResult = Just r
+          , _position = position $ lastMove s
+          , preMoves = []
+          , draggedPiece = Nothing})
+
 draw :: Panel () -> Var BoardState -> DC a -> t -> IO ()
 draw _panel vState dc _ = do
   (Size x _) <- get _panel size
@@ -51,7 +60,7 @@ draw _panel vState dc _ = do
   when (isHighlightMove $ lastMove state) $ highlightLastMove dc state
   mapM_ (highlightPreMove dc state) (preMoves state)
   mapM_ (drawPiece dc state) (_position state)
-  when (isGameUser $ lastMove state) $ paintSelectedSquare dc state
+  when (isGameUser (lastMove state) && not (isJust $ gameResult state)) $ paintSelectedSquare dc state
   drawDraggedPiece dc state scale (draggedPiece state)
 
 
