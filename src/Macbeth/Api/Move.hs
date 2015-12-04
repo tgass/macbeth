@@ -114,6 +114,7 @@ toGameResultTuple move = (gameId move, namePlayer colorTurn move ++ " checkmated
 isHighlightMove :: Move -> Bool
 isHighlightMove m = (isJust . moveVerbose) m && (wasOponentMove m || relation m == Observing)
 
+
 dummyMove :: Move
 dummyMove = Move {
     positionRaw = "",

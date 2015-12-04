@@ -183,6 +183,7 @@ updateBoardState :: TVar BoardState -> Move -> IO ()
 updateBoardState vBoardState move =
   atomically $ modifyTVar vBoardState (\s -> s {
     isWaiting = isNextMoveUser move
+  , pieceMove = diffPosition (position $ lastMove s) (position move)
   , moves = addMove move (moves s)
   , lastMove = move
   , _position = movePieces (preMoves s) (position move)})

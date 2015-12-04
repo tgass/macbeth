@@ -5,6 +5,8 @@
 -- square doesn't highlight before first move
 -- don't premove if drag start = drag stop
 
+-- remove MoveDetailed?
+
 -- ??? unobserve does not work?
 -- ??? out of time msg did not show (Schoon vs..)
 -- save game if observing optional

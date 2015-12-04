@@ -28,6 +28,7 @@ import System.IO.Unsafe
 initBoardState move = BoardState {
       lastMove = move
     , gameResult = Nothing
+    , pieceMove = []
     , moves = [move | isJust $ movePretty move]
     , _position = Macbeth.Api.Move.position move
     , preMoves = []
@@ -71,7 +72,7 @@ drawBoard dc state = do
        where seed = if perspective' == White then [Black, White] else [White, Black]
   let sq = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
   set dc [ pen := penTransparent ]
-  withBrushStyle (BrushStyle BrushSolid (rgb 180 150 100)) $ \blackBrush ->
+  withBrushStyle (BrushStyle BrushSolid (rgb (180::Int) 150 100)) $ \blackBrush ->
     withBrushStyle (BrushStyle BrushSolid white) $ \whiteBrush ->
       mapM_ (\(c,sq) -> do
         dcSetBrush dc $ if c == White then whiteBrush else blackBrush
@@ -80,14 +81,10 @@ drawBoard dc state = do
 
 
 highlightLastMove :: DC a -> BoardState -> IO ()
-highlightLastMove dc state = let
-  turn' = turn $ lastMove state
-  move' =  (fromJust $ moveVerbose $ lastMove state)
-  in sequence_ $ paintHighlight dc state blue `fmap` convertMoveDt turn' move'
-
+highlightLastMove dc state = sequence_ $ paintHighlight dc state blue `fmap` pieceMove state
 
 highlightPreMove :: DC a -> BoardState -> PieceMove -> IO ()
-highlightPreMove dc state preMove = paintHighlight dc state yellow (from preMove, to preMove)
+highlightPreMove dc state = paintHighlight dc state yellow
 
 
 paintSelectedSquare :: DC a -> BoardState -> IO ()
@@ -204,8 +201,8 @@ toBitmap :: Int -> PieceSet -> Piece -> Bitmap ()
 toBitmap size pieceSet p = bitmap $ unsafePerformIO $ getDataFileName $ path pieceSet </> show size </> pieceToFile p ++ ".png"
 
 
-paintHighlight :: DC a -> BoardState -> Color -> (Square, Square) -> IO ()
-paintHighlight dc state color (s1, s2) = do
+paintHighlight :: DC a -> BoardState -> Color -> PieceMove -> IO ()
+paintHighlight dc state color (PieceMove _ s1 s2) = do
   set dc [pen := penColored color 1]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
     dcSetBrush dc brushBg
@@ -213,16 +210,5 @@ paintHighlight dc state color (s1, s2) = do
   withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
     drawArrow dc (psize state) s1 s2 (perspective state)
-
-
-convertMoveDt _ (Simple s1 s2) = [(s1, s2)]
-convertMoveDt Black CastleShort = [ (Square E One, Square G One)
-                                  , (Square H One, Square F One)]
-convertMoveDt Black CastleLong = [ (Square E One, Square C One)
-                                 , (Square A One, Square D One)]
-convertMoveDt White CastleShort = [ (Square E Eight, Square G Eight)
-                                  , (Square H Eight, Square F Eight)]
-convertMoveDt White CastleLong = [ (Square E Eight, Square C Eight)
-                                 , (Square A Eight, Square D Eight)]
 
 
