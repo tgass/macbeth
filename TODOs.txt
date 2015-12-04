@@ -1,11 +1,12 @@
--- TODO: application icon
--- TODO: Cmd+W, Cmd+Q
+-- application icon
+-- menu icons
+-- new About.jpg
+-- Cmd+W, Cmd+Q
 -- ??? unobserve does not work?
 -- ??? out of time msg did not show (Schoon vs..)
 -- save game if observing optional
 -- wild games
 -- crazyhouse / bughouse
--- status bar with multiple fields!
 -- remove status message after 5 seconds
 
 

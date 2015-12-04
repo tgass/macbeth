@@ -48,6 +48,7 @@ wxToolBox h chan = do
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
 
     status <- statusField []
+    statusLoggedIn <- statusField [ statusWidth := 100]
 
     nb <- notebook f []
 
@@ -70,9 +71,9 @@ wxToolBox h chan = do
     set ce [on enterKey := emitCommand ce h]
 
 
-    -- about menu
+    -- menu
     m_help    <- menuHelp []
-    _         <- menuAbout m_help [help := "About Macbeth", on command := wxAbout ]
+    menuAbout m_help [help := "About Macbeth", on command := wxAbout ]
 
     set f [ layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
@@ -83,7 +84,7 @@ wxToolBox h chan = do
                         ]
           , menuBar := [m_help]
           , outerSize := sz 600 600
-          , statusBar := [status]
+          , statusBar := [status, statusLoggedIn]
           ]
 
     -- preselect console
@@ -111,7 +112,7 @@ wxToolBox h chan = do
 
         LoggedIn userName -> set nb [on click := (onMouse nb >=> clickHandler h nb)] >>
                              hPutStrLn h `mapM_` defaultParams >>
-                             set f [ text := "Macbeth - Logged in as " ++ userName ] >>
+                             set statusLoggedIn [ text := userName] >>
                              set tbarItem_seek [ enabled := True ] >>
                              set tbarItem_match [ enabled := True ] >>
                              set tbarItem_finger [ enabled := True ]
