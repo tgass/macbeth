@@ -2,12 +2,16 @@
 -- menu icons
 -- new About.jpg
 -- Cmd+W, Cmd+Q
+-- square doesn't highlight before first move
+-- don't premove if drag start = drag stop
+
 -- ??? unobserve does not work?
 -- ??? out of time msg did not show (Schoon vs..)
 -- save game if observing optional
 -- wild games
 -- crazyhouse / bughouse
 -- remove status message after 5 seconds
+
 
 
 -- ARCHITEX
