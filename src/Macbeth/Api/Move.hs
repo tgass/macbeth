@@ -138,4 +138,8 @@ dummyMove = Move {
     remainingTimeW = 0,
     remainingTimeB = 0,
     movePretty = Just "f2"
+  , initialTime = 300
+  , incPerMove = 0
+  , whiteRelStrength = 120
+  , blackRelStrength = 120
   }

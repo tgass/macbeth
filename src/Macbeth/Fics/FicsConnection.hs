@@ -121,7 +121,8 @@ logFile :: BS.ByteString -> IO ()
 logFile chunk = do
   rootDir <- getUserDocumentsDirectory
   createDirectoryIfMissing False $ rootDir </> "Macbeth"
+  date <- fmap (formatTime defaultTimeLocale "%Y-%m-%d_") getZonedTime
   dateTime <- fmap (formatTime defaultTimeLocale "%Y-%m-%d %H-%M-%S: ") getZonedTime
-  appendFile (rootDir </> "Macbeth" </> "macbeth.log") $
+  appendFile (rootDir </> "Macbeth" </> date ++ "macbeth.log") $
     (foldr (.) (showString dateTime) $ fmap showLitChar (BS.unpack chunk)) "\n"
 
