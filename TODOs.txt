@@ -6,6 +6,7 @@
 -- wild games
 -- crazyhouse / bughouse
 -- status bar with multiple fields!
+-- remove status message after 5 seconds
 
 
 -- ARCHITEX
@@ -25,6 +26,5 @@
 
 -- PARSERS
 -- while observing: TextMessage "Game 84: Paet offers a draw."
--- "\NAK4\SYN158\SYNThat seek is not available.\n\ETB"
 
 -- MINOR

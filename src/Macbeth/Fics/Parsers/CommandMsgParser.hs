@@ -8,6 +8,7 @@ import Macbeth.Api.Api
 import Macbeth.Api.Challenge
 import Macbeth.Api.CommandMsg
 import Macbeth.Api.Game
+import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
 import Macbeth.Fics.Parsers.MoveParser
 import Macbeth.Fics.Parsers.RatingParser
@@ -26,6 +27,7 @@ parseCommandMsg = parseOnly parser where
   parser = choice [ SP.clearSeek
                   , SP.newSeek
                   , SP.removeSeeks
+                  , SP.seekNotAvailable
 
                   , gameMove
                   , confirmGameMove
@@ -236,16 +238,3 @@ acknoledge = commandHead 519 *> char (chr 23) *> pure Acknoledge
 
 settingsDone :: Parser CommandMsg
 settingsDone = char (chr 23) *> pure SettingsDone
-
-
-{- HELPER -}
-data CommandHead = CommandHead Int deriving (Show)
-
-commandHead :: Int -> Parser CommandHead
-commandHead code = do
-  char $ chr 21
-  id <- decimal
-  char $ chr 22
-  string $ BS.pack $ show code
-  char $ chr 22
-  return $ CommandHead id

@@ -23,6 +23,7 @@ library
                      Macbeth.Api.Rating,
                      Macbeth.Api.Seek,
                      Macbeth.Fics.FicsConnection
+                     Macbeth.Fics.Parsers.Api,
                      Macbeth.Fics.Parsers.CommandMsgParser,
                      Macbeth.Fics.Parsers.GamesParser,
                      Macbeth.Fics.Parsers.MoveParser,

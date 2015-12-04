@@ -3,7 +3,8 @@
 module Macbeth.Fics.Parsers.SeekMsgParsers (
   clearSeek,
   newSeek,
-  removeSeeks
+  removeSeeks,
+  seekNotAvailable
 ) where
 
 import Macbeth.Api.Api
@@ -11,6 +12,7 @@ import Macbeth.Api.CommandMsg
 import Macbeth.Api.Game
 import Macbeth.Api.Rating
 import Macbeth.Api.Seek
+import Macbeth.Fics.Parsers.Api
 import Macbeth.Utils.Utils
 
 import Control.Applicative
@@ -25,6 +27,10 @@ newSeek = NewSeek <$> seek'
 
 removeSeeks :: Parser CommandMsg
 removeSeeks = RemoveSeeks <$> ("<sr>" *> many1 (space *> decimal))
+
+seekNotAvailable :: Parser CommandMsg
+seekNotAvailable = commandHead 158 *> "That seek is not available." *> pure SeekNotAvailable
+
 
 seek' :: Parser Seek
 seek' = Seek

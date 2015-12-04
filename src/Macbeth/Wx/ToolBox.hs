@@ -101,6 +101,8 @@ wxToolBox h chan = do
           set status [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
 
+        SeekNotAvailable -> set status [text := "That seek is not available."]
+
         TextMessage text -> appendText ct $ text ++ "\n"
 
         SettingsDone -> hPutStrLn h `mapM_` ["4 iset seekinfo 1", "4 games", "4 pending"]

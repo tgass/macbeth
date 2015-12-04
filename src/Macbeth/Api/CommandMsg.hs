@@ -34,6 +34,7 @@ data CommandMsg =   GameMove Move
                   | NewSeek Seek
                   | RemoveSeeks [Int]
                   | ClearSeek
+                  | SeekNotAvailable
 
                   | Finger String String
 
