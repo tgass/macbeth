@@ -126,9 +126,9 @@ noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
 matchRequested :: Parser CommandMsg
 matchRequested = MatchRequested <$> (Challenge
   <$> ("Challenge: " *> manyTill anyChar space)
-  <*> ("(" *> rating)
+  <*> ("(" *> skipSpace *> rating)
   <*> (") " *> manyTill anyChar space)
-  <*> ("(" *> rating)
+  <*> ("(" *> skipSpace *> rating)
   <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
 
 declinedChallenge :: Parser CommandMsg

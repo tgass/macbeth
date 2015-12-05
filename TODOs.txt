@@ -34,5 +34,6 @@
 
 -- PARSERS
 -- while observing: TextMessage "Game 84: Paet offers a draw."
+-- "GuestPCFH declines the match offer."
 
 -- MINOR
