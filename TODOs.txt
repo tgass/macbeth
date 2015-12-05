@@ -4,6 +4,7 @@
 -- Cmd+W, Cmd+Q
 -- square doesn't highlight before first move
 -- don't premove if drag start = drag stop
+-- parse illegal move -> status msg
 
 -- remove MoveDetailed?
 
@@ -12,6 +13,7 @@
 -- save game if observing optional
 -- wild games
 -- crazyhouse / bughouse
+-- fisher random (0-0, 0-0-0 shortcuts)
 -- remove status message after 5 seconds
 
 

@@ -39,11 +39,12 @@ instance Show Square where
 type Position = [(Square, Piece)]
 
 diffPosition :: Position -> Position -> [PieceMove]
-diffPosition before after = [PieceMove piece1 s1 s2 | (s1, piece1) <- from, (s2, piece2) <- to
+diffPosition before after = let from = before \\ after
+                                to = after \\ before
+                            in [PieceMove piece1 s1 s2 | (s1, piece1) <- from, (s2, piece2) <- to
                                                     , piece1 == piece2
                                                     , s1 /= s2 ]
-  where from = before \\ after
-        to = after \\ before
+
 
 data PieceMove = PieceMove { piece :: Piece, from :: Square, to :: Square }
 
