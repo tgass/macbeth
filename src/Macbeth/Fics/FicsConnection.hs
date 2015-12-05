@@ -64,15 +64,15 @@ extractC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
 extractC = awaitForever $ \cmd -> do
   state <- get
   case cmd of
+    Boxed cmds -> sourceList cmds
     GameCreation id _ -> put (state {gameId' = Just id}) >> sourceList []
-    GameMove move
+    GameMove _ move
       | isCheckmate move && isOponentMove move -> sourceList $ cmd : [toGameResult move]
       | isNewGameUser move && fromMaybe False ((== gameId move) <$> gameId' state) -> do
           put (state {gameId' = Nothing }); sourceList [MatchAccepted move]
       | otherwise -> sourceList [cmd]
-    Boxed cmds -> sourceList cmds
-    MatchAccepted move -> if isPlaying state
-      then sourceList [GameMove move]
+    MatchAccepted move -> if isPlaying state --takeback
+      then sourceList [GameMove False move]
       else do put (state {isPlaying = True}); sourceList [cmd]
     g@GameResult {} -> do put (state {isPlaying = False}); sourceList [g]
     _ -> yield cmd
@@ -124,5 +124,5 @@ logFile chunk = do
   date <- fmap (formatTime defaultTimeLocale "%Y-%m-%d_") getZonedTime
   dateTime <- fmap (formatTime defaultTimeLocale "%Y-%m-%d %H-%M-%S: ") getZonedTime
   appendFile (rootDir </> "Macbeth" </> date ++ "macbeth.log") $
-    (foldr (.) (showString dateTime) $ fmap showLitChar (BS.unpack chunk)) "\n"
+    (foldr (.) (showString $ "\n" ++ dateTime) $ fmap showLitChar (BS.unpack chunk)) ""
 

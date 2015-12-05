@@ -8,8 +8,8 @@ import Macbeth.Api.Game
 import Macbeth.Api.Move
 import Macbeth.Api.Seek
 
-data CommandMsg =   GameMove Move
-                  | PieceHolding { gameId :: Int, h_white :: [PType], h_black :: [PType] }
+data CommandMsg =   GameMove { illegal :: Bool, move :: Move }
+                  | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }
                   | Games [Game]
                   | Observe Move
                   | RemovingObservedGame

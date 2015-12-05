@@ -85,10 +85,10 @@ createObservedGame h move chan = do
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
-    GameMove move' -> when (gameId move' == gameId move) $ do
+    GameMove illegal move' -> when (gameId move' == gameId move) $ do
       state <- varGet vBoardState
       updateChessClock move' cc
-      set status [text := ""]
+      set status [text := if illegal then "Illegal move." else ""]
       updateBoardState vBoardState move'
       when (isNextMoveUser move' && not (null $ preMoves state)) $
         handlePreMoves vBoardState h

@@ -6,7 +6,7 @@ module Macbeth.Fics.Parsers.MoveParser (
 ) where
 
 import Macbeth.Api.Api
-import Macbeth.Api.CommandMsg
+import Macbeth.Api.CommandMsg hiding (move)
 import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Api.Move hiding (relation)
 

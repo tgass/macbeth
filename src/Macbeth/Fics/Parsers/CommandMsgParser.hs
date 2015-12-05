@@ -6,7 +6,7 @@ module Macbeth.Fics.Parsers.CommandMsgParser (
 
 import Macbeth.Api.Api
 import Macbeth.Api.Challenge
-import Macbeth.Api.CommandMsg
+import Macbeth.Api.CommandMsg hiding (move)
 import Macbeth.Api.Game
 import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
@@ -79,12 +79,14 @@ parseCommandMsg = parseOnly parser where
                   ]
 
 gameMove :: Parser CommandMsg
-gameMove = GameMove <$> move
+gameMove = GameMove <$> pure False <*> move
 
 confirmGameMove :: Parser CommandMsg
-confirmGameMove = Boxed <$> sequence [ commandHead 1 *> option NullCommand (takeTill (=='<') *> pieceHolding)
-                                     , GameMove <$> (takeTill (=='<') *> move)
-                                     ]
+confirmGameMove = do
+  illegal <- commandHead 1 *> option False ("Illegal move" *> pure True)
+  ph <- option NullCommand (takeTill (=='<') *> pieceHolding)
+  move' <- takeTill (=='<') *> move
+  return $ Boxed [ph, GameMove illegal move']
 
 accept :: Parser CommandMsg
 accept = MatchAccepted <$> (commandHead 11 *> takeTill (== '<') *> move)

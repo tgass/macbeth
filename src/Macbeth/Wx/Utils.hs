@@ -34,8 +34,8 @@ listItemRightClickEvent listCtrl eventHandler
 
 
 toWxColor :: PColor -> Graphics.UI.WXCore.Color
-toWxColor White = white
-toWxColor Black = black
+toWxColor White = Graphics.UI.WXCore.white
+toWxColor Black = Graphics.UI.WXCore.black
 
 staticTextFormatted :: Panel () -> String -> IO (StaticText ())
 staticTextFormatted p s = staticText p [ text := s
