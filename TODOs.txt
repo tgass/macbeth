@@ -3,7 +3,6 @@
 -- new About.jpg
 -- Cmd+W, Cmd+Q
 -- square doesn't highlight before first move
--- don't premove if drag start = drag stop
 -- msg if takeback ?
 
 -- remove MoveDetailed?

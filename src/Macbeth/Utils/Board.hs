@@ -130,7 +130,7 @@ onMouseEvent _panel h vState evtMouse = do
         varSet vState state { _position = newPosition, draggedPiece = Nothing}
         if isWaiting state
           then hPutStrLn h $ "6 " ++ show (PieceMove piece dp_sq clicked_sq)
-          else atomically $ modifyTVar vState (\s -> s {preMoves = preMoves state ++ [PieceMove piece dp_sq clicked_sq]})
+          else addPreMove vState $ PieceMove piece dp_sq clicked_sq
       _ -> return ()
 
     MouseLeftDrag pt _ -> varSet vState state { selSquare = toSquare pt
