@@ -114,9 +114,7 @@ wxToolBox h chan = do
         LoggedIn userName -> set nb [on click := (onMouse nb >=> clickHandler h nb)] >>
                              hPutStrLn h `mapM_` defaultParams >>
                              set statusLoggedIn [ text := userName] >>
-                             set tbarItem_seek [ enabled := True ] >>
-                             set tbarItem_match [ enabled := True ] >>
-                             set tbarItem_finger [ enabled := True ]
+                             (`set` [ enabled := True ]) `mapM_` [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
         GuestLogin _ -> set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ] >>
                         set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
