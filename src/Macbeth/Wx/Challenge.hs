@@ -4,14 +4,14 @@ module Macbeth.Wx.Challenge (
 
 import Macbeth.Api.Challenge
 import Macbeth.Api.CommandMsg
-import Macbeth.Wx.Utils (eventLoop)
+import Macbeth.Wx.Utils
 
 import Control.Concurrent
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
 
-eventId = wxID_HIGHEST + 97
+eventId = wxID_HIGHEST + 54
 
 wxChallenge :: Handle -> Challenge -> Chan CommandMsg  -> IO ()
 wxChallenge h c chan = do
@@ -40,6 +40,8 @@ wxChallenge h c chan = do
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
       MatchRequested c' -> when (isUpdate c c') $ close f
+
+      WxClose -> close f
 
       _ -> return ()
 

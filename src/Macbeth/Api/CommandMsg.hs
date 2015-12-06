@@ -53,6 +53,7 @@ data CommandMsg =   GameMove { illegal :: Bool, move :: Move }
                   | UnkownUsername String
 
                   {- Internal -}
+                  | WxClose
                   | NullCommand
                   | GameCreation { gameId :: Int, description :: String }
                   | Boxed [CommandMsg] deriving (Show, Eq)

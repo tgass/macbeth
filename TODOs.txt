@@ -18,7 +18,6 @@
 
 
 -- ARCHITEX
--- TODO: close all windows if ToolBox closes
 -- newtype for perspective == view
 -- TODO: user frameCreateTopFrame for background / hibernation /network conn evnt
 -- TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)

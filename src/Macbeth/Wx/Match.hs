@@ -3,10 +3,15 @@ module Macbeth.Wx.Match (
   wxMatch
 ) where
 
+import Macbeth.Api.CommandMsg
+import Macbeth.Wx.Utils
+
 import Control.Applicative
-import Data.Char (toLower)
+import Control.Concurrent.Chan
+import Data.Char
 import Graphics.UI.WX
-import System.IO (Handle, hPutStrLn, stdout)
+import Graphics.UI.WXCore
+import System.IO
 
 data WxMatch = WxMatch {
   name :: TextCtrl (),
@@ -16,10 +21,12 @@ data WxMatch = WxMatch {
   color :: Choice ()
 }
 
-main = start $ wxMatch stdout False
+eventId = wxID_HIGHEST + 56
 
-wxMatch :: Handle -> Bool -> IO ()
-wxMatch h isGuest = do
+main = start $ wxMatch stdout False undefined
+
+wxMatch :: Handle -> Bool -> Chan CommandMsg -> IO ()
+wxMatch h isGuest chan = do
   f <- frameFixed [ text := "Create a match" ]
   p <- panel f []
   match <- matchInputs p isGuest
@@ -39,7 +46,7 @@ wxMatch h isGuest = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-
+  registerWxCloseEventListener chan eventId f
 
 matchInputs :: Panel () -> Bool -> IO WxMatch
 matchInputs p isGuest = WxMatch

@@ -52,7 +52,7 @@ createObservedGame h move chan = do
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command :=
     Board.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board]
-  when (relation move `elem` [MyMove, OponentsMove]) $ do
+  when (isGameUser move) $ do
      menuLine ctxMenu
      menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
      menuItem ctxMenu [ text := "Request takeback 2", on command := hPutStrLn h "4 takeback 2"]
@@ -63,6 +63,7 @@ createObservedGame h move chan = do
      windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
   menuLine ctxMenu
   wxPieceSetsMenu ctxMenu vBoardState p_board
+
   -- status line
   status <- statusField []
 
@@ -114,6 +115,8 @@ createObservedGame h move chan = do
     TakebackRequest user numTakeback -> do
       set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
       windowOnKeyChar p_back acceptDeclineKeyHandler
+
+    WxClose -> close f
 
     _ -> return ()
 

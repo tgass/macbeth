@@ -3,18 +3,23 @@ module Macbeth.Wx.Seek (
   main
 ) where
 
+import Macbeth.Api.CommandMsg
+import Macbeth.Wx.Utils
+
 import Control.Applicative
 import Control.Monad (void)
+import Control.Concurrent.Chan
 import Data.Char (toLower)
 import Graphics.UI.WX hiding (color)
 import Graphics.UI.WXCore
 import System.IO (Handle, hPutStrLn, stdout)
 
-main = start $ wxSeek stdout True
+eventId = wxID_HIGHEST + 57
 
+main = start $ wxSeek stdout True undefined
 
-wxSeek :: Handle -> Bool -> IO ()
-wxSeek h isGuest = do
+wxSeek :: Handle -> Bool -> Chan CommandMsg -> IO ()
+wxSeek h isGuest chan = do
   f <- frameFixed [ text := "Seek a match" ]
   p <- panel f []
   match <- matchInputs p isGuest
@@ -32,7 +37,7 @@ wxSeek h isGuest = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-  void $ windowShow f
+  registerWxCloseEventListener chan eventId f
 
 -- 4 seek time inc rated color from-to
 toString:: WxSeek -> IO String

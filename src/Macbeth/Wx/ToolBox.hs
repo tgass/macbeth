@@ -31,7 +31,7 @@ import System.FilePath
 import System.IO
 import System.IO.Unsafe
 
-ficsEventId = wxID_HIGHEST + 51
+eventId = wxID_HIGHEST + 51
 
 wxToolBox :: Handle -> Chan CommandMsg -> IO ()
 wxToolBox h chan = do
@@ -39,10 +39,10 @@ wxToolBox h chan = do
 
     tbar   <- toolBarEx f False False []
     tbarItem_seek <- toolItem tbar "Seek" False (unsafePerformIO $ getDataFileName $ "icons" </> "bullhorn.gif")
-      [ on command := wxSeek h False, enabled := False, tooltip := "Seek" ]
+      [ on command := dupChan chan >>= wxSeek h False, enabled := False, tooltip := "Seek" ]
 
     tbarItem_match <- toolItem tbar "Match" False  (unsafePerformIO $ getDataFileName $ "icons" </> "dot-circle-o.gif")
-      [ on command := wxMatch h False, enabled := False, tooltip := "Match" ]
+      [ on command := dupChan chan >>= wxMatch h False, enabled := False, tooltip := "Match" ]
 
     tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName $ "icons" </> "fa-question.png")
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
@@ -73,7 +73,7 @@ wxToolBox h chan = do
 
     -- menu
     m_help    <- menuHelp []
-    menuAbout m_help [help := "About Macbeth", on command := wxAbout ]
+    menuAbout m_help [help := "About Macbeth", on command := dupChan chan >>= wxAbout ]
 
     set f [ layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
@@ -91,9 +91,10 @@ wxToolBox h chan = do
     notebookSetSelection nb 3
 
     vCmd <- newEmptyMVar
-    threadId <- forkIO $ eventLoop ficsEventId chan vCmd f
-    windowOnDestroy f $ killThread threadId
-    evtHandlerOnMenuCommand f ficsEventId $ takeMVar vCmd >>= \cmd ->
+    threadId <- forkIO $ eventLoop eventId chan vCmd f
+    windowOnDestroy f $ writeChan chan WxClose >> killThread threadId
+
+    evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
       glHandler cmd >> slHandler cmd >> pendingHandler cmd >> case cmd of
 
         MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
@@ -117,10 +118,10 @@ wxToolBox h chan = do
                              set tbarItem_match [ enabled := True ] >>
                              set tbarItem_finger [ enabled := True ]
 
-        GuestLogin _ -> set tbarItem_seek  [on command := wxSeek h True ] >>
-                        set tbarItem_match  [on command := wxMatch h True ]
+        GuestLogin _ -> set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ] >>
+                        set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
-        Finger name stats -> wxFinger name stats
+        Finger name stats -> dupChan chan >>= wxFinger name stats
 
         LoginTimeout -> set f [ text := "Login Timeout." ]
 

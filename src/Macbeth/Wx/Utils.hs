@@ -1,5 +1,6 @@
 module Macbeth.Wx.Utils (
   eventLoop,
+  registerWxCloseEventListener,
   listItemRightClickEvent,
   toWxColor,
   staticTextFormatted,
@@ -13,8 +14,7 @@ module Macbeth.Wx.Utils (
 import Macbeth.Api.Api
 import Macbeth.Api.CommandMsg
 
-import Control.Concurrent.Chan
-import Control.Concurrent.MVar
+import Control.Concurrent
 import Graphics.UI.WX
 import Graphics.UI.WXCore hiding (Column, Row)
 
@@ -23,6 +23,17 @@ eventLoop :: Int -> Chan CommandMsg -> MVar CommandMsg -> Frame () -> IO ()
 eventLoop id chan vCmd f = readChan chan >>= putMVar vCmd >>
   commandEventCreate wxEVT_COMMAND_MENU_SELECTED id >>= evtHandlerAddPendingEvent f >>
   eventLoop id chan vCmd f
+
+
+registerWxCloseEventListener :: Chan CommandMsg -> Int -> Frame () -> IO ()
+registerWxCloseEventListener chan eventId f = do
+  vCmd <- newEmptyMVar
+  threadId <- forkIO $ eventLoop eventId chan vCmd f
+  windowOnDestroy f $ killThread threadId
+
+  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
+    WxClose -> close f
+    _ -> return ()
 
 
 listItemRightClickEvent :: ListCtrl a -> (Graphics.UI.WXCore.ListEvent () -> IO ()) -> IO ()
