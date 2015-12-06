@@ -10,7 +10,6 @@
 -- ??? unobserve does not work?
 -- ??? out of time msg did not show (Schoon vs..)
 -- save game if observing optional
--- wild games
 -- crazyhouse / bughouse
 -- fisher random (0-0, 0-0-0 shortcuts)
 -- remove status message after 5 seconds
@@ -34,5 +33,6 @@
 -- PARSERS
 -- while observing: TextMessage "Game 84: Paet offers a draw."
 -- "GuestPCFH declines the match offer."
+-- "Logging you in as "GuestRCSH"; you may use this name to play unrated games."
 
 -- MINOR

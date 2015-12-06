@@ -35,21 +35,22 @@ library
                      Macbeth.Utils.Board,
                      Macbeth.Utils.Utils,
                      Macbeth.Wx.About,
-                     Macbeth.Wx.Finger,
+                     Macbeth.Wx.Api,
                      Macbeth.Wx.Challenge,
+                     Macbeth.Wx.Clock,
+                     Macbeth.Wx.Finger,
+                     Macbeth.Wx.GamesList,
+                     Macbeth.Wx.GameMoves,
+                     Macbeth.Wx.GameType,
                      Macbeth.Wx.Login,
                      Macbeth.Wx.Match,
                      Macbeth.Wx.ObservedGame,
-                     Macbeth.Wx.Seek,
-                     Macbeth.Wx.ToolBox,
-                     Macbeth.Wx.Utils,
                      Macbeth.Wx.Pending,
-                     Macbeth.Wx.GamesList,
-                     Macbeth.Wx.SoughtList,
-                     Macbeth.Wx.Clock,
-                     Macbeth.Wx.GameMoves,
                      Macbeth.Wx.PieceSet,
-                     Macbeth.Wx.Api
+                     Macbeth.Wx.Seek,
+                     Macbeth.Wx.SoughtList,
+                     Macbeth.Wx.ToolBox,
+                     Macbeth.Wx.Utils
   other-modules: Paths_Macbeth
   ghc-options: -O3 -threaded -W
 
