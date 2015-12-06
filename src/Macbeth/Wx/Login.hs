@@ -3,13 +3,15 @@ module Macbeth.Wx.Login (
 ) where
 
 import Macbeth.Api.CommandMsg
+import Macbeth.Wx.Utils
 
 import Control.Applicative
 import Control.Concurrent.Chan
 import Graphics.UI.WX
 import Graphics.UI.WXCore
-import System.IO (Handle, hPutStrLn)
+import System.IO
 
+eventId = wxID_HIGHEST + 60
 
 data WxLogin = WxLogin {
   name :: TextCtrl (),
@@ -29,15 +31,15 @@ wxLogin h chan = do
   b_can <- button p [text := "Quit", on command := close f]
 
   set f [ defaultButton := b_ok
-        , layout := container p $ margin 10 $
-            column 25 [boxed "" (
-              grid 15 15 [
+        , layout := container p $ margin 10 $ column 25 [
+              boxed "" (grid 15 15 [
                 [ label "Username:", hfill $ widget $ name wxInputs]
-               ,[ label "Password:", hfill $ widget $ password wxInputs]]
-            )
+               ,[ label "Password:", hfill $ widget $ password wxInputs]])
             , floatBottomRight $ row 5 [widget b_ok, widget b_can]]
         , statusBar := [ status ]
         ]
+  wxChan <- dupChan chan
+  registerWxCloseEventListener wxChan eventId f
 
 
 okBtnHandler :: WxLogin -> Frame() -> Handle -> Chan CommandMsg -> IO ()
@@ -45,10 +47,9 @@ okBtnHandler wxInputs f h chan = get (name wxInputs) text >>= hPutStrLn h >> loo
   where
     loop = readChan chan >>= handlePw
 
+    handlePw :: CommandMsg -> IO ()
     handlePw Password = get (password wxInputs) text >>= hPutStrLn h
     handlePw (GuestLogin _) = hPutStrLn h ""
-    handlePw LoginTimeout = close f
-    handlePw WxClose = close f
     handlePw _ = loop
 
 

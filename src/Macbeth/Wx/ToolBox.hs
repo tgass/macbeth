@@ -112,7 +112,7 @@ wxToolBox h chan = do
         InvalidPassword  -> void $ set status [text := "Invalid password."]
 
         LoggedIn userName -> set nb [on click := (onMouse nb >=> clickHandler h nb)] >>
-                             hPutStrLn h `mapM_` defaultParams >>
+                             hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
                              set statusLoggedIn [ text := userName] >>
                              (`set` [ enabled := True ]) `mapM_` [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
@@ -121,7 +121,7 @@ wxToolBox h chan = do
 
         Finger name stats -> dupChan chan >>= wxFinger name stats
 
-        LoginTimeout -> set f [ text := "Login Timeout." ]
+        LoginTimeout -> set status [ text := "Login Timeout." ]
 
         Login -> dupChan chan >>= wxLogin h
 
@@ -136,9 +136,6 @@ wxToolBox h chan = do
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
 emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set textCtrl [text := ""]
-
-
-defaultParams = [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"]
 
 
 onMouse :: Notebook() -> Point -> IO Int
