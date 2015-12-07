@@ -1,7 +1,7 @@
 -- application icon
 -- menu icons
 -- new About.jpg
--- Cmd+W, Cmd+Q
+-- Cmd+W
 -- square doesn't highlight before first move
 -- msg if takeback ?
 -- auto / manual seek
