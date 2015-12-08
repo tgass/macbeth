@@ -3,7 +3,9 @@ module Macbeth.Utils.Board (
   onMouseEvent,
   initBoardState,
   invertPerspective,
-  resetPositionWithResult,
+  setResult,
+  update,
+  cancelLastPreMove,
   PieceMove (..),
 ) where
 
@@ -18,8 +20,9 @@ import Paths
 import Control.Applicative
 import Data.Maybe
 import Control.Concurrent.STM
-import Graphics.UI.WX hiding (position)
+import Graphics.UI.WX hiding (position, update)
 import Graphics.UI.WXCore hiding (Row, Column)
+import Safe
 import System.FilePath
 import System.IO
 import System.IO.Unsafe
@@ -44,12 +47,38 @@ invertPerspective ::  TVar BoardState -> IO ()
 invertPerspective vState = atomically $ modifyTVar vState (\s -> s{perspective = invert $ perspective s})
 
 
-resetPositionWithResult :: TVar BoardState -> GameResult -> IO ()
-resetPositionWithResult vState r = atomically $ modifyTVar vState
-  (\s -> s{ gameResult = Just r
-          , _position = position $ lastMove s
-          , preMoves = []
-          , draggedPiece = Nothing})
+setResult :: TVar BoardState -> GameResult -> IO ()
+setResult vState r = atomically $ modifyTVar vState (\s ->
+  s{ gameResult = Just r
+   , _position = position $ lastMove s
+   , preMoves = []
+   , draggedPiece = Nothing})
+
+
+update :: TVar BoardState -> Move -> IO ()
+update vBoardState move = atomically $ modifyTVar vBoardState (\s ->
+  s { isWaiting = isNextMoveUser move
+  , pieceMove = diffPosition (position $ lastMove s) (position move)
+  , moves = addMove move (moves s)
+  , lastMove = move
+  , draggedPiece = Nothing
+  , _position = movePieces (preMoves s) (position move)})
+  where
+    {- Add new moves in the front, so I can check for duplicates. -}
+    addMove :: Move -> [Move] -> [Move]
+    addMove m [] = [m]
+    addMove m moves@(m':_)
+      | areEqual m m' = moves
+      | otherwise = m : moves
+        where areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
+
+
+cancelLastPreMove :: TVar BoardState -> IO ()
+cancelLastPreMove vBoardState = atomically $ modifyTVar vBoardState (\s ->
+  let preMoves' = fromMaybe [] $ initMay (preMoves s) in
+  s { preMoves = preMoves'
+    , _position = movePieces preMoves' (position $ lastMove s)})
+
 
 draw :: Panel () -> Var BoardState -> DC a -> t -> IO ()
 draw _panel vState dc _ = do
@@ -83,6 +112,7 @@ drawBoard dc state = do
 highlightLastMove :: DC a -> BoardState -> IO ()
 highlightLastMove dc state = sequence_ $ paintHighlight dc state blue `fmap` pieceMove state
 
+
 highlightPreMove :: DC a -> BoardState -> PieceMove -> IO ()
 highlightPreMove dc state = paintHighlight dc state yellow
 
@@ -91,7 +121,7 @@ paintSelectedSquare :: DC a -> BoardState -> IO ()
 paintSelectedSquare dc state =
   withBrushStyle brushTransparent $ \transparent -> do
     dcSetBrush dc transparent
-    set dc [penColor := red ]
+    set dc [pen := penColored red 1]
     paintSquare dc (psize state) (perspective state) (selSquare state)
 
 
@@ -210,5 +240,4 @@ paintHighlight dc state color (PieceMove _ s1 s2) = do
   withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
     drawArrow dc (psize state) s1 s2 (perspective state)
-
 

@@ -14,14 +14,12 @@ import Macbeth.Wx.PieceSet
 import qualified Macbeth.Utils.Board as Board
 
 import Control.Concurrent
-import Control.Concurrent.Chan ()
 import Control.Concurrent.STM
 import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Graphics.UI.WX hiding (when, position)
 import Graphics.UI.WXCore hiding (when, Timer)
-import Safe
 import System.IO
 
 eventId = wxID_HIGHEST + 53
@@ -90,7 +88,7 @@ createObservedGame h move chan = do
       state <- varGet vBoardState
       updateChessClock move' cc
       set status [text := if illegal then "Illegal move." else ""]
-      updateBoardState vBoardState move'
+      Board.update vBoardState move'
       when (isNextMoveUser move' && not (null $ preMoves state)) $
         handlePreMoves vBoardState h
       repaint p_board
@@ -100,7 +98,7 @@ createObservedGame h move chan = do
       windowOnKeyChar p_board (\_ -> return ())
       stopChessClock cc
       set status [text := (show result ++ " " ++ reason)]
-      Board.resetPositionWithResult vBoardState result >> repaint p_board
+      Board.setResult vBoardState result >> repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
@@ -141,15 +139,8 @@ resizeFrame f = do
 
 cancelLastPreMove :: TVar BoardState -> Panel () -> EventKey -> IO ()
 cancelLastPreMove vBoardState panel keyboard = case keyKey keyboard of
-  KeyChar 'x' -> cancelLastPreMove' vBoardState >> repaint panel
+  KeyChar 'x' -> Board.cancelLastPreMove vBoardState >> repaint panel
   _ -> return ()
-  where
-    cancelLastPreMove' :: TVar BoardState -> IO ()
-    cancelLastPreMove' vBoardState =
-      atomically $ modifyTVar vBoardState (\s ->
-        let preMoves' = fromMaybe [] $ initMay (preMoves s) in s {
-        preMoves = preMoves'
-      , _position = movePieces preMoves' (position $ lastMove s)})
 
 
 handlePreMoves :: TVar BoardState -> Handle -> IO ()
@@ -180,23 +171,4 @@ updateBoardLayout pback board white black vBoardState = do
   set pback [ layout := column 0 [ hfill $ widget (if perspective state == White then black else white)
                                  , stretch $ minsize (Size 320 320) $ shaped $ widget board
                                  , hfill $ widget (if perspective state == White then white else black)]]
-
-
-updateBoardState :: TVar BoardState -> Move -> IO ()
-updateBoardState vBoardState move =
-  atomically $ modifyTVar vBoardState (\s -> s {
-    isWaiting = isNextMoveUser move
-  , pieceMove = diffPosition (position $ lastMove s) (position move)
-  , moves = addMove move (moves s)
-  , lastMove = move
-  , _position = movePieces (preMoves s) (position move)})
-
-
-{- Add new moves in the front, so I can check for duplicates. -}
-addMove :: Move -> [Move] -> [Move]
-addMove m [] = [m]
-addMove m moves@(m':_)
-  | areEqual m m' = moves
-  | otherwise = m : moves
-    where areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
 
