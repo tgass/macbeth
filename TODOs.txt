@@ -5,16 +5,15 @@
 -- msg if takeback ?
 -- auto / manual seek
 -- fisher random (0-0, 0-0-0 shortcuts)
+-- save game if observing optional
+-- save game: don't save if abort on move 1
+-- crazyhouse / bughouse
+
 
 -- remove MoveDetailed?
 -- ??? unobserve does not work?
 -- ??? out of time msg did not show (Schoon vs..)
--- save game if observing optional
--- save game: don't save if abort on move 1
--- crazyhouse / bughouse
 -- remove status message after 5 seconds
-
-
 
 -- ARCHITEX
 -- newtype for perspective == view
