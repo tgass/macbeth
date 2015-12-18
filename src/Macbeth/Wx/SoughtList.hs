@@ -69,7 +69,7 @@ wxSoughtList slp h = do
 imageNames = ["fa-user", "fa-desktop"]
 
 
-imageFiles = map (\name -> "icons/" ++ name ++ ".png") imageNames
+imageFiles = map (\name -> "icons/" ++ name ++ ".gif") imageNames
 
 
 addSeek :: ListCtrl () -> Seek -> IO ()

@@ -44,7 +44,7 @@ wxToolBox h chan = do
     tbarItem_match <- toolItem tbar "Match" False  (unsafePerformIO $ getDataFileName $ "icons" </> "dot-circle-o.gif")
       [ on command := dupChan chan >>= wxMatch h False, enabled := False, tooltip := "Match" ]
 
-    tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName $ "icons" </> "fa-question.png")
+    tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName $ "icons" </> "fa-question.gif")
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
 
     status <- statusField []
