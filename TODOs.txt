@@ -2,6 +2,7 @@
 -- menu icons
 -- new About.jpg
 -- Cmd+W
+-- Bug when observing game. Wrong game opened
 -- msg if takeback ?
 -- auto / manual seek
 -- fisher random (0-0, 0-0-0 shortcuts)
