@@ -16,43 +16,41 @@ data GamesOpts = GamesOpts { refresh :: MenuItem ()
                            , showUnrated :: MenuItem ()
                            }
 
-wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), CommandMsg -> IO CommandMsg)
+wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), CommandMsg -> IO ())
 wxGamesList glp h = do
-  gl  <- listCtrl glp [
-    columns :=
+  gl  <- listCtrl glp [ columns :=
       [ ("#", AlignLeft, -1)
       , ("player 1", AlignLeft, -1)
       , ("rating", AlignLeft, -1)
       , ("player 2", AlignLeft, -1)
       , ("rating", AlignLeft, -1)
       , ("Game type", AlignLeft, -1)
-      ]
-    ]
+      ]]
   listCtrlSetColumnWidths gl 100
 
   glCtxMenu <- menuPane []
   gamesOpts <- getGamesOpts glCtxMenu
   set (refresh gamesOpts) [on command := hPutStrLn h "4 games"]
-
-  let handler cmd = case cmd of
-          Games games -> do
-              filterGamesList gl gamesOpts games
-              set (showRated gamesOpts) [on command := filterGamesList gl gamesOpts games]
-              set (showUnrated gamesOpts) [on command := filterGamesList gl gamesOpts games]
-              set gl [on listEvent := onGamesListEvent games h]
-
-              listItemRightClickEvent gl (\evt -> do
-                pt <- listEventGetPoint evt
-                menuPopup glCtxMenu pt gl)
-              return cmd
-          _ -> return cmd
-
-  return (gl, handler)
+  return (gl, handler gamesOpts gl glCtxMenu h)
 
 
-onGamesListEvent :: [Game] -> Handle -> EventList -> IO ()
-onGamesListEvent games h eventList = case eventList of
-  ListItemActivated idx -> hPutStrLn h $ "4 observe " ++ show (Macbeth.Api.Game.id $ games !! idx)
+handler :: GamesOpts -> ListCtrl () -> Menu () -> Handle -> CommandMsg -> IO ()
+handler gamesOpts gl glCtxMenu h cmd = case cmd of
+  Games games -> do
+    filterGamesList gl gamesOpts games
+    set (showRated gamesOpts) [on command := filterGamesList gl gamesOpts games]
+    set (showUnrated gamesOpts) [on command := filterGamesList gl gamesOpts games]
+    set gl [on listEvent := onGamesListEvent gl h]
+
+    listItemRightClickEvent gl (\evt -> do
+      pt <- listEventGetPoint evt
+      menuPopup glCtxMenu pt gl)
+  _ -> return ()
+
+
+onGamesListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
+onGamesListEvent gl h evt = case evt of
+  ListItemActivated idx -> listCtrlGetItemText gl idx >>= hPutStrLn h . ("4 observe " ++)
   _ -> return ()
 
 
@@ -73,5 +71,6 @@ getGamesOpts ctxMenu = GamesOpts
   <*> menuItem ctxMenu [ text := "Show unrated games", checkable := True, checked := True]
 
 
+toList :: Game -> [String]
 toList g = [show $ Macbeth.Api.Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g, show $ gameType $ settings g]
 
