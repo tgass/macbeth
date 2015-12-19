@@ -111,10 +111,8 @@ filterSoughtList sl opts vSoughtList = do
 
 
 onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
-onSeekListEvent sl h eventList = case eventList of
-  ListItemActivated idx -> do
-    seeks <- get sl items
-    hPutStrLn h $ "4 play " ++ show (read $ head (seeks !! idx) :: Int)
+onSeekListEvent sl h evt = case evt of
+  ListItemActivated idx -> listCtrlGetItemText sl idx >>= hPutStrLn h . ("4 play " ++)
   _ -> return ()
 
 
