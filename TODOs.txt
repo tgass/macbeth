@@ -3,7 +3,6 @@
 -- new About.jpg
 -- Cmd+W
 -- msg if takeback ?
--- auto / manual seek
 -- fisher random (0-0, 0-0-0 shortcuts)
 -- save game if observing optional
 -- save game: don't save if abort on move 1

@@ -7,7 +7,7 @@ import Macbeth.Api.CommandMsg
 import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 
-import Control.Applicative
+import Control.Applicative hiding (empty)
 import Control.Concurrent.Chan
 import Data.Char (toLower)
 import Graphics.UI.WX hiding (color)
@@ -18,16 +18,16 @@ eventId = wxID_HIGHEST + 57
 
 -- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide] [wild #] [auto|manual] [formula] [rating-range]
 data WxSeek = WxSeek {
-  category :: Choice (),
-  board :: Choice (),
-  time :: TextCtrl (),
-  inc :: TextCtrl (),
-  rated :: CheckBox (),
-  color :: Choice (),
--- manual :: CheckBox ()
--- formula :: CheckBox (),
-  ratingFrom :: TextCtrl (),
-  ratingTo :: TextCtrl ()
+    category :: Choice ()
+  , board :: Choice ()
+  , time :: TextCtrl ()
+  , inc :: TextCtrl ()
+  , rated :: CheckBox ()
+  , color :: Choice ()
+  , manual :: CheckBox ()
+--, formula :: CheckBox ()
+  , ratingFrom :: TextCtrl ()
+  , ratingTo :: TextCtrl ()
 }
 
 
@@ -49,6 +49,7 @@ wxSeek h isGuest chan = do
             boxed "" (grid 15 15 [
                   [ label "Time [min.]:", hfill $ widget $ time match, label "Inc [sec.]:", hfill $ widget $ inc match]
                 , [ label "Rated:", hfill $ widget $ rated match, label "Color:", hfill $ widget $ color match]
+                , [ label "Manual accept:", hfill $ widget $ manual match, empty, empty]
                 , [ label "Rating from", hfill $ widget $ ratingFrom match, label "to", hfill $ widget $ ratingTo match]
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
@@ -56,19 +57,22 @@ wxSeek h isGuest chan = do
   registerWxCloseEventListener chan eventId f
 
 
--- 4 seek time inc rated color from-to
+-- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide]
+--      [wild #] [auto|manual] [formula] [rating-range]
 toString:: WxSeek -> IO String
 toString m = (("4 seek " ++) . unwords) `fmap` sequence [
     get (time m) text
   , get (inc m) text
-  , convertIsRated `fmap` get (rated m) enabled
+  , convertIsRated <$> get (rated m) enabled
   , get (color m) selection >>= fmap convertColor . get (color m) . item
-  , convertRatingRange <$> get (ratingFrom m) text <*> get (ratingTo m) text
-  , gameTypeIdxToString <$> get (category m) selection <*> get (board m) selection]
+  , gameTypeIdxToString <$> get (category m) selection <*> get (board m) selection
+  , convertAutoManual <$> get (manual m) checked
+  , convertRatingRange <$> get (ratingFrom m) text <*> get (ratingTo m) text]
     where
       convertIsRated r = if r then "rated" else "unrated"
       convertColor x = if x == "Automatic" then "" else fmap toLower x
       convertRatingRange from to = from ++ "-" ++ to
+      convertAutoManual isManual = if isManual then "m" else "a"
 
 
 matchInputs :: Panel () -> Bool -> IO WxSeek
@@ -79,6 +83,7 @@ matchInputs p isGuest = WxSeek
   <*> textEntry p [ text := "0"]
   <*> checkBox p [ enabled := not isGuest ]
   <*> choice p [tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
+  <*> checkBox p []
   <*> textEntry p [ text := "0"]
   <*> textEntry p [ text := "9999"]
 
