@@ -14,48 +14,57 @@ import System.IO
 eventId = wxID_HIGHEST + 60
 
 data WxLogin = WxLogin {
-  name :: TextCtrl (),
-  password :: TextCtrl ()
+    name :: TextCtrl ()
+  , password :: TextCtrl ()
+  , guestLogin :: CheckBox ()
 }
 
 
 wxLogin :: Handle -> Chan CommandMsg -> IO ()
 wxLogin h chan = do
-  f <- frameFixed [ text := "FICS Login" ]
+  f <- frameFixed [ text := "Macbeth" ]
   p <- panel f []
   wxInputs <- loginInputs p
-
-  status <- statusField []
+  set (guestLogin wxInputs) [on command := toggleLoginFields wxInputs]
 
   b_ok  <- button p [text := "Login", on command := okBtnHandler wxInputs f h chan]
   b_can <- button p [text := "Quit", on command := close f]
 
   set f [ defaultButton := b_ok
         , layout := container p $ margin 10 $ column 25 [
-              boxed "" (grid 15 15 [
+              boxed "Login @ freechess.org" (grid 15 15 [
                 [ label "Username:", hfill $ widget $ name wxInputs]
-               ,[ label "Password:", hfill $ widget $ password wxInputs]])
+               ,[ label "Password:", hfill $ widget $ password wxInputs]
+               ,[ label "Login as Guest:", hfill $ widget $ guestLogin wxInputs]])
             , floatBottomRight $ row 5 [widget b_ok, widget b_can]]
-        , statusBar := [ status ]
         ]
   wxChan <- dupChan chan
   registerWxCloseEventListener wxChan eventId f
 
 
 okBtnHandler :: WxLogin -> Frame() -> Handle -> Chan CommandMsg -> IO ()
-okBtnHandler wxInputs f h chan = get (name wxInputs) text >>= hPutStrLn h >> loop >> close f
+okBtnHandler wxInputs f h chan = do
+  isGuestLogin <- get (guestLogin wxInputs) checked
+  username <- get (name wxInputs) text
+  hPutStrLn h (if isGuestLogin then "guest" else username) >> loop >> close f
   where
     loop = readChan chan >>= handlePw
 
     handlePw :: CommandMsg -> IO ()
     handlePw Password = get (password wxInputs) text >>= hPutStrLn h
     handlePw (GuestLogin _) = hPutStrLn h ""
+    handlePw Login = return ()
     handlePw _ = loop
 
 
 loginInputs :: Panel () -> IO WxLogin
 loginInputs p = WxLogin
-  <$> textEntry p [ text := "guest", alignment := AlignRight]
-  <*> textCtrlEx p wxTE_PASSWORD [ alignment := AlignRight]
+  <$> textEntry p [alignment := AlignRight]
+  <*> textCtrlEx p wxTE_PASSWORD [alignment := AlignRight]
+  <*> checkBox p []
 
-
+toggleLoginFields :: WxLogin -> IO ()
+toggleLoginFields wxLogin = do
+  isChecked <- get (guestLogin wxLogin) checked
+  set (name wxLogin) [enabled := not isChecked]
+  set (password wxLogin) [enabled := not isChecked]
