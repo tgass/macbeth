@@ -1,4 +1,4 @@
-name: Macbeth
+name: Macbeth-lib
 version: 0.0.4
 cabal-version: >= 1.8
 build-type: Simple
@@ -54,9 +54,9 @@ library
   other-modules: Paths_Macbeth
   ghc-options: -O3 -threaded -W
 
-executable MacbethRun
+executable Macbeth
   main-is: src/Macbeth.hs
-  build-depends: base  >= 4.2, wx, wxcore, Macbeth, stm
+  build-depends: base  >= 4.2, wx, wxcore, Macbeth-lib, stm
   ghc-options: -O3 -threaded -W
 
 Test-Suite MacbethTestSuite

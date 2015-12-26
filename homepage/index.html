@@ -5,10 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Bootstrap 101 Template</title>
+    <title>Macbeth - A simple FICS client for OSX</title>
 
     <!-- Bootstrap -->
     <link href="bootstrap-3.3.5-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/macbeth.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -20,49 +21,67 @@
   <body>
     <div class="jumbotron">
       <div class="container">
-        <h1>Lentils</h1>
-        <p>Lentils - A simple and clean FICS client for OSX</p>
+	<div class="col-md-offset-2 col-md-8 text-center">
+          <h1>Macbeth</h1>
+          <p>A simple FICS client for OSX</p>
+	</div>
       </div>
     </div>
-    <div class="container">
-      <!-- Example row of columns -->
+    <div class="container-fluid text-center">
       <div class="row">
-        <div class="col-md-4">
-          <h2>What is FICS?</h2>
-          <p>FICS is the Free Internet Chess Server. It is one of the oldest and largest internet chess servers.</p>
-          <p><a class="btn btn-default" href="#" role="button">Read more &raquo;</a></p>
+	<div class="col-md-offset-2 col-md-8">
+          <p class="text-center"><button type="button" class="btn btn-lg btn-primary">Download</button></p>
         </div>
-        <div class="col-md-4">
-          <h2>What is Lentils?</h2>
-          <p>Lentils provides a graphical interface for FICS. Since FICS is text-based, a program is needed to make FICS pretty. This is where Lentils comes in.</p>
-          <p><a class="btn btn-default" href="#" role="button">Read more &raquo;</a></p>
-       </div>
-        <div class="col-md-4">
-          <h2>Where do I start?</h2>
-          <p>Download Lentils and start playing as a guest on FICS. Later you can register for a FICS account, for free!</p>
-          <p><a class="btn btn-default" href="#" role="button">Read more &raquo;</a></p>
+
+        <div class="col-md-offset-2 col-md-8">
+          <h2>Screenshots</h2>
+        </div>
+
+        <div class="col-md-offset-2 col-md-8 padding-bottom-m">
+          <img alt="" class="img-responsive" src="Macbeth_login.png">
+	  <p>Login</p>
+	</div>
+
+        <div class="col-md-offset-2 col-md-8 padding-bottom-m">
+          <img alt="" class="img-responsive" src="Macbeth_observeGames.png">
+	  <p>Observing multiple games</p>
+	</div>
+
+        <div class="col-md-offset-2 col-md-8 padding-bottom-m">
+          <img alt="" class="img-responsive center-block" src="Macbeth_SoughtList.png">
+	  <p>Soughtlist</p>
+	</div>
+
+        <div class="col-md-offset-2 col-md-8 padding-bottom-m">
+          <img alt="" class="img-responsive center-block" src="Macbeth_PreMoves.png">
+	  <p>Pre-Moves</p>
+	</div>
+
+        <div class="col-md-offset-2 col-md-8">
+          <h2>Features</h2>
+          <ul>
+	    <li>Sought List</li>
+	    <li>Games List</li>
+	    <li>Resume pending games</li> 
+	    <li>Seek Game</li>
+	    <li>Match Player</li>
+	    <li>Pre-Moves</li>
+	    <li>Auto-Save Game to PGN</li> 
+	  </ul> 
+        </div>
+
+        <div class="col-md-offset-2 col-md-8">
+	  <h2>What is FICS?</h2>
+	  <p>FICS is the venerable free chess server ...</p>
         </div>
       </div>
 
-      <hr>
-
-      <div class="container">
-	      <div class="row">
-		      <div class="col-md-3">&nbsp;</div>
-		      <div class="col-md-6">
-		           <h1>What is FICS?</h1> 
-			   The FICS
-		      </div>
-                <div class="col-md-3"></div>
-	      
-	      </div> 
+        <div class="col-md-offset-2 col-md-8">
+	  <h2>About Macbeth</h2>
+	  <p>FICS is the venerable free chess server ...</p>
       </div>
-
-
-      <footer>
-        <p>&copy; Company 2014</p>
-      </footer>
-    </div> <!-- /container -->
+    </div>
+    
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
