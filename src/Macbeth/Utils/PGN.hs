@@ -18,7 +18,7 @@ import System.Locale
 saveAsPGN :: BoardState ->  IO ()
 saveAsPGN b = saveAsPGN' (reverse $ moves b) (gameResult b)
 
-
+saveAsPGN' :: [Move] -> Maybe GameResult -> IO ()
 saveAsPGN' [] _ = return ()
 saveAsPGN' moves mGameResult = do
   rootDir <- getUserDocumentsDirectory

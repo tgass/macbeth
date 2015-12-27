@@ -1,36 +1,26 @@
--- application icon
--- menu icons
+-- License info
 -- new About.jpg
--- Cmd+W
--- msg if takeback ?
--- fisher random (0-0, 0-0-0 shortcuts)
--- save game if observing optional
--- save game: don't save if abort on move 1
--- crazyhouse / bughouse
-
-
--- remove MoveDetailed?
--- ??? unobserve does not work?
--- ??? out of time msg did not show (Schoon vs..)
--- remove status message after 5 seconds
+-- pre-Move: what if piece on target square? is it captured properly?
 
 -- ARCHITEX
 -- newtype for perspective == view
--- TODO: user frameCreateTopFrame for background / hibernation /network conn evnt
--- TODO: create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
+-- user frameCreateTopFrame for background / hibernation /network conn evnt
+-- create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 -- declinedChallenge / offerDeclined
 -- refactor FicsConnection (performance)
-
+-- remove MoveDetailed?
 
 -- BUGS
--- TODO: Seek auto match ?! Bug?
 
 -- FEATURES
+-- fisher random (0-0, 0-0-0 shortcuts)
+-- msg if takeback ?
+-- save game if observing optional
+-- crazyhouse / bughouse
+-- Cmd+W
 -- command moves to get first moves in observed game?
 
 -- PARSERS
 -- while observing: TextMessage "Game 84: Paet offers a draw."
 -- "GuestPCFH declines the match offer."
 -- "Logging you in as "GuestRCSH"; you may use this name to play unrated games."
-
--- MINOR

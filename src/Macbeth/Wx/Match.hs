@@ -57,13 +57,13 @@ wxMatch h isGuest chan = do
 
 matchInputs :: Panel () -> Bool -> IO WxMatch
 matchInputs p isGuest = WxMatch
-  <$> choice p [items := fmap (show . fst) gameTypes]
-  <*> choice p []
+  <$> choice p [ items := fmap (show . fst) gameTypes]
+  <*> choice p [ visible := False]
   <*> textEntry p [ ]
   <*> textEntry p [ text := "5" ]
   <*> textEntry p [ text := "0" ]
   <*> checkBox p [ enabled := not isGuest ]
-  <*> choice p [tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
+  <*> choice p [ tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
 
 
 -- 4 match GuestXYZZ rated 5 0 white

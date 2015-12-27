@@ -78,7 +78,7 @@ toString m = (("4 seek " ++) . unwords) `fmap` sequence [
 matchInputs :: Panel () -> Bool -> IO WxSeek
 matchInputs p isGuest = WxSeek
   <$> choice p [items := fmap (show . fst) gameTypes]
-  <*> choice p []
+  <*> choice p [ visible := False ]
   <*> textEntry p [ text := "5"]
   <*> textEntry p [ text := "0"]
   <*> checkBox p [ enabled := not isGuest ]

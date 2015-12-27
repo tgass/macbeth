@@ -20,10 +20,10 @@ wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), CommandMsg -> IO ())
 wxGamesList glp h = do
   gl  <- listCtrl glp [ columns :=
       [ ("#", AlignLeft, -1)
-      , ("player 1", AlignLeft, -1)
-      , ("rating", AlignLeft, -1)
-      , ("player 2", AlignLeft, -1)
-      , ("rating", AlignLeft, -1)
+      , ("Player 1", AlignLeft, -1)
+      , ("Rating", AlignLeft, -1)
+      , ("Player 2", AlignLeft, -1)
+      , ("Rating", AlignLeft, -1)
       , ("Game type", AlignLeft, -1)
       ]]
   listCtrlSetColumnWidths gl 100

@@ -48,16 +48,16 @@ invertPerspective vState = atomically $ modifyTVar vState (\s -> s{perspective =
 
 
 setResult :: TVar BoardState -> GameResult -> IO ()
-setResult vState r = atomically $ modifyTVar vState (\s ->
-  s{ gameResult = Just r
+setResult vState r = atomically $ modifyTVar vState (\s -> s{
+     gameResult = Just r
    , _position = position $ lastMove s
    , preMoves = []
    , draggedPiece = Nothing})
 
 
 update :: TVar BoardState -> Move -> IO ()
-update vBoardState move = atomically $ modifyTVar vBoardState (\s ->
-  s { isWaiting = isNextMoveUser move
+update vBoardState move = atomically $ modifyTVar vBoardState (\s -> s {
+    isWaiting = isNextMoveUser move
   , pieceMove = diffPosition (position $ lastMove s) (position move)
   , moves = addMove move (moves s)
   , lastMove = move
@@ -75,8 +75,8 @@ update vBoardState move = atomically $ modifyTVar vBoardState (\s ->
 
 cancelLastPreMove :: TVar BoardState -> IO ()
 cancelLastPreMove vBoardState = atomically $ modifyTVar vBoardState (\s ->
-  let preMoves' = fromMaybe [] $ initMay (preMoves s) in
-  s { preMoves = preMoves'
+  let preMoves' = fromMaybe [] $ initMay (preMoves s) in s {
+      preMoves = preMoves'
     , _position = movePieces preMoves' (position $ lastMove s)})
 
 
@@ -90,7 +90,7 @@ draw _panel vState dc _ = do
   when (isHighlightMove $ lastMove state) $ highlightLastMove dc state
   mapM_ (highlightPreMove dc state) (preMoves state)
   mapM_ (drawPiece dc state) (_position state)
-  when (isGameUser (lastMove state) && not (isJust $ gameResult state)) $ paintSelectedSquare dc state
+  when (isGameUser (lastMove state) && (isNothing $ gameResult state)) $ paintSelectedSquare dc state
   drawDraggedPiece dc state scale (draggedPiece state)
 
 

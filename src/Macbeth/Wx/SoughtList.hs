@@ -24,10 +24,10 @@ data SoughtOpts = SoughtOpts { computerOffers :: MenuItem ()
 wxSoughtList :: Panel () -> Handle -> IO (ListCtrl (), CommandMsg -> IO ())
 wxSoughtList slp h = do
     sl  <- listCtrl slp [columns := [ ("#", AlignLeft, -1)
-                                    , ("handle", AlignLeft, -1)
-                                    , ("rating", AlignLeft, -1)
+                                    , ("Handle", AlignLeft, -1)
+                                    , ("Rating", AlignLeft, -1)
                                     , ("Time (start inc.)", AlignRight, -1)
-                                    , ("type", AlignRight, -1)]
+                                    , ("Type", AlignRight, -1)]
                                     ]
     set sl [on listEvent := onSeekListEvent sl h]
     listCtrlSetColumnWidths sl 100
