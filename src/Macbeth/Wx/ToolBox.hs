@@ -5,7 +5,7 @@ module Macbeth.Wx.ToolBox (
 ) where
 
 import Macbeth.Api.CommandMsg
-import Macbeth.Wx.About
+--import Macbeth.Wx.About
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList
 import Macbeth.Wx.Login
@@ -73,7 +73,7 @@ wxToolBox h chan = do
 
     -- menu
     m_help    <- menuHelp []
-    menuAbout m_help [help := "About Macbeth", on command := dupChan chan >>= wxAbout ]
+    --menuAbout m_help [help := "About Macbeth", on command := dupChan chan >>= wxAbout ]
 
     set f [ layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
