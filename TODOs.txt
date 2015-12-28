@@ -24,3 +24,6 @@
 -- while observing: TextMessage "Game 84: Paet offers a draw."
 -- "GuestPCFH declines the match offer."
 -- "Logging you in as "GuestRCSH"; you may use this name to play unrated games."
+
+-- APP
+-- alternative icons: crosshair, child, flag, search
