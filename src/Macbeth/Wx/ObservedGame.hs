@@ -121,7 +121,7 @@ createObservedGame h move chan = do
   windowOnDestroy f $ do
     catch (killThread threadId) (\e -> print $ show (e :: IOException))
     boardState <- readTVarIO vBoardState
-    saveAsPGN boardState
+    when (isGameUser move) $ saveAsPGN boardState
     unless (isJust $ gameResult boardState) $ case relation move of
       MyMove -> hPutStrLn h "5 resign"
       OponentsMove -> hPutStrLn h "5 resign"
