@@ -3,9 +3,9 @@ module Macbeth.Wx.ObservedGame (
 ) where
 
 
-import Macbeth.Api.Api
-import Macbeth.Api.CommandMsg hiding (gameId)
-import Macbeth.Api.Move
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.CommandMsg hiding (gameId)
+import Macbeth.Fics.Api.Move
 import Macbeth.Utils.PGN
 import Macbeth.Wx.Api
 import Macbeth.Wx.Utils

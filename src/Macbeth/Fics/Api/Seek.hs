@@ -1,12 +1,12 @@
-module Macbeth.Api.Seek (
+module Macbeth.Fics.Api.Seek (
   Seek (..),
   StartMode,
   Title (..)
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Game
-import Macbeth.Api.Rating
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Rating
 import Macbeth.Utils.Utils
 
 data Seek = Seek {

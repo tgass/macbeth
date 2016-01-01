@@ -1,12 +1,12 @@
-module Macbeth.Api.CommandMsg (
+module Macbeth.Fics.Api.CommandMsg (
   CommandMsg (..)
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Challenge
-import Macbeth.Api.Game
-import Macbeth.Api.Move
-import Macbeth.Api.Seek
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Challenge
+import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.Seek
 
 data CommandMsg =   GameMove { illegal :: Bool, move :: Move }
                   | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }

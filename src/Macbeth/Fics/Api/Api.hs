@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Macbeth.Api.Api (
+module Macbeth.Fics.Api.Api (
   PColor (..),
   Piece (..),
   PType (..),

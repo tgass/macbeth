@@ -4,7 +4,7 @@ module Macbeth.Fics.Parsers.RatingParser (
   rating
 ) where
 
-import Macbeth.Api.Rating
+import Macbeth.Fics.Api.Rating
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8

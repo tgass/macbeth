@@ -1,4 +1,4 @@
-module Macbeth.Api.Move (
+module Macbeth.Fics.Api.Move (
   Move(..),
   Relation(..),
   Castling(..),
@@ -20,8 +20,8 @@ module Macbeth.Api.Move (
   dummyMove
 ) where
 
-import Macbeth.Api.Api
-import qualified Macbeth.Api.Game as Game
+import Macbeth.Fics.Api.Api
+import qualified Macbeth.Fics.Api.Game as Game
 
 import Data.Maybe
 
@@ -52,12 +52,12 @@ data Relation = IsolatedPosition | ObservingExaminedGame | Examiner | MyMove | O
 
 data Castling = WhiteLong | WhiteShort | BlackLong | BlackShort deriving (Show, Eq)
 
-remainingTime :: Macbeth.Api.Api.PColor -> Move -> Int
+remainingTime :: Macbeth.Fics.Api.Api.PColor -> Move -> Int
 remainingTime Black = remainingTimeB
 remainingTime White = remainingTimeW
 
 
-decreaseRemainingTime :: Macbeth.Api.Api.PColor -> Move -> Move
+decreaseRemainingTime :: Macbeth.Fics.Api.Api.PColor -> Move -> Move
 decreaseRemainingTime Black move = move {remainingTimeB = max 0 $ remainingTimeB move - 1}
 decreaseRemainingTime White move = move {remainingTimeW = max 0 $ remainingTimeW move - 1}
 
@@ -66,8 +66,8 @@ nameUser :: Move -> String
 nameUser m = namePlayer (colorUser m) m
 
 
-colorUser :: Move -> Macbeth.Api.Api.PColor
-colorUser m = if relation m == MyMove then turn m else Macbeth.Api.Api.invert $ turn m
+colorUser :: Move -> Macbeth.Fics.Api.Api.PColor
+colorUser m = if relation m == MyMove then turn m else Macbeth.Fics.Api.Api.invert $ turn m
 
 isGameUser :: Move -> Bool
 isGameUser m = relation m `elem` [MyMove, OponentsMove]
@@ -86,7 +86,7 @@ wasOponentMove :: Move -> Bool
 wasOponentMove m = colorUser m == turn m
 
 
-namePlayer :: Macbeth.Api.Api.PColor -> Move -> String
+namePlayer :: Macbeth.Fics.Api.Api.PColor -> Move -> String
 namePlayer White = nameW
 namePlayer Black = nameB
 
@@ -95,10 +95,10 @@ nameOponent :: Move -> String
 nameOponent m = namePlayer (invert $ colorUser m) m
 
 
-playerColor :: String -> Move -> Macbeth.Api.Api.PColor
+playerColor :: String -> Move -> Macbeth.Fics.Api.Api.PColor
 playerColor name move
-  | nameW move == name = Macbeth.Api.Api.White
-  | otherwise = Macbeth.Api.Api.Black
+  | nameW move == name = Macbeth.Fics.Api.Api.White
+  | otherwise = Macbeth.Fics.Api.Api.Black
 
 
 isCheckmate :: Move -> Bool

@@ -2,9 +2,9 @@ module Macbeth.Utils.PGN (
   saveAsPGN
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Move
-import Macbeth.Api.Game (GameResult)
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.Game (GameResult)
 import qualified Macbeth.Utils.FEN as FEN
 import Macbeth.Wx.Api
 

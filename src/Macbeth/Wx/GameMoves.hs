@@ -2,8 +2,8 @@ module Macbeth.Wx.GameMoves (
   wxGameMoves
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Move
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Move
 
 import Control.Applicative hiding (empty)
 import Control.Concurrent.STM

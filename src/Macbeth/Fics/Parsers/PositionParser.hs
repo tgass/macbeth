@@ -4,7 +4,7 @@ module Macbeth.Fics.Parsers.PositionParser (
   parsePosition
 ) where
 
-import Macbeth.Api.Api
+import Macbeth.Fics.Api.Api
 import Control.Arrow (second)
 import Data.List.Split
 import Data.Maybe

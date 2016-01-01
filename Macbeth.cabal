@@ -12,13 +12,13 @@ library
                    time, MissingH, old-locale, safe, FindBin
     hs-source-dirs: src
     exposed-modules: Paths,
-                     Macbeth.Api.Api,
-                     Macbeth.Api.Challenge,
-                     Macbeth.Api.CommandMsg,
-                     Macbeth.Api.Game,
-                     Macbeth.Api.Move,
-                     Macbeth.Api.Rating,
-                     Macbeth.Api.Seek,
+                     Macbeth.Fics.Api.Api,
+                     Macbeth.Fics.Api.Challenge,
+                     Macbeth.Fics.Api.CommandMsg,
+                     Macbeth.Fics.Api.Game,
+                     Macbeth.Fics.Api.Move,
+                     Macbeth.Fics.Api.Rating,
+                     Macbeth.Fics.Api.Seek,
                      Macbeth.Fics.FicsConnection
                      Macbeth.Fics.Parsers.Api,
                      Macbeth.Fics.Parsers.CommandMsgParser,
@@ -60,4 +60,4 @@ Test-Suite MacbethTestSuite
     type:       detailed-0.9
     hs-source-dirs: test
     test-module: MacbethTest
-    build-depends: Macbeth, base, Cabal >= 1.9.2, bytestring
+    build-depends: Macbeth-lib, base, Cabal >= 1.9.2, bytestring

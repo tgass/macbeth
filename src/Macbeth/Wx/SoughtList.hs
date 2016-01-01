@@ -2,9 +2,9 @@ module Macbeth.Wx.SoughtList (
   wxSoughtList
 ) where
 
-import Macbeth.Api.Seek
-import Macbeth.Api.Game hiding (gameType, isRated)
-import Macbeth.Api.CommandMsg
+import Macbeth.Fics.Api.Seek
+import Macbeth.Fics.Api.Game hiding (gameType, isRated)
+import Macbeth.Fics.Api.CommandMsg
 import Macbeth.Wx.Utils
 import Paths
 

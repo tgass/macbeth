@@ -2,13 +2,13 @@ module MacbethTest ( tests ) where
 
 import Distribution.TestSuite
 
-import Macbeth.Api.Api
-import Macbeth.Api.Challenge
-import Macbeth.Api.Rating
-import Macbeth.Api.CommandMsg
-import Macbeth.Api.Game
-import Macbeth.Api.Seek
-import Macbeth.Api.Move
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Challenge
+import Macbeth.Fics.Api.Rating
+import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Seek
+import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Parsers.CommandMsgParser
 import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Fics.Parsers.GamesParser
@@ -67,9 +67,9 @@ commandMessageParserTest = [
       , (MatchUserNotLoggedIn "GuestLHDG", "\NAK4\SYN73\SYNGuestLHDG is not logged in.\n\ETB")
       , (PieceHolding 455 [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
       , (SeekNotAvailable, "\NAK4\SYN158\SYNThat seek is not available.\n\ETB")
-      , (Boxed [NullCommand, GameMove {illegal = False, move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------", position = [], turn = Black, doublePawnPush = Nothing, castlingAv = [WhiteShort,WhiteLong,BlackShort,BlackLong], ply = 1, Macbeth.Api.Move.gameId = 147, Macbeth.Api.Move.nameW = "Schoon", Macbeth.Api.Move.nameB = "GuestYBPD", relation = MyMove, initialTime = 5, incPerMove = 0, whiteRelStrength = 39, blackRelStrength = 39, remainingTimeW = 295, remainingTimeB = 297, moveNumber = 2, moveVerbose = Just(Simple (Square G One) (Square E Three)), timeTaken = "(0:05)", movePretty = Just "Qe3"}}],
+      , (Boxed [NullCommand, GameMove {illegal = False, move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------", position = [], turn = Black, doublePawnPush = Nothing, castlingAv = [WhiteShort,WhiteLong,BlackShort,BlackLong], ply = 1, Macbeth.Fics.Api.Move.gameId = 147, Macbeth.Fics.Api.Move.nameW = "Schoon", Macbeth.Fics.Api.Move.nameB = "GuestYBPD", relation = MyMove, initialTime = 5, incPerMove = 0, whiteRelStrength = 39, blackRelStrength = 39, remainingTimeW = 295, remainingTimeB = 297, moveNumber = 2, moveVerbose = Just(Simple (Square G One) (Square E Three)), timeTaken = "(0:05)", movePretty = Just "Qe3"}}],
           "\NAK6\SYN1\SYN\n\r\a\n\r<12> -------- -------- -------- -------- -------- -------- -------- -------- B -1 1 1 1 1 1 147 Schoon GuestYBPD 1 5 0 39 39 295 297 2 Q/g1-e3 (0:05) Qe3 1 1 0\n\r\ETB")
-      , (Boxed [NullCommand, GameMove {illegal = True, move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------", position = [], turn = Black, doublePawnPush = Nothing, castlingAv = [WhiteShort,WhiteLong,BlackShort,BlackLong], ply = 1, Macbeth.Api.Move.gameId = 147, Macbeth.Api.Move.nameW = "Schoon", Macbeth.Api.Move.nameB = "GuestYBPD", relation = MyMove, initialTime = 5, incPerMove = 0, whiteRelStrength = 39, blackRelStrength = 39, remainingTimeW = 295, remainingTimeB = 297, moveNumber = 2, moveVerbose = Just(Simple (Square G One) (Square E Three)), timeTaken = "(0:05)", movePretty = Just "Qe3"}}],
+      , (Boxed [NullCommand, GameMove {illegal = True, move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------", position = [], turn = Black, doublePawnPush = Nothing, castlingAv = [WhiteShort,WhiteLong,BlackShort,BlackLong], ply = 1, Macbeth.Fics.Api.Move.gameId = 147, Macbeth.Fics.Api.Move.nameW = "Schoon", Macbeth.Fics.Api.Move.nameB = "GuestYBPD", relation = MyMove, initialTime = 5, incPerMove = 0, whiteRelStrength = 39, blackRelStrength = 39, remainingTimeW = 295, remainingTimeB = 297, moveNumber = 2, moveVerbose = Just(Simple (Square G One) (Square E Three)), timeTaken = "(0:05)", movePretty = Just "Qe3"}}],
           "\NAK6\SYN1\SYNIllegal move (b7b7).\n\r\a\n\r<12> -------- -------- -------- -------- -------- -------- -------- -------- B -1 1 1 1 1 1 147 Schoon GuestYBPD 1 5 0 39 39 295 297 2 Q/g1-e3 (0:05) Qe3 1 1 0\n\r\ETB")
       , (MatchRequested $ Challenge "Schoon" (Rating 997 None) "GuestPCFH" Unrated "unrated blitz 5 0", "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters.")
       ]

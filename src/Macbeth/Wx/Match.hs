@@ -3,7 +3,7 @@ module Macbeth.Wx.Match (
   wxMatch
 ) where
 
-import Macbeth.Api.CommandMsg
+import Macbeth.Fics.Api.CommandMsg
 import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 

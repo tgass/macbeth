@@ -4,7 +4,7 @@ module Macbeth.Fics.Parsers.GamesParser (
   parseGamesList
 ) where
 
-import Macbeth.Api.Game
+import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Parsers.RatingParser
 
 import Control.Applicative

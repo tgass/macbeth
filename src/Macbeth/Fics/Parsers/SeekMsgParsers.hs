@@ -7,11 +7,11 @@ module Macbeth.Fics.Parsers.SeekMsgParsers (
   seekNotAvailable
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.CommandMsg
-import Macbeth.Api.Game
-import Macbeth.Api.Rating
-import Macbeth.Api.Seek
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Rating
+import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Parsers.Api
 import Macbeth.Utils.Utils
 

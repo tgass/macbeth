@@ -3,8 +3,8 @@ module Macbeth.Utils.FEN (
   convert
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Move
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Move
 
 import Data.List.Utils
 

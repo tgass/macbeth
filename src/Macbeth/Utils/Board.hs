@@ -9,9 +9,9 @@ module Macbeth.Utils.Board (
   PieceMove (..),
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Move
-import Macbeth.Api.Game
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.Game
 import Macbeth.Wx.Api
 import Macbeth.Wx.Utils
 import Macbeth.Wx.PieceSet
@@ -33,7 +33,7 @@ initBoardState move = BoardState {
     , gameResult = Nothing
     , pieceMove = []
     , moves = [move | isJust $ movePretty move]
-    , _position = Macbeth.Api.Move.position move
+    , _position = Macbeth.Fics.Api.Move.position move
     , preMoves = []
     , perspective = if relation move == Observing then White else colorUser move
     , selSquare = Square A One
@@ -207,7 +207,7 @@ intToRow White = toEnum . abs . (7-)
 intToRow Black = toEnum
 
 
-intToCol :: Macbeth.Api.Api.PColor -> Int -> Column
+intToCol :: Macbeth.Fics.Api.Api.PColor -> Int -> Column
 intToCol White = toEnum
 intToCol Black = toEnum . abs . (7-)
 

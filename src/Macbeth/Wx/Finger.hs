@@ -2,7 +2,7 @@ module Macbeth.Wx.Finger (
   wxFinger
 ) where
 
-import Macbeth.Api.CommandMsg
+import Macbeth.Fics.Api.CommandMsg
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.Chan

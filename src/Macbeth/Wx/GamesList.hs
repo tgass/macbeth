@@ -2,8 +2,8 @@ module Macbeth.Wx.GamesList (
   wxGamesList
 ) where
 
-import Macbeth.Api.Game
-import Macbeth.Api.CommandMsg
+import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.CommandMsg
 import Macbeth.Wx.Utils
 
 import Control.Applicative
@@ -72,5 +72,5 @@ getGamesOpts ctxMenu = GamesOpts
 
 
 toList :: Game -> [String]
-toList g = [show $ Macbeth.Api.Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g, show $ gameType $ settings g]
+toList g = [show $ Macbeth.Fics.Api.Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g, show $ gameType $ settings g]
 

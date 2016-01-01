@@ -1,9 +1,9 @@
-module Macbeth.Api.Challenge (
+module Macbeth.Fics.Api.Challenge (
   Challenge (..),
   displayChallenge
 ) where
 
-import Macbeth.Api.Rating
+import Macbeth.Fics.Api.Rating
 
 data Challenge = Challenge { nameW :: String
                            , ratingW :: Rating

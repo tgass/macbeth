@@ -1,4 +1,4 @@
-module Macbeth.Api.Game (
+module Macbeth.Fics.Api.Game (
   Game (..),
   GameType (..),
   GameSettings (..),
@@ -6,7 +6,7 @@ module Macbeth.Api.Game (
   GameInfo (..)
 ) where
 
-import Macbeth.Api.Rating
+import Macbeth.Fics.Api.Rating
 
 data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
                  Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show, Eq)

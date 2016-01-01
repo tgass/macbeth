@@ -11,8 +11,8 @@ module Macbeth.Wx.Utils (
   colToInt
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.CommandMsg
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.CommandMsg
 
 import Control.Concurrent
 import Graphics.UI.WX
@@ -54,12 +54,12 @@ staticTextFormatted p s = staticText p [ text := s
                                        , fontSize := 20
                                        , fontWeight := WeightBold]
 
-rowToInt :: Macbeth.Api.Api.PColor -> Row -> Int
+rowToInt :: Macbeth.Fics.Api.Api.PColor -> Row -> Int
 rowToInt White = abs . (7-) . fromEnum
 rowToInt Black = fromEnum
 
 
-colToInt :: Macbeth.Api.Api.PColor -> Column -> Int
+colToInt :: Macbeth.Fics.Api.Api.PColor -> Column -> Int
 colToInt White = fromEnum
 colToInt Black = abs . (7-) . fromEnum
 

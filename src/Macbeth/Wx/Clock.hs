@@ -6,8 +6,8 @@ module Macbeth.Wx.Clock (
   stopChessClock
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Move
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Move
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Utils
 

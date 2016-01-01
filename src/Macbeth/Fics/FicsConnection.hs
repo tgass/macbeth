@@ -4,8 +4,8 @@ module Macbeth.Fics.FicsConnection (
   ficsConnection
 ) where
 
-import Macbeth.Api.CommandMsg hiding (gameId)
-import Macbeth.Api.Move
+import Macbeth.Fics.Api.CommandMsg hiding (gameId)
+import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Parsers.CommandMsgParser
 
 import Control.Applicative

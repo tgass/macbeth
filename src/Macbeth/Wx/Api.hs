@@ -5,9 +5,9 @@ module Macbeth.Wx.Api (
   PieceSet(..)
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Move
-import Macbeth.Api.Game
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.Game
 
 import Control.Concurrent.STM
 import Graphics.UI.WX

@@ -4,10 +4,10 @@ module Macbeth.Fics.Parsers.CommandMsgParser (
  parseCommandMsg
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.Challenge
-import Macbeth.Api.CommandMsg hiding (move)
-import Macbeth.Api.Game
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Challenge
+import Macbeth.Fics.Api.CommandMsg hiding (move)
+import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
 import Macbeth.Fics.Parsers.MoveParser

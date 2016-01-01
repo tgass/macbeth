@@ -2,7 +2,7 @@ module Macbeth.Wx.Login (
   wxLogin
 ) where
 
-import Macbeth.Api.CommandMsg
+import Macbeth.Fics.Api.CommandMsg
 import Macbeth.Wx.Utils
 
 import Control.Applicative

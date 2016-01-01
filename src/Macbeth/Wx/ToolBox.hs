@@ -4,7 +4,7 @@ module Macbeth.Wx.ToolBox (
   wxToolBox
 ) where
 
-import Macbeth.Api.CommandMsg
+import Macbeth.Fics.Api.CommandMsg
 --import Macbeth.Wx.About
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList

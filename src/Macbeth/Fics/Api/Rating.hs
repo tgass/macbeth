@@ -1,4 +1,4 @@
-module Macbeth.Api.Rating (
+module Macbeth.Fics.Api.Rating (
   Rating (..),
   ProvShow (..)
 ) where

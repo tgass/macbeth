@@ -5,10 +5,10 @@ module Macbeth.Fics.Parsers.MoveParser (
   pieceHolding
 ) where
 
-import Macbeth.Api.Api
-import Macbeth.Api.CommandMsg hiding (move)
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.CommandMsg hiding (move)
 import Macbeth.Fics.Parsers.PositionParser
-import Macbeth.Api.Move hiding (relation)
+import Macbeth.Fics.Api.Move hiding (relation)
 
 import Control.Applicative
 import Control.Monad

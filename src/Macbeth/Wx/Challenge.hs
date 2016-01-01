@@ -2,8 +2,8 @@ module Macbeth.Wx.Challenge (
   wxChallenge
 ) where
 
-import Macbeth.Api.Challenge
-import Macbeth.Api.CommandMsg
+import Macbeth.Fics.Api.Challenge
+import Macbeth.Fics.Api.CommandMsg
 import Macbeth.Wx.Utils
 
 import Control.Concurrent
