@@ -31,8 +31,9 @@
     </div>
     <div class="container-fluid text-center">
       <div class="row">
-	<div class="col-md-offset-2 col-md-8 padding-bottom-m">
-		<p class="text-center"><a href="Macbeth.dmg"><button type="button" class="btn btn-lg btn-primary">Download!</button></a></p>
+	<div class="col-md-offset-2 col-md-8 padding-bottom-m text-center">
+          <a href="Macbeth.dmg" onclick="ga('send', 'event', 'Downloads', 'Macbeth.dmg', 'page top')">
+	    <button type="button" class="btn btn-lg btn-primary">Download!</button></a>
         </div>
 
         <div class="col-md-offset-2 col-md-8">
@@ -94,14 +95,31 @@
 
         <div class="col-md-offset-2 col-md-8 padding-bottom-l">
 	  <h2>About Macbeth</h2>
-	  <p class="text-justify">When I bought my MacBook Air I was disappointed that my favourite FICS client Babaschess would not run 
-	  on OSX. So I decided to program my own client, learning Haskell on the way.
-	  <br><br> 
-	  The piece sets are the work of Eric De Mund, licensed under a <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-Share Alike 3.0 Unported License</a>. So check out <a href="http://jinchess.com/">Jin</a> as well.
+	  <p class="text-justify">When I bought my MacBook Air I was disappointed that my favourite FICS client 
+	  <a href="http://www.babaschess.net/" target="_blank">Babaschess</a> would not run on OSX. So I decided to program my own 
+	  client, learning Haskell on the way.
+	  <br><br>
+	  Macbeth is still a work in progress! A lot of functionality FICS offers is not (yet) implemented, ie. playing
+	  Bughouse/Crazyhouse, chatting with your oponent, but Macbeth will store your games automatically!
+	  <br><br>
+	  Macbeth will create a folder in your home directory: ~/Macbeth. All your games will be automatically stored 
+	  here. Currently Macbeth writes to a log-file there as well.
+          <br><br>
+	  If you tried Macbeth and like it, please write me an email! If you don't like it or your favourite feature
+	  is missing or you encountered a bug, please write me as well! <<a href="mailto:tilmann@macbeth-ficsclient.com">tilmann@macbeth-ficsclient.com</a>>
+	  <br><br>
+	  I am indebted to Eric de Mund. He is so kind to offer chess piece sets in perfect quality under Creative Commons.
+	  I rejoiced when I found them! So, the piece sets are the work of Eric De Mund, licensed under a <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-Share Alike 3.0 Unported License</a>.
 	  
 	  </p>
 	  
         </div>
+	<div class="col-md-offset-2 col-md-8 padding-bottom-m">
+		<p class="text-center"><a href="Macbeth.dmg" onclick="ga('send', 'event', 'Downloads', 'Macbeth.dmg', 'page bottom'">
+			<button type="button" class="btn btn-lg btn-primary">Download!</button></a>
+		</p>
+        </div>
+
       </div>
 
       <footer class="padding-bottom-l">
@@ -115,5 +133,15 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="bootstrap-3.3.5-dist/js/bootstrap.min.js"></script>
+   <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-71848619-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
   </body>
 </html>

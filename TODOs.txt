@@ -1,3 +1,5 @@
+-- add Features to homepage: -> auto save games
+
 -- ARCHITEX
 -- newtype for perspective == view
 -- user frameCreateTopFrame for background / hibernation /network conn evnt
