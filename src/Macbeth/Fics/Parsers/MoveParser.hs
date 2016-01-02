@@ -11,10 +11,9 @@ import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Fics.Api.Move hiding (relation)
 
 import Control.Applicative
-import Control.Monad
 import Data.Attoparsec.ByteString.Char8 hiding (D)
 import Data.Maybe
-import qualified Data.Attoparsec.ByteString.Char8 as A (take, )
+import qualified Data.Attoparsec.ByteString.Char8 as A (take)
 import qualified Data.ByteString.Char8 as BS
 
 --test = BS.pack "<12> --kr-bnr ppp-pppp --nqb--- ---p---- ---P-B-- --NQ---P PPP-PPP- R---KBNR W -1 1 1 0 0 1 345 GuestTVTH GuestPYFX -1 5 0 39 39 282 288 6 o-o-o (0:03) O-O-O 1 1 0"
@@ -27,13 +26,13 @@ move = do
     <$> pure pos
     <*> pure (parsePosition pos)
     <*> (space *> ("B" *> pure Black <|> "W" *> pure White)) -- turn
-    <*> (space *> ("-1" *> pure Nothing <|> liftM Just column)) -- doublePawnPush
+    <*> (space *> ("-1" *> pure Nothing <|> Just `fmap` column)) -- doublePawnPush
     <*> (catMaybes <$> sequence [ castle WhiteShort, castle WhiteLong, castle BlackShort, castle BlackLong])
     <*> (space *> decimal) -- the number of moves made since the last irreversible move, halfmove clock
     <*> (space *> decimal) -- gameId
     <*> (space *> manyTill anyChar space) -- nameW
-    <*> (manyTill anyChar space) -- nameB
-    <*> relation --relation
+    <*> manyTill anyChar space -- nameB
+    <*> relation
     <*> (space *> decimal) --initialTime
     <*> (space *> decimal) --inc per move
     <*> (space *> decimal) -- whiteRelStrength
@@ -43,15 +42,15 @@ move = do
     <*> (space *> decimal) -- moveNumber
     <*> (space *> parseVerboseMove) -- moveVerbose
     <*> (space *> manyTill anyChar space) -- timeTaken
-    <*> ("none" *> pure Nothing <|> liftM Just (manyTill anyChar space)) -- movePretty
+    <*> ("none" *> pure Nothing <|> Just `fmap` manyTill anyChar space) -- movePretty
 
 --P/c7-c5
 -- P/f2-f1=R
 parseVerboseMove :: Parser (Maybe MoveDetailed)
 parseVerboseMove = ("none" *> pure Nothing) <|>
-  (Just `liftM` (Simple <$> (anyChar *> anyChar *> square) <*> ("-" *> square <* takeTill (== ' ')))) <|>
-  (Just `liftM` ("o-o-o" *> pure CastleLong)) <|>
-  (Just `liftM` ("o-o" *> pure CastleShort))
+  (Just <$> (Simple <$> (anyChar *> anyChar *> square) <*> ("-" *> square <* takeTill (== ' ')))) <|>
+  (Just <$> ("o-o-o" *> pure CastleLong)) <|>
+  (Just <$> ("o-o" *> pure CastleShort))
 
 castle :: Castling -> Parser (Maybe Castling)
 castle c = space *> ("0" *> pure Nothing <|> "1" *> pure (Just c))
