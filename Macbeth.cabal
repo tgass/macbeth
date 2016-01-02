@@ -28,6 +28,7 @@ library
                      Macbeth.Fics.Parsers.PositionParser,
                      Macbeth.Fics.Parsers.RatingParser,
                      Macbeth.Fics.Parsers.SeekMsgParsers,
+                     Macbeth.Fics.Utils.Bitmask,
                      Macbeth.Utils.PGN,
                      Macbeth.Utils.FEN,
                      Macbeth.Utils.Board,

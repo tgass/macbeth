@@ -9,6 +9,7 @@ import Macbeth.Fics.Api.CommandMsg
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Parsers.CommandMsgParser
 import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Fics.Parsers.GamesParser

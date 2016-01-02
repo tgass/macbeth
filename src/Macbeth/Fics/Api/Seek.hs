@@ -7,7 +7,7 @@ module Macbeth.Fics.Api.Seek (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Rating
-import Macbeth.Utils.Utils
+import Macbeth.Fics.Utils.Bitmask
 
 data Seek = Seek {
     id :: Int

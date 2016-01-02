@@ -2,8 +2,8 @@ module Macbeth.Wx.Pending (
   wxPending
 ) where
 
-import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Wx.Utils
 
 import Control.Applicative

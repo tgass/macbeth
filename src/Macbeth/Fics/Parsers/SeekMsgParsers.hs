@@ -13,7 +13,7 @@ import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Rating
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Parsers.Api
-import Macbeth.Utils.Utils
+import Macbeth.Fics.Utils.Bitmask
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
