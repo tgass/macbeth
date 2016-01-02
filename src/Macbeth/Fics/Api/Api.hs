@@ -10,6 +10,7 @@ module Macbeth.Fics.Api.Api (
   Position,
   PieceMove (..),
   MoveDetailed (..),
+  Username,
   diffPosition,
   movePiece,
   movePieces,
@@ -43,6 +44,8 @@ instance Show PieceMove where
   show (PieceMove _ s1 s2) = show s1 ++ show s2
 
 data MoveDetailed = Simple Square Square | CastleLong | CastleShort deriving (Show, Eq)
+
+type Username = String
 
 diffPosition :: Position -> Position -> [PieceMove]
 diffPosition before after =

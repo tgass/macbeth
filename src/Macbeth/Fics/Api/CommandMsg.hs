@@ -19,7 +19,7 @@ data CommandMsg =   GameMove { illegal :: Bool, move :: Move }
                   | MatchRequested Challenge
                   | MatchAccepted Move
                   | MatchDeclined
-                  | MatchUserNotLoggedIn {user :: String}
+                  | MatchUserNotLoggedIn Username
 
                   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
@@ -29,21 +29,21 @@ data CommandMsg =   GameMove { illegal :: Bool, move :: Move }
                   | IdenticalOffer
 
                   | DrawRequest
-                  | AbortRequest String
-                  | TakebackRequest String Int
+                  | AbortRequest Username
+                  | TakebackRequest Username Int
 
                   | NewSeek Seek
                   | RemoveSeeks [Int]
                   | ClearSeek
                   | SeekNotAvailable
 
-                  | Finger String String
+                  | Finger Username String
 
                   | Login
                   | LoginTimeout
                   | Password
-                  | GuestLogin String
-                  | LoggedIn String
+                  | GuestLogin Username
+                  | LoggedIn Username
                   | InvalidPassword
                   | Prompt
                   | SettingsDone
@@ -51,7 +51,7 @@ data CommandMsg =   GameMove { illegal :: Bool, move :: Move }
                   | TextMessage String
 
                   {- Unused -}
-                  | UnkownUsername String
+                  | UnkownUsername Username
 
                   {- Internal -}
                   | WxClose
