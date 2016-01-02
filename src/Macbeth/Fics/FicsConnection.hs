@@ -6,7 +6,7 @@ module Macbeth.Fics.FicsConnection (
 
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Move
-import Macbeth.Fics.Parsers.CommandMsgParser
+import Macbeth.Fics.Parsers.FicsMessageParser
 
 import Control.Applicative
 import Control.Concurrent.Chan
@@ -79,7 +79,7 @@ extractC = awaitForever $ \cmd -> do
 
 
 parseC :: Conduit BS.ByteString (StateT HelperState IO) FicsMessage
-parseC = awaitForever $ \str ->case parseFicsMessage str of
+parseC = awaitForever $ \str -> case parseFicsMessage str of
   Left _    -> yield $ TextMessage $ BS.unpack str
   Right cmd -> yield cmd
 

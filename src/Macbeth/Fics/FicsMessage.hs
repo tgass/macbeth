@@ -10,8 +10,8 @@ import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Seek
 
 data FicsMessage =
-  -- | 1. Confirmation of a move
-  --   2. Reseted position after illegal move
+  -- | 1. Confirmation of a user move
+  --   2. Reseted position after illegal user move
   --   3. Move by oponent
     GameMove { illegal :: Bool, move :: Move }
 
@@ -30,20 +30,28 @@ data FicsMessage =
   -- | Match offered by another player
   | MatchRequested Challenge
 
-
+  -- | Starts a new game. Let it be after 'seek' or 'match' or resuming a pending game.
+  -- Indifferent of whether the user or his oponent started the interaction.
   | MatchAccepted Move
-  | MatchDeclined
+  | MatchDeclined Username
   | MatchUserNotLoggedIn Username
+  -- | The user made the same match offer twice
+  | MatchOfferIdentical
 
+
+  -- | Not concering if the user or his oponent is checkmated/out of time/.. GameResult informs
+  -- that the game is over.
   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
   | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }
-  | OfferAccepted
-  | OfferDeclined
-  | IdenticalOffer
 
+  -- | The oponents wants to draw.
   | DrawRequest
+
+  -- | The oponent wants to abort.
   | AbortRequest Username
+
+  -- | The oponent wants to takeback one or more half-moves
   | TakebackRequest Username Int
 
   | NewSeek Seek
@@ -59,13 +67,13 @@ data FicsMessage =
   | GuestLogin Username
   | LoggedIn Username
   | InvalidPassword
-  | Prompt
   | SettingsDone
-  | Acknoledge
   | TextMessage String
 
   {- Unused -}
   | UnkownUsername Username
+  | Prompt
+  | Acknoledge
 
   {- Internal -}
   | WxClose

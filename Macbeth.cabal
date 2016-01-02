@@ -22,7 +22,7 @@ library
                      Macbeth.Fics.Api.PendingOffer,
                      Macbeth.Fics.Api.Seek,
                      Macbeth.Fics.Parsers.Api,
-                     Macbeth.Fics.Parsers.CommandMsgParser,
+                     Macbeth.Fics.Parsers.FicsMessageParser,
                      Macbeth.Fics.Parsers.GamesParser,
                      Macbeth.Fics.Parsers.MoveParser,
                      Macbeth.Fics.Parsers.PositionParser,

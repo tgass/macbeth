@@ -97,8 +97,6 @@ wxToolBox h chan = do
     evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
       glHandler cmd >> slHandler cmd >> pendingHandler cmd >> case cmd of
 
-        MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
-
         NoSuchGame -> do
           set status [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
@@ -127,9 +125,17 @@ wxToolBox h chan = do
 
         Observe move -> dupChan chan >>= createObservedGame h move
 
-        MatchAccepted move -> dupChan chan >>= createObservedGame h move
-
         MatchRequested c -> dupChan chan >>= wxChallenge h c
+
+        MatchAccepted move -> do
+          hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.
+          dupChan chan >>= createObservedGame h move
+
+        MatchDeclined user -> do
+          hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.
+          set status [text := user ++ " declines the match offer."]
+
+        MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
 
         _ -> return ()
 

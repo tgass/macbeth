@@ -39,10 +39,6 @@ wxPending h p' = do
                   listItemRightClickEvent lcFrom (ctxMenuHandler h lcFrom fx)
                   set lcTo [items := [ toList offer | offer <- tx]]
 
-                OfferAccepted -> hPutStrLn h "4 pending"
-
-                OfferDeclined -> hPutStrLn h "4 pending"
-
                 _ -> return ()
 
   return (p, handler)

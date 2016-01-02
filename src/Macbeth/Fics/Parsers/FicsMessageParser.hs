@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Macbeth.Fics.Parsers.CommandMsgParser (
+module Macbeth.Fics.Parsers.FicsMessageParser (
  parseFicsMessage
 ) where
 
@@ -28,6 +28,7 @@ parseFicsMessage = parseOnly parser where
                   , SP.newSeek
                   , SP.removeSeeks
                   , SP.seekNotAvailable
+                  , SP.seekInfoBlock
 
                   , gameMove
                   , confirmGameMove
@@ -37,7 +38,9 @@ parseFicsMessage = parseOnly parser where
                   , pieceHolding
 
                   , matchRequested
-                  , declinedChallenge
+                  , matchDeclined
+                  , matchUserNotLoggedIn
+                  , matchOfferIdentical
 
                   , games
                   , noSuchGame
@@ -54,15 +57,10 @@ parseFicsMessage = parseOnly parser where
                   , gameResultAbortGame
                   , gameResultAbortGame2
 
-                  , seekInfoBlock
                   , seekMatchesAlreadyPosted
 
                   , finger
                   , pendingOffers
-                  , offerAccepted
-                  , offerDeclined
-                  , matchUserNotLoggedIn
-                  , identicalOffer
 
                   , login
                   , loginTimeout
@@ -105,14 +103,11 @@ seekMatchesAlreadyPosted = do
 observe :: Parser FicsMessage
 observe = Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
 
-
 games :: Parser FicsMessage
 games = Games <$> (commandHead 43 *> parseGamesList)
 
-
 noSuchGame :: Parser FicsMessage
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
-
 
 matchRequested :: Parser FicsMessage
 matchRequested = MatchRequested <$> (Challenge
@@ -122,18 +117,19 @@ matchRequested = MatchRequested <$> (Challenge
   <*> ("(" *> skipSpace *> rating)
   <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
 
-declinedChallenge :: Parser FicsMessage
-declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure MatchDeclined
+matchDeclined :: Parser FicsMessage
+matchDeclined = MatchDeclined <$> ("\"" *> manyTill anyChar "\" declines the match offer.")
 
-seekInfoBlock :: Parser FicsMessage
-seekInfoBlock = Boxed
-  <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ SP.clearSeek, SP.newSeek <* takeTill (== '\n')]) "\n")
+matchOfferIdentical :: Parser FicsMessage
+matchOfferIdentical = commandHead 73 *> "You are already offering an identical match to" *> pure MatchOfferIdentical
+
+matchUserNotLoggedIn :: Parser FicsMessage
+matchUserNotLoggedIn = MatchUserNotLoggedIn <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
 
 gameCreation :: Parser FicsMessage
 gameCreation = GameCreation
   <$> (skipSpace *> "{Game" *> space *> decimal)
   <*> (takeTill (== ')') *> ") Creating " *> manyTill anyChar "}")
-
 
 drawRequest :: Parser FicsMessage
 drawRequest = manyTill anyChar space *> "offers you a draw." *> pure DrawRequest
@@ -145,7 +141,6 @@ takebackRequest :: Parser FicsMessage
 takebackRequest = TakebackRequest
   <$> manyTill anyChar " " <* "would like to take back "
   <*> decimal <* " half move(s)."
-
 
 gameResult :: Parser FicsMessage
 gameResult = commandHead 103 *> gameResult'
@@ -186,19 +181,6 @@ pendingOffers = PendingOffers
 
 pendingOffer :: Parser PendingOffer
 pendingOffer = PendingOffer <$> (skipSpace *> decimal <* ": ") <*> manyTill anyChar "."
-
-offerAccepted :: Parser FicsMessage
-offerAccepted = manyTill anyChar " " *> "accepts the match offer." *> pure OfferAccepted
-
-offerDeclined :: Parser FicsMessage
-offerDeclined = manyTill anyChar " " *> "declines the match offer." *> pure OfferDeclined
-
-identicalOffer :: Parser FicsMessage
-identicalOffer = commandHead 73 *> "You are already offering an identical match to" *> pure IdenticalOffer
-
-matchUserNotLoggedIn :: Parser FicsMessage
-matchUserNotLoggedIn = MatchUserNotLoggedIn
-  <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
 
 login :: Parser FicsMessage
 login = "login: " *> pure Login

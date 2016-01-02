@@ -10,7 +10,7 @@ import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
-import Macbeth.Fics.Parsers.CommandMsgParser
+import Macbeth.Fics.Parsers.FicsMessageParser
 import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Fics.Parsers.GamesParser
 
@@ -33,7 +33,7 @@ succeeds result = TestInstance
   , setOption = \_ _ -> Right $ succeeds result
   }
 
-commandMessageParserTest :: [(CommandMsg, String)]
+commandMessageParserTest :: [(FicsMessage, String)]
 commandMessageParserTest = [
         (DrawRequest, "GuestDWXY offers you a draw.")
       , (GameResult 368 "CalicoCat resigns" WhiteWins, "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0")
@@ -42,7 +42,6 @@ commandMessageParserTest = [
       , (GameResult 196 "Game drawn by mutual agreement" Draw, "\NAK4\SYN34\SYN\n{Game 196 (GuestCWVD vs. GuestDWTL) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB")
       , (GameResult 202 "Game drawn by mutual agreement" Draw, "\NAK5\SYN11\SYNYou accept the draw request from GuestNMNG.\n\n{Game 202 (GuestDKZD vs. GuestNMNG) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB")
       , (NoSuchGame, "\NAK5\SYN80\SYNThere is no such game.\n\ETB")
-      , (RemovingObservedGame, "\NAK5\SYN138\SYNRemoving game 97 from observation list.\n\ETB")
       , (MatchRequested $ Challenge "GuestYWYK" Unrated "GuestMGSD" Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
       , (GuestLogin "FOOBAR", "Press return to enter the server as \"FOOBAR\":")
       -- playSeek
@@ -57,7 +56,7 @@ commandMessageParserTest = [
       , (PendingOffers [] [], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nThere are no offers pending from other players.\n\ETB")
       , (PendingOffers [PendingOffer 45 "You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0"] [], "\NAK5\SYN87\SYNOffers to other players:\n\n  45: You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0.\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\nThere are no offers pending from other players.\n\ETB")
       , (PendingOffers [] [PendingOffer 43 "GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0"], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nOffers from other players:\n\n  43: GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0.\n\nIf you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".\n\ETB")
-      , (IdenticalOffer, "\NAK4\SYN73\SYNYou are already offering an identical match to GuestSPLL.\n\ETB")
+      , (MatchOfferIdentical, "\NAK4\SYN73\SYNYou are already offering an identical match to GuestSPLL.\n\ETB")
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
       , (GameResult 82 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN11\SYNYou accept the abort request from GuestSPLL.\n\n{Game 82 (GuestTKHJ vs. GuestSPLL) Game aborted by mutual agreement} *\n\ETB")
@@ -79,7 +78,7 @@ defaultMove = Move "-------- -------- -------- -------- -------- -------- ------
 defaultMoveStr = "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 1 1 1 1 0 18 nameWhite nameBlack -1 3 0 39 39 180 180 1 none (0:00) none 1 0 0\n"
 
 
-seekMsgParserTest :: [(CommandMsg, String)]
+seekMsgParserTest :: [(FicsMessage, String)]
 seekMsgParserTest = [
     (ClearSeek, "<sc>")
   , (RemoveSeeks [59, 3, 11], "<sr> 59 3 11")
@@ -108,7 +107,7 @@ positionTest = [
 
 
 parseGamesListTest :: Result
-parseGamesListTest = case parseCommandMsg $ BS.pack games of
+parseGamesListTest = case parseFicsMessage $ BS.pack games of
   Left txt -> Fail txt
   Right (Games games) -> if length games == 584 then Pass else Fail $ show $ length games
   where
@@ -118,7 +117,7 @@ comparePosition :: Position -> String -> Result
 comparePosition pos str = let pos' = parsePosition str
                           in if pos' == pos then Pass else Fail $ show pos ++ " <<-->> " ++ show pos'
 
-compareCmdMsg :: String -> CommandMsg -> Result
-compareCmdMsg str cmd = case parseCommandMsg $ BS.pack str of
+compareCmdMsg :: String -> FicsMessage -> Result
+compareCmdMsg str cmd = case parseFicsMessage $ BS.pack str of
   Left txt -> Fail txt
   Right cmd' -> if cmd' == cmd then Pass else Fail $ show cmd ++ " <<-->> " ++ show cmd'
