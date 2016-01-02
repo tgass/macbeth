@@ -4,7 +4,7 @@ module Macbeth.Wx.ObservedGame (
 
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.CommandMsg hiding (gameId)
+import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.PGN
 import Macbeth.Wx.Api
@@ -24,7 +24,7 @@ import System.IO
 
 eventId = wxID_HIGHEST + 53
 
-createObservedGame :: Handle -> Move -> Chan CommandMsg -> IO ()
+createObservedGame :: Handle -> Move -> Chan FicsMessage -> IO ()
 createObservedGame h move chan = do
   vCmd <- newEmptyMVar
   f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move]

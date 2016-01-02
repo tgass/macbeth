@@ -3,7 +3,7 @@ module Macbeth.Wx.Challenge (
 ) where
 
 import Macbeth.Fics.Api.Challenge
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 
 import Control.Concurrent
@@ -13,7 +13,7 @@ import System.IO
 
 eventId = wxID_HIGHEST + 54
 
-wxChallenge :: Handle -> Challenge -> Chan CommandMsg  -> IO ()
+wxChallenge :: Handle -> Challenge -> Chan FicsMessage  -> IO ()
 wxChallenge h c chan = do
   vCmd <- newEmptyMVar
 

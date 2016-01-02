@@ -2,7 +2,7 @@ module Macbeth.Wx.About (
   wxAbout
 ) where
 
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 import Paths
 
@@ -13,7 +13,7 @@ import System.IO.Unsafe
 
 eventId = wxID_HIGHEST + 52
 
-wxAbout :: Chan CommandMsg -> IO ()
+wxAbout :: Chan FicsMessage -> IO ()
 wxAbout chan = do
   f <- frameFixed [ text := "About Macbeth, Free FICS client "]
   p <- panel f [ on paint := paintAbout]

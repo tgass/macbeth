@@ -12,15 +12,15 @@ library
                    time, MissingH, old-locale, safe, FindBin
     hs-source-dirs: src
     exposed-modules: Paths,
+                     Macbeth.Fics.FicsConnection
+                     Macbeth.Fics.FicsMessage,
                      Macbeth.Fics.Api.Api,
                      Macbeth.Fics.Api.Challenge,
-                     Macbeth.Fics.Api.CommandMsg,
                      Macbeth.Fics.Api.Game,
                      Macbeth.Fics.Api.Move,
                      Macbeth.Fics.Api.Rating,
                      Macbeth.Fics.Api.PendingOffer,
                      Macbeth.Fics.Api.Seek,
-                     Macbeth.Fics.FicsConnection
                      Macbeth.Fics.Parsers.Api,
                      Macbeth.Fics.Parsers.CommandMsgParser,
                      Macbeth.Fics.Parsers.GamesParser,

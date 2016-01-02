@@ -1,5 +1,5 @@
-module Macbeth.Fics.Api.CommandMsg (
-  CommandMsg (..)
+module Macbeth.Fics.FicsMessage (
+  FicsMessage (..)
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -9,7 +9,7 @@ import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Seek
 
-data CommandMsg =   GameMove { illegal :: Bool, move :: Move }
+data FicsMessage =   GameMove { illegal :: Bool, move :: Move }
                   | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }
                   | Games [Game]
                   | Observe Move
@@ -57,5 +57,4 @@ data CommandMsg =   GameMove { illegal :: Bool, move :: Move }
                   | WxClose
                   | NullCommand
                   | GameCreation { gameId :: Int, description :: String }
-                  | Boxed [CommandMsg] deriving (Show, Eq)
-
+                  | Boxed [FicsMessage] deriving (Show, Eq)

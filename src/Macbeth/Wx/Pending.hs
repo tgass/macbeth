@@ -2,7 +2,7 @@ module Macbeth.Wx.Pending (
   wxPending
 ) where
 
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Wx.Utils
 
@@ -15,7 +15,7 @@ import System.IO
 data PendingActions = PendingActions { accept :: MenuItem (), decline :: MenuItem ()}
 
 
-wxPending :: Handle -> Panel () -> IO (Panel (), CommandMsg -> IO ())
+wxPending :: Handle -> Panel () -> IO (Panel (), FicsMessage -> IO ())
 wxPending h p' = do
   p <- panel p' []
   stFrom <- staticText p [ text := "Offers from other players:", fontSize := 12]

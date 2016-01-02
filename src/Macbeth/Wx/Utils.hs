@@ -12,20 +12,20 @@ module Macbeth.Wx.Utils (
 ) where
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 
 import Control.Concurrent
 import Graphics.UI.WX
 import Graphics.UI.WXCore hiding (Column, Row)
 
 
-eventLoop :: Int -> Chan CommandMsg -> MVar CommandMsg -> Frame () -> IO ()
+eventLoop :: Int -> Chan FicsMessage -> MVar FicsMessage -> Frame () -> IO ()
 eventLoop id chan vCmd f = readChan chan >>= putMVar vCmd >>
   commandEventCreate wxEVT_COMMAND_MENU_SELECTED id >>= evtHandlerAddPendingEvent f >>
   eventLoop id chan vCmd f
 
 
-registerWxCloseEventListener :: Chan CommandMsg -> Int -> Frame () -> IO ()
+registerWxCloseEventListener :: Chan FicsMessage -> Int -> Frame () -> IO ()
 registerWxCloseEventListener chan eventId f = do
   vCmd <- newEmptyMVar
   threadId <- forkIO $ eventLoop eventId chan vCmd f

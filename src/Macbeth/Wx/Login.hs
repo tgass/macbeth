@@ -2,7 +2,7 @@ module Macbeth.Wx.Login (
   wxLogin
 ) where
 
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 
 import Control.Applicative
@@ -20,7 +20,7 @@ data WxLogin = WxLogin {
 }
 
 
-wxLogin :: Handle -> Chan CommandMsg -> IO ()
+wxLogin :: Handle -> Chan FicsMessage -> IO ()
 wxLogin h chan = do
   f <- frameFixed [ text := "Macbeth" ]
   p <- panel f []
@@ -42,7 +42,7 @@ wxLogin h chan = do
   registerWxCloseEventListener wxChan eventId f
 
 
-okBtnHandler :: WxLogin -> Frame() -> Handle -> Chan CommandMsg -> IO ()
+okBtnHandler :: WxLogin -> Frame() -> Handle -> Chan FicsMessage -> IO ()
 okBtnHandler wxInputs f h chan = do
   isGuestLogin <- get (guestLogin wxInputs) checked
   username <- get (name wxInputs) text
@@ -50,7 +50,7 @@ okBtnHandler wxInputs f h chan = do
   where
     loop = readChan chan >>= handlePw
 
-    handlePw :: CommandMsg -> IO ()
+    handlePw :: FicsMessage -> IO ()
     handlePw Password = get (password wxInputs) text >>= hPutStrLn h
     handlePw (GuestLogin _) = hPutStrLn h ""
     handlePw Login = return ()

@@ -8,7 +8,7 @@ module Macbeth.Fics.Parsers.SeekMsgParsers (
 ) where
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Rating
 import Macbeth.Fics.Api.Seek
@@ -19,16 +19,16 @@ import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
 import Numeric
 
-clearSeek :: Parser CommandMsg
+clearSeek :: Parser FicsMessage
 clearSeek = "<sc>" *> pure ClearSeek
 
-newSeek :: Parser CommandMsg
+newSeek :: Parser FicsMessage
 newSeek = NewSeek <$> seek'
 
-removeSeeks :: Parser CommandMsg
+removeSeeks :: Parser FicsMessage
 removeSeeks = RemoveSeeks <$> ("<sr>" *> many1 (space *> decimal))
 
-seekNotAvailable :: Parser CommandMsg
+seekNotAvailable :: Parser FicsMessage
 seekNotAvailable = commandHead 158 *> "That seek is not available." *> pure SeekNotAvailable
 
 

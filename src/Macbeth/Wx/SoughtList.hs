@@ -4,7 +4,7 @@ module Macbeth.Wx.SoughtList (
 
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Api.Game hiding (gameType, isRated)
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 import Paths
 
@@ -21,7 +21,7 @@ data SoughtOpts = SoughtOpts { computerOffers :: MenuItem ()
                              , unratedOffers :: MenuItem ()
                              , ratedOffers :: MenuItem () }
 
-wxSoughtList :: Panel () -> Handle -> IO (ListCtrl (), CommandMsg -> IO ())
+wxSoughtList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
 wxSoughtList slp h = do
     sl  <- listCtrl slp [columns := [ ("#", AlignLeft, -1)
                                     , ("Handle", AlignLeft, -1)

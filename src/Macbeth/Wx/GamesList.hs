@@ -3,7 +3,7 @@ module Macbeth.Wx.GamesList (
 ) where
 
 import Macbeth.Fics.Api.Game
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 
 import Control.Applicative
@@ -16,7 +16,7 @@ data GamesOpts = GamesOpts { refresh :: MenuItem ()
                            , showUnrated :: MenuItem ()
                            }
 
-wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), CommandMsg -> IO ())
+wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
 wxGamesList glp h = do
   gl  <- listCtrl glp [ columns :=
       [ ("#", AlignLeft, -1)
@@ -34,7 +34,7 @@ wxGamesList glp h = do
   return (gl, handler gamesOpts gl glCtxMenu h)
 
 
-handler :: GamesOpts -> ListCtrl () -> Menu () -> Handle -> CommandMsg -> IO ()
+handler :: GamesOpts -> ListCtrl () -> Menu () -> Handle -> FicsMessage -> IO ()
 handler gamesOpts gl glCtxMenu h cmd = case cmd of
   Games games -> do
     filterGamesList gl gamesOpts games

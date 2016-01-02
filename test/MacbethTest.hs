@@ -5,7 +5,7 @@ import Distribution.TestSuite
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.Api.Rating
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Api.Move

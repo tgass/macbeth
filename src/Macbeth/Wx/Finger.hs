@@ -2,7 +2,7 @@ module Macbeth.Wx.Finger (
   wxFinger
 ) where
 
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.Chan
@@ -11,7 +11,7 @@ import Graphics.UI.WXCore
 
 eventId = wxID_HIGHEST + 55
 
-wxFinger :: String -> String -> Chan CommandMsg -> IO ()
+wxFinger :: String -> String -> Chan FicsMessage -> IO ()
 wxFinger name stats chan = do
   f <- frameFixed [ text := "Finger of " ++ name]
   st <- staticText f [ text := "Finger of " ++ name ++ stats

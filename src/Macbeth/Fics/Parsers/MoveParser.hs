@@ -6,7 +6,7 @@ module Macbeth.Fics.Parsers.MoveParser (
 ) where
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.CommandMsg hiding (move)
+import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Fics.Api.Move hiding (relation)
 
@@ -83,7 +83,7 @@ column =
 
 
 -- <b1> game 455 white [PP] black []
-pieceHolding :: Parser CommandMsg
+pieceHolding :: Parser FicsMessage
 pieceHolding = PieceHolding
   <$> ("<b1> game " *> decimal <* " ")
   <*> ("white [" *> many' dropablePiece <* "] ")

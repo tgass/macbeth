@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Macbeth.Fics.Parsers.CommandMsgParser (
- parseCommandMsg
+ parseFicsMessage
 ) where
 
 import Macbeth.Fics.Api.Challenge
-import Macbeth.Fics.Api.CommandMsg hiding (move)
+import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Parsers.Api
@@ -22,8 +22,8 @@ import qualified Data.ByteString.Char8 as BS
 
 
 
-parseCommandMsg :: BS.ByteString -> Either String CommandMsg
-parseCommandMsg = parseOnly parser where
+parseFicsMessage :: BS.ByteString -> Either String FicsMessage
+parseFicsMessage = parseOnly parser where
   parser = choice [ SP.clearSeek
                   , SP.newSeek
                   , SP.removeSeeks
@@ -78,25 +78,25 @@ parseCommandMsg = parseOnly parser where
                   , settingsDone
                   ]
 
-gameMove :: Parser CommandMsg
+gameMove :: Parser FicsMessage
 gameMove = GameMove <$> pure False <*> move
 
-confirmGameMove :: Parser CommandMsg
+confirmGameMove :: Parser FicsMessage
 confirmGameMove = do
   illegal <- commandHead 1 *> option False ("Illegal move" *> pure True)
   ph <- option NullCommand (takeTill (=='<') *> pieceHolding)
   move' <- takeTill (=='<') *> move
   return $ Boxed [ph, GameMove illegal move']
 
-accept :: Parser CommandMsg
+accept :: Parser FicsMessage
 accept = MatchAccepted <$> (commandHead 11 *> takeTill (== '<') *> move)
 
-playSeek :: Parser CommandMsg
+playSeek :: Parser FicsMessage
 playSeek = Boxed
   <$> sequence [ commandHead 158 *> "\n" *> SP.removeSeeks <* "\n"
                , takeTill (=='<') *> (MatchAccepted <$> move)]
 
-seekMatchesAlreadyPosted :: Parser CommandMsg
+seekMatchesAlreadyPosted :: Parser FicsMessage
 seekMatchesAlreadyPosted = do
   commandHead 155
   option "" "You are unregistered - setting to unrated.\n"
@@ -104,26 +104,26 @@ seekMatchesAlreadyPosted = do
   mv <- takeTill (=='<') *> (MatchAccepted <$> move)
   return $ Boxed [rs, mv]
 
-observe :: Parser CommandMsg
+observe :: Parser FicsMessage
 observe = Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
 
 
 
 
-games :: Parser CommandMsg
+games :: Parser FicsMessage
 games = Games <$> (commandHead 43 *> parseGamesList)
 
-removingObservedGame :: Parser CommandMsg
+removingObservedGame :: Parser FicsMessage
 removingObservedGame = "Removing game " *> decimal *> " from observation list." *> pure RemovingObservedGame
 
-removingObservedGame2 :: Parser CommandMsg
+removingObservedGame2 :: Parser FicsMessage
 removingObservedGame2 = commandHead 138 *> removingObservedGame
 
-noSuchGame :: Parser CommandMsg
+noSuchGame :: Parser FicsMessage
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
 
 
-matchRequested :: Parser CommandMsg
+matchRequested :: Parser FicsMessage
 matchRequested = MatchRequested <$> (Challenge
   <$> ("Challenge: " *> manyTill anyChar space)
   <*> ("(" *> skipSpace *> rating)
@@ -131,62 +131,62 @@ matchRequested = MatchRequested <$> (Challenge
   <*> ("(" *> skipSpace *> rating)
   <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
 
-declinedChallenge :: Parser CommandMsg
+declinedChallenge :: Parser FicsMessage
 declinedChallenge = "\"" *> manyTill anyChar "\" declines the match offer." *> pure MatchDeclined
 
-seekInfoBlock :: Parser CommandMsg
+seekInfoBlock :: Parser FicsMessage
 seekInfoBlock = Boxed
   <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ SP.clearSeek, SP.newSeek <* takeTill (== '\n')]) "\n")
 
-gameCreation :: Parser CommandMsg
+gameCreation :: Parser FicsMessage
 gameCreation = GameCreation
   <$> (skipSpace *> "{Game" *> space *> decimal)
   <*> (takeTill (== ')') *> ") Creating " *> manyTill anyChar "}")
 
 
-drawRequest :: Parser CommandMsg
+drawRequest :: Parser FicsMessage
 drawRequest = manyTill anyChar space *> "offers you a draw." *> pure DrawRequest
 
-abortRequest :: Parser CommandMsg
+abortRequest :: Parser FicsMessage
 abortRequest = AbortRequest <$> (manyTill anyChar " " <* "would like to abort the game;")
 
-takebackRequest :: Parser CommandMsg
+takebackRequest :: Parser FicsMessage
 takebackRequest = TakebackRequest
   <$> manyTill anyChar " " <* "would like to take back "
   <*> decimal <* " half move(s)."
 
 
-gameResult :: Parser CommandMsg
+gameResult :: Parser FicsMessage
 gameResult = commandHead 103 *> gameResult'
 
-gameResultMutualDraw :: Parser CommandMsg
+gameResultMutualDraw :: Parser FicsMessage
 gameResultMutualDraw = commandHead 34 *> gameResult'
 
-gameResultAcceptDrawOrAbort :: Parser CommandMsg
+gameResultAcceptDrawOrAbort :: Parser FicsMessage
 gameResultAcceptDrawOrAbort = commandHead 11 *> takeTill (== '{') *> (gameResult' <|> gameResultAbortGame)
 
-gameResult' :: Parser CommandMsg
+gameResult' :: Parser FicsMessage
 gameResult' = GameResult
   <$> (skipSpace *> "{Game" *> space *> decimal)
   <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
 
-gameResultAbortGame :: Parser CommandMsg
+gameResultAbortGame :: Parser FicsMessage
 gameResultAbortGame = GameResult
   <$> ("{Game " *> decimal <* manyTill anyChar ") ")
   <*> manyTill anyChar "} *"
   <*> pure Aborted
 
-gameResultAbortGame2 :: Parser CommandMsg
+gameResultAbortGame2 :: Parser FicsMessage
 gameResultAbortGame2 = commandHead 10 *> choice ["\n", "The game has been aborted on move one.\n\n"] *> gameResultAbortGame
 
 
-finger :: Parser CommandMsg
+finger :: Parser FicsMessage
 finger = Finger
   <$> (commandHead 37 *> "Finger of " *> manyTill anyChar ":")
   <*> manyTill anyChar "\n\n\ETB"
 
-pendingOffers :: Parser CommandMsg
+pendingOffers :: Parser FicsMessage
 pendingOffers = PendingOffers
   <$> (commandHead 87 *> (("There are no offers pending to other players.\n\n" *> pure []) <|>
                           ("Offers to other players:\n\n" *> sepBy pendingOffer "\n\n" <* "\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\n")))
@@ -196,47 +196,47 @@ pendingOffers = PendingOffers
 pendingOffer :: Parser PendingOffer
 pendingOffer = PendingOffer <$> (skipSpace *> decimal <* ": ") <*> manyTill anyChar "."
 
-offerAccepted :: Parser CommandMsg
+offerAccepted :: Parser FicsMessage
 offerAccepted = manyTill anyChar " " *> "accepts the match offer." *> pure OfferAccepted
 
-offerDeclined :: Parser CommandMsg
+offerDeclined :: Parser FicsMessage
 offerDeclined = manyTill anyChar " " *> "declines the match offer." *> pure OfferDeclined
 
-identicalOffer :: Parser CommandMsg
+identicalOffer :: Parser FicsMessage
 identicalOffer = commandHead 73 *> "You are already offering an identical match to" *> pure IdenticalOffer
 
-matchUserNotLoggedIn :: Parser CommandMsg
+matchUserNotLoggedIn :: Parser FicsMessage
 matchUserNotLoggedIn = MatchUserNotLoggedIn
   <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
 
-login :: Parser CommandMsg
+login :: Parser FicsMessage
 login = "login: " *> pure Login
 
-loginTimeout :: Parser CommandMsg
+loginTimeout :: Parser FicsMessage
 loginTimeout = "**** LOGIN TIMEOUT ****" *> pure LoginTimeout
 
-password :: Parser CommandMsg
+password :: Parser FicsMessage
 password = "password: " *> pure Password
 
-guestLogin :: Parser CommandMsg
+guestLogin :: Parser FicsMessage
 guestLogin = GuestLogin <$> ("Press return to enter the server as \"" *> manyTill anyChar "\":")
 
-unknownUsername :: Parser CommandMsg
+unknownUsername :: Parser FicsMessage
 unknownUsername = UnkownUsername <$> ("\"" *> manyTill anyChar "\" is not a registered name.")
 
 -- | Beware the guest handles: ie GuestXWLW(U)
-loggedIn :: Parser CommandMsg
+loggedIn :: Parser FicsMessage
 loggedIn = LoggedIn
   <$> ("**** Starting FICS session as " *> (Prelude.head . splitOn "(") `fmap` manyTill anyChar " ****")
 
-invalidPassword :: Parser CommandMsg
+invalidPassword :: Parser FicsMessage
 invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword
 
-prompt :: Parser CommandMsg
+prompt :: Parser FicsMessage
 prompt = "fics% " *> pure Prompt
 
-acknoledge :: Parser CommandMsg
+acknoledge :: Parser FicsMessage
 acknoledge = commandHead 519 *> char (chr 23) *> pure Acknoledge
 
-settingsDone :: Parser CommandMsg
+settingsDone :: Parser FicsMessage
 settingsDone = char (chr 23) *> pure SettingsDone

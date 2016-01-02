@@ -1,5 +1,5 @@
 import FicsConnection2
-import CommandMsg
+import FicsMessage
 import System.IO
 
 main :: IO ()
@@ -10,7 +10,7 @@ loop :: Handle -> IO ()
 loop h = getLine >>= hPutStrLn h >> loop h
 
 
-handler :: Handle -> CommandMsg -> IO ()
+handler :: Handle -> FicsMessage -> IO ()
 handler h cmd = case cmd of
 --      Login       -> hPutStrLn h "guest"
 --

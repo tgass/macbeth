@@ -3,7 +3,7 @@ module Macbeth.Wx.Seek (
   main
 ) where
 
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 
@@ -31,7 +31,7 @@ data WxSeek = WxSeek {
 }
 
 
-wxSeek :: Handle -> Bool -> Chan CommandMsg -> IO ()
+wxSeek :: Handle -> Bool -> Chan FicsMessage -> IO ()
 wxSeek h isGuest chan = do
   f <- frameFixed [ text := "Seek a match" ]
   p <- panel f []

@@ -4,7 +4,7 @@ module Macbeth.Wx.ToolBox (
   wxToolBox
 ) where
 
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 --import Macbeth.Wx.About
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList
@@ -33,7 +33,7 @@ import System.IO.Unsafe
 
 eventId = wxID_HIGHEST + 51
 
-wxToolBox :: Handle -> Chan CommandMsg -> IO ()
+wxToolBox :: Handle -> Chan FicsMessage -> IO ()
 wxToolBox h chan = do
     f  <- frame [ text := "Macbeth"]
 

@@ -4,7 +4,7 @@ module Macbeth.Fics.FicsConnection (
   ficsConnection
 ) where
 
-import Macbeth.Fics.Api.CommandMsg hiding (gameId)
+import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Parsers.CommandMsgParser
 
@@ -31,7 +31,7 @@ import qualified Data.ByteString.Char8 as BS
 data HelperState = HelperState { gameId' :: Maybe Int, isPlaying :: Bool }
 
 
-ficsConnection :: IO (Handle, Chan CommandMsg)
+ficsConnection :: IO (Handle, Chan FicsMessage)
 ficsConnection = runResourceT $ do
   chan <- liftIO newChan
   (_, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
@@ -40,7 +40,7 @@ ficsConnection = runResourceT $ do
   return (hsock, chan)
 
 
-chain :: Handle -> Chan CommandMsg -> IO ()
+chain :: Handle -> Chan FicsMessage -> IO ()
 chain h chan = flip evalStateT (HelperState Nothing False) $ transPipe lift
   (sourceHandle h) $$
   fileLoggerC =$
@@ -52,15 +52,15 @@ chain h chan = flip evalStateT (HelperState Nothing False) $ transPipe lift
   sink chan
 
 
-sink :: Chan CommandMsg -> Sink CommandMsg (StateT HelperState IO) ()
+sink :: Chan FicsMessage -> Sink FicsMessage (StateT HelperState IO) ()
 sink chan = awaitForever $ liftIO . writeChan chan
 
 
-loggingC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
+loggingC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
 loggingC = awaitForever $ \cmd -> liftIO (printCmdMsg cmd) >> yield cmd
 
 
-extractC :: Conduit CommandMsg (StateT HelperState IO) CommandMsg
+extractC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
 extractC = awaitForever $ \cmd -> do
   state <- get
   case cmd of
@@ -78,8 +78,8 @@ extractC = awaitForever $ \cmd -> do
     _ -> yield cmd
 
 
-parseC :: Conduit BS.ByteString (StateT HelperState IO) CommandMsg
-parseC = awaitForever $ \str ->case parseCommandMsg str of
+parseC :: Conduit BS.ByteString (StateT HelperState IO) FicsMessage
+parseC = awaitForever $ \str ->case parseFicsMessage str of
   Left _    -> yield $ TextMessage $ BS.unpack str
   Right cmd -> yield cmd
 
@@ -105,12 +105,12 @@ fileLoggerC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
 fileLoggerC = awaitForever $ \chunk -> liftIO (logFile chunk) >> yield chunk
 
 
-toGameResult :: Move -> CommandMsg
+toGameResult :: Move -> FicsMessage
 toGameResult move = GameResult id reason result
   where (id, reason, result) = toGameResultTuple move
 
 
-printCmdMsg :: CommandMsg -> IO ()
+printCmdMsg :: FicsMessage -> IO ()
 printCmdMsg Prompt = return ()
 printCmdMsg NewSeek {} = return ()
 printCmdMsg RemoveSeeks {} = return ()

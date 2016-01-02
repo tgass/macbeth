@@ -3,7 +3,7 @@ module Macbeth.Wx.Match (
   wxMatch
 ) where
 
-import Macbeth.Fics.Api.CommandMsg
+import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 
@@ -28,7 +28,7 @@ eventId = wxID_HIGHEST + 56
 
 main = start $ wxMatch stdout False undefined
 
-wxMatch :: Handle -> Bool -> Chan CommandMsg -> IO ()
+wxMatch :: Handle -> Bool -> Chan FicsMessage -> IO ()
 wxMatch h isGuest chan = do
   f <- frameFixed [ text := "Create a match" ]
   p <- panel f []
