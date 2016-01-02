@@ -6,6 +6,7 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Seek
 
 data CommandMsg =   GameMove { illegal :: Bool, move :: Move }

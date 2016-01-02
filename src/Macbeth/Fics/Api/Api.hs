@@ -10,7 +10,6 @@ module Macbeth.Fics.Api.Api (
   Position,
   PieceMove (..),
   MoveDetailed (..),
-  PendingOffer (..),
   diffPosition,
   movePiece,
   movePieces,
@@ -42,8 +41,6 @@ data PieceMove = PieceMove { piece :: Piece, from :: Square, to :: Square }
 
 instance Show PieceMove where
   show (PieceMove _ s1 s2) = show s1 ++ show s2
-
-data PendingOffer = PendingOffer { offerId :: Int, offer :: String } deriving (Show, Eq)
 
 data MoveDetailed = Simple Square Square | CastleLong | CastleShort deriving (Show, Eq)
 
