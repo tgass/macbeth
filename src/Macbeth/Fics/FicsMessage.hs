@@ -9,52 +9,66 @@ import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Seek
 
-data FicsMessage =   GameMove { illegal :: Bool, move :: Move }
-                  | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }
-                  | Games [Game]
-                  | Observe Move
-                  | RemovingObservedGame
-                  | NoSuchGame
+data FicsMessage =
+  -- | 1. Confirmation of a move
+  --   2. Reseted position after illegal move
+  --   3. Move by oponent
+    GameMove { illegal :: Bool, move :: Move }
 
-                  | MatchRequested Challenge
-                  | MatchAccepted Move
-                  | MatchDeclined
-                  | MatchUserNotLoggedIn Username
+  -- | Pieces holdings in Bughouse / Crazyhouse games
+  | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }
 
-                  | GameResult { gameId :: Int, reason :: String, result :: GameResult }
+  -- | Answer to 'games' command (BLK_GAMES 43)
+  | Games [Game]
 
-                  | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }
-                  | OfferAccepted
-                  | OfferDeclined
-                  | IdenticalOffer
+  -- | Answer to 'observe' command (BLK_OBSERVE 80)
+  | Observe Move
 
-                  | DrawRequest
-                  | AbortRequest Username
-                  | TakebackRequest Username Int
+  -- | If id in 'observe id' does not exist
+  | NoSuchGame
 
-                  | NewSeek Seek
-                  | RemoveSeeks [Int]
-                  | ClearSeek
-                  | SeekNotAvailable
+  -- | Match offered by another player
+  | MatchRequested Challenge
 
-                  | Finger Username String
 
-                  | Login
-                  | LoginTimeout
-                  | Password
-                  | GuestLogin Username
-                  | LoggedIn Username
-                  | InvalidPassword
-                  | Prompt
-                  | SettingsDone
-                  | Acknoledge
-                  | TextMessage String
+  | MatchAccepted Move
+  | MatchDeclined
+  | MatchUserNotLoggedIn Username
 
-                  {- Unused -}
-                  | UnkownUsername Username
+  | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
-                  {- Internal -}
-                  | WxClose
-                  | NullCommand
-                  | GameCreation { gameId :: Int, description :: String }
-                  | Boxed [FicsMessage] deriving (Show, Eq)
+  | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }
+  | OfferAccepted
+  | OfferDeclined
+  | IdenticalOffer
+
+  | DrawRequest
+  | AbortRequest Username
+  | TakebackRequest Username Int
+
+  | NewSeek Seek
+  | RemoveSeeks [Int]
+  | ClearSeek
+  | SeekNotAvailable
+
+  | Finger Username String
+
+  | Login
+  | LoginTimeout
+  | Password
+  | GuestLogin Username
+  | LoggedIn Username
+  | InvalidPassword
+  | Prompt
+  | SettingsDone
+  | Acknoledge
+  | TextMessage String
+
+  {- Unused -}
+  | UnkownUsername Username
+
+  {- Internal -}
+  | WxClose
+  | NullCommand
+  | GameCreation { gameId :: Int, description :: String }
+  | Boxed [FicsMessage] deriving (Show, Eq)

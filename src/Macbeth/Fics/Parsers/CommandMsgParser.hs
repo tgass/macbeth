@@ -40,8 +40,6 @@ parseFicsMessage = parseOnly parser where
                   , declinedChallenge
 
                   , games
-                  , removingObservedGame
-                  , removingObservedGame2
                   , noSuchGame
                   , gameCreation
 
@@ -108,16 +106,9 @@ observe :: Parser FicsMessage
 observe = Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
 
 
-
-
 games :: Parser FicsMessage
 games = Games <$> (commandHead 43 *> parseGamesList)
 
-removingObservedGame :: Parser FicsMessage
-removingObservedGame = "Removing game " *> decimal *> " from observation list." *> pure RemovingObservedGame
-
-removingObservedGame2 :: Parser FicsMessage
-removingObservedGame2 = commandHead 138 *> removingObservedGame
 
 noSuchGame :: Parser FicsMessage
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
