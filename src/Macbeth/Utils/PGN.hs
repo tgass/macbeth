@@ -2,15 +2,16 @@ module Macbeth.Utils.PGN (
   saveAsPGN
 ) where
 
+import Macbeth.Fics.Configuration
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Game (GameResult)
 import qualified Macbeth.Utils.FEN as FEN
 import Macbeth.Wx.Api
 
+import Control.Monad
 import Data.Maybe
 import Data.Time
-import System.Directory
 import System.FilePath
 import System.Locale
 
@@ -21,17 +22,15 @@ saveAsPGN b = saveAsPGN' (reverse $ moves b) (gameResult b)
 saveAsPGN' :: [Move] -> Maybe GameResult -> IO ()
 saveAsPGN' [] _ = return ()
 saveAsPGN' moves mGameResult = do
-  rootDir <- getUserDocumentsDirectory
-  createDirectoryIfMissing False $ rootDir </> "Macbeth"
   dateTime <- getZonedTime
-  path <- filepath dateTime (head moves)
-  appendFile path $ toPGN moves mGameResult dateTime
+  appDir <- directory `fmap` loadConfig
+  when (isJust appDir) $ do
+    path <- filepath (fromJust appDir) dateTime (head moves)
+    appendFile path $ toPGN moves mGameResult dateTime
 
-filepath :: ZonedTime -> Move -> IO FilePath
-filepath dateTime m = do
-  rootDir <- getUserDocumentsDirectory
-  return $ rootDir </> "Macbeth" </> formatTime defaultTimeLocale "%Y-%m-%d" dateTime ++ "_" ++
-           formatTime defaultTimeLocale "%H-%M-%S" dateTime ++ "_" ++ nameW m ++ "_vs_" ++ nameB m ++ ".pgn"
+filepath :: FilePath -> ZonedTime -> Move -> IO FilePath
+filepath appDir dateTime m = return $ appDir </>
+  formatTime defaultTimeLocale "%Y-%m-%d_%H-%M-%S_" dateTime ++ nameW m ++ "_vs_" ++ nameB m ++ ".pgn"
 
 toPGN :: [Move] -> Maybe GameResult -> ZonedTime -> String
 toPGN [] _ _ = ""

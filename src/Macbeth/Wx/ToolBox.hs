@@ -6,6 +6,7 @@ module Macbeth.Wx.ToolBox (
 
 import Macbeth.Fics.FicsMessage
 --import Macbeth.Wx.About
+import Macbeth.Wx.Configuration
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList
 import Macbeth.Wx.Login
@@ -73,6 +74,8 @@ wxToolBox h chan = do
 
     -- menu
     m_help    <- menuHelp []
+    m_file   <- menuPane [text := "&File"]
+    menuItem m_file [text := "Settings", on command := wxConfiguration ]
     --menuAbout m_help [help := "About Macbeth", on command := dupChan chan >>= wxAbout ]
 
     set f [ layout := tabs nb
@@ -82,7 +85,7 @@ wxToolBox h chan = do
                         , tab "Console" $ container cp ( column 5  [ fill $ widget ct
                                                                    , hfill $ widget ce])
                         ]
-          , menuBar := [m_help]
+          , menuBar := [m_file, m_help]
           , outerSize := sz 600 600
           , statusBar := [status, statusLoggedIn]
           ]

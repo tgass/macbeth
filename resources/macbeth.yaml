@@ -1,0 +1,4 @@
+logging:
+  stdOut: false
+  file: false
+directory: /Users/tilmann/Macbeth

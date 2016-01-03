@@ -1,5 +1,5 @@
 name: Macbeth-lib
-version: 0.0.6
+version: 0.0.7
 cabal-version: >= 1.8
 build-type: Simple
 license: AllRightsReserved
@@ -9,11 +9,12 @@ data-dir: resources
 library
     build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
                    bytestring, split, attoparsec, filepath, containers, split, mtl, stm, sodium, directory, filepath,
-                   time, MissingH, old-locale, safe, FindBin
+                   time, MissingH, old-locale, safe, FindBin, yaml, either-unwrap
     hs-source-dirs: src
     exposed-modules: Paths,
                      Macbeth.Fics.FicsConnection
                      Macbeth.Fics.FicsMessage,
+                     Macbeth.Fics.Configuration,
                      Macbeth.Fics.Api.Api,
                      Macbeth.Fics.Api.Challenge,
                      Macbeth.Fics.Api.Game,
@@ -37,6 +38,7 @@ library
                      Macbeth.Wx.Api,
                      Macbeth.Wx.Challenge,
                      Macbeth.Wx.Clock,
+                     Macbeth.Wx.Configuration,
                      Macbeth.Wx.Finger,
                      Macbeth.Wx.GamesList,
                      Macbeth.Wx.GameMoves,
