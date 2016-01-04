@@ -1,4 +1,4 @@
 logging:
   stdOut: false
-  file: false
+  file: true
 directory: /Users/tilmann/Macbeth

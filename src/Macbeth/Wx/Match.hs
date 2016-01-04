@@ -1,5 +1,4 @@
 module Macbeth.Wx.Match (
-  main,
   wxMatch
 ) where
 
@@ -25,8 +24,6 @@ data WxMatch = WxMatch {
 }
 
 eventId = wxID_HIGHEST + 56
-
-main = start $ wxMatch stdout False undefined
 
 wxMatch :: Handle -> Bool -> Chan FicsMessage -> IO ()
 wxMatch h isGuest chan = do
@@ -58,7 +55,7 @@ wxMatch h isGuest chan = do
 matchInputs :: Panel () -> Bool -> IO WxMatch
 matchInputs p isGuest = WxMatch
   <$> choice p [ items := fmap (show . fst) gameTypes]
-  <*> choice p [ visible := False]
+  <*> choice p []
   <*> textEntry p [ ]
   <*> textEntry p [ text := "5" ]
   <*> textEntry p [ text := "0" ]
