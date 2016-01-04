@@ -48,6 +48,7 @@ parseFicsMessage = parseOnly parser where
 
                   , abortRequest
                   , takebackRequest
+                  , takebackAccepted
                   , drawRequest
 
                   , gameResult
@@ -141,6 +142,9 @@ takebackRequest :: Parser FicsMessage
 takebackRequest = TakebackRequest
   <$> manyTill anyChar " " <* "would like to take back "
   <*> decimal <* " half move(s)."
+
+takebackAccepted :: Parser FicsMessage
+takebackAccepted = TakebackAccepted <$> manyTill anyChar " " <* "accepts the takeback request."
 
 gameResult :: Parser FicsMessage
 gameResult = commandHead 103 *> gameResult'

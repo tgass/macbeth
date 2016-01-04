@@ -53,6 +53,7 @@ data FicsMessage =
 
   -- | The oponent wants to takeback one or more half-moves
   | TakebackRequest Username Int
+  | TakebackAccepted Username
 
   | NewSeek Seek
   | RemoveSeeks [Int]

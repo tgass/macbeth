@@ -59,6 +59,7 @@ commandMessageParserTest = [
       , (MatchOfferIdentical, "\NAK4\SYN73\SYNYou are already offering an identical match to GuestSPLL.\n\ETB")
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
+      , (TakebackAccepted "GuestVQMB", "GuestVQMB accepts the takeback request.")
       , (GameResult 82 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN11\SYNYou accept the abort request from GuestSPLL.\n\n{Game 82 (GuestTKHJ vs. GuestSPLL) Game aborted by mutual agreement} *\n\ETB")
       , (GameResult 112 "Game aborted on move 1" Aborted, "\NAK4\SYN10\SYNThe game has been aborted on move one.\n\n{Game 112 (GuestSPLL vs. GuestTKHJ) Game aborted on move 1} *\n\ETB")
       , (GameResult 383 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN10\SYN\n{Game 383 (GuestRVNY vs. GuestZTNM) Game aborted by mutual agreement} *\n\ETB")

@@ -1,6 +1,5 @@
 module Macbeth.Wx.Seek (
-  wxSeek,
-  main
+  wxSeek
 ) where
 
 import Macbeth.Fics.FicsMessage
@@ -12,7 +11,7 @@ import Control.Concurrent.Chan
 import Data.Char (toLower)
 import Graphics.UI.WX hiding (color)
 import Graphics.UI.WXCore
-import System.IO (Handle, hPutStrLn, stdout)
+import System.IO
 
 eventId = wxID_HIGHEST + 57
 

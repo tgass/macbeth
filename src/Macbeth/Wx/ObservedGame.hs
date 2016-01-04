@@ -114,6 +114,8 @@ createObservedGame h move chan = do
       set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
       windowOnKeyChar p_back acceptDeclineKeyHandler
 
+    TakebackAccepted user -> set status [text := user ++ " accepts the takeback request."]
+
     WxClose -> close f
 
     _ -> return ()

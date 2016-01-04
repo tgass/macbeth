@@ -11,14 +11,13 @@
 -- BUGS
 
 -- FEATURES
--- config file
 -- formula (seek)
 -- auto/manual (seek)
 -- WxConfigUpdated event
+-- WxKeyBindings : Show all key bindings to user
 -- chatting
 -- new About.jpg
 -- fisher random (0-0, 0-0-0 shortcuts)
--- msg if takeback ?
 -- save game if observing optional
 -- crazyhouse / bughouse
 -- Cmd+W
