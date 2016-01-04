@@ -1,5 +1,7 @@
 -- add Features to homepage: -> auto save games
 
+
+
 -- ARCHITEX
 -- newtype for perspective == view
 -- user frameCreateTopFrame for background / hibernation /network conn evnt
@@ -10,6 +12,9 @@
 
 -- FEATURES
 -- config file
+-- formula (seek)
+-- auto/manual (seek)
+-- WxConfigUpdated event
 -- chatting
 -- new About.jpg
 -- fisher random (0-0, 0-0-0 shortcuts)

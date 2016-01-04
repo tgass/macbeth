@@ -75,7 +75,7 @@ wxToolBox h chan = do
     -- menu
     m_help    <- menuHelp []
     m_file   <- menuPane [text := "&File"]
-    menuItem m_file [text := "Settings", on command := wxConfiguration ]
+    menuItem m_file [text := "Settings", on command := dupChan chan >>= wxConfiguration ]
     --menuAbout m_help [help := "About Macbeth", on command := dupChan chan >>= wxAbout ]
 
     set f [ layout := tabs nb

@@ -3,7 +3,10 @@ module Macbeth.Wx.Configuration (
 ) where
 
 import Macbeth.Fics.Configuration
+import Macbeth.Fics.FicsMessage
+import Macbeth.Wx.Utils
 
+import Control.Concurrent.Chan
 import Control.Monad
 import Control.Monad.Except
 import Graphics.UI.WX
@@ -12,8 +15,10 @@ import Graphics.UI.WXCore
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Yaml as Y
 
-wxConfiguration :: IO ()
-wxConfiguration = do
+eventId = wxID_HIGHEST + 61
+
+wxConfiguration :: Chan FicsMessage -> IO ()
+wxConfiguration chan = do
   f  <- frame [ text := "Macbeth"]
   ct <- textCtrlEx f (wxTE_MULTILINE .+. wxTE_RICH) [font := fontFixed]
   showConfig ct loadConfig
@@ -30,6 +35,7 @@ wxConfiguration = do
                        boxed "Configuration" $ fill $ minsize (Size 350 200) $ widget ct
                      , hfloatRight $ row 5 [widget b_default, widget b_current, widget b_save]]
         ]
+  registerWxCloseEventListener chan eventId f
 
 
 showConfig :: TextCtrl() -> IO Config -> IO ()
