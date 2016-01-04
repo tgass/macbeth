@@ -48,9 +48,13 @@ parseFicsMessage = parseOnly parser where
                   , gameCreation
 
                   , abortRequest
+                  , abortRequestDeclined
+
                   , takebackRequest
                   , takebackAccepted
+
                   , drawRequest
+                  , drawRequestDeclined
 
                   , gameResult
                   , gameResult'
@@ -136,8 +140,14 @@ gameCreation = GameCreation
 drawRequest :: Parser FicsMessage
 drawRequest = manyTill anyChar space *> "offers you a draw." *> pure DrawRequest
 
+drawRequestDeclined :: Parser FicsMessage
+drawRequestDeclined = DrawRequestDeclined <$> manyTill anyChar space <* "declines the draw request."
+
 abortRequest :: Parser FicsMessage
 abortRequest = AbortRequest <$> (manyTill anyChar " " <* "would like to abort the game;")
+
+abortRequestDeclined :: Parser FicsMessage
+abortRequestDeclined = AbortRequestDeclined <$> manyTill anyChar space <* "declines the abort request."
 
 takebackRequest :: Parser FicsMessage
 takebackRequest = TakebackRequest

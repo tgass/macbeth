@@ -47,9 +47,11 @@ data FicsMessage =
 
   -- | The oponents wants to draw.
   | DrawRequest
+  | DrawRequestDeclined Username
 
   -- | The oponent wants to abort.
   | AbortRequest Username
+  | AbortRequestDeclined Username
 
   -- | The oponent wants to takeback one or more half-moves
   | TakebackRequest Username Int

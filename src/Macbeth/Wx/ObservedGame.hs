@@ -106,9 +106,13 @@ createObservedGame h move chan = do
       set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
       windowOnKeyChar p_back acceptDeclineKeyHandler
 
+    DrawRequestDeclined user -> set status [text := user ++ " declines the draw request."]
+
     AbortRequest user -> do
       set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
       windowOnKeyChar p_back acceptDeclineKeyHandler
+
+    AbortRequestDeclined user -> set status [text := user ++ " declines the abort request."]
 
     TakebackRequest user numTakeback -> do
       set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
