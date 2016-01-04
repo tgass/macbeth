@@ -73,21 +73,19 @@ wxToolBox h chan = do
 
 
     -- menu
-    m_help    <- menuHelp []
     m_file   <- menuPane [text := "&File"]
     menuItem m_file [text := "Settings", on command := dupChan chan >>= wxConfiguration ]
-    --menuAbout m_help [help := "About Macbeth", on command := dupChan chan >>= wxAbout ]
 
-    set f [ layout := tabs nb
+    set f [ statusBar := [status, statusLoggedIn],
+            layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
                         , tab "Pending" $ container pending $ fill $ widget pendingWidget
                         , tab "Console" $ container cp ( column 5  [ fill $ widget ct
                                                                    , hfill $ widget ce])
                         ]
-          , menuBar := [m_file, m_help]
+          , menuBar := [m_file]
           , outerSize := sz 600 600
-          , statusBar := [status, statusLoggedIn]
           ]
 
     -- preselect console

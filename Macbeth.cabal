@@ -34,7 +34,6 @@ library
                      Macbeth.Utils.FEN,
                      Macbeth.Utils.Board,
                      Macbeth.Utils.Utils,
-                     Macbeth.Wx.About,
                      Macbeth.Wx.Api,
                      Macbeth.Wx.Challenge,
                      Macbeth.Wx.Clock,
