@@ -1,3 +1,15 @@
+-- FEATURES
+-- chatting
+-- formula (seek)
+-- auto/manual (seek)
+-- save game if observing optional
+-- fisher random (0-0, 0-0-0 shortcuts)
+-- crazyhouse / bughouse
+-- Cmd+W
+-- WxConfigUpdated event
+-- command moves to get first moves in observed game?
+-- WxKeyBindings : Show all key bindings to user
+-- new WxAbout
 
 -- ARCHITEX
 -- newtype for perspective == view
@@ -5,24 +17,8 @@
 -- create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 -- refactor FicsConnection (performance)
 
--- BUGS
-
--- FEATURES
--- formula (seek)
--- auto/manual (seek)
--- WxConfigUpdated event
--- WxKeyBindings : Show all key bindings to user
--- chatting
--- new About.jpg
--- fisher random (0-0, 0-0-0 shortcuts)
--- save game if observing optional
--- crazyhouse / bughouse
--- Cmd+W
--- command moves to get first moves in observed game?
-
 -- PARSERS
 -- while observing: TextMessage "Game 84: Paet offers a draw."
--- "Logging you in as "GuestRCSH"; you may use this name to play unrated games."
 
 -- APP
 -- alternative icons: crosshair, child, flag, search
