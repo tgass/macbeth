@@ -32,7 +32,7 @@ wxConfiguration chan = do
 
   set f [ statusBar := [status],
           layout := margin 10 $ column 10 [
-                       boxed "Configuration" $ fill $ minsize (Size 350 200) $ widget ct
+                       boxed "Configuration" $ fill $ minsize (Size 380 220) $ widget ct
                      , hfloatRight $ row 5 [widget b_default, widget b_current, widget b_save]]
         ]
   registerWxCloseEventListener chan eventId f

@@ -1,6 +1,3 @@
--- add Features to homepage: -> auto save games
-
-
 
 -- ARCHITEX
 -- newtype for perspective == view
