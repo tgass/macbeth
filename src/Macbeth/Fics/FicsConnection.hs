@@ -29,7 +29,8 @@ import qualified Data.ByteString.Char8 as BS
 
 
 data HelperState = HelperState { config :: Config
-                               , gameId' :: Maybe Int
+                               , takebackAccptedBy :: Maybe String -- ^ oponent accepted takeback request
+                               , newGameId :: Maybe Int
                                , isPlaying :: Bool }
 
 
@@ -44,7 +45,7 @@ ficsConnection = runResourceT $ do
 
 
 chain :: Handle -> Config-> Chan FicsMessage -> IO ()
-chain h config chan = flip evalStateT (HelperState config Nothing False) $ transPipe lift
+chain h config chan = flip evalStateT (HelperState config Nothing Nothing False) $ transPipe lift
   (sourceHandle h) $$
   fileLoggerC =$
   toCharC =$
@@ -71,19 +72,36 @@ extractC = awaitForever $ \cmd -> do
   state <- get
   case cmd of
     Boxed cmds -> sourceList cmds
-    GameCreation id _ -> put (state {gameId' = Just id}) >> sourceList []
+
+    GameCreation id _ -> do
+      put $ state {newGameId = Just id}
+      sourceList []
+
     m@(GameMove _ move)
       | isCheckmate move && isOponentMove move -> sourceList $ cmd : [toGameResult move]
-      | isNewGameUser move && fromMaybe False ((== gameId move) <$> gameId' state) -> do
-          put (state {gameId' = Nothing })
+      | isNewGameUser move && fromMaybe False ((== gameId move) <$> newGameId state) -> do
+          put $ state {newGameId = Nothing }
           sourceList [MatchAccepted move]
+      | isJust $ takebackAccptedBy state -> do
+          put $ state {takebackAccptedBy = Nothing}
+          sourceList [m{context = Just $ Takeback $ fromJust (takebackAccptedBy state)}]
       | otherwise -> sourceList [m]
+
     MatchAccepted move
-      | isPlaying state -> sourceList [GameMove (Just $ Takeback $ nameOponent move) move]
-      | otherwise -> do put (state {isPlaying = True}); sourceList [cmd]
+      | isPlaying state -> sourceList [GameMove Nothing move] -- user accepted takeback himself
+      | otherwise -> do
+          put (state {isPlaying = True})
+          sourceList [cmd]
+
+    -- oponent accepts takeback
+    TakebackAccepted username -> do
+      put $ state {takebackAccptedBy = Just username}
+      sourceList []
+
     g@GameResult {} -> do
-      put (state {isPlaying = False})
+      put $ state {isPlaying = False}
       sourceList [g]
+
     _ -> yield cmd
 
 

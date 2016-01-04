@@ -79,4 +79,5 @@ data FicsMessage =
   | WxClose
   | NullCommand
   | GameCreation { gameId :: Int, description :: String }
+  | TakebackAccepted Username
   | Boxed [FicsMessage] deriving (Show, Eq)
