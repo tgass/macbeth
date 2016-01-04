@@ -2,6 +2,7 @@ module Macbeth.Fics.Api.Move (
   Move(..),
   Relation(..),
   Castling(..),
+  MoveModifier(..),
   remainingTime,
   decreaseRemainingTime,
   nameUser,
@@ -51,6 +52,12 @@ data Move = Move {
 data Relation = IsolatedPosition | ObservingExaminedGame | Examiner | MyMove | OponentsMove | Observing deriving (Show, Eq)
 
 data Castling = WhiteLong | WhiteShort | BlackLong | BlackShort deriving (Show, Eq)
+
+data MoveModifier = Illegal | Takeback Username deriving (Eq)
+
+instance Show MoveModifier where
+  show Illegal = "Illegal move."
+  show (Takeback username) = username ++ " accepts the takeback request."
 
 remainingTime :: Macbeth.Fics.Api.Api.PColor -> Move -> Int
 remainingTime Black = remainingTimeB

@@ -13,7 +13,7 @@ data FicsMessage =
   -- | 1. Confirmation of a user move
   --   2. Reseted position after illegal user move
   --   3. Move by oponent
-    GameMove { illegal :: Bool, move :: Move }
+    GameMove { context :: Maybe MoveModifier, move :: Move }
 
   -- | Pieces holdings in Bughouse / Crazyhouse games
   | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }
@@ -53,7 +53,6 @@ data FicsMessage =
 
   -- | The oponent wants to takeback one or more half-moves
   | TakebackRequest Username Int
-  | TakebackAccepted Username
 
   | NewSeek Seek
   | RemoveSeeks [Int]

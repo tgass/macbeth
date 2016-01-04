@@ -84,10 +84,10 @@ createObservedGame h move chan = do
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
 
-    GameMove illegal move' -> when (gameId move' == gameId move) $ do
+    GameMove ctx move' -> when (gameId move' == gameId move) $ do
       state <- varGet vBoardState
       updateChessClock move' cc
-      set status [text := if illegal then "Illegal move." else ""]
+      set status [text := maybe "" show ctx]
       Board.update vBoardState move'
       when (isNextMoveUser move' && not (null $ preMoves state)) $
         handlePreMoves vBoardState h
@@ -113,8 +113,6 @@ createObservedGame h move chan = do
     TakebackRequest user numTakeback -> do
       set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
       windowOnKeyChar p_back acceptDeclineKeyHandler
-
-    TakebackAccepted user -> set status [text := user ++ " accepts the takeback request."]
 
     WxClose -> close f
 

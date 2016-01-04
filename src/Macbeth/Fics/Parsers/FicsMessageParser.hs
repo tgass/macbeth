@@ -7,6 +7,7 @@ module Macbeth.Fics.Parsers.FicsMessageParser (
 import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
@@ -48,7 +49,6 @@ parseFicsMessage = parseOnly parser where
 
                   , abortRequest
                   , takebackRequest
-                  , takebackAccepted
                   , drawRequest
 
                   , gameResult
@@ -76,11 +76,11 @@ parseFicsMessage = parseOnly parser where
                   ]
 
 gameMove :: Parser FicsMessage
-gameMove = GameMove <$> pure False <*> move
+gameMove = GameMove <$> pure Nothing <*> move
 
 confirmGameMove :: Parser FicsMessage
 confirmGameMove = do
-  illegal <- commandHead 1 *> option False ("Illegal move" *> pure True)
+  illegal <- commandHead 1 *> option Nothing ("Illegal move" *> pure (Just Illegal))
   ph <- option NullCommand (takeTill (=='<') *> pieceHolding)
   move' <- takeTill (=='<') *> move
   return $ Boxed [ph, GameMove illegal move']
@@ -142,9 +142,6 @@ takebackRequest :: Parser FicsMessage
 takebackRequest = TakebackRequest
   <$> manyTill anyChar " " <* "would like to take back "
   <*> decimal <* " half move(s)."
-
-takebackAccepted :: Parser FicsMessage
-takebackAccepted = TakebackAccepted <$> manyTill anyChar " " <* "accepts the takeback request."
 
 gameResult :: Parser FicsMessage
 gameResult = commandHead 103 *> gameResult'

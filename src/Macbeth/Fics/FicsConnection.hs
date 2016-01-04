@@ -28,7 +28,9 @@ import System.IO
 import qualified Data.ByteString.Char8 as BS
 
 
-data HelperState = HelperState { config :: Config, gameId' :: Maybe Int, isPlaying :: Bool }
+data HelperState = HelperState { config :: Config
+                               , gameId' :: Maybe Int
+                               , isPlaying :: Bool }
 
 
 ficsConnection :: IO (Handle, Chan FicsMessage)
@@ -70,15 +72,18 @@ extractC = awaitForever $ \cmd -> do
   case cmd of
     Boxed cmds -> sourceList cmds
     GameCreation id _ -> put (state {gameId' = Just id}) >> sourceList []
-    GameMove _ move
+    m@(GameMove _ move)
       | isCheckmate move && isOponentMove move -> sourceList $ cmd : [toGameResult move]
       | isNewGameUser move && fromMaybe False ((== gameId move) <$> gameId' state) -> do
-          put (state {gameId' = Nothing }); sourceList [MatchAccepted move]
-      | otherwise -> sourceList [cmd]
-    MatchAccepted move -> if isPlaying state --takeback
-      then sourceList [GameMove False move]
-      else do put (state {isPlaying = True}); sourceList [cmd]
-    g@GameResult {} -> do put (state {isPlaying = False}); sourceList [g]
+          put (state {gameId' = Nothing })
+          sourceList [MatchAccepted move]
+      | otherwise -> sourceList [m]
+    MatchAccepted move
+      | isPlaying state -> sourceList [GameMove (Just $ Takeback $ nameOponent move) move]
+      | otherwise -> do put (state {isPlaying = True}); sourceList [cmd]
+    g@GameResult {} -> do
+      put (state {isPlaying = False})
+      sourceList [g]
     _ -> yield cmd
 
 
