@@ -10,7 +10,6 @@ import Control.Applicative
 import Control.Concurrent.Chan
 import Data.Char
 import Graphics.UI.WX hiding (color)
-import Graphics.UI.WXCore
 import System.IO
 
 data WxMatch = WxMatch {
@@ -22,8 +21,6 @@ data WxMatch = WxMatch {
   rated :: CheckBox (),
   color :: Choice ()
 }
-
-eventId = wxID_HIGHEST + 56
 
 wxMatch :: Handle -> Bool -> Chan FicsMessage -> IO ()
 wxMatch h isGuest chan = do
@@ -49,7 +46,7 @@ wxMatch h isGuest chan = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-  registerWxCloseEventListener chan eventId f
+  registerWxCloseEventListener f chan
 
 
 matchInputs :: Panel () -> Bool -> IO WxMatch

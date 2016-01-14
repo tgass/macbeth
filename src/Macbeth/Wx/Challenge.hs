@@ -11,8 +11,6 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
 
-eventId = wxID_HIGHEST + 54
-
 wxChallenge :: Handle -> Challenge -> Chan FicsMessage  -> IO ()
 wxChallenge h c chan = do
   vCmd <- newEmptyMVar
@@ -52,5 +50,6 @@ wxChallenge h c chan = do
 isUpdate :: Challenge -> Challenge -> Bool
 isUpdate c c' = (nameW c == nameW c') && (nameB c == nameB c')
 
+eventId = wxID_HIGHEST + 1
 
 --main = start $ wxChallenge undefined (Challenge "foobar" (Rating 1200) "barbaz" Guest "12 2 blitz")

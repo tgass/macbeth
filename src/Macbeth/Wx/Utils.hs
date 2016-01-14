@@ -1,5 +1,6 @@
 module Macbeth.Wx.Utils (
   eventLoop,
+  eventLoopP,
   registerWxCloseEventListener,
   listItemRightClickEvent,
   toWxColor,
@@ -24,14 +25,18 @@ eventLoop id chan vCmd f = readChan chan >>= putMVar vCmd >>
   commandEventCreate wxEVT_COMMAND_MENU_SELECTED id >>= evtHandlerAddPendingEvent f >>
   eventLoop id chan vCmd f
 
+eventLoopP :: Int -> Chan FicsMessage -> MVar FicsMessage -> Panel () -> IO ()
+eventLoopP id chan vCmd f = readChan chan >>= putMVar vCmd >>
+  commandEventCreate wxEVT_COMMAND_MENU_SELECTED id >>= evtHandlerAddPendingEvent f >>
+  eventLoopP id chan vCmd f
 
-registerWxCloseEventListener :: Chan FicsMessage -> Int -> Frame () -> IO ()
-registerWxCloseEventListener chan eventId f = do
+registerWxCloseEventListener :: Frame () -> Chan FicsMessage -> IO ()
+registerWxCloseEventListener f chan = do
   vCmd <- newEmptyMVar
-  threadId <- forkIO $ eventLoop eventId chan vCmd f
+  threadId <- forkIO $ eventLoop (wxID_HIGHEST + 13) chan vCmd f
   windowOnDestroy f $ killThread threadId
 
-  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
+  evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \cmd -> case cmd of
     WxClose -> close f
     _ -> return ()
 

@@ -10,10 +10,7 @@ import Control.Applicative hiding (empty)
 import Control.Concurrent.Chan
 import Data.Char (toLower)
 import Graphics.UI.WX hiding (color)
-import Graphics.UI.WXCore
 import System.IO
-
-eventId = wxID_HIGHEST + 57
 
 -- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide] [wild #] [auto|manual] [formula] [rating-range]
 data WxSeek = WxSeek {
@@ -53,7 +50,7 @@ wxSeek h isGuest chan = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-  registerWxCloseEventListener chan eventId f
+  registerWxCloseEventListener f chan
 
 
 -- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide]
@@ -85,5 +82,4 @@ matchInputs p isGuest = WxSeek
   <*> checkBox p []
   <*> textEntry p [ text := "0"]
   <*> textEntry p [ text := "9999"]
-
 

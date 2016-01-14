@@ -32,7 +32,7 @@ import System.FilePath
 import System.IO
 import System.IO.Unsafe
 
-eventId = wxID_HIGHEST + 51
+eventId = wxID_HIGHEST + 1
 
 wxToolBox :: Handle -> Chan FicsMessage -> IO ()
 wxToolBox h chan = do

@@ -7,9 +7,6 @@ import Macbeth.Wx.Utils
 
 import Control.Concurrent.Chan
 import Graphics.UI.WX
-import Graphics.UI.WXCore
-
-eventId = wxID_HIGHEST + 55
 
 wxFinger :: String -> String -> Chan FicsMessage -> IO ()
 wxFinger name stats chan = do
@@ -18,4 +15,4 @@ wxFinger name stats chan = do
                      , font := fontFixed
                      , fontSize := 14]
   set f [layout := margin 10 $ row 0 [widget st]]
-  registerWxCloseEventListener chan eventId f
+  registerWxCloseEventListener f chan

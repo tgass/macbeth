@@ -11,8 +11,6 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
 
-eventId = wxID_HIGHEST + 60
-
 data WxLogin = WxLogin {
     name :: TextCtrl ()
   , password :: TextCtrl ()
@@ -38,8 +36,7 @@ wxLogin h chan = do
                ,[ label "Login as Guest:", hfill $ widget $ guestLogin wxInputs]])
             , floatBottomRight $ row 5 [widget b_ok, widget b_can]]
         ]
-  wxChan <- dupChan chan
-  registerWxCloseEventListener wxChan eventId f
+  dupChan chan >>= registerWxCloseEventListener f
 
 
 okBtnHandler :: WxLogin -> Frame() -> Handle -> Chan FicsMessage -> IO ()

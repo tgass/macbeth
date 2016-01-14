@@ -15,8 +15,6 @@ import Graphics.UI.WXCore
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Yaml as Y
 
-eventId = wxID_HIGHEST + 61
-
 wxConfiguration :: Chan FicsMessage -> IO ()
 wxConfiguration chan = do
   f  <- frame [ text := "Macbeth"]
@@ -35,8 +33,7 @@ wxConfiguration chan = do
                        boxed "Configuration" $ fill $ minsize (Size 380 220) $ widget ct
                      , hfloatRight $ row 5 [widget b_default, widget b_current, widget b_save]]
         ]
-  registerWxCloseEventListener chan eventId f
-
+  registerWxCloseEventListener f chan
 
 showConfig :: TextCtrl() -> IO Config -> IO ()
 showConfig ct io_config = io_config >>= \config -> set ct [text := comments ++ BS.unpack (Y.encode config)]
@@ -57,4 +54,3 @@ comments :: String
 comments = "# Changes will take effect only after restart (for now).\n\n\
            \# If you change the directory make sure it exists.\n\
            \# It will not be created for you.\n\n"
-
