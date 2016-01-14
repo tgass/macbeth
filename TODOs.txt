@@ -1,3 +1,6 @@
+--BUGS:
+-- save game, remove take back moves
+
 -- FEATURES
 -- chatting
 -- formula (seek)
