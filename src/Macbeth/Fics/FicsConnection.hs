@@ -48,8 +48,8 @@ chain :: Handle -> Config-> Chan FicsMessage -> IO ()
 chain h config chan = flip evalStateT (HelperState config Nothing Nothing False) $ transPipe lift
   (sourceHandle h) $$
   fileLoggerC =$
-  toCharC =$
-  blockC (False, BS.empty) =$
+  filterR =$
+  blockC BS.empty =$
   parseC =$
   extractC =$
   loggingC =$
@@ -111,21 +111,25 @@ parseC = awaitForever $ \str -> case parseFicsMessage str of
   Right cmd -> yield cmd
 
 
-blockC :: (Bool, BS.ByteString) -> Conduit Char (StateT HelperState IO) BS.ByteString
-blockC (block, p) = awaitForever $ \c -> case p of
-  "login:" -> yield "login: " >> blockC (False, BS.empty)
-  "password:" -> yield "password: " >> blockC (False, BS.empty)
-  _ -> case ord c of
-    21 -> blockC (True, BS.singleton c)
-    23 -> yield (p `BS.append` BS.singleton c) >> blockC (False, BS.empty)
-    10 -> if block then blockC (block, p `BS.append` BS.singleton c)
-                   else when(p /= "") $ yield p >> blockC (block, BS.empty)
-    13 -> blockC (block, p) -- ignores \r
-    _  -> blockC (block, p `BS.append` BS.singleton c)
+blockC :: BS.ByteString -> Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+blockC block = awaitForever $ \line -> case ord $ BS.head line of
+  21 -> blockC line
+  23 -> yield (block `BS.append` line) >> blockC BS.empty
+  _ | BS.null block -> yield line >> blockC BS.empty
+    | otherwise -> blockC (block `BS.append` line)
 
 
-toCharC :: Conduit BS.ByteString (StateT HelperState IO) Char
-toCharC = awaitForever $ sourceList . BS.unpack
+-- remember!! "fics% \NAK4\SYN87\SYNThere are no offers pending to other players."
+filterR :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+filterR = awaitForever $ sourceList . Prelude.filter (not . BS.null) . fmap dropPrompt . BS.split '\r'
+
+
+dropPrompt :: BS.ByteString -> BS.ByteString
+dropPrompt line
+  | BS.take promptSz line == prompt = BS.drop promptSz line
+  | otherwise = line
+  where prompt = BS.pack "fics% "
+        promptSz = BS.length prompt
 
 
 fileLoggerC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
@@ -142,7 +146,6 @@ toGameResult move = GameResult id reason result
 
 
 printCmdMsg :: FicsMessage -> IO ()
-printCmdMsg Prompt = return ()
 printCmdMsg NewSeek {} = return ()
 printCmdMsg RemoveSeeks {} = return ()
 printCmdMsg cmd = print cmd

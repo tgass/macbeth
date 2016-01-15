@@ -74,7 +74,6 @@ data FicsMessage =
 
   {- Unused -}
   | UnkownUsername Username
-  | Prompt
   | Acknoledge
 
   {- Internal -}

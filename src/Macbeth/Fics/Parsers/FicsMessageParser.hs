@@ -75,7 +75,6 @@ parseFicsMessage = parseOnly parser where
                   , unknownUsername
                   , loggedIn
                   , invalidPassword
-                  , prompt
                   , acknoledge
                   , settingsDone
                   ]
@@ -219,9 +218,6 @@ loggedIn = LoggedIn
 
 invalidPassword :: Parser FicsMessage
 invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword
-
-prompt :: Parser FicsMessage
-prompt = "fics% " *> pure Prompt
 
 acknoledge :: Parser FicsMessage
 acknoledge = commandHead 519 *> char (chr 23) *> pure Acknoledge
