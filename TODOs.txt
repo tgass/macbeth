@@ -21,6 +21,7 @@
 
 -- PARSERS
 -- while observing: TextMessage "Game 84: Paet offers a draw."
+-- GuestKMZS declines takeback
 
 -- APP
 -- alternative icons: crosshair, child, flag, search

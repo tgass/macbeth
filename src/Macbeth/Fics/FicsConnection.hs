@@ -30,8 +30,7 @@ import qualified Data.ByteString.Char8 as BS
 
 data HelperState = HelperState { config :: Config
                                , takebackAccptedBy :: Maybe String -- ^ oponent accepted takeback request
-                               , newGameId :: Maybe Int
-                               , isPlaying :: Bool }
+                               , newGameId :: Maybe Int }
 
 
 ficsConnection :: IO (Handle, Chan FicsMessage)
@@ -45,13 +44,13 @@ ficsConnection = runResourceT $ do
 
 
 chain :: Handle -> Config-> Chan FicsMessage -> IO ()
-chain h config chan = flip evalStateT (HelperState config Nothing Nothing False) $ transPipe lift
+chain h config chan = flip evalStateT (HelperState config Nothing Nothing) $ transPipe lift
   (sourceHandle h) $$
   fileLoggerC =$
-  filterR =$
+  linesC =$
   blockC BS.empty =$
   parseC =$
-  extractC =$
+  stateC =$
   loggingC =$
   sink chan
 
@@ -67,15 +66,19 @@ loggingC = awaitForever $ \cmd -> do
   yield cmd
 
 
-extractC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
-extractC = awaitForever $ \cmd -> do
+stateC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
+stateC = awaitForever $ \cmd -> do
   state <- get
   case cmd of
     Boxed cmds -> sourceList cmds
 
     GameCreation id _ -> do
       put $ state {newGameId = Just id}
-      sourceList []
+      sourceNull
+
+    TakebackAccepted username -> do
+      put $ state {takebackAccptedBy = Just username}
+      sourceNull
 
     m@(GameMove _ move)
       | isCheckmate move && isOponentMove move -> sourceList $ cmd : [toGameResult move]
@@ -86,21 +89,6 @@ extractC = awaitForever $ \cmd -> do
           put $ state {takebackAccptedBy = Nothing}
           sourceList [m{context = Just $ Takeback $ fromJust (takebackAccptedBy state)}]
       | otherwise -> sourceList [m]
-
-    MatchAccepted move
-      | isPlaying state -> sourceList [GameMove Nothing move] -- user accepted takeback himself
-      | otherwise -> do
-          put (state {isPlaying = True})
-          sourceList [cmd]
-
-    -- oponent accepts takeback
-    TakebackAccepted username -> do
-      put $ state {takebackAccptedBy = Just username}
-      sourceList []
-
-    g@GameResult {} -> do
-      put $ state {isPlaying = False}
-      sourceList [g]
 
     _ -> yield cmd
 
@@ -115,13 +103,14 @@ blockC :: BS.ByteString -> Conduit BS.ByteString (StateT HelperState IO) BS.Byte
 blockC block = awaitForever $ \line -> case ord $ BS.head line of
   21 -> blockC line
   23 -> yield (block `BS.append` line) >> blockC BS.empty
-  _ | BS.null block -> yield line >> blockC BS.empty
+  _ | BS.null block -> when (line /= newline) (yield line) >> blockC BS.empty
     | otherwise -> blockC (block `BS.append` line)
+  where newline = BS.pack "\n"
 
 
 -- remember!! "fics% \NAK4\SYN87\SYNThere are no offers pending to other players."
-filterR :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
-filterR = awaitForever $ sourceList . Prelude.filter (not . BS.null) . fmap dropPrompt . BS.split '\r'
+linesC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+linesC = awaitForever $ sourceList . Prelude.filter (not . BS.null) . fmap dropPrompt . BS.split '\r'
 
 
 dropPrompt :: BS.ByteString -> BS.ByteString

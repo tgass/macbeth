@@ -33,7 +33,7 @@ parseFicsMessage = parseOnly parser where
 
                   , gameMove
                   , confirmGameMove
-                  , accept
+                  , acceptMatchOffer
                   , playSeek
                   , observe
                   , pieceHolding
@@ -52,6 +52,7 @@ parseFicsMessage = parseOnly parser where
 
                   , takebackRequest
                   , takebackAccepted
+                  , acceptTakeback
 
                   , drawRequest
                   , drawRequestDeclined
@@ -89,8 +90,8 @@ confirmGameMove = do
   move' <- takeTill (=='<') *> move
   return $ Boxed [ph, GameMove illegal move']
 
-accept :: Parser FicsMessage
-accept = MatchAccepted <$> (commandHead 11 *> takeTill (== '<') *> move)
+acceptMatchOffer :: Parser FicsMessage
+acceptMatchOffer = MatchAccepted <$> (commandHead 11 *> "You accept the match offer from" *> takeTill (== '<') *> move)
 
 playSeek :: Parser FicsMessage
 playSeek = Boxed
@@ -155,6 +156,11 @@ takebackRequest = TakebackRequest
 
 takebackAccepted :: Parser FicsMessage
 takebackAccepted = TakebackAccepted <$> manyTill anyChar " " <* "accepts the takeback request."
+
+acceptTakeback :: Parser FicsMessage
+acceptTakeback = GameMove <$>
+  pure Nothing <*> -- ^ User accepted takeback himself
+  (commandHead 11 *> "You accept the takeback request from" *> takeTill (== '<') *> move)
 
 gameResult :: Parser FicsMessage
 gameResult = commandHead 103 *> gameResult'
