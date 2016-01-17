@@ -34,18 +34,18 @@ parseFicsMessage = parseOnly parser where
                   , gameMove
                   , confirmGameMove
                   , acceptMatchOffer
-                  , playSeek
-                  , observe
+                  , gameCreation
+                  , seek
                   , pieceHolding
 
-                  , matchRequested
+                  , challenge
                   , matchDeclined
                   , matchUserNotLoggedIn
                   , matchOfferIdentical
 
                   , games
+                  , observe
                   , noSuchGame
-                  , gameCreation
 
                   , abortRequest
                   , abortRequestDeclined
@@ -59,8 +59,6 @@ parseFicsMessage = parseOnly parser where
 
                   , gameResult
                   , gameResult'
-
-                  , seekMatchesAlreadyPosted
 
                   , finger
                   , pendingOffers
@@ -86,33 +84,31 @@ confirmGameMove = do
   move' <- takeTill (=='<') *> move
   return $ Boxed [ph, GameMove illegal move']
 
+-- 11 = accept (match) ! don't delete this again: "You accept the match offer from"
 acceptMatchOffer :: Parser FicsMessage
 acceptMatchOffer = MatchAccepted <$> (commandHead 11 *> "You accept the match offer from" *> takeTill (== '<') *> move)
 
-playSeek :: Parser FicsMessage
-playSeek = Boxed
-  <$> sequence [ commandHead 158 *> "\n" *> SP.removeSeeks <* "\n"
-               , takeTill (=='<') *> (MatchAccepted <$> move)]
+-- 155 = Seek (User selects a seek)
+-- 158 = Play (Users' seek matches a seek already posted)
+seek :: Parser FicsMessage
+seek = Boxed <$> ((commandHead 155 <|> commandHead 158) *> sequence
+  [ takeTill (== '<') *> SP.removeSeeks
+  , takeTill (== '<') *> (MatchAccepted <$> move)])
 
-seekMatchesAlreadyPosted :: Parser FicsMessage
-seekMatchesAlreadyPosted = do
-  commandHead 155
-  option "" "You are unregistered - setting to unrated.\n"
-  rs <- "Your seek matches one already posted by" *> takeTill (== '<') *> SP.removeSeeks <* "\n"
-  mv <- takeTill (=='<') *> (MatchAccepted <$> move)
-  return $ Boxed [rs, mv]
+gameCreation :: Parser FicsMessage
+gameCreation = GameCreation <$> ("{Game " *> decimal <* takeTill (== ')') <* ") Creating ")
 
 observe :: Parser FicsMessage
 observe = Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
 
-games :: Parser FicsMessage
-games = Games <$> (commandHead 43 *> parseGamesList)
-
 noSuchGame :: Parser FicsMessage
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
 
-matchRequested :: Parser FicsMessage
-matchRequested = MatchRequested <$> (Challenge
+games :: Parser FicsMessage
+games = Games <$> (commandHead 43 *> parseGamesList)
+
+challenge :: Parser FicsMessage
+challenge = MatchRequested <$> (Challenge
   <$> ("Challenge: " *> manyTill anyChar space)
   <*> ("(" *> skipSpace *> rating)
   <*> (") " *> manyTill anyChar space)
@@ -127,11 +123,6 @@ matchOfferIdentical = commandHead 73 *> "You are already offering an identical m
 
 matchUserNotLoggedIn :: Parser FicsMessage
 matchUserNotLoggedIn = MatchUserNotLoggedIn <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
-
-gameCreation :: Parser FicsMessage
-gameCreation = GameCreation
-  <$> (skipSpace *> "{Game" *> space *> decimal)
-  <*> (takeTill (== ')') *> ") Creating " *> manyTill anyChar "}")
 
 drawRequest :: Parser FicsMessage
 drawRequest = manyTill anyChar space *> "offers you a draw." *> pure DrawRequest
@@ -158,7 +149,10 @@ acceptTakeback = GameMove <$>
   pure Nothing <*> -- ^ User accepted takeback himself
   (commandHead 11 *> "You accept the takeback request from" *> takeTill (== '<') *> move)
 
--- 10 = Abort, 11 = Accept (Draw), Draw = 34, 103 = Resign
+-- 10 = Abort
+-- 11 = Accept (Draw, Abort)
+-- 34 = Draw (Mutual)
+-- 103 = Resign
 gameResult :: Parser FicsMessage
 gameResult = choice [commandHead 10, commandHead 11, commandHead 34, commandHead 103] *> gameResult'
 

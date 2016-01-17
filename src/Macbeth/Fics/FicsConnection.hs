@@ -82,7 +82,7 @@ stateC = awaitForever $ \cmd -> do
   case cmd of
     Boxed cmds -> sourceList cmds
 
-    GameCreation id _ -> do
+    GameCreation id -> do
       put $ state {newGameId = Just id}
       sourceNull
 
