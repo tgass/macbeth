@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Macbeth.Wx.ObservedGame (
   createObservedGame
@@ -17,6 +18,7 @@ import qualified Macbeth.Utils.Board as Board
 
 import Control.Concurrent
 import Control.Concurrent.STM
+import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Graphics.UI.WX hiding (when, position)
@@ -81,7 +83,7 @@ createObservedGame h move chan = do
   set f [ statusBar := [status], layout := fill $ widget p_back, on resize := resizeFrame f]
 
   -- necessary: after GameResult no more events are handled
-  dupChan chan >>= registerWxCloseEventListener f
+  tiClose <- dupChan chan >>= registerWxCloseEventListenerWithThreadId f
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case
@@ -101,7 +103,7 @@ createObservedGame h move chan = do
       Board.setResult vBoardState result
       repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
-      sequence_ $ fmap killThread [threadId, tiClockW, tiClockB]
+      sequence_ $ fmap killThread [threadId, tiClockW, tiClockB, tiClose]
 
     DrawRequest -> do
       set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
@@ -122,7 +124,7 @@ createObservedGame h move chan = do
     _ -> return ()
 
   windowOnDestroy f $ do
-    sequence_ $ fmap killThread [threadId, tiClockW, tiClockB]
+    sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClockW, tiClockB, tiClose]
     boardState <- readTVarIO vBoardState
     when (isGameUser move) $ saveAsPGN boardState
     unless (isJust $ gameResult boardState) $ case relation move of

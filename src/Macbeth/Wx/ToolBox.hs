@@ -128,9 +128,9 @@ wxToolBox h chan = do
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 
-        MatchAccepted move -> do
+        WxMatchAccepted move chan' -> do
           hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.
-          dupChan chan >>= createObservedGame h move
+          createObservedGame h move chan'
 
         MatchDeclined user -> do
           hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.

@@ -2,6 +2,7 @@ module Macbeth.Wx.Utils (
   eventLoop,
   eventLoopP,
   registerWxCloseEventListener,
+  registerWxCloseEventListenerWithThreadId,
   listItemRightClickEvent,
   toWxColor,
   staticTextFormatted,
@@ -39,6 +40,17 @@ registerWxCloseEventListener f chan = do
   evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \cmd -> case cmd of
     WxClose -> close f
     _ -> return ()
+
+registerWxCloseEventListenerWithThreadId :: Frame () -> Chan FicsMessage -> IO ThreadId
+registerWxCloseEventListenerWithThreadId f chan = do
+  vCmd <- newEmptyMVar
+  threadId <- forkIO $ eventLoop (wxID_HIGHEST + 13) chan vCmd f
+
+  evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \cmd -> case cmd of
+    WxClose -> close f
+    _ -> return ()
+
+  return threadId
 
 
 listItemRightClickEvent :: ListCtrl a -> (Graphics.UI.WXCore.ListEvent () -> IO ()) -> IO ()

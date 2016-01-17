@@ -16,8 +16,6 @@
 
 -- ARCHITEX
 -- newtype for perspective == view
--- user frameCreateTopFrame for background / hibernation /network conn evnt
--- create new frames with complete channel, WxNewFrame CommandMsg (Chan CommandMsg)
 
 -- PARSERS
 -- while observing: TextMessage "Game 84: Paet offers a draw."

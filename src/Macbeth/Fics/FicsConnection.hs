@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Macbeth.Fics.FicsConnection (
   ficsConnection
@@ -46,11 +47,12 @@ ficsConnection = runResourceT $ do
 chain :: Handle -> Config-> Chan FicsMessage -> IO ()
 chain h config chan = flip evalStateT (HelperState config Nothing Nothing) $ transPipe lift
   (sourceHandle h) $$
-  fileLoggerC =$
   linesC =$
   blockC BS.empty =$
+  fileLoggerC =$
   parseC =$
   stateC =$
+  copyC chan =$
   loggingC =$
   sink chan
 
@@ -64,6 +66,14 @@ loggingC = awaitForever $ \cmd -> do
   logToStdOut <- (stdOut . logging . config) `fmap` get
   when logToStdOut $ liftIO (printCmdMsg cmd)
   yield cmd
+
+
+copyC :: Chan FicsMessage -> Conduit FicsMessage (StateT HelperState IO) FicsMessage
+copyC chan = awaitForever $ \case
+  m@(MatchAccepted match) -> do
+    chan' <- liftIO $ dupChan chan
+    sourceList [m, WxMatchAccepted match chan']
+  cmd -> yield cmd
 
 
 stateC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
@@ -102,7 +112,7 @@ parseC = awaitForever $ \str -> case parseFicsMessage str of
 blockC :: BS.ByteString -> Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
 blockC block = awaitForever $ \line -> case ord $ BS.head line of
   21 -> blockC line
-  23 -> yield (block `BS.append` line) >> blockC BS.empty
+  23 -> yield (block `BS.append` line) >> blockC BS.empty -- ^ don't ever delete this again!
   _ | BS.null block -> when (line /= newline) (yield line) >> blockC BS.empty
     | otherwise -> blockC (block `BS.append` line)
   where newline = BS.pack "\n"

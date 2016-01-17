@@ -9,6 +9,8 @@ import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Seek
 
+import Control.Concurrent.Chan
+
 data FicsMessage =
   -- | 1. Confirmation of a user move
   --   2. Reseted position after illegal user move
@@ -78,7 +80,12 @@ data FicsMessage =
 
   {- Internal -}
   | WxClose
+  | WxMatchAccepted Move (Chan FicsMessage)
   | NullCommand
   | GameCreation { gameId :: Int, description :: String }
   | TakebackAccepted Username
   | Boxed [FicsMessage] deriving (Show, Eq)
+
+instance Show (Chan a) where
+  show _ = "Chan"
+
