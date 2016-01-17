@@ -59,10 +59,6 @@ parseFicsMessage = parseOnly parser where
 
                   , gameResult
                   , gameResult'
-                  , gameResultMutualDraw
-                  , gameResultAcceptDrawOrAbort
-                  , gameResultAbortGame
-                  , gameResultAbortGame2
 
                   , seekMatchesAlreadyPosted
 
@@ -162,30 +158,15 @@ acceptTakeback = GameMove <$>
   pure Nothing <*> -- ^ User accepted takeback himself
   (commandHead 11 *> "You accept the takeback request from" *> takeTill (== '<') *> move)
 
+-- 10 = Abort, 11 = Accept (Draw), Draw = 34, 103 = Resign
 gameResult :: Parser FicsMessage
-gameResult = commandHead 103 *> gameResult'
-
-gameResultMutualDraw :: Parser FicsMessage
-gameResultMutualDraw = commandHead 34 *> gameResult'
-
-gameResultAcceptDrawOrAbort :: Parser FicsMessage
-gameResultAcceptDrawOrAbort = commandHead 11 *> takeTill (== '{') *> (gameResult' <|> gameResultAbortGame)
+gameResult = choice [commandHead 10, commandHead 11, commandHead 34, commandHead 103] *> gameResult'
 
 gameResult' :: Parser FicsMessage
 gameResult' = GameResult
-  <$> (skipSpace *> "{Game" *> space *> decimal)
+  <$> (takeTill (== '{') *> "{Game " *> decimal)
   <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
-  <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|>  "1/2-1/2" *> pure Draw)
-
-gameResultAbortGame :: Parser FicsMessage
-gameResultAbortGame = GameResult
-  <$> ("{Game " *> decimal <* manyTill anyChar ") ")
-  <*> manyTill anyChar "} *"
-  <*> pure Aborted
-
-gameResultAbortGame2 :: Parser FicsMessage
-gameResultAbortGame2 = commandHead 10 *> choice ["\n", "The game has been aborted on move one.\n\n"] *> gameResultAbortGame
-
+  <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|> "1/2-1/2" *> pure Draw <|> "*" *> pure Aborted)
 
 finger :: Parser FicsMessage
 finger = Finger
