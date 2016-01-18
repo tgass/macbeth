@@ -61,7 +61,6 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
   , pieceMove = diffPosition (position $ lastMove s) (position move)
   , moves = addtoHistory move ctx (moves s)
   , lastMove = move
-  , draggedPiece = Nothing
   , _position = movePieces (preMoves s) (position move)})
 
 
