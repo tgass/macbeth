@@ -26,7 +26,7 @@ saveAsPGN' moves mGameResult = do
   appDir <- directory `fmap` loadConfig
   when (isJust appDir) $ do
     path <- filepath (fromJust appDir) dateTime (head moves)
-    appendFile path $ toPGN moves mGameResult dateTime
+    appendFile path $ toPGN (filter (isJust . movePretty) moves) mGameResult dateTime
 
 filepath :: FilePath -> ZonedTime -> Move -> IO FilePath
 filepath appDir dateTime m = return $ appDir </>

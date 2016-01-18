@@ -90,8 +90,8 @@ createObservedGame h move chan = do
 
     GameMove ctx move' -> when (gameId move' == gameId move) $ do
       state <- varGet vBoardState
-      set status [text := maybe "" show ctx]
-      Board.update vBoardState move'
+      set status [text := show ctx]
+      Board.update vBoardState move' ctx
       when (isNextMoveUser move' && not (null $ preMoves state)) $
         handlePreMoves vBoardState h
       repaint p_board
@@ -103,7 +103,7 @@ createObservedGame h move chan = do
       Board.setResult vBoardState result
       repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
-      sequence_ $ fmap killThread [threadId, tiClockW, tiClockB, tiClose]
+      sequence_ $ fmap killThread [threadId, tiClockW, tiClockB]
 
     DrawRequest -> do
       set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]

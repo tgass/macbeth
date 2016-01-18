@@ -32,7 +32,7 @@ initBoardState move = BoardState {
       lastMove = move
     , gameResult = Nothing
     , pieceMove = []
-    , moves = [move | isJust $ movePretty move]
+    , moves = [move] -- ^ accept empty positions, filter when creating pgn
     , _position = Macbeth.Fics.Api.Move.position move
     , preMoves = []
     , perspective = if relation move == Observing then White else colorUser move
@@ -55,22 +55,23 @@ setResult vState r = atomically $ modifyTVar vState (\s -> s{
    , draggedPiece = Nothing})
 
 
-update :: TVar BoardState -> Move -> IO ()
-update vBoardState move = atomically $ modifyTVar vBoardState (\s -> s {
+update :: TVar BoardState -> Move -> MoveModifier -> IO ()
+update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
     isWaiting = isNextMoveUser move
   , pieceMove = diffPosition (position $ lastMove s) (position move)
-  , moves = addMove move (moves s)
+  , moves = addtoHistory move ctx (moves s)
   , lastMove = move
   , draggedPiece = Nothing
   , _position = movePieces (preMoves s) (position move)})
+
+
+addtoHistory :: Move -> MoveModifier -> [Move] -> [Move]
+addtoHistory _ Illegal mx = mx
+addtoHistory m (Takeback _) mx = m : tail (dropWhile (not . equal m) mx)
   where
-    {- Add new moves in the front, so I can check for duplicates. -}
-    addMove :: Move -> [Move] -> [Move]
-    addMove m [] = [m]
-    addMove m moves@(m':_)
-      | areEqual m m' = moves
-      | otherwise = m : moves
-        where areEqual m1 m2 = (movePretty m1 == movePretty m2) && (turn m1 == turn m2)
+    equal :: Move -> Move -> Bool
+    equal m1 m2 = (moveNumber m1 == moveNumber m2) && (turn m1 == turn m2)
+addtoHistory m _ mx = m : mx
 
 
 cancelLastPreMove :: TVar BoardState -> IO ()

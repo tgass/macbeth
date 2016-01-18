@@ -97,7 +97,7 @@ stateC = awaitForever $ \cmd -> do
           sourceList [MatchAccepted move]
       | isJust $ takebackAccptedBy state -> do
           put $ state {takebackAccptedBy = Nothing}
-          sourceList [m{context = Just $ Takeback $ fromJust (takebackAccptedBy state)}]
+          sourceList [m{context = Takeback $ takebackAccptedBy state}]
       | otherwise -> sourceList [m]
 
     _ -> yield cmd

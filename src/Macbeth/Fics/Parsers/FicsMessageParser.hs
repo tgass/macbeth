@@ -75,11 +75,11 @@ parseFicsMessage = parseOnly parser where
                   ]
 
 gameMove :: Parser FicsMessage
-gameMove = GameMove <$> pure Nothing <*> move
+gameMove = GameMove <$> pure None <*> move
 
 confirmGameMove :: Parser FicsMessage
 confirmGameMove = do
-  illegal <- commandHead 1 *> option Nothing ("Illegal move" *> pure (Just Illegal))
+  illegal <- commandHead 1 *> option None ("Illegal move" *> pure Illegal)
   ph <- option NullCommand (takeTill (=='<') *> pieceHolding)
   move' <- takeTill (=='<') *> move
   return $ Boxed [ph, GameMove illegal move']
@@ -146,7 +146,7 @@ takebackAccepted = TakebackAccepted <$> manyTill anyChar " " <* "accepts the tak
 
 acceptTakeback :: Parser FicsMessage
 acceptTakeback = GameMove <$>
-  pure Nothing <*> -- ^ User accepted takeback himself
+  pure (Takeback Nothing) <*> -- ^ User accepted takeback himself
   (commandHead 11 *> "You accept the takeback request from" *> takeTill (== '<') *> move)
 
 -- 10 = Abort

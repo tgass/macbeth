@@ -15,7 +15,7 @@ data FicsMessage =
   -- | 1. Confirmation of a user move
   --   2. Reseted position after illegal user move
   --   3. Move by oponent
-    GameMove { context :: Maybe MoveModifier, move :: Move }
+    GameMove { context :: MoveModifier, move :: Move }
 
   -- | Pieces holdings in Bughouse / Crazyhouse games
   | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }
