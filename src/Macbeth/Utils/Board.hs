@@ -7,6 +7,7 @@ module Macbeth.Utils.Board (
   update,
   cancelLastPreMove,
   PieceMove (..),
+  toBitmap
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -40,7 +41,9 @@ initBoardState move = BoardState {
     , draggedPiece = Nothing
     , isWaiting = relation move == MyMove
     , psize = 40
-    , pieceSet = head pieceSets}
+    , pieceSet = head pieceSets
+    , phW = []
+    , phB = []}
 
 
 invertPerspective ::  TVar BoardState -> IO ()
@@ -212,23 +215,22 @@ intToCol White = toEnum
 intToCol Black = toEnum . abs . (7-)
 
 
-pieceToFile :: Piece -> String
-pieceToFile (Piece King Black) = "bk"
-pieceToFile (Piece Queen Black) = "bq"
-pieceToFile (Piece Rook Black) = "br"
-pieceToFile (Piece Knight Black) = "bn"
-pieceToFile (Piece Bishop Black) = "bb"
-pieceToFile (Piece Pawn Black) = "bp"
-pieceToFile (Piece King White) = "wk"
-pieceToFile (Piece Queen White) = "wq"
-pieceToFile (Piece Rook White) = "wr"
-pieceToFile (Piece Knight White) = "wn"
-pieceToFile (Piece Bishop White) = "wb"
-pieceToFile (Piece Pawn White) = "wp"
-
-
 toBitmap :: Int -> PieceSet -> Piece -> Bitmap ()
 toBitmap size pieceSet p = bitmap $ unsafePerformIO $ getDataFileName $ path pieceSet </> show size </> pieceToFile p ++ ".png"
+  where
+    pieceToFile :: Piece -> String
+    pieceToFile (Piece King Black) = "bk"
+    pieceToFile (Piece Queen Black) = "bq"
+    pieceToFile (Piece Rook Black) = "br"
+    pieceToFile (Piece Knight Black) = "bn"
+    pieceToFile (Piece Bishop Black) = "bb"
+    pieceToFile (Piece Pawn Black) = "bp"
+    pieceToFile (Piece King White) = "wk"
+    pieceToFile (Piece Queen White) = "wq"
+    pieceToFile (Piece Rook White) = "wr"
+    pieceToFile (Piece Knight White) = "wn"
+    pieceToFile (Piece Bishop White) = "wb"
+    pieceToFile (Piece Pawn White) = "wp"
 
 
 paintHighlight :: DC a -> BoardState -> Color -> PieceMove -> IO ()

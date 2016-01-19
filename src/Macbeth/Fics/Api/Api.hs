@@ -21,7 +21,7 @@ module Macbeth.Fics.Api.Api (
 import Data.Char
 import Data.List
 
-data Column = A | B | C | D | E | F | G | H deriving (Show, Enum, Eq)
+data Column = A | B | C | D | E | F | G | H deriving (Show, Enum, Bounded, Eq)
 
 data Row = One | Two | Three | Four | Five | Six | Seven | Eight deriving (Show, Eq, Enum, Bounded)
 
@@ -30,7 +30,7 @@ data Square = Square Column Row deriving (Eq)
 instance Show Square where
   show (Square s y) = fmap toLower (show s) ++ show (fromEnum y + 1)
 
-data PType = Pawn | Rook | Knight | Bishop | Queen | King deriving (Show, Eq)
+data PType = Pawn | Rook | Knight | Bishop | Queen | King deriving (Show, Ord, Eq)
 
 data PColor = Black | White deriving (Show, Eq)
 

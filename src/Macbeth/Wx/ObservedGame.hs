@@ -40,8 +40,8 @@ createObservedGame h move chan = do
   set p_board [ on paint := Board.draw p_board vBoardState ]
 
   -- player panels
-  (p_white, tiClockW) <- createStatusPanel p_back White move (eventId + 1) chan
-  (p_black, tiClockB) <- createStatusPanel p_back Black move (eventId + 2) chan
+  (p_white, tiClockW) <- createStatusPanel p_back White vBoardState (eventId + 1) chan
+  (p_black, tiClockB) <- createStatusPanel p_back Black vBoardState (eventId + 2) chan
 
   -- layout helper
   let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f

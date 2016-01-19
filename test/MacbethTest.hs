@@ -69,6 +69,7 @@ commandMessageParserTest = [
       , (GameResult 202 "Game drawn by mutual agreement" Draw, "\NAK5\SYN11\SYNYou accept the draw request from GuestNMNG.\n\n{Game 202 (GuestDKZD vs. GuestNMNG) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB")
       , (MatchUserNotLoggedIn "GuestLHDG", "\NAK4\SYN73\SYNGuestLHDG is not logged in.\n\ETB")
       , (PieceHolding 455 [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
+      , (PieceHolding 182 [Pawn,Pawn,Bishop] [Pawn,Queen,Queen], "<b1> game 182 white [PPB] black [PQQ] <- BQ\n")
       , (SeekNotAvailable, "\NAK4\SYN158\SYNThat seek is not available.\n\ETB")
       , (Boxed [NullCommand, GameMove {context = None, move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------", position = [], turn = Black, doublePawnPush = Nothing, castlingAv = [WhiteShort,WhiteLong,BlackShort,BlackLong], ply = 1, Macbeth.Fics.Api.Move.gameId = 147, Macbeth.Fics.Api.Move.nameW = "Schoon", Macbeth.Fics.Api.Move.nameB = "GuestYBPD", relation = MyMove, initialTime = 5, incPerMove = 0, whiteRelStrength = 39, blackRelStrength = 39, remainingTimeW = 295, remainingTimeB = 297, moveNumber = 2, moveVerbose = Just(Simple (Square G One) (Square E Three)), timeTaken = "(0:05)", movePretty = Just "Qe3"}}],
           "\NAK6\SYN1\SYN\n\r\a\n\r<12> -------- -------- -------- -------- -------- -------- -------- -------- B -1 1 1 1 1 1 147 Schoon GuestYBPD 1 5 0 39 39 295 297 2 Q/g1-e3 (0:05) Qe3 1 1 0\n\r\ETB")
