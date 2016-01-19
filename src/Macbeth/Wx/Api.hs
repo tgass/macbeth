@@ -1,9 +1,9 @@
 module Macbeth.Wx.Api (
   BoardState(..),
-  addPreMove,
-  getPieceHolding,
   DraggedPiece(..),
-  PieceSet(..)
+  PieceSet(..),
+  getPieceHolding,
+  addPreMove
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -29,6 +29,13 @@ data BoardState = BoardState { lastMove :: Move
                              , phB :: [PType] }
 
 
+data DraggedPiece = DraggedPiece { _point :: Point
+                                 , _piece :: Piece
+                                 , _square :: Square } deriving (Show)
+
+data PieceSet = PieceSet { path :: FilePath, display :: String }
+
+
 getPieceHolding :: PColor -> BoardState -> [PType]
 getPieceHolding White bs = phW bs
 getPieceHolding Black bs = phB bs
@@ -36,10 +43,3 @@ getPieceHolding Black bs = phB bs
 
 addPreMove :: TVar BoardState -> PieceMove -> IO ()
 addPreMove vState pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
-
-
-data DraggedPiece = DraggedPiece { _point :: Point
-                                 , _piece :: Piece
-                                 , _square :: Square } deriving (Show)
-
-data PieceSet = PieceSet { path :: FilePath, display :: String }
