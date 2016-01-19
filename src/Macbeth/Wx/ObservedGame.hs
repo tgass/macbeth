@@ -80,7 +80,7 @@ createObservedGame h move chan = do
 
 
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
-  set f [ statusBar := [status], layout := fill $ widget p_back, on resize := resizeFrame f]
+  set f [ statusBar := [status], layout := fill $ widget p_back, on resize := resizeFrame f vBoardState p_board]
 
   -- necessary: after GameResult no more events are handled
   tiClose <- dupChan chan >>= registerWxCloseEventListenerWithThreadId f
@@ -134,9 +134,10 @@ createObservedGame h move chan = do
       _ -> return ()
 
 
-resizeFrame :: Frame () -> IO ()
-resizeFrame f = do
+resizeFrame :: Frame () -> TVar BoardState -> Panel() -> IO ()
+resizeFrame f vBoardState p_board = do
   (Size w h) <- windowGetClientSize f
+  Board.resize p_board vBoardState
   let x = max w (h-66)
   windowSetClientSize f $ Size x (x+66)
   void $ windowLayout f

@@ -17,7 +17,6 @@ module Macbeth.Fics.Api.Move (
   nameOponent,
   isCheckmate,
   toGameResultTuple,
-  isHighlightMove,
   dummyMove
 ) where
 
@@ -119,9 +118,6 @@ toGameResultTuple move = (gameId move, namePlayer colorTurn move ++ " checkmated
     colorTurn = turn move
     turnToGameResult Black = Game.WhiteWins
     turnToGameResult White = Game.BlackWins
-
-isHighlightMove :: Move -> Bool
-isHighlightMove m = (isJust . moveVerbose) m && (wasOponentMove m || relation m == Observing)
 
 
 dummyMove :: Move

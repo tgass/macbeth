@@ -24,6 +24,7 @@ data BoardState = BoardState { lastMove :: Move
                              , draggedPiece :: Maybe DraggedPiece
                              , isWaiting :: Bool
                              , psize :: Int
+                             , scale :: Double
                              , pieceSet :: PieceSet
                              , phW :: [PType]
                              , phB :: [PType] }
