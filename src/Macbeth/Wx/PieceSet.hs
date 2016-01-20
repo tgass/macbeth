@@ -1,31 +1,19 @@
 module Macbeth.Wx.PieceSet (
+  PieceSet(..),
   pieceSets,
-  pieceSetFindSize,
-  wxPieceSetsMenu
+  pieceSetFindSize
 ) where
 
-import Macbeth.Wx.Api
-
-import Control.Monad
-import Control.Concurrent.STM
-import Graphics.UI.WX
 import Data.Maybe
 import Safe
-
-
-wxPieceSetsMenu :: Menu () -> TVar BoardState -> Panel () -> IO ()
-wxPieceSetsMenu ctxMenu vState p = do
-  sub <- menuPane [text := "Piece Sets"]
-  mapM_ (\ps -> menuItem sub [ text := display ps
-                             , on command := atomically (modifyTVar vState (\s -> s { pieceSet = ps })) >> repaint p ])
-    pieceSets
-  void $ menuSub ctxMenu sub [ text := "Piece Sets" ]
 
 
 {-
 http://ixian.com/chess/jin-piece-sets/
 This work by Eric De Mund is licensed under a Creative Commons Attribution-Share Alike 3.0 Unported License
 -}
+
+data PieceSet = PieceSet { path :: FilePath, display :: String }
 
 pieceSets = [
     PieceSet "alpha.ead-01" "Alpha (ead-01)"

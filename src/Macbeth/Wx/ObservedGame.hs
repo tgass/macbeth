@@ -5,16 +5,15 @@ module Macbeth.Wx.ObservedGame (
   createObservedGame
 ) where
 
-
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.PGN
-import Macbeth.Wx.Api
+import qualified Macbeth.Wx.BoardState as Api
 import Macbeth.Wx.Utils
-import Macbeth.Wx.StatusPanel
 import Macbeth.Wx.PieceSet
-import qualified Macbeth.Utils.Board as Board
+import Macbeth.Wx.StatusPanel
+import qualified Macbeth.Wx.Board as Board
 
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -34,10 +33,9 @@ createObservedGame h move chan = do
   p_back <- panel f []
 
   -- board
-  p_board <- panel p_back []
-  let boardState = Board.initBoardState move
+  let boardState = Api.initBoardState move
   vBoardState <- newTVarIO boardState
-  set p_board [ on paint := Board.draw p_board vBoardState ]
+  p_board <- panel p_back [ on paint := Board.draw vBoardState ]
 
   -- player panels
   (p_white, tiClockW) <- createStatusPanel p_back White vBoardState (eventId + 1) chan
@@ -50,7 +48,7 @@ createObservedGame h move chan = do
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command :=
-    Board.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board]
+    Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board]
   when (isGameUser move) $ do
      menuLine ctxMenu
      menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
@@ -58,7 +56,7 @@ createObservedGame h move chan = do
      menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
      menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
      menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
-     windowOnMouse p_board True (Board.onMouseEvent p_board h vBoardState)
+     windowOnMouse p_board True (\x -> Board.onMouseEvent h vBoardState x >> repaint p_board)
      windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
   menuLine ctxMenu
   wxPieceSetsMenu ctxMenu vBoardState p_board
@@ -89,18 +87,16 @@ createObservedGame h move chan = do
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case
 
     GameMove ctx move' -> when (gameId move' == gameId move) $ do
-      state <- varGet vBoardState
       set status [text := show ctx]
-      Board.update vBoardState move' ctx
-      when (isNextMoveUser move' && not (null $ preMoves state)) $
-        handlePreMoves vBoardState h
+      Api.update vBoardState move' ctx
+      when (isNextMoveUser move') $ Api.handlePreMoves vBoardState h
       repaint p_board
 
     GameResult id reason result -> when (id == gameId move) $ do
       windowOnMouse p_board True (\_ -> return ())
       windowOnKeyChar p_board (\_ -> return ())
       set status [text := (show result ++ " " ++ reason)]
-      Board.setResult vBoardState result
+      Api.setResult vBoardState result
       repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
       sequence_ $ fmap killThread [threadId, tiClockW, tiClockB]
@@ -127,41 +123,39 @@ createObservedGame h move chan = do
     sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClockW, tiClockB, tiClose]
     boardState <- readTVarIO vBoardState
     when (isGameUser move) $ saveAsPGN boardState
-    unless (isJust $ gameResult boardState) $ case relation move of
+    unless (isJust $ Api.gameResult boardState) $ case relation move of
       MyMove -> hPutStrLn h "5 resign"
       OponentsMove -> hPutStrLn h "5 resign"
       Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
       _ -> return ()
 
 
-resizeFrame :: Frame () -> TVar BoardState -> Panel() -> IO ()
+resizeFrame :: Frame () -> TVar Api.BoardState -> Panel() -> IO ()
 resizeFrame f vBoardState p_board = do
   (Size w h) <- windowGetClientSize f
-  Board.resize p_board vBoardState
+  Api.resize p_board vBoardState
   let x = max w (h-66)
   windowSetClientSize f $ Size x (x+66)
   void $ windowLayout f
 
 
-cancelLastPreMove :: TVar BoardState -> Panel () -> EventKey -> IO ()
+cancelLastPreMove :: TVar Api.BoardState -> Panel () -> EventKey -> IO ()
 cancelLastPreMove vBoardState panel keyboard = case keyKey keyboard of
-  KeyChar 'x' -> Board.cancelLastPreMove vBoardState >> repaint panel
+  KeyChar 'x' -> Api.cancelLastPreMove vBoardState >> repaint panel
   _ -> return ()
 
 
-handlePreMoves :: TVar BoardState -> Handle -> IO ()
-handlePreMoves vBoardState h = do
-  preMoves' <- preMoves `fmap` readTVarIO vBoardState
-  atomically $ modifyTVar vBoardState (\s -> s {
-    isWaiting = False,
-    preMoves = tail preMoves'})
-  hPutStrLn h $ "6 " ++ show (head preMoves' )
-
-
-updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar BoardState -> IO ()
+updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar Api.BoardState -> IO ()
 updateBoardLayout pback board white black vBoardState = do
   state <- readTVarIO vBoardState
-  set pback [ layout := column 0 [ hfill $ widget (if perspective state == White then black else white)
+  set pback [ layout := column 0 [ hfill $ widget (if Api.perspective state == White then black else white)
                                  , stretch $ minsize (Size 320 320) $ shaped $ widget board
-                                 , hfill $ widget (if perspective state == White then white else black)]]
+                                 , hfill $ widget (if Api.perspective state == White then white else black)]]
+
+
+wxPieceSetsMenu :: Menu () -> TVar Api.BoardState -> Panel () -> IO ()
+wxPieceSetsMenu ctxMenu vState p = do
+  sub <- menuPane [text := "Piece Sets"]
+  mapM_ (\ps -> menuItem sub [ text := display ps, on command := Api.setPieceSet vState ps >> repaint p ]) pieceSets
+  void $ menuSub ctxMenu sub [ text := "Piece Sets" ]
 

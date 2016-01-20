@@ -4,11 +4,13 @@ module Macbeth.Wx.StatusPanel (
   createStatusPanel
 ) where
 
-import Macbeth.Fics.Api.Api
 import Macbeth.Fics.FicsMessage hiding (gameId)
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.Utils
-import Macbeth.Wx.Api
+import Macbeth.Utils.BoardUtils
+import Macbeth.Wx.BoardState
+import Macbeth.Wx.PieceSet
 import Macbeth.Wx.Utils
 
 import Control.Arrow
@@ -18,9 +20,6 @@ import Control.Monad
 import Data.List
 import Graphics.UI.WX hiding (when)
 import Graphics.UI.WXCore hiding (Timer, Column, when)
-
-import Macbeth.Wx.PieceSet
-import Macbeth.Utils.Board
 
 
 createStatusPanel :: Panel () -> PColor -> TVar BoardState -> Int -> Chan FicsMessage -> IO (Panel (), ThreadId)
@@ -75,7 +74,8 @@ paintPieceHolding color state dc _ = do
 
 drawPiece :: DC a -> PColor -> Column -> (PType, Int) -> IO ()
 drawPiece dc color col (ptype, freq) = do
-  drawBitmap dc (toBitmap pieceSize (head pieceSets) (Piece ptype color)) (toPos' fieldSize (Square col Eight) White) True []
+  drawBitmap dc (pieceToBitmap pieceSize (head pieceSets) (Piece ptype color))
+                (toPos' fieldSize (Square col Eight) White) True []
   set dc [pen := penColored black 2]
   drawText dc (show freq) (Point (22 + fromEnum col * fieldSize) 15)
     [ fontFace := "Avenir Next Medium"
