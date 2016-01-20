@@ -98,6 +98,7 @@ seek = Boxed <$> ((commandHead 155 <|> commandHead 158) *> sequence
 gameCreation :: Parser FicsMessage
 gameCreation = GameCreation <$> ("{Game " *> decimal <* takeTill (== ')') <* ") Creating ")
 
+
 observe :: Parser FicsMessage
 observe = Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
 

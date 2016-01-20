@@ -11,30 +11,37 @@ import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Parsers.FicsMessageParser
+import Macbeth.Fics.Parsers.MoveParser hiding (move)
 import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Fics.Parsers.GamesParser
 
+import Control.Applicative
+import Data.Attoparsec.ByteString.Char8 hiding (Fail, Result, D)
 import System.IO.Unsafe
 import qualified Data.ByteString.Char8 as BS
 
 tests :: IO [Test]
-tests = return $ (Test . succeeds) `fmap` (uncurry (flip compareCmdMsg) `fmap` commandMessageParserTest) ++
-                 (Test . succeeds) `fmap` (uncurry (flip compareCmdMsg) `fmap` seekMsgParserTest) ++
-                 (Test . succeeds) `fmap` (uncurry comparePosition `fmap` positionTest)
-                 -- [Test $ succeeds parseGamesListTest]
+tests = return [commandMessageParserTest, seekMsgParserTest, positionTest, moveParserTest]
 
 
-succeeds :: Result -> TestInstance
-succeeds result = TestInstance
+toGroup :: String -> [Result] -> Test
+toGroup name results = Group name True (test name `fmap` zip [1..] results)
+
+
+test :: String -> (Int, Result) -> Test
+test groupName (idx, result) = Test TestInstance
   { run = return $ Finished result
-  , Distribution.TestSuite.name = "succeeds"
+  , Distribution.TestSuite.name = groupName ++ " " ++ show idx
   , tags = []
   , options = []
-  , setOption = \_ _ -> Right $ succeeds result
+  , setOption = \_ _ -> Left "none"
   }
 
-commandMessageParserTest :: [(FicsMessage, String)]
-commandMessageParserTest = [
+commandMessageParserTest :: Test
+commandMessageParserTest = toGroup "commandMsgParser" $ fmap compareCmdMsg commandMessageParserTestData
+
+commandMessageParserTestData :: [(FicsMessage, String)]
+commandMessageParserTestData = [
         (DrawRequest, "GuestDWXY offers you a draw.")
       , (NoSuchGame, "\NAK5\SYN80\SYNThere is no such game.\n\ETB")
       , (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
@@ -81,9 +88,11 @@ commandMessageParserTest = [
 defaultMove = Move "-------- -------- -------- -------- -------- -------- -------- --------" [] White Nothing [WhiteShort,WhiteLong,BlackShort,BlackLong] 0 18 "nameWhite" "nameBlack" OponentsMove 3 0 39 39 180 180 1 Nothing "(0:00)" Nothing
 defaultMoveStr = "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 1 1 1 1 0 18 nameWhite nameBlack -1 3 0 39 39 180 180 1 none (0:00) none 1 0 0\n"
 
+seekMsgParserTest :: Test
+seekMsgParserTest = toGroup "seekMsgParserTest" $ fmap compareCmdMsg seekMsgParserTestData
 
-seekMsgParserTest :: [(FicsMessage, String)]
-seekMsgParserTest = [
+seekMsgParserTestData :: [(FicsMessage, String)]
+seekMsgParserTestData = [
     (ClearSeek, "<sc>")
   , (RemoveSeeks [59, 3, 11], "<sr> 59 3 11")
   , (NewSeek $ Seek 7 "GuestNMZJ" [Unregistered] (R.Rating 0 R.Provisional) 15 5 False Standard (Just White) (0,9999), "<s> 7 w=GuestNMZJ ti=01 rt=0P t=15 i=5 r=u tp=standard c=W rr=0-9999 a=t f=t")
@@ -92,12 +101,12 @@ seekMsgParserTest = [
   ]
 
 
--- fuzzy compare
---, (GameMove _), "<12> rnbqkbnr pp-p-ppp ----p--- --p----- ----P--- ------P- PPPP-P-P RNBQKBNR W 2 1 1 1 1 0 232 tuffshaq mlaren 0 15 12 39 39 901 897 3 P/c7-c5 (0:15) c5 0 1 167")
+positionTest :: Test
+positionTest = toGroup "positionTest" $ fmap comparePosition positionTestData
 
 
-positionTest :: [(Position, String)]
-positionTest = [
+positionTestData :: [(Position, String)]
+positionTestData = [
     ([], "-------- -------- -------- -------- -------- -------- -------- --------")
   , ([ (Square A Eight, Piece Rook White)
      , (Square B Seven, Piece Knight White)
@@ -109,19 +118,37 @@ positionTest = [
      , (Square H One, Piece King Black)], "R------- -N------ --B----- ---Q---- ----K--- -----P-- ------r- -------k")
   ]
 
+moveParserTest :: Test
+moveParserTest = toGroup "moveParser" $ fmap withParser moveParserTestData
+
+moveParserTestData :: [(Parser (Maybe MoveDetailed), String, Maybe MoveDetailed)]
+moveParserTestData = [
+    (verboseMove', "P/c7-c5", Just $ Simple (Square C Seven) (Square C Five))
+  , (verboseMove', "P/f2-f1=R", Just $ Simple (Square F Two) (Square F One))
+  , (verboseMove', "o-o", Just CastleShort)
+  , (verboseMove', "o-o-o", Just CastleLong)
+  , (verboseMove', "B/@@-g6", Just $ Drop $ Square G Six)
+  ]
+
 
 parseGamesListTest :: Result
 parseGamesListTest = case parseFicsMessage $ BS.pack games of
   Left txt -> Fail txt
   Right (Games games) -> if length games == 584 then Pass else Fail $ show $ length games
-  where
-    games = unsafePerformIO $ readFile "./test/Games.txt"
+  where games = unsafePerformIO $ readFile "./test/Games.txt"
 
-comparePosition :: Position -> String -> Result
-comparePosition pos str = let pos' = parsePosition str
-                          in if pos' == pos then Pass else Fail $ show pos ++ " <<-->> " ++ show pos'
 
-compareCmdMsg :: String -> FicsMessage -> Result
-compareCmdMsg str cmd = case parseFicsMessage $ BS.pack str of
-  Left txt -> Fail txt
+withParser :: (Show a, Eq a) => (Parser a, String, a) -> Result
+withParser (parser, str, x) = case parseOnly parser (BS.pack str) of
+  Left txt -> Fail str
+  Right x' -> if x' == x then Pass else Fail $ show x ++ " <<==>> " ++ show x'
+
+
+comparePosition :: (Position, String) -> Result
+comparePosition (pos, str) = let pos' = parsePosition str
+                             in if pos' == pos then Pass else Fail $ show pos ++ " <<-->> " ++ show pos'
+
+compareCmdMsg :: (FicsMessage, String) -> Result
+compareCmdMsg (cmd, str) = case parseFicsMessage $ BS.pack str of
+  Left txt -> Fail str
   Right cmd' -> if cmd' == cmd then Pass else Fail $ show cmd ++ " <<-->> " ++ show cmd'

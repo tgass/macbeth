@@ -63,4 +63,4 @@ Test-Suite MacbethTestSuite
     type:       detailed-0.9
     hs-source-dirs: test
     test-module: MacbethTest
-    build-depends: Macbeth-lib, base, Cabal >= 1.9.2, bytestring
+    build-depends: Macbeth-lib, base, Cabal >= 1.9.2, bytestring, attoparsec

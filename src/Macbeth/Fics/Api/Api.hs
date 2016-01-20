@@ -44,7 +44,7 @@ instance Show PieceMove where
   show (PieceMove _ s1 s2) = show s1 ++ show s2
 
 -- This will be needed for Bughouse/Crazyhouse
-data MoveDetailed = Simple Square Square | CastleLong | CastleShort deriving (Show, Eq)
+data MoveDetailed = Simple Square Square | Drop Square | CastleLong | CastleShort deriving (Show, Eq)
 
 type Username = String
 

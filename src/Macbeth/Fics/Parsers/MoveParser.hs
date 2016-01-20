@@ -2,7 +2,8 @@
 
 module Macbeth.Fics.Parsers.MoveParser (
   move,
-  pieceHolding
+  pieceHolding,
+  verboseMove'
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -18,6 +19,7 @@ import qualified Data.ByteString.Char8 as BS
 
 --test = BS.pack "<12> --kr-bnr ppp-pppp --nqb--- ---p---- ---P-B-- --NQ---P PPP-PPP- R---KBNR W -1 1 1 0 0 1 345 GuestTVTH GuestPYFX -1 5 0 39 39 282 288 6 o-o-o (0:03) O-O-O 1 1 0"
 --test2 = BS.pack "<12> --kr-bnr ppp-pppp --nqb--- ---p---- ---P-B-- --NQ---P PPP-PPP- R---KBNR W -1 1 1 0 0 1 345 GuestTVTH GuestPYFX -1 5 0 39 39 282 288 6 o-o (0:03) O-O-O 1 1 0"
+--test3 = BS.pack "<12> r--k-b-n ppp-pppP --bpp-b- ---pp--N -------- --P--PB- PPP-pPPP R---R-K- W -1 0 0 0 0 0 408 CarlosFenix mandevil 0 2 0 43 28 48 31 27 B/@@-g6 (0:25) B@g6 0 1 0\n"
 
 move :: Parser Move
 move = do
@@ -40,20 +42,22 @@ move = do
     <*> (space *> (decimal <|> ("-" *> (decimal >>= pure . negate)))) -- remTimeWhite
     <*> (space *> (decimal <|> ("-" *> (decimal >>= pure . negate)))) -- remTimeBlack
     <*> (space *> decimal) -- moveNumber
-    <*> (space *> parseVerboseMove) -- moveVerbose
+    <*> (space *> verboseMove') -- moveVerbose
     <*> (space *> manyTill anyChar space) -- timeTaken
     <*> ("none" *> pure Nothing <|> Just `fmap` manyTill anyChar space) -- movePretty
 
---P/c7-c5
--- P/f2-f1=R
-parseVerboseMove :: Parser (Maybe MoveDetailed)
-parseVerboseMove = ("none" *> pure Nothing) <|>
-  (Just <$> (Simple <$> (anyChar *> anyChar *> square) <*> ("-" *> square <* takeTill (== ' ')))) <|>
-  (Just <$> ("o-o-o" *> pure CastleLong)) <|>
-  (Just <$> ("o-o" *> pure CastleShort))
+
+verboseMove' :: Parser (Maybe MoveDetailed)
+verboseMove' = ("none" *> pure Nothing) <|> Just <$> (
+  (Simple <$> (anyChar *> "/" *> square) <*> ("-" *> square <* takeTill (== ' '))) <|>
+  (Drop <$> (anyChar *> "/@@-" *> square <* takeTill (== ' '))) <|>
+  ("o-o-o" *> pure CastleLong) <|>
+  ("o-o" *> pure CastleShort))
+
 
 castle :: Castling -> Parser (Maybe Castling)
 castle c = space *> ("0" *> pure Nothing <|> "1" *> pure (Just c))
+
 
 square :: Parser Square
 square = Square <$> columnAH <*> row
