@@ -48,7 +48,7 @@ drawBoard = do
     withBrushStyle (BrushStyle BrushSolid white) $ \whiteBrush ->
       mapM_ (\(c,sq) -> do
         dcSetBrush dc $ if c == White then whiteBrush else blackBrush
-        paintSquare dc (psize state) perspective' sq)
+        paintSquare dc state sq)
           (zip (if perspective' == White then bw else reverse bw) sq)
 
 
@@ -86,7 +86,7 @@ paintSelectedSquare = do
     withBrushStyle brushTransparent $ \transparent -> do
       dcSetBrush dc transparent
       set dc [pen := penColored red 1]
-      paintSquare dc (psize state) (perspective state) (selSquare state)
+      paintSquare dc state (getSelectedSquare state)
 
 
 drawDraggedPiece :: BoardT a
@@ -108,14 +108,14 @@ paintHighlight dc state color (PieceMove _ s1 s2) = do
   set dc [pen := penColored color 1]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
     dcSetBrush dc brushBg
-    mapM_ (paintSquare dc (psize state) (perspective state)) [s1, s2]
+    mapM_ (paintSquare dc state) [s1, s2]
   withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
     drawArrow dc (psize state) s1 s2 (perspective state)
 
 
-paintSquare :: DC a -> Int -> PColor -> Square -> IO ()
-paintSquare dc size perspective sq = drawRect dc (squareToRect' size sq perspective) []
+paintSquare :: DC a -> BoardState -> Square -> IO ()
+paintSquare dc state sq = drawRect dc (squareToRect' (psize state) sq (perspective state)) []
 
 
 onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
@@ -123,7 +123,7 @@ onMouseEvent h vState evtMouse = do
   state <- varGet vState
   case evtMouse of
 
-    MouseMotion pt _ -> varSet vState $ state {selSquare = pointToSquare state pt}
+    MouseMotion pt _ -> varSet vState $ state {mousePt = pt}
 
     MouseLeftDown pt _ -> do
         let square' = pointToSquare state pt
@@ -142,24 +142,10 @@ onMouseEvent h vState evtMouse = do
           else addPreMove vState $ PieceMove piece dp_sq clicked_sq
       _ -> return ()
 
-    MouseLeftDrag pt _ -> varSet vState state { selSquare = pointToSquare state pt
+    MouseLeftDrag pt _ -> varSet vState state { mousePt = pt
                                               , draggedPiece = draggedPiece state >>= setNewPoint pt}
 
     _ -> return ()
-
-
-pointToSquare :: BoardState -> Point -> Square
-pointToSquare state (Point x y) = Square
-  (intToCol (perspective state) (floor $ fromIntegral x / fieldSize state))
-  (intToRow (perspective state) (floor $ fromIntegral y / fieldSize state))
-  where
-    intToRow :: PColor -> Int -> Row
-    intToRow White = toEnum . abs . (7-)
-    intToRow Black = toEnum
-
-    intToCol :: PColor -> Int -> Column
-    intToCol White = toEnum
-    intToCol Black = toEnum . abs . (7-)
 
 
 removePiece :: Position -> Square -> Position

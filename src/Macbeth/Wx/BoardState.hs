@@ -11,7 +11,9 @@ module Macbeth.Wx.BoardState (
   handlePreMoves,
   setPieceSet,
   getPieceHolding,
-  fieldSize
+  fieldSize,
+  pointToSquare,
+  getSelectedSquare
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -35,7 +37,7 @@ data BoardState = BoardState {
   , _position :: Position
   , preMoves :: [PieceMove]
   , perspective :: PColor
-  , selSquare :: Square
+  , mousePt :: Point
   , draggedPiece :: Maybe DraggedPiece
   , isWaiting :: Bool
   , psize :: Int
@@ -45,10 +47,8 @@ data BoardState = BoardState {
   , phB :: [PType] }
 
 
-data DraggedPiece = DraggedPiece {
-    _point :: Point
-  , _piece :: Piece
-  , _square :: Square } deriving (Show)
+data DraggedPiece = DraggedPiece { _point :: Point, _piece :: Piece, origin :: Square } deriving (Show)
+
 
 initBoardState move = BoardState {
     lastMove = move
@@ -58,7 +58,7 @@ initBoardState move = BoardState {
   , _position = Macbeth.Fics.Api.Move.position move
   , preMoves = []
   , perspective = if relation move == Observing then White else colorUser move
-  , selSquare = Square A One
+  , mousePt = Point 0 0
   , draggedPiece = Nothing
   , isWaiting = relation move == MyMove
   , psize = 40
@@ -137,3 +137,21 @@ getPieceHolding Black bs = phB bs
 
 fieldSize :: BoardState -> Double
 fieldSize bs = scale bs * fromIntegral (psize bs)
+
+
+pointToSquare :: BoardState -> Point -> Square
+pointToSquare state (Point x y) = Square
+  (intToCol (perspective state) (floor $ fromIntegral x / fieldSize state))
+  (intToRow (perspective state) (floor $ fromIntegral y / fieldSize state))
+  where
+    intToRow :: PColor -> Int -> Row
+    intToRow White = toEnum . abs . (7-)
+    intToRow Black = toEnum
+
+    intToCol :: PColor -> Int -> Column
+    intToCol White = toEnum
+    intToCol Black = toEnum . abs . (7-)
+
+
+getSelectedSquare :: BoardState -> Square
+getSelectedSquare state = pointToSquare state (mousePt state)
