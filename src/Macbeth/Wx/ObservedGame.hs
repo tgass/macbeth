@@ -35,7 +35,7 @@ createObservedGame h move chan = do
   -- board
   let boardState = Api.initBoardState move
   vBoardState <- newTVarIO boardState
-  p_board <- panel p_back [ on paint := Board.draw vBoardState ]
+  p_board <- panel p_back [ on paint := Board.draw vBoardState]
 
   -- player panels
   (p_white, tiClockW) <- createStatusPanel p_back White vBoardState (eventId + 1) chan
@@ -44,6 +44,20 @@ createObservedGame h move chan = do
   -- layout helper
   let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f
   updateBoardLayoutIO
+
+  -- status line
+  status <- statusField []
+  promotion <- statusField [ statusWidth := 30, text := "=Q"]
+
+  -- key handler
+  let onKeyDownHandler evt
+        | onlyKey evt 'X' = do Api.cancelLastPreMove vBoardState; repaint p_board
+        | onlyKey evt 'N' = hPutStrLn h "5 decline"
+        | onlyKey evt 'Y' = hPutStrLn h "5 accept"
+        | keyWithMod evt 'W' justControl = close f
+        | otherwise = return ()
+          where onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
+                keyWithMod evt c mod = (keyKey evt == KeyChar c) && (keyModifiers evt == mod)
 
   -- context menu
   ctxMenu <- menuPane []
@@ -57,28 +71,14 @@ createObservedGame h move chan = do
      menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
      menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
      windowOnMouse p_board True (\x -> Board.onMouseEvent h vBoardState x >> repaint p_board)
-     windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
   menuLine ctxMenu
   wxPieceSetsMenu ctxMenu vBoardState p_board
-
-  -- status line
-  status <- statusField []
-
-  -- key handler
-  let acceptDeclineKeyHandler keyboard = case keyKey keyboard of
-       KeyChar 'y' -> do
-         hPutStrLn h "5 accept"
-         set status [ text := ""]
-         windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
-       KeyChar 'n' -> do
-         hPutStrLn h "5 decline"
-         set status [ text := ""]
-         windowOnKeyChar p_back $ cancelLastPreMove vBoardState p_back
-       _ -> return ()
-
+  windowOnKeyDown p_board onKeyDownHandler
 
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
-  set f [ statusBar := [status], layout := fill $ widget p_back, on resize := resizeFrame f vBoardState p_board]
+  set f [ statusBar := [status, promotion]
+        , layout := fill $ widget p_back
+        , on resize := resizeFrame f vBoardState p_board]
 
   -- necessary: after GameResult no more events are handled
   tiClose <- dupChan chan >>= registerWxCloseEventListenerWithThreadId f
@@ -93,29 +93,21 @@ createObservedGame h move chan = do
       repaint p_board
 
     GameResult id reason result -> when (id == gameId move) $ do
-      windowOnMouse p_board True (\_ -> return ())
-      windowOnKeyChar p_board (\_ -> return ())
       set status [text := (show result ++ " " ++ reason)]
       Api.setResult vBoardState result
       repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
       sequence_ $ fmap killThread [threadId, tiClockW, tiClockB]
 
-    DrawRequest -> do
-      set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
-      windowOnKeyChar p_back acceptDeclineKeyHandler
+    DrawRequest -> set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
 
     DrawRequestDeclined user -> set status [text := user ++ " declines the draw request."]
 
-    AbortRequest user -> do
-      set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
-      windowOnKeyChar p_back acceptDeclineKeyHandler
+    AbortRequest user -> set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
 
     AbortRequestDeclined user -> set status [text := user ++ " declines the abort request."]
 
-    TakebackRequest user numTakeback -> do
-      set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
-      windowOnKeyChar p_back acceptDeclineKeyHandler
+    TakebackRequest user numTakeback -> set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
 
     _ -> return ()
 
@@ -137,12 +129,6 @@ resizeFrame f vBoardState p_board = do
   let x = max w (h-66)
   windowSetClientSize f $ Size x (x+66)
   void $ windowLayout f
-
-
-cancelLastPreMove :: TVar Api.BoardState -> Panel () -> EventKey -> IO ()
-cancelLastPreMove vBoardState panel keyboard = case keyKey keyboard of
-  KeyChar 'x' -> Api.cancelLastPreMove vBoardState >> repaint panel
-  _ -> return ()
 
 
 updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar Api.BoardState -> IO ()
