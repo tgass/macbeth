@@ -83,6 +83,11 @@ commandMessageParserTestData = [
       , (Boxed [NullCommand, GameMove {context = Illegal, move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------", position = [], turn = Black, doublePawnPush = Nothing, castlingAv = [WhiteShort,WhiteLong,BlackShort,BlackLong], ply = 1, Macbeth.Fics.Api.Move.gameId = 147, Macbeth.Fics.Api.Move.nameW = "Schoon", Macbeth.Fics.Api.Move.nameB = "GuestYBPD", relation = MyMove, initialTime = 5, incPerMove = 0, whiteRelStrength = 39, blackRelStrength = 39, remainingTimeW = 295, remainingTimeB = 297, moveNumber = 2, moveVerbose = Just(Simple (Square G One) (Square E Three)), timeTaken = "(0:05)", movePretty = Just "Qe3"}}],
           "\NAK6\SYN1\SYNIllegal move (b7b7).\n\r\a\n\r<12> -------- -------- -------- -------- -------- -------- -------- -------- B -1 1 1 1 1 1 147 Schoon GuestYBPD 1 5 0 39 39 295 297 2 Q/g1-e3 (0:05) Qe3 1 1 0\n\r\ETB")
       , (MatchRequested $ Challenge "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated "unrated blitz 5 0", "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters.")
+      , (PromotionPiece Knight, "\NAK5\SYN92\SYNPromotion piece set to KNIGHT.\n\ETB\n")
+      , (PromotionPiece Queen, "\NAK5\SYN92\SYNPromotion piece set to QUEEN.\n\ETB\n")
+      , (PromotionPiece Bishop, "\NAK5\SYN92\SYNPromotion piece set to BISHOP.\n\ETB\n")
+      , (PromotionPiece Rook, "\NAK5\SYN92\SYNPromotion piece set to ROOK.\n\ETB\n")
+      , (PromotionPiece King, "\NAK5\SYN92\SYNPromotion piece set to KING.\n\ETB\n") -- Suicide
       ]
 
 defaultMove = Move "-------- -------- -------- -------- -------- -------- -------- --------" [] White Nothing [WhiteShort,WhiteLong,BlackShort,BlackLong] 0 18 "nameWhite" "nameBlack" OponentsMove 3 0 39 39 180 180 1 Nothing "(0:00)" Nothing

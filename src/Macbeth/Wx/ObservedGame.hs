@@ -47,17 +47,7 @@ createObservedGame h move chan = do
 
   -- status line
   status <- statusField []
-  promotion <- statusField [ statusWidth := 30, text := "=Q"]
-
-  -- key handler
-  let onKeyDownHandler evt
-        | onlyKey evt 'X' = do Api.cancelLastPreMove vBoardState; repaint p_board
-        | onlyKey evt 'N' = hPutStrLn h "5 decline"
-        | onlyKey evt 'Y' = hPutStrLn h "5 accept"
-        | keyWithMod evt 'W' justControl = close f
-        | otherwise = return ()
-          where onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
-                keyWithMod evt c mod = (keyKey evt == KeyChar c) && (keyModifiers evt == mod)
+  promotion <- statusField [ statusWidth := 30, text := "=" ++ show (Api.promotion boardState)]
 
   -- context menu
   ctxMenu <- menuPane []
@@ -70,12 +60,17 @@ createObservedGame h move chan = do
      menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
      menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
      menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
-     windowOnMouse p_board True (\x -> Board.onMouseEvent h vBoardState x >> repaint p_board)
+     windowOnMouse p_board True (\pt -> Board.onMouseEvent h vBoardState pt >> repaint p_board)
   menuLine ctxMenu
   wxPieceSetsMenu ctxMenu vBoardState p_board
-  windowOnKeyDown p_board onKeyDownHandler
 
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
+
+  -- key handler
+  windowOnKeyDown p_board $ onKeyDownHandler h p_board f vBoardState promotion
+  windowOnKeyUp p_board $ onKeyUpHandler vBoardState h
+
+  --set layout
   set f [ statusBar := [status, promotion]
         , layout := fill $ widget p_back
         , on resize := resizeFrame f vBoardState p_board]
@@ -108,6 +103,8 @@ createObservedGame h move chan = do
     AbortRequestDeclined user -> set status [text := user ++ " declines the abort request."]
 
     TakebackRequest user numTakeback -> set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
+
+    PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]
 
     _ -> return ()
 
@@ -144,4 +141,23 @@ wxPieceSetsMenu ctxMenu vState p = do
   sub <- menuPane [text := "Piece Sets"]
   mapM_ (\ps -> menuItem sub [ text := display ps, on command := Api.setPieceSet vState ps >> repaint p ]) pieceSets
   void $ menuSub ctxMenu sub [ text := "Piece Sets" ]
+
+
+onKeyDownHandler :: Handle -> Panel () -> Frame () -> TVar Api.BoardState -> StatusField -> EventKey -> IO ()
+onKeyDownHandler h p_board f vBoardState promotion evt
+        | onlyKey evt 'X' = do Api.cancelLastPreMove vBoardState; repaint p_board
+        | onlyKey evt 'N' = hPutStrLn h "5 decline"
+        | onlyKey evt 'Y' = hPutStrLn h "5 accept"
+        | keyWithMod evt 'W' justControl = close f
+        | keyWithMod evt 'P' justControl = Api.togglePromotion vBoardState >>= \p -> set promotion [text := "=" ++ show p]
+        | otherwise = return ()
+        where onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
+              keyWithMod evt c mod = (keyKey evt == KeyChar c) && (keyModifiers evt == mod)
+
+
+onKeyUpHandler :: TVar Api.BoardState -> Handle -> EventKey -> IO ()
+onKeyUpHandler vBoardState h evt
+        | (keyKey evt == KeyControl) && isNoneDown (keyModifiers evt) =
+            Api.promotion `fmap` readTVarIO vBoardState >>= hPutStrLn h . ("5 promote " ++) . show
+        | otherwise = return ()
 

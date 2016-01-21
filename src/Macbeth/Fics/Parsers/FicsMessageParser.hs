@@ -4,6 +4,7 @@ module Macbeth.Fics.Parsers.FicsMessageParser (
  parseFicsMessage
 ) where
 
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Game
@@ -59,6 +60,8 @@ parseFicsMessage = parseOnly parser where
 
                   , gameResult
                   , gameResult'
+
+                  , promotionPiece
 
                   , finger
                   , pendingOffers
@@ -162,6 +165,10 @@ gameResult' = GameResult
   <$> (takeTill (== '{') *> "{Game " *> decimal)
   <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|> "1/2-1/2" *> pure Draw <|> "*" *> pure Aborted)
+
+promotionPiece :: Parser FicsMessage
+promotionPiece = PromotionPiece <$> (commandHead 92 *> "Promotion piece set to " *>
+  ("QUEEN" *> pure Queen <|> "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> 	"ROOK" *> pure Rook <|> "KING" *> pure King))
 
 finger :: Parser FicsMessage
 finger = Finger

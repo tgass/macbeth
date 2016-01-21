@@ -8,6 +8,8 @@ module Macbeth.Wx.BoardState (
   movePiece,
   movePieces,
   toPieceMove,
+  setPromotion,
+  togglePromotion,
 
   initBoardState,
   invertPerspective,
@@ -49,6 +51,7 @@ data BoardState = BoardState {
   , preMoves :: [PieceMove]
   , perspective :: PColor
   , mousePt :: Point
+  , promotion :: PType
   , draggedPiece :: Maybe DraggedPiece
   , isWaiting :: Bool
   , psize :: Int
@@ -104,6 +107,7 @@ initBoardState move = BoardState {
   , preMoves = []
   , perspective = if relation move == Observing then White else colorUser move
   , mousePt = Point 0 0
+  , promotion = Queen
   , draggedPiece = Nothing
   , isWaiting = relation move == MyMove
   , psize = 40
@@ -123,6 +127,19 @@ setResult vState r = atomically $ modifyTVar vState (\s -> s{
    , _position = position $ lastMove s
    , preMoves = []
    , draggedPiece = Nothing})
+
+setPromotion :: PType -> TVar BoardState -> IO ()
+setPromotion p vState = atomically $ modifyTVar vState (\s -> s{promotion = p})
+
+
+togglePromotion :: TVar BoardState -> IO PType
+togglePromotion vState = atomically $ do
+  modifyTVar vState (\s -> s{promotion = togglePromotion' (promotion s)})
+  promotion `fmap` readTVar vState
+
+togglePromotion' :: PType -> PType
+togglePromotion' p = let px = [Queen, Rook, Knight, Bishop]
+                     in px !! ((fromJust (p `elemIndex` px) + 1) `mod` length px)
 
 
 update :: TVar BoardState -> Move -> MoveModifier -> IO ()
