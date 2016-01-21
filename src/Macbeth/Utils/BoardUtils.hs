@@ -5,14 +5,11 @@ module Macbeth.Utils.BoardUtils (
   pieceToBitmap
 ) where
 
-import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Api
 import Macbeth.Wx.PieceSet
 import Paths
 
-import Control.Concurrent
 import Graphics.UI.WX
-import Graphics.UI.WXCore hiding (Column, Row)
 import System.FilePath
 import System.IO.Unsafe
 

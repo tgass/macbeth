@@ -9,6 +9,7 @@ import Macbeth.Utils.BoardUtils
 import Macbeth.Wx.BoardState
 
 import Control.Monad.Reader
+import Control.Monad.Trans.Maybe
 import Data.Maybe
 import Control.Concurrent.STM
 import Graphics.UI.WX hiding (position, update, resize, when)
@@ -93,14 +94,8 @@ drawDraggedPiece :: BoardT a
 drawDraggedPiece = do
   (dc, state) <- ask
   case draggedPiece state of
-    Nothing -> return ()
-    Just (DraggedPiece pt piece _) ->
-      liftIO $ drawBitmap dc (pieceToBitmap size (pieceSet state) piece) (scalePoint pt) True []
-      where
-        scale' = scale state
-        size = psize state
-        scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
-        scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale') / scale'
+    Just dp -> liftIO $ drawDraggedPiece'' state dc dp
+    _ -> return ()
 
 
 paintHighlight :: DC a -> BoardState -> Color -> PieceMove -> IO ()
@@ -112,6 +107,11 @@ paintHighlight dc state color (PieceMove _ s1 s2) = do
   withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
     drawArrow dc (psize state) s1 s2 (perspective state)
+paintHighlight dc state color (DropMove _ s1) = do
+  set dc [pen := penColored color 1]
+  withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
+    dcSetBrush dc brushBg
+    paintSquare dc state s1
 
 
 paintSquare :: DC a -> BoardState -> Square -> IO ()
@@ -126,21 +126,21 @@ onMouseEvent h vState evtMouse = do
     MouseMotion pt _ -> varSet vState $ state {mousePt = pt}
 
     MouseLeftDown pt _ -> do
-        let square' = pointToSquare state pt
-        case getPiece (_position state) square' (colorUser $ lastMove state) of
-          Just piece -> varSet vState state { _position = removePiece (_position state) square'
-                                            , draggedPiece = Just $ DraggedPiece pt piece square'}
-          _ -> return ()
+      let square' = pointToSquare state pt
+      case getPiece (_position state) square' (colorUser $ lastMove state) of
+        Just piece -> varSet vState state { _position = removePiece (_position state) square'
+                                          , draggedPiece = Just $ DraggedPiece pt piece $ FromBoard square'}
+        _ -> return ()
 
-    MouseLeftUp click_pt _ -> case draggedPiece state of
-      Just (DraggedPiece _ piece dp_sq) -> do
-        let clicked_sq = pointToSquare state click_pt
-        let newPosition = movePiece (PieceMove piece dp_sq clicked_sq) (_position state)
+    MouseLeftUp click_pt _ -> void $ runMaybeT $ do
+      dp <- MaybeT $ return (draggedPiece state)
+      let pieceMove = toPieceMove (pointToSquare state click_pt) dp
+      let newPosition = movePiece pieceMove (_position state)
+      liftIO $ do
         varSet vState state { _position = newPosition, draggedPiece = Nothing}
         if isWaiting state
-          then hPutStrLn h $ "6 " ++ show (PieceMove piece dp_sq clicked_sq)
-          else addPreMove vState $ PieceMove piece dp_sq clicked_sq
-      _ -> return ()
+          then hPutStrLn h $ "6 " ++ show pieceMove
+          else addPreMove vState pieceMove
 
     MouseLeftDrag pt _ -> varSet vState state { mousePt = pt
                                               , draggedPiece = draggedPiece state >>= setNewPoint pt}
@@ -153,7 +153,7 @@ removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
 
 
 setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
-setNewPoint pt (DraggedPiece _ p s) = Just $ DraggedPiece pt p s
+setNewPoint pt (DraggedPiece _ p o) = Just (DraggedPiece pt p o)
 
 
 getPiece :: Position -> Square -> PColor -> Maybe Piece

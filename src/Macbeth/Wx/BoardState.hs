@@ -1,6 +1,14 @@
+{-# LANGUAGE TypeFamilies #-}
 module Macbeth.Wx.BoardState (
   BoardState(..),
   DraggedPiece(..),
+  Origin(..),
+  PieceMove (..),
+  diffPosition,
+  movePiece,
+  movePieces,
+  toPieceMove,
+
   initBoardState,
   invertPerspective,
   update,
@@ -13,17 +21,20 @@ module Macbeth.Wx.BoardState (
   getPieceHolding,
   fieldSize,
   pointToSquare,
-  getSelectedSquare
+  getSelectedSquare,
+  drawDraggedPiece''
 ) where
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Game
+import Macbeth.Utils.BoardUtils
 import Macbeth.Wx.PieceSet
 
 import Control.Monad
 import Control.Concurrent.STM
 import Data.Maybe
+import Data.List
 import Graphics.UI.WX hiding (position, update, resize, when)
 import Safe
 import System.IO
@@ -47,7 +58,41 @@ data BoardState = BoardState {
   , phB :: [PType] }
 
 
-data DraggedPiece = DraggedPiece { _point :: Point, _piece :: Piece, origin :: Square } deriving (Show)
+data DraggedPiece = DraggedPiece Point Piece Origin deriving (Show)
+
+data Origin = FromHolding | FromBoard Square deriving (Show)
+
+data PieceMove = PieceMove { piece :: Piece, from :: Square, to :: Square } | DropMove Piece Square
+
+instance Show PieceMove where
+  show (PieceMove _ s1 s2) = show s1 ++ show s2
+  show (DropMove (Piece p _) s) = show p ++ "@" ++ show s
+
+
+diffPosition :: Position -> Position -> [PieceMove]
+diffPosition before after =
+  let from = before \\ after
+      to = after \\ before
+  in [PieceMove piece1 s1 s2 | (s1, piece1) <- from, (s2, piece2) <- to, piece1 == piece2, s1 /= s2 ]
+
+movePiece :: PieceMove -> Position -> Position
+movePiece (PieceMove piece from to) position = filter (\(s, _) -> s /= from && s /= to) position ++ [(to, piece)]
+movePiece (DropMove piece sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece)]
+
+movePieces :: [PieceMove] -> Position -> Position
+movePieces moves pos = foldl (flip movePiece) pos moves
+
+drawDraggedPiece'' state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBitmap size (pieceSet state) piece) (scalePoint pt) True []
+  where
+    scale' = scale state
+    size = psize state
+    scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
+    scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale') / scale'
+
+
+toPieceMove :: Square -> DraggedPiece -> PieceMove
+toPieceMove toSq (DraggedPiece _ piece (FromBoard fromSq)) = PieceMove piece fromSq toSq
+toPieceMove toSq (DraggedPiece _ piece FromHolding) = DropMove piece toSq
 
 
 initBoardState move = BoardState {
