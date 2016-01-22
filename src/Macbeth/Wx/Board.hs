@@ -11,6 +11,7 @@ import Macbeth.Utils.BoardUtils
 import Macbeth.Wx.BoardState
 
 import Control.Monad.Reader
+import Control.Monad.Trans.Maybe
 import Data.Maybe
 import Control.Concurrent.STM
 import Graphics.UI.WX hiding (position, update, resize, when)
@@ -142,4 +143,52 @@ onMouseEvent h vState = \case
     MouseLeftDrag pt _ -> updateMousePosition vState pt
 
     _ -> return ()
+
+
+updateMousePosition :: TVar BoardState -> Point -> IO ()
+updateMousePosition vState pt = atomically $ modifyTVar vState
+  (\s -> s{ mousePt = pt, draggedPiece = draggedPiece s >>= setNewPoint pt})
+  where
+    setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
+    setNewPoint pt (DraggedPiece _ p o) = Just (DraggedPiece pt p o)
+
+
+dropDraggedPiece :: TVar BoardState -> Handle -> Point -> IO ()
+dropDraggedPiece vState h click_pt = do
+  state <- readTVarIO vState
+  void $ runMaybeT $ do
+      dp <- MaybeT $ return (draggedPiece state)
+      let pieceMove = toPieceMove (pointToSquare state click_pt) dp
+      let newPosition = movePiece pieceMove (_position state)
+      liftIO $ do
+        varSet vState state { _position = newPosition, draggedPiece = Nothing}
+        if isWaiting state
+          then hPutStrLn h $ "6 " ++ show pieceMove
+          else addPreMove vState pieceMove
+  where
+    toPieceMove :: Square -> DraggedPiece -> PieceMove
+    toPieceMove toSq (DraggedPiece _ piece (FromBoard fromSq)) = PieceMove piece fromSq toSq
+    toPieceMove toSq (DraggedPiece _ piece FromHolding) = DropMove piece toSq
+
+    addPreMove :: TVar BoardState -> PieceMove -> IO ()
+    addPreMove vState pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
+
+
+pickUpPiece :: TVar BoardState -> Point -> IO ()
+pickUpPiece vState pt = do
+  state <- readTVarIO vState
+  let square' = pointToSquare state pt
+  case getPiece (_position state) square' (colorUser $ lastMove state) of
+     Just piece -> varSet vState state { _position = removePiece (_position state) square'
+                                          , draggedPiece = Just $ DraggedPiece pt piece $ FromBoard square'}
+     _ -> return ()
+  where
+    removePiece :: Position -> Square -> Position
+    removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
+
+    getPiece :: Position -> Square -> PColor -> Maybe Piece
+    getPiece pos sq color = sq `lookup` pos >>= checkColor color
+      where
+        checkColor :: PColor -> Piece -> Maybe Piece
+        checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 
