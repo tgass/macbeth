@@ -60,12 +60,12 @@ instance Show MoveModifier where
   show (Takeback Nothing) = ""
   show None = ""
 
-remainingTime :: Macbeth.Fics.Api.Api.PColor -> Move -> Int
+remainingTime :: PColor -> Move -> Int
 remainingTime Black = remainingTimeB
 remainingTime White = remainingTimeW
 
 
-decreaseRemainingTime :: Macbeth.Fics.Api.Api.PColor -> Move -> Move
+decreaseRemainingTime :: PColor -> Move -> Move
 decreaseRemainingTime Black move = move {remainingTimeB = max 0 $ remainingTimeB move - 1}
 decreaseRemainingTime White move = move {remainingTimeW = max 0 $ remainingTimeW move - 1}
 
@@ -74,11 +74,13 @@ nameUser :: Move -> String
 nameUser m = namePlayer (colorUser m) m
 
 
-colorUser :: Move -> Macbeth.Fics.Api.Api.PColor
-colorUser m = if relation m == MyMove then turn m else Macbeth.Fics.Api.Api.invert $ turn m
+colorUser :: Move -> PColor
+colorUser m = if relation m == MyMove then turn m else invert $ turn m
+
 
 isGameUser :: Move -> Bool
 isGameUser m = relation m `elem` [MyMove, OponentsMove]
+
 
 isNextMoveUser :: Move -> Bool
 isNextMoveUser m = relation m == MyMove
@@ -87,14 +89,16 @@ isNextMoveUser m = relation m == MyMove
 isNewGameUser :: Move -> Bool
 isNewGameUser m = isGameUser m && isNothing (movePretty m)
 
+
 isOponentMove :: Move -> Bool
 isOponentMove m = relation m == OponentsMove
+
 
 wasOponentMove :: Move -> Bool
 wasOponentMove m = colorUser m == turn m
 
 
-namePlayer :: Macbeth.Fics.Api.Api.PColor -> Move -> String
+namePlayer :: PColor -> Move -> String
 namePlayer White = nameW
 namePlayer Black = nameB
 
@@ -103,14 +107,15 @@ nameOponent :: Move -> String
 nameOponent m = namePlayer (invert $ colorUser m) m
 
 
-playerColor :: String -> Move -> Macbeth.Fics.Api.Api.PColor
+playerColor :: String -> Move -> PColor
 playerColor name move
-  | nameW move == name = Macbeth.Fics.Api.Api.White
-  | otherwise = Macbeth.Fics.Api.Api.Black
+  | nameW move == name = White
+  | otherwise = Black
 
 
 isCheckmate :: Move -> Bool
 isCheckmate = maybe False ((== '#') . last) . movePretty
+
 
 toGameResultTuple :: Move -> (Int, String, Game.GameResult)
 toGameResultTuple move = (gameId move, namePlayer colorTurn move ++ " checkmated", turnToGameResult colorTurn)

@@ -55,7 +55,7 @@ commandMessageParserTestData = [
       , (GameCreation 484, "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
       -- seekInfoBlock
       , (Boxed [ClearSeek, NewSeek $ Seek 16 "CatNail" [Computer] (R.Rating 1997 R.None) 3 0 False Suicide Nothing (0, 9999)], "\NAK4\SYN56\SYNseekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n")
-      , (Observe defaultMove, "\NAK5\SYN80\SYNYou are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0" ++ defaultMoveStr)
+      , (Boxed [Observe defaultMove, NullCommand], "\NAK5\SYN80\SYNYou are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0" ++ defaultMoveStr)
       , (Finger "GuestSPRM(U)" "\n\nOn for: 4 mins   Idle: 0 secs\n\n\nTotal time online: 4 mins\n\nTimeseal   : Off", "\NAK5\SYN37\SYNFinger of GuestSPRM(U):\n\nOn for: 4 mins   Idle: 0 secs\n\n\nTotal time online: 4 mins\n\nTimeseal   : Off\n\n\ETB")
       , (PendingOffers [] [], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nThere are no offers pending from other players.\n\ETB")
       , (PendingOffers [PendingOffer 45 "You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0"] [], "\NAK5\SYN87\SYNOffers to other players:\n\n  45: You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0.\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\nThere are no offers pending from other players.\n\ETB")
@@ -78,10 +78,12 @@ commandMessageParserTestData = [
       , (PieceHolding 455 [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
       , (PieceHolding 182 [Pawn,Pawn,Bishop] [Pawn,Queen,Queen], "<b1> game 182 white [PPB] black [PQQ] <- BQ\n")
       , (SeekNotAvailable, "\NAK4\SYN158\SYNThat seek is not available.\n\ETB")
-      , (Boxed [NullCommand, GameMove {context = None, move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------", position = [], turn = Black, doublePawnPush = Nothing, castlingAv = [WhiteShort,WhiteLong,BlackShort,BlackLong], ply = 1, Macbeth.Fics.Api.Move.gameId = 147, Macbeth.Fics.Api.Move.nameW = "Schoon", Macbeth.Fics.Api.Move.nameB = "GuestYBPD", relation = MyMove, initialTime = 5, incPerMove = 0, whiteRelStrength = 39, blackRelStrength = 39, remainingTimeW = 295, remainingTimeB = 297, moveNumber = 2, moveVerbose = Just(Simple (Square G One) (Square E Three)), timeTaken = "(0:05)", movePretty = Just "Qe3"}}],
-          "\NAK6\SYN1\SYN\n\r\a\n\r<12> -------- -------- -------- -------- -------- -------- -------- -------- B -1 1 1 1 1 1 147 Schoon GuestYBPD 1 5 0 39 39 295 297 2 Q/g1-e3 (0:05) Qe3 1 1 0\n\r\ETB")
-      , (Boxed [NullCommand, GameMove {context = Illegal, move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------", position = [], turn = Black, doublePawnPush = Nothing, castlingAv = [WhiteShort,WhiteLong,BlackShort,BlackLong], ply = 1, Macbeth.Fics.Api.Move.gameId = 147, Macbeth.Fics.Api.Move.nameW = "Schoon", Macbeth.Fics.Api.Move.nameB = "GuestYBPD", relation = MyMove, initialTime = 5, incPerMove = 0, whiteRelStrength = 39, blackRelStrength = 39, remainingTimeW = 295, remainingTimeB = 297, moveNumber = 2, moveVerbose = Just(Simple (Square G One) (Square E Three)), timeTaken = "(0:05)", movePretty = Just "Qe3"}}],
-          "\NAK6\SYN1\SYNIllegal move (b7b7).\n\r\a\n\r<12> -------- -------- -------- -------- -------- -------- -------- -------- B -1 1 1 1 1 1 147 Schoon GuestYBPD 1 5 0 39 39 295 297 2 Q/g1-e3 (0:05) Qe3 1 1 0\n\r\ETB")
+
+      , (Boxed [GameMove None defaultMove, NullCommand], "\NAK6\SYN1\SYN\n\r\a\n\r" ++ defaultMoveStr ++ "\ETB")
+      , (Boxed [GameMove Illegal defaultMove, NullCommand], "\NAK6\SYN1\SYNIllegal move (d7d7).\n\a\n" ++ defaultMoveStr ++ "\ETB")
+      , (Boxed [GameMove None defaultMove, PieceHolding 26 [Pawn] [Pawn]], "\NAK6\SYN1\SYN\a\n" ++ defaultMoveStr ++ "<b1> game 26 white [P] black [P]\n\ETB")
+      , (Boxed [GameMove None defaultMove, PieceHolding 329 [] [Pawn]], "\NAK6\SYN1\SYN\n<b1> game 329 white [] black [P] <- BP\n\a\n" ++ defaultMoveStr ++ "<b1> game 329 white [] black [P]\n\ETB\n")
+
       , (MatchRequested $ Challenge "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated "unrated blitz 5 0", "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters.")
       , (PromotionPiece Knight, "\NAK5\SYN92\SYNPromotion piece set to KNIGHT.\n\ETB\n")
       , (PromotionPiece Queen, "\NAK5\SYN92\SYNPromotion piece set to QUEEN.\n\ETB\n")

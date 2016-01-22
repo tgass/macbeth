@@ -82,10 +82,10 @@ gameMove = GameMove <$> pure None <*> move
 
 confirmGameMove :: Parser FicsMessage
 confirmGameMove = do
-  illegal <- commandHead 1 *> option None ("Illegal move" *> pure Illegal)
-  ph <- option NullCommand (takeTill (=='<') *> pieceHolding)
-  move' <- takeTill (=='<') *> move
-  return $ Boxed [ph, GameMove illegal move']
+  ctx <- commandHead 1 *> option None ("Illegal move" *> pure Illegal)
+  move <- manyTill anyChar "<12>" *> moveOnly -- ^ there is potentially another pieceHolding in front
+  ph <- option NullCommand (manyTill anyChar "<b1>" *> pieceHoldingOnly)
+  return $ Boxed [GameMove ctx move, ph]
 
 -- 11 = accept (match) ! don't delete this again: "You accept the match offer from"
 acceptMatchOffer :: Parser FicsMessage
@@ -101,9 +101,10 @@ seek = Boxed <$> ((commandHead 155 <|> commandHead 158) *> sequence
 gameCreation :: Parser FicsMessage
 gameCreation = GameCreation <$> ("{Game " *> decimal <* takeTill (== ')') <* ") Creating ")
 
-
 observe :: Parser FicsMessage
-observe = Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
+observe = Boxed <$> sequence [
+    Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
+  , option NullCommand (takeTill (=='<') *> pieceHolding)]
 
 noSuchGame :: Parser FicsMessage
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame

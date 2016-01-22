@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Macbeth.Wx.Board (
   draw,
   onMouseEvent
@@ -9,7 +11,6 @@ import Macbeth.Utils.BoardUtils
 import Macbeth.Wx.BoardState
 
 import Control.Monad.Reader
-import Control.Monad.Trans.Maybe
 import Data.Maybe
 import Control.Concurrent.STM
 import Graphics.UI.WX hiding (position, update, resize, when)
@@ -24,10 +25,10 @@ draw vState dc _ = do
   flip runReaderT (dc, state) $ do
     setScale
     drawBoard
-    highlightLastMove
-    highlightPreMove
+    drawHighlightLastMove
+    drawHighlightPreMove
     drawPieces
-    paintSelectedSquare
+    drawSelectedSquare
     drawDraggedPiece
 
 
@@ -53,8 +54,8 @@ drawBoard = do
           (zip (if perspective' == White then bw else reverse bw) sq)
 
 
-highlightLastMove :: BoardT a
-highlightLastMove = do
+drawHighlightLastMove :: BoardT a
+drawHighlightLastMove = do
   (dc, state) <- ask
   liftIO $ when (isHighlightMove $ lastMove state) $
     sequence_ $ paintHighlight dc state blue `fmap` pieceMove state
@@ -63,8 +64,8 @@ highlightLastMove = do
     isHighlightMove m = (isJust . moveVerbose) m && (wasOponentMove m || relation m == Observing)
 
 
-highlightPreMove :: BoardT a
-highlightPreMove = do
+drawHighlightPreMove :: BoardT a
+drawHighlightPreMove = do
   (dc, state) <- ask
   liftIO $ sequence_ $ paintHighlight dc state yellow `fmap` preMoves state
 
@@ -80,8 +81,8 @@ drawPieces = do
       (toPos' (psize state) sq (perspective state)) True []
 
 
-paintSelectedSquare :: BoardT a
-paintSelectedSquare = do
+drawSelectedSquare :: BoardT a
+drawSelectedSquare = do
   (dc, state) <- ask
   liftIO $ when (isGameUser (lastMove state) && isNothing (gameResult state)) $
     withBrushStyle brushTransparent $ \transparent -> do
@@ -96,6 +97,15 @@ drawDraggedPiece = do
   case draggedPiece state of
     Just dp -> liftIO $ drawDraggedPiece'' state dc dp
     _ -> return ()
+
+
+drawDraggedPiece'' :: BoardState -> DC a -> DraggedPiece -> IO ()
+drawDraggedPiece'' state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBitmap size (pieceSet state) piece) (scalePoint pt) True []
+  where
+    scale' = scale state
+    size = psize state
+    scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
+    scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale') / scale'
 
 
 paintHighlight :: DC a -> BoardState -> Color -> PieceMove -> IO ()
@@ -119,45 +129,17 @@ paintSquare dc state sq = drawRect dc (squareToRect' (psize state) sq (perspecti
 
 
 onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
-onMouseEvent h vState evtMouse = do
-  state <- varGet vState
-  case evtMouse of
+onMouseEvent h vState = \case
 
-    MouseMotion pt _ -> varSet vState $ state {mousePt = pt}
+    MouseMotion pt _ -> updateMousePosition vState pt
 
     MouseLeftDown pt _ -> do
-      let square' = pointToSquare state pt
-      case getPiece (_position state) square' (colorUser $ lastMove state) of
-        Just piece -> varSet vState state { _position = removePiece (_position state) square'
-                                          , draggedPiece = Just $ DraggedPiece pt piece $ FromBoard square'}
-        _ -> return ()
+      dp <- draggedPiece `fmap` readTVarIO vState
+      if isJust dp then dropDraggedPiece vState h pt else pickUpPiece vState pt
 
-    MouseLeftUp click_pt _ -> void $ runMaybeT $ do
-      dp <- MaybeT $ return (draggedPiece state)
-      let pieceMove = toPieceMove (pointToSquare state click_pt) dp
-      let newPosition = movePiece pieceMove (_position state)
-      liftIO $ do
-        varSet vState state { _position = newPosition, draggedPiece = Nothing}
-        if isWaiting state
-          then hPutStrLn h $ "6 " ++ show pieceMove
-          else addPreMove vState pieceMove
+    MouseLeftUp click_pt _ -> dropDraggedPiece vState h click_pt
 
-    MouseLeftDrag pt _ -> varSet vState state { mousePt = pt
-                                              , draggedPiece = draggedPiece state >>= setNewPoint pt}
+    MouseLeftDrag pt _ -> updateMousePosition vState pt
 
     _ -> return ()
 
-
-removePiece :: Position -> Square -> Position
-removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
-
-
-setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
-setNewPoint pt (DraggedPiece _ p o) = Just (DraggedPiece pt p o)
-
-
-getPiece :: Position -> Square -> PColor -> Maybe Piece
-getPiece pos sq color = sq `lookup` pos >>= checkColor color
-  where
-    checkColor :: PColor -> Piece -> Maybe Piece
-    checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing

@@ -2,7 +2,9 @@
 
 module Macbeth.Fics.Parsers.MoveParser (
   move,
+  moveOnly,
   pieceHolding,
+  pieceHoldingOnly,
   verboseMove'
 ) where
 
@@ -22,8 +24,11 @@ import qualified Data.ByteString.Char8 as BS
 --test3 = BS.pack "<12> r--k-b-n ppp-pppP --bpp-b- ---pp--N -------- --P--PB- PPP-pPPP R---R-K- W -1 0 0 0 0 0 408 CarlosFenix mandevil 0 2 0 43 28 48 31 27 B/@@-g6 (0:25) B@g6 0 1 0\n"
 
 move :: Parser Move
-move = do
-  pos <- BS.unpack `fmap` ("<12>" *> space *> A.take 71)
+move = "<12>" *> moveOnly
+
+moveOnly :: Parser Move
+moveOnly = do
+  pos <- BS.unpack `fmap` (space *> A.take 71)
   Move
     <$> pure pos
     <*> pure (parsePosition pos)
@@ -87,9 +92,13 @@ column =
 
 
 -- <b1> game 455 white [PP] black []
+
 pieceHolding :: Parser FicsMessage
-pieceHolding = PieceHolding
-  <$> ("<b1> game " *> decimal <* " ")
+pieceHolding = "<b1>" *> pieceHoldingOnly
+
+pieceHoldingOnly :: Parser FicsMessage
+pieceHoldingOnly = PieceHolding
+  <$> (" game " *> decimal <* " ")
   <*> ("white [" *> many' dropablePiece <* "] ")
   <*> ("black [" *> many' dropablePiece <* "]" <* option "" " <-")
 

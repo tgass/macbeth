@@ -68,7 +68,7 @@ createObservedGame h move chan = do
 
   -- key handler
   windowOnKeyDown p_board $ onKeyDownHandler h p_board f vBoardState promotion
-  windowOnKeyUp p_board $ onKeyUpHandler vBoardState h
+  windowOnKeyUp p_board $ onKeyUpHandler vBoardState h promotion
 
   --set layout
   set f [ statusBar := [status, promotion]
@@ -84,7 +84,7 @@ createObservedGame h move chan = do
     GameMove ctx move' -> when (gameId move' == gameId move) $ do
       set status [text := show ctx]
       Api.update vBoardState move' ctx
-      when (isNextMoveUser move') $ Api.handlePreMoves vBoardState h
+      when (isNextMoveUser move') $ Api.performPreMoves vBoardState h
       repaint p_board
 
     GameResult id reason result -> when (id == gameId move) $ do
@@ -144,20 +144,30 @@ wxPieceSetsMenu ctxMenu vState p = do
 
 
 onKeyDownHandler :: Handle -> Panel () -> Frame () -> TVar Api.BoardState -> StatusField -> EventKey -> IO ()
-onKeyDownHandler h p_board f vBoardState promotion evt
-        | onlyKey evt 'X' = do Api.cancelLastPreMove vBoardState; repaint p_board
-        | onlyKey evt 'N' = hPutStrLn h "5 decline"
-        | onlyKey evt 'Y' = hPutStrLn h "5 accept"
-        | keyWithMod evt 'W' justControl = close f
-        | keyWithMod evt 'P' justControl = Api.togglePromotion vBoardState >>= \p -> set promotion [text := "=" ++ show p]
-        | otherwise = return ()
-        where onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
-              keyWithMod evt c mod = (keyKey evt == KeyChar c) && (keyModifiers evt == mod)
+onKeyDownHandler h p_board f vBoardState sf evt
+    | onlyKey evt 'X' = do Api.cancelLastPreMove vBoardState; repaint p_board
+
+    | onlyKey evt 'Q' = do Api.pickUpPieceFromHolding vBoardState Queen; repaint p_board
+    | onlyKey evt 'B' = do Api.pickUpPieceFromHolding vBoardState Bishop; repaint p_board
+    | onlyKey evt 'K' = do Api.pickUpPieceFromHolding vBoardState Knight; repaint p_board
+    | onlyKey evt 'R' = do Api.pickUpPieceFromHolding vBoardState Rook; repaint p_board
+    | onlyKey evt 'P' = do Api.pickUpPieceFromHolding vBoardState Pawn; repaint p_board
+
+    | onlyKey evt 'N' = hPutStrLn h "5 decline"
+    | onlyKey evt 'Y' = hPutStrLn h "5 accept"
+
+    | keyWithMod evt 'W' justControl = close f
+    | keyWithMod evt 'O' justControl = Api.togglePromotion vBoardState >>= \p -> set sf [text := "=" ++ show p]
+    | otherwise = return ()
+    where onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
+          keyWithMod evt c mod = (keyKey evt == KeyChar c) && (keyModifiers evt == mod)
 
 
-onKeyUpHandler :: TVar Api.BoardState -> Handle -> EventKey -> IO ()
-onKeyUpHandler vBoardState h evt
+onKeyUpHandler :: TVar Api.BoardState -> Handle -> StatusField -> EventKey -> IO ()
+onKeyUpHandler vBoardState h sf evt
         | (keyKey evt == KeyControl) && isNoneDown (keyModifiers evt) =
-            Api.promotion `fmap` readTVarIO vBoardState >>= hPutStrLn h . ("5 promote " ++) . show
+            Api.promotion `fmap` readTVarIO vBoardState >>= \p -> do
+              hPutStrLn h $ "5 promote " ++ show p
+              set sf [text := "=" ]
         | otherwise = return ()
 
