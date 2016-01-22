@@ -7,6 +7,7 @@ module Macbeth.Wx.BoardState (
   pickUpPiece,
   pickUpPieceFromHolding,
   dropDraggedPiece,
+  discardDraggedPiece,
   updateMousePosition,
 
   setPromotion,
@@ -120,6 +121,12 @@ pickUpPiece vState pt = do
       where
         checkColor :: PColor -> Piece -> Maybe Piece
         checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
+
+
+discardDraggedPiece :: TVar BoardState -> IO ()
+discardDraggedPiece vState = atomically $ modifyTVar vState (\s -> s {
+    draggedPiece = Nothing
+  , _position = movePieces (preMoves s) (position $ lastMove s)})
 
 
 updateMousePosition :: TVar BoardState -> Point -> IO ()

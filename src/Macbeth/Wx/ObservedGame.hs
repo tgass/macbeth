@@ -152,6 +152,7 @@ onKeyDownHandler h p_board f vBoardState sf evt
     | onlyKey evt 'K' = do Api.pickUpPieceFromHolding vBoardState Knight; repaint p_board
     | onlyKey evt 'R' = do Api.pickUpPieceFromHolding vBoardState Rook; repaint p_board
     | onlyKey evt 'P' = do Api.pickUpPieceFromHolding vBoardState Pawn; repaint p_board
+    | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) = do Api.discardDraggedPiece vBoardState; repaint p_board
 
     | onlyKey evt 'N' = hPutStrLn h "5 decline"
     | onlyKey evt 'Y' = hPutStrLn h "5 accept"
