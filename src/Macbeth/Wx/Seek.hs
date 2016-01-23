@@ -8,8 +8,10 @@ import Macbeth.Wx.Utils
 
 import Control.Applicative hiding (empty)
 import Control.Concurrent.Chan
+import Data.Map (keys)
 import Data.Char (toLower)
 import Graphics.UI.WX hiding (color)
+import Safe
 import System.IO
 
 -- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide] [wild #] [auto|manual] [formula] [rating-range]
@@ -60,8 +62,9 @@ toString m = (("4 seek " ++) . unwords) `fmap` sequence [
     get (time m) text
   , get (inc m) text
   , convertIsRated <$> get (rated m) enabled
-  , get (color m) selection >>= fmap convertColor . get (color m) . item
-  , gameTypeIdxToString <$> get (category m) selection <*> get (board m) selection
+  , convertColor <$> getDisplaySelection (color m)
+  , gameTypeSelectionToString <$> read `fmap` getDisplaySelection (category m)
+                              <*> readMay `fmap` getDisplaySelection (board m)
   , convertAutoManual <$> get (manual m) checked
   , convertRatingRange <$> get (ratingFrom m) text <*> get (ratingTo m) text]
     where
@@ -73,7 +76,7 @@ toString m = (("4 seek " ++) . unwords) `fmap` sequence [
 
 matchInputs :: Panel () -> Bool -> IO WxSeek
 matchInputs p isGuest = WxSeek
-  <$> choice p [items := fmap (show . fst) gameTypes]
+  <$> choice p [items := fmap show (filter (/= Bughouse) $ keys gameTypes)]
   <*> choice p []
   <*> textEntry p [ text := "5"]
   <*> textEntry p [ text := "0"]

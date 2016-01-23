@@ -8,8 +8,10 @@ import Macbeth.Wx.Utils
 
 import Control.Applicative
 import Control.Concurrent.Chan
+import Data.Map
 import Data.Char
 import Graphics.UI.WX hiding (color)
+import Safe
 import System.IO
 
 data WxMatch = WxMatch {
@@ -51,7 +53,7 @@ wxMatch h isGuest chan = do
 
 matchInputs :: Panel () -> Bool -> IO WxMatch
 matchInputs p isGuest = WxMatch
-  <$> choice p [ items := fmap (show . fst) gameTypes]
+  <$> choice p [ items := fmap show (keys gameTypes)]
   <*> choice p []
   <*> textEntry p [ ]
   <*> textEntry p [ text := "5" ]
@@ -68,7 +70,8 @@ toString m = (("4 match " ++) . unwords) `fmap` sequence [
      , get (time m) text
      , get (inc m) text
      , get (color m) selection >>= fmap convertColor . get (color m) . item
-     , gameTypeIdxToString <$> get (category m) selection <*> get (board m) selection]
+     , gameTypeSelectionToString <$> read `fmap` getDisplaySelection (category m)
+                                 <*> readMay `fmap` getDisplaySelection (board m)]
     where
       convertIsRated r = if r then "rated" else "unrated"
       convertColor x = if x == "Automatic" then "" else fmap toLower x

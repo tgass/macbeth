@@ -5,6 +5,7 @@ module Macbeth.Wx.Utils (
   registerWxCloseEventListenerWithThreadId,
   listItemRightClickEvent,
   toWxColor,
+  getDisplaySelection,
   staticTextFormatted
 ) where
 
@@ -56,9 +57,14 @@ listItemRightClickEvent listCtrl eventHandler
       listHandler evt = eventHandler $ objectCast evt
 
 
+getDisplaySelection :: Choice () -> IO String
+getDisplaySelection c = get c selection >>= get c . item
+
+
 toWxColor :: PColor -> Color
 toWxColor White = Graphics.UI.WXCore.white
 toWxColor Black = Graphics.UI.WXCore.black
+
 
 staticTextFormatted :: Panel () -> String -> IO (StaticText ())
 staticTextFormatted p s = staticText p [ text := s
