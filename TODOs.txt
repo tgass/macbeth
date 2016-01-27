@@ -8,7 +8,6 @@
 -- save game if observing optional
 -- fisher random (0-0, 0-0-0 shortcuts)
 -- crazyhouse / bughouse
--- Cmd+W
 -- WxConfigUpdated event
 -- command moves to get first moves in observed game?
 -- WxKeyBindings : Show all key bindings to user
