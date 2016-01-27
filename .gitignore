@@ -1,7 +1,6 @@
 .DS_Store
 **/*.swp
 .cabal-sandbox/
-LICENSE
 cabal.sandbox.config
 dist/
 src/.DS_Store
