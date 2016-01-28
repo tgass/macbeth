@@ -152,8 +152,8 @@ printCmdMsg cmd = print cmd
 
 logFile :: FilePath -> BS.ByteString -> IO ()
 logFile path chunk = do
-  date <- fmap (formatTime defaultTimeLocale "%Y-%m-%d_") getZonedTime
-  dateTime <- fmap (formatTime defaultTimeLocale "%Y-%m-%d %H-%M-%S: ") getZonedTime
+  date <- fmap (formatTime Data.Time.defaultTimeLocale "%Y-%m-%d_") getZonedTime
+  dateTime <- fmap (formatTime Data.Time.defaultTimeLocale "%Y-%m-%d %H-%M-%S: ") getZonedTime
   appendFile (path </> date ++ "macbeth.log") $
     (foldr (.) (showString $ "\n" ++ dateTime) $ fmap showLitChar (BS.unpack chunk)) ""
 
