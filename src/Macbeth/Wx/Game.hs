@@ -1,8 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Macbeth.Wx.ObservedGame (
-  createObservedGame
+module Macbeth.Wx.Game (
+  wxGame
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -26,8 +26,8 @@ import System.IO
 
 eventId = wxID_HIGHEST + 1
 
-createObservedGame :: Handle -> Move -> Chan FicsMessage -> IO ()
-createObservedGame h move chan = do
+wxGame :: Handle -> Move -> Chan FicsMessage -> IO ()
+wxGame h move chan = do
   vCmd <- newEmptyMVar
   f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move]
   p_back <- panel f []

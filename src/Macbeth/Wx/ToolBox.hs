@@ -14,7 +14,7 @@ import Macbeth.Wx.Match
 import Macbeth.Wx.Seek
 import Macbeth.Wx.Utils
 import Macbeth.Wx.SoughtList
-import Macbeth.Wx.ObservedGame
+import Macbeth.Wx.Game
 import Macbeth.Wx.Challenge
 import Macbeth.Wx.Pending
 import Paths
@@ -124,13 +124,13 @@ wxToolBox h chan = do
 
         Login -> dupChan chan >>= wxLogin h
 
-        Observe move -> dupChan chan >>= createObservedGame h move
+        Observe move -> dupChan chan >>= wxGame h move
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 
         WxMatchAccepted move chan' -> do
           hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.
-          createObservedGame h move chan'
+          wxGame h move chan'
 
         MatchDeclined user -> do
           hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.
