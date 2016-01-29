@@ -52,7 +52,7 @@ wxGame h move chan = do
   -- context menu
   ctxMenu <- menuPane []
   menuItem ctxMenu [ text := "Turn board", on command :=
-    Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board]
+    Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
   when (isGameUser move) $ do
      menuLine ctxMenu
      menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
