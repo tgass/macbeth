@@ -6,7 +6,6 @@ import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 
-import Control.Applicative hiding (empty)
 import Control.Concurrent.Chan
 import Data.Map (keys)
 import Data.Char (toLower)

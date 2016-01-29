@@ -6,7 +6,6 @@ import Data.List
 import qualified Paths_Macbeth as PM
 import System.Environment.FindBin
 import System.FilePath
-import Control.Applicative
 
 getDataFileName :: FilePath -> IO FilePath
 getDataFileName f

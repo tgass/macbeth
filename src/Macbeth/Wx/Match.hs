@@ -6,7 +6,6 @@ import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 
-import Control.Applicative
 import Control.Concurrent.Chan
 import Data.Map
 import Data.Char

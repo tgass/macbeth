@@ -5,7 +5,6 @@ module Macbeth.Wx.GameMoves (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 
-import Control.Applicative hiding (empty)
 import Control.Concurrent.STM
 import Control.Monad
 import Data.Maybe

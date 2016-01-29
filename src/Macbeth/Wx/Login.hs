@@ -5,7 +5,6 @@ module Macbeth.Wx.Login (
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 
-import Control.Applicative
 import Control.Concurrent.Chan
 import Graphics.UI.WX
 import Graphics.UI.WXCore

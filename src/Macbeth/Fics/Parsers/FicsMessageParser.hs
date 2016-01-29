@@ -169,7 +169,7 @@ gameResult' = GameResult
 
 promotionPiece :: Parser FicsMessage
 promotionPiece = PromotionPiece <$> (commandHead 92 *> "Promotion piece set to " *>
-  ("QUEEN" *> pure Queen <|> "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> 	"ROOK" *> pure Rook <|> "KING" *> pure King))
+  ("QUEEN" *> pure Queen <|> "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> "ROOK" *> pure Rook <|> "KING" *> pure King))
 
 finger :: Parser FicsMessage
 finger = Finger

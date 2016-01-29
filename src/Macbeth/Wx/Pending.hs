@@ -6,7 +6,6 @@ import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Wx.Utils
 
-import Control.Applicative
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO

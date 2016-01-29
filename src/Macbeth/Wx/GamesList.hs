@@ -6,7 +6,6 @@ import Macbeth.Fics.Api.Game
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 
-import Control.Applicative
 import Graphics.UI.WX hiding (refresh)
 import Graphics.UI.WXCore
 import System.IO

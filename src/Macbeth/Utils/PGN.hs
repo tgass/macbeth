@@ -13,7 +13,6 @@ import Control.Monad
 import Data.Maybe
 import Data.Time
 import System.FilePath
-import System.Locale
 
 
 saveAsPGN :: BoardState ->  IO ()

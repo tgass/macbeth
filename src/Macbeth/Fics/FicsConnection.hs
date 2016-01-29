@@ -10,7 +10,6 @@ import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Parsers.FicsMessageParser
 
-import Control.Applicative
 import Control.Concurrent.Chan
 import Control.Monad
 import Control.Monad.State
@@ -23,7 +22,6 @@ import Data.Maybe
 import Data.Time
 import Network
 import System.FilePath
-import System.Locale
 import System.IO
 
 import qualified Data.ByteString.Char8 as BS

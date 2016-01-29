@@ -9,7 +9,6 @@ import Macbeth.Wx.Utils
 import Paths
 
 import Control.Concurrent.STM
-import Control.Applicative
 import Control.Monad
 import Graphics.UI.WX hiding (when)
 import Graphics.UI.WXCore hiding (when)
