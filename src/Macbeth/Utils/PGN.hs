@@ -30,7 +30,7 @@ saveAsPGN' moves mGameResult = do
 
 filepath :: FilePath -> ZonedTime -> Move -> IO FilePath
 filepath appDir dateTime m = return $ appDir </>
-  formatTime defaultTimeLocale "%Y-%m-%d_%H-%M-%S_" dateTime ++ nameW m ++ "_vs_" ++ nameB m ++ ".pgn"
+  formatTime Data.Time.defaultTimeLocale "%Y-%m-%d_%H-%M-%S_" dateTime ++ nameW m ++ "_vs_" ++ nameB m ++ ".pgn"
 
 toPGN :: [Move] -> Maybe GameResult -> ZonedTime -> String
 toPGN [] _ _ = ""
@@ -46,8 +46,8 @@ tagsSection :: Move -> Maybe GameResult -> ZonedTime -> String
 tagsSection m mGameResult dateTime =
   "[Event \"?\"]\n\
   \[Site \"?\"]\n\
-  \[Date \"" ++ formatTime defaultTimeLocale "%Y.%m.%d" dateTime ++ "\"]\n\
-  \[Time \"" ++ formatTime defaultTimeLocale "%T" dateTime ++ "\"]\n\
+  \[Date \"" ++ formatTime Data.Time.defaultTimeLocale "%Y.%m.%d" dateTime ++ "\"]\n\
+  \[Time \"" ++ formatTime Data.Time.defaultTimeLocale "%T" dateTime ++ "\"]\n\
   \[Round \"?\"]\n\
   \[White \"" ++ nameW m ++ "\"]\n\
   \[Black \"" ++ nameB m ++ "\"]\n\
