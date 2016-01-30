@@ -1,10 +1,18 @@
 name: Macbeth-lib
+synopsis: Macbeth - A FICS client
+description: A FICS client written with OSX in mind 
+maintainer: Tilmann Gass
+homepage: http://www.macbeth-ficsclient.com
+category: Games
 version: 0.0.9
 cabal-version: >= 1.8
 build-type: Simple
-license: AllRightsReserved
-license-file: "LICENSE"
+license: GPL
+license-file: LICENSE
 data-dir: resources
+source-repository head
+  type: git 
+  location: https://github.com/tgass/macbeth 
 
 library
     build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
@@ -53,15 +61,14 @@ library
                      Macbeth.Wx.ToolBox,
                      Macbeth.Wx.Utils
   other-modules: Paths_Macbeth
-  ghc-options: -O3 -threaded -W
 
 executable Macbeth
   main-is: src/Macbeth.hs
   build-depends: base  >= 4.2, wx, wxcore, Macbeth-lib, stm
   ghc-options: -O3 -threaded -W
 
-Test-Suite MacbethTestSuite
-    type:       detailed-0.9
+test-suite macbeth-lib-test
+    type: exitcode-stdio-1.0 
     hs-source-dirs: test
-    test-module: MacbethTest
-    build-depends: Macbeth-lib, base, Cabal >= 1.9.2, bytestring, attoparsec
+    main-is: Spec.hs
+    build-depends: Macbeth-lib, base, hspec, bytestring, attoparsec

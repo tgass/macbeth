@@ -1,6 +1,4 @@
-module MacbethTest ( tests ) where
-
-import Distribution.TestSuite
+import Test.Hspec
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Challenge
@@ -13,32 +11,25 @@ import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Parsers.FicsMessageParser
 import Macbeth.Fics.Parsers.MoveParser hiding (move)
 import Macbeth.Fics.Parsers.PositionParser
-import Macbeth.Fics.Parsers.GamesParser
 
-import Control.Applicative
 import Data.Attoparsec.ByteString.Char8 hiding (Fail, Result, D)
-import System.IO.Unsafe
 import qualified Data.ByteString.Char8 as BS
 
-tests :: IO [Test]
-tests = return [commandMessageParserTest, seekMsgParserTest, positionTest, moveParserTest]
+data Result = Pass | Fail String deriving (Eq)
 
+main :: IO ()
+main = hspec $
+  describe "Parser test" $ do
+    it "command message parser" $ commandMessageParserTest `shouldBe` True 
 
-toGroup :: String -> [Result] -> Test
-toGroup name results = Group name True (test name `fmap` zip [1..] results)
+    it "seek msg parser" $ seekMsgParserTest `shouldBe` True 
 
+    it "move parser" $ moveParserTest `shouldBe` True 
 
-test :: String -> (Int, Result) -> Test
-test groupName (idx, result) = Test TestInstance
-  { run = return $ Finished result
-  , Distribution.TestSuite.name = groupName ++ " " ++ show idx
-  , tags = []
-  , options = []
-  , setOption = \_ _ -> Left "none"
-  }
+    it "position parser" $ positionTest `shouldBe` True 
 
-commandMessageParserTest :: Test
-commandMessageParserTest = toGroup "commandMsgParser" $ fmap compareCmdMsg commandMessageParserTestData
+commandMessageParserTest :: Bool 
+commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
 
 commandMessageParserTestData :: [(FicsMessage, String)]
 commandMessageParserTestData = [
@@ -95,8 +86,8 @@ commandMessageParserTestData = [
 defaultMove = Move "-------- -------- -------- -------- -------- -------- -------- --------" [] White Nothing [WhiteShort,WhiteLong,BlackShort,BlackLong] 0 18 "nameWhite" "nameBlack" OponentsMove 3 0 39 39 180 180 1 Nothing "(0:00)" Nothing
 defaultMoveStr = "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 1 1 1 1 0 18 nameWhite nameBlack -1 3 0 39 39 180 180 1 none (0:00) none 1 0 0\n"
 
-seekMsgParserTest :: Test
-seekMsgParserTest = toGroup "seekMsgParserTest" $ fmap compareCmdMsg seekMsgParserTestData
+seekMsgParserTest :: Bool
+seekMsgParserTest = all (== Pass) $ fmap compareCmdMsg seekMsgParserTestData
 
 seekMsgParserTestData :: [(FicsMessage, String)]
 seekMsgParserTestData = [
@@ -108,8 +99,8 @@ seekMsgParserTestData = [
   ]
 
 
-positionTest :: Test
-positionTest = toGroup "positionTest" $ fmap comparePosition positionTestData
+positionTest :: Bool
+positionTest = all (== Pass) $ fmap comparePosition positionTestData
 
 
 positionTestData :: [(Position, String)]
@@ -125,8 +116,8 @@ positionTestData = [
      , (Square H One, Piece King Black)], "R------- -N------ --B----- ---Q---- ----K--- -----P-- ------r- -------k")
   ]
 
-moveParserTest :: Test
-moveParserTest = toGroup "moveParser" $ fmap withParser moveParserTestData
+moveParserTest :: Bool
+moveParserTest = all (== Pass) $ fmap withParser moveParserTestData
 
 moveParserTestData :: [(Parser (Maybe MoveDetailed), String, Maybe MoveDetailed)]
 moveParserTestData = [
@@ -137,17 +128,17 @@ moveParserTestData = [
   , (verboseMove', "B/@@-g6", Just $ Drop $ Square G Six)
   ]
 
-
+{-
 parseGamesListTest :: Result
 parseGamesListTest = case parseFicsMessage $ BS.pack games of
   Left txt -> Fail txt
   Right (Games games) -> if length games == 584 then Pass else Fail $ show $ length games
   where games = unsafePerformIO $ readFile "./test/Games.txt"
-
+-}
 
 withParser :: (Show a, Eq a) => (Parser a, String, a) -> Result
 withParser (parser, str, x) = case parseOnly parser (BS.pack str) of
-  Left txt -> Fail str
+  Left txt -> Fail txt
   Right x' -> if x' == x then Pass else Fail $ show x ++ " <<==>> " ++ show x'
 
 
@@ -157,5 +148,5 @@ comparePosition (pos, str) = let pos' = parsePosition str
 
 compareCmdMsg :: (FicsMessage, String) -> Result
 compareCmdMsg (cmd, str) = case parseFicsMessage $ BS.pack str of
-  Left txt -> Fail str
+  Left txt -> Fail txt
   Right cmd' -> if cmd' == cmd then Pass else Fail $ show cmd ++ " <<-->> " ++ show cmd'
