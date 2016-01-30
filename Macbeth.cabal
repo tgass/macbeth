@@ -3,7 +3,7 @@ version: 0.0.9
 cabal-version: >= 1.8
 build-type: Simple
 license: AllRightsReserved
-license-file: ""
+license-file: "LICENSE"
 data-dir: resources
 
 library
