@@ -9,3 +9,4 @@ XChess.cabal.lkshs
 src/wx/EnableGUI.*
 Sodium.hs
 scripts/
+.stack-work
