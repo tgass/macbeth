@@ -17,7 +17,7 @@ import Control.Monad.Trans.Resource
 import Data.Char
 import Data.Conduit
 import Data.Conduit.Binary
-import Data.Conduit.List
+import Data.Conduit.List hiding (filter)
 import Data.Maybe
 import Data.Time
 import Network
@@ -118,7 +118,8 @@ blockC block = awaitForever $ \line -> case ord $ BS.head line of
 
 -- remember!! "fics% \NAK4\SYN87\SYNThere are no offers pending to other players."
 linesC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
-linesC = awaitForever $ sourceList . Prelude.filter (not . BS.null) . fmap dropPrompt . BS.split '\r'
+linesC = awaitForever $ sourceList .
+  filter (/= BS.pack "\a\n") . filter (not . BS.null) . fmap dropPrompt . BS.split '\r'
 
 
 dropPrompt :: BS.ByteString -> BS.ByteString

@@ -1,5 +1,4 @@
 --BUGS:
--- empty lines \a\n
 
 -- FEATURES
 -- chatting
@@ -21,7 +20,6 @@
 -- while observing: TextMessage "Game 84: Paet offers a draw."
 -- observing: "\NAK4\SYN80\SYNYou are now observing game 408.\nGame 408: CarlosFenix (2007) mandevil (1787) rated bughouse 2 0\n\a\n<12> r--k-b-n ppp-pppP --bpp-b- ---pp--N -------- --P--PB- PPP-pPPP R---R-K- W -1 0 0 0 0 0 408 CarlosFenix mandevil 0 2 0 43 28 48 31 27 B/@@-g6 (0:25) B@g6 0 1 0\n<b1> game 408 white [NNBQ] black []\n\ETB\n"
 -- "GuestKMZS declines takeback"
--- TextMessage "\a\n"
 
 
 -- APP
