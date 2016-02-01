@@ -14,18 +14,14 @@ import Macbeth.Wx.PieceSet
 import Macbeth.Wx.Utils
 
 import Control.Arrow
-import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad
 import Data.List
 import Graphics.UI.WX hiding (when)
-import Graphics.UI.WXCore hiding (Timer, Column, when)
 
 
-createStatusPanel :: Panel () -> PColor -> TVar BoardState -> Int -> Chan FicsMessage -> IO (Panel (), ThreadId)
-createStatusPanel p color vBoardState eventId chan' = do
-  vCmd <- newEmptyMVar
-  chan <- dupChan chan'
+createStatusPanel :: Panel () -> PColor -> TVar BoardState -> IO (Panel (), FicsMessage -> IO ())
+createStatusPanel p color vBoardState = do
   move <- lastMove `fmap` readTVarIO vBoardState
 
   p_status <- panel p []
@@ -44,24 +40,23 @@ createStatusPanel p color vBoardState eventId chan' = do
                                   , widget st_playerName
                                   , marginWidth 5 $ marginTop $ fill $ widget p_pieceHoldings] ]
 
-  threadId <- forkIO $ eventLoopP eventId chan vCmd p_status
-  evtHandlerOnMenuCommand p_status eventId $ takeMVar vCmd >>= \case
+  let handler = \case
 
-    GameMove _ move' -> when (gameId move' == gameId move) $ do
-      let time' = remainingTime color move'
-      atomically $ swapTVar t time'
-      set st [text := formatTime time']
-      set tx [enabled := isActive move' color]
+        GameMove _ move' -> when (gameId move' == gameId move) $ do
+          let time' = remainingTime color move'
+          atomically $ swapTVar t time'
+          set st [text := formatTime time']
+          set tx [enabled := isActive move' color]
 
-    GameResult id _ _ -> when (id == gameId move) $ set tx [enabled := False]
+        GameResult id _ _ -> when (id == gameId move) $ set tx [enabled := False]
 
-    PieceHolding id phW' phB' -> when (id == gameId move) $ do
-      atomically $ modifyTVar vBoardState (\s -> s{ phW = phW', phB = phB' })
-      repaint p_status
+        PieceHolding id phW' phB' -> when (id == gameId move) $ do
+          atomically $ modifyTVar vBoardState (\s -> s{ phW = phW', phB = phB' })
+          repaint p_status
 
-    _ -> return ()
+        _ -> return ()
 
-  return (p_status, threadId)
+  return (p_status, handler)
 
 
 paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()

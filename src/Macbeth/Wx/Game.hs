@@ -38,8 +38,8 @@ wxGame h move chan = do
   p_board <- panel p_back [ on paint := Board.draw vBoardState]
 
   -- player panels
-  (p_white, tiClockW) <- createStatusPanel p_back White vBoardState (eventId + 1) chan
-  (p_black, tiClockB) <- createStatusPanel p_back Black vBoardState (eventId + 2) chan
+  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState
+  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState
 
   -- layout helper
   let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f
@@ -79,7 +79,8 @@ wxGame h move chan = do
   tiClose <- dupChan chan >>= registerWxCloseEventListenerWithThreadId f
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
-  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case
+  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
+    updateClockW cmd >> updateClockB cmd >> case cmd of
 
     GameMove ctx move' -> when (gameId move' == gameId move) $ do
       set status [text := show ctx]
@@ -92,7 +93,7 @@ wxGame h move chan = do
       Api.setResult vBoardState result
       repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
-      sequence_ $ fmap killThread [threadId, tiClockW, tiClockB]
+      killThread threadId
 
     DrawRequest -> set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
 
@@ -109,7 +110,7 @@ wxGame h move chan = do
     _ -> return ()
 
   windowOnDestroy f $ do
-    sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClockW, tiClockB, tiClose]
+    sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClose]
     boardState <- readTVarIO vBoardState
     when (isGameUser move) $ saveAsPGN boardState
     unless (isJust $ Api.gameResult boardState) $ case relation move of

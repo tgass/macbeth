@@ -1,6 +1,5 @@
 module Macbeth.Wx.Utils (
   eventLoop,
-  eventLoopP,
   registerWxCloseEventListener,
   registerWxCloseEventListenerWithThreadId,
   listItemRightClickEvent,
@@ -21,11 +20,6 @@ eventLoop :: Int -> Chan FicsMessage -> MVar FicsMessage -> Frame () -> IO ()
 eventLoop id chan vCmd f = readChan chan >>= putMVar vCmd >>
   commandEventCreate wxEVT_COMMAND_MENU_SELECTED id >>= evtHandlerAddPendingEvent f >>
   eventLoop id chan vCmd f
-
-eventLoopP :: Int -> Chan FicsMessage -> MVar FicsMessage -> Panel () -> IO ()
-eventLoopP id chan vCmd f = readChan chan >>= putMVar vCmd >>
-  commandEventCreate wxEVT_COMMAND_MENU_SELECTED id >>= evtHandlerAddPendingEvent f >>
-  eventLoopP id chan vCmd f
 
 registerWxCloseEventListener :: Frame () -> Chan FicsMessage -> IO ()
 registerWxCloseEventListener f chan = do
