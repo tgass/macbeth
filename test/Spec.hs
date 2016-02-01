@@ -20,15 +20,20 @@ data Result = Pass | Fail String deriving (Eq)
 main :: IO ()
 main = hspec $
   describe "Parser test" $ do
-    it "command message parser" $ commandMessageParserTest `shouldBe` True 
 
-    it "seek msg parser" $ seekMsgParserTest `shouldBe` True 
+    it "parse observe game with piece holding" $
+       parseFicsMessage (BS.pack $ "\NAK4\SYN80\SYNYou are now observing game 408.\nGame 408: CarlosFenix (2007) mandevil (1787) rated bughouse 2 0\n\a\n" ++ defaultMoveStr ++ "<b1> game 408 white [NNBQ] black []\n\ETB\n")
+      `shouldBe` (Right $ Boxed [Observe defaultMove,  PieceHolding 408 [Knight, Knight, Bishop, Queen] []])
 
-    it "move parser" $ moveParserTest `shouldBe` True 
+    it "command message parser" $ commandMessageParserTest `shouldBe` True
 
-    it "position parser" $ positionTest `shouldBe` True 
+    it "seek msg parser" $ seekMsgParserTest `shouldBe` True
 
-commandMessageParserTest :: Bool 
+    it "move parser" $ moveParserTest `shouldBe` True
+
+    it "position parser" $ positionTest `shouldBe` True
+
+commandMessageParserTest :: Bool
 commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
 
 commandMessageParserTestData :: [(FicsMessage, String)]
