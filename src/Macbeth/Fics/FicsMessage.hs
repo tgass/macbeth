@@ -84,6 +84,7 @@ data FicsMessage =
   {- Internal -}
   | WxClose
   | WxMatchAccepted Move (Chan FicsMessage)
+  | WxObserve Move (Chan FicsMessage)
   | NullCommand
   | GameCreation Int
   | TakebackAccepted Username

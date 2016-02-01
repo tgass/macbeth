@@ -68,9 +68,12 @@ loggingC = awaitForever $ \cmd -> do
 
 copyC :: Chan FicsMessage -> Conduit FicsMessage (StateT HelperState IO) FicsMessage
 copyC chan = awaitForever $ \case
-  m@(MatchAccepted match) -> do
+  m@(MatchAccepted move) -> do
     chan' <- liftIO $ dupChan chan
-    sourceList [m, WxMatchAccepted match chan']
+    sourceList [m, WxMatchAccepted move chan']
+  m@(Observe move) -> do
+    chan' <- liftIO $ dupChan chan
+    sourceList [m, WxObserve move chan']
   cmd -> yield cmd
 
 
@@ -111,15 +114,14 @@ blockC :: BS.ByteString -> Conduit BS.ByteString (StateT HelperState IO) BS.Byte
 blockC block = awaitForever $ \line -> case ord $ BS.head line of
   21 -> blockC line
   23 -> yield (block `BS.append` line) >> blockC BS.empty -- ^ don't ever delete this again!
-  _ | BS.null block -> when (line /= newline) (yield line) >> blockC BS.empty
-    | otherwise -> blockC (block `BS.append` line)
-  where newline = BS.pack "\n"
+  _ | BS.null block -> unless (line `elem` ignore) $ yield line
+    | otherwise -> blockC $ block `BS.append` line
+  where ignore = [BS.pack "\n", BS.pack "\a\n"]
 
 
 -- remember!! "fics% \NAK4\SYN87\SYNThere are no offers pending to other players."
 linesC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
-linesC = awaitForever $ sourceList .
-  filter (/= BS.pack "\a\n") . filter (not . BS.null) . fmap dropPrompt . BS.split '\r'
+linesC = awaitForever $ sourceList . filter (not . BS.null) . fmap dropPrompt . BS.split '\r'
 
 
 dropPrompt :: BS.ByteString -> BS.ByteString

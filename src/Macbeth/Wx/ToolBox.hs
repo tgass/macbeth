@@ -124,7 +124,7 @@ wxToolBox h chan = do
 
         Login -> dupChan chan >>= wxLogin h
 
-        Observe move -> dupChan chan >>= wxGame h move
+        WxObserve move chan' -> wxGame h move chan'
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 
