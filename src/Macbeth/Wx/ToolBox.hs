@@ -5,7 +5,6 @@ module Macbeth.Wx.ToolBox (
 ) where
 
 import Macbeth.Fics.FicsMessage
---import Macbeth.Wx.About
 import Macbeth.Wx.Configuration
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList
@@ -13,6 +12,7 @@ import Macbeth.Wx.Login
 import Macbeth.Wx.Match
 import Macbeth.Wx.Seek
 import Macbeth.Wx.Utils
+import Macbeth.Wx.PlayersList
 import Macbeth.Wx.SoughtList
 import Macbeth.Wx.Game
 import Macbeth.Wx.Challenge
@@ -65,6 +65,10 @@ wxToolBox h chan = do
     pending <- panel nb []
     (pendingWidget, pendingHandler) <- wxPending h pending
 
+    -- Players
+    players <- panel nb []
+    (playersWidget, playersHandler) <- wxPlayersList players h
+
     -- Console
     cp <- panel nb []
     ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed]
@@ -81,6 +85,7 @@ wxToolBox h chan = do
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
                         , tab "Pending" $ container pending $ fill $ widget pendingWidget
+                        , tab "Players" $ container players $ fill $ widget playersWidget
                         , tab "Console" $ container cp ( column 5  [ fill $ widget ct
                                                                    , hfill $ widget ce])
                         ]
@@ -88,15 +93,19 @@ wxToolBox h chan = do
           , outerSize := sz 600 600
           ]
 
-    -- preselect console
-    notebookSetSelection nb 3
+    -- preselect first tab
+    notebookSetSelection nb 0
 
     vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop eventId chan vCmd f
     windowOnDestroy f $ writeChan chan WxClose >> killThread threadId
 
     evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
-      glHandler cmd >> slHandler cmd >> pendingHandler cmd >> case cmd of
+      glHandler cmd >>
+      slHandler cmd >>
+      pendingHandler cmd >>
+      playersHandler cmd >>
+      case cmd of
 
         NoSuchGame -> do
           set status [text := "No such game. Updating games..."]
@@ -106,7 +115,7 @@ wxToolBox h chan = do
 
         TextMessage text -> appendText ct text
 
-        SettingsDone -> hPutStrLn h `mapM_` ["4 iset seekinfo 1", "4 games", "4 pending"]
+        SettingsDone -> hPutStrLn h `mapM_` ["4 iset seekinfo 1", "4 games", "4 pending", "4 who"]
 
         InvalidPassword  -> void $ set status [text := "Invalid password."]
 

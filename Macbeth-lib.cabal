@@ -1,6 +1,6 @@
 name: Macbeth-lib
 synopsis: Macbeth - A FICS client
-description: A FICS client written with OSX in mind 
+description: A FICS client written with OSX in mind
 maintainer: Tilmann Gass
 homepage: http://www.macbeth-ficsclient.com
 category: Games
@@ -11,8 +11,8 @@ license: GPL
 license-file: LICENSE
 data-dir: resources
 source-repository head
-  type: git 
-  location: https://github.com/tgass/macbeth 
+  type: git
+  location: https://github.com/tgass/macbeth
 
 library
     build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
@@ -30,11 +30,13 @@ library
                      Macbeth.Fics.Api.Rating,
                      Macbeth.Fics.Api.PendingOffer,
                      Macbeth.Fics.Api.Seek,
+                     Macbeth.Fics.Api.Player,
                      Macbeth.Fics.Parsers.Api,
                      Macbeth.Fics.Parsers.FicsMessageParser,
                      Macbeth.Fics.Parsers.GamesParser,
                      Macbeth.Fics.Parsers.MoveParser,
                      Macbeth.Fics.Parsers.PositionParser,
+                     Macbeth.Fics.Parsers.Players,
                      Macbeth.Fics.Parsers.RatingParser,
                      Macbeth.Fics.Parsers.SeekMsgParsers,
                      Macbeth.Fics.Utils.Bitmask,
@@ -56,6 +58,7 @@ library
                      Macbeth.Wx.Game,
                      Macbeth.Wx.Pending,
                      Macbeth.Wx.PieceSet,
+                     Macbeth.Wx.PlayersList,
                      Macbeth.Wx.Seek,
                      Macbeth.Wx.SoughtList,
                      Macbeth.Wx.ToolBox,
@@ -69,7 +72,8 @@ executable Macbeth
   ghc-options: -O3 -threaded -W
 
 test-suite macbeth-lib-test
-    type: exitcode-stdio-1.0 
+    type: exitcode-stdio-1.0
+    ghc-options: -W
     hs-source-dirs: test
     main-is: Spec.hs
-    build-depends: Macbeth-lib, base, hspec, bytestring, attoparsec
+    build-depends: Macbeth-lib, base, hspec == 2.*, bytestring, attoparsec

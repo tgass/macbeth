@@ -14,6 +14,7 @@ import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
 import Macbeth.Fics.Parsers.MoveParser
 import Macbeth.Fics.Parsers.RatingParser
+import Macbeth.Fics.Parsers.Players
 import qualified Macbeth.Fics.Parsers.SeekMsgParsers as SP
 
 import Control.Applicative
@@ -65,6 +66,7 @@ parseFicsMessage = parseOnly parser where
 
                   , finger
                   , pendingOffers
+                  , players
 
                   , login
                   , loginTimeout
@@ -174,7 +176,7 @@ promotionPiece = PromotionPiece <$> (commandHead 92 *> "Promotion piece set to "
 finger :: Parser FicsMessage
 finger = Finger
   <$> (commandHead 37 *> "Finger of " *> manyTill anyChar ":")
-  <*> manyTill anyChar "\n\n\ETB"
+  <*> manyTill anyChar "\n\ETB"
 
 pendingOffers :: Parser FicsMessage
 pendingOffers = PendingOffers

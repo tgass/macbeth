@@ -3,6 +3,7 @@ module Macbeth.Fics.FicsMessage (
 ) where
 
 import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
@@ -19,9 +20,6 @@ data FicsMessage =
 
   -- | Pieces holdings in Bughouse / Crazyhouse games
   | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }
-
-  -- | Answer to 'games' command (BLK_GAMES 43)
-  | Games [Game]
 
   -- | Answer to 'observe' command (BLK_OBSERVE 80)
   | Observe Move
@@ -66,6 +64,9 @@ data FicsMessage =
   | ClearSeek
   | SeekNotAvailable
 
+  -- | Answer to 'games' command (BLK_GAMES 43)
+  | Games [Game]
+  | Players [Player]
   | Finger Username String
 
   | Login

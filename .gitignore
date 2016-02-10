@@ -10,3 +10,4 @@ src/wx/EnableGUI.*
 Sodium.hs
 scripts/
 .stack-work
+spec.sh

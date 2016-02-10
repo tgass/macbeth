@@ -13,7 +13,7 @@ instance Show ProvShow where
   show Provisional = "P"
 
 instance Show Rating where
-  show (Rating r' ps) = Prelude.show r' ++ Prelude.show ps
+  show (Rating r' ps) = show r' ++ show ps
   show Guest = "Guest"
   show Unrated = "Unrated"
 
