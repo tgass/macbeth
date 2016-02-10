@@ -67,6 +67,7 @@ parseFicsMessage = parseOnly parser where
                   , finger
                   , pendingOffers
                   , players
+                  , partnerNotOpen
 
                   , login
                   , loginTimeout

@@ -29,3 +29,6 @@ spec =
     it "check num players in block 2" $ fmap (\(Players x) -> length x) (parseOnly players (BS.pack "\NAK5\SYN146\SYN\n2985.BigMomma(C)                 ++++ xcx(U)\n\n 1055 players displayed (of 1055). (*) indicates system administrator.\n\ETB"))
       `shouldBe` Right 2
 
+    it "partner not open for bughouse" $ parseOnly partnerNotOpen (BS.pack "\NAK6\SYN84\SYNzerowin is not open for bughouse.\n\ETB\n")
+      `shouldBe` Right (PartnerNotOpen "zerowin")
+

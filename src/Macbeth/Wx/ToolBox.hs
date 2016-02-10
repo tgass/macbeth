@@ -111,6 +111,8 @@ wxToolBox h chan = do
           set status [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
 
+        PartnerNotOpen username -> set status [text := username ++ " not open for bughouse."]
+
         SeekNotAvailable -> set status [text := "That seek is not available."]
 
         TextMessage text -> appendText ct text

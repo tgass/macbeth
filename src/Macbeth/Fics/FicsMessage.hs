@@ -64,6 +64,8 @@ data FicsMessage =
   | ClearSeek
   | SeekNotAvailable
 
+  | PartnerNotOpen Username
+
   -- | Answer to 'games' command (BLK_GAMES 43)
   | Games [Game]
   | Players [Player]

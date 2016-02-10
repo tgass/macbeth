@@ -14,7 +14,8 @@ import qualified System.IO as IO
 
 
 data CtxMenu = CtxMenu {
-  finger :: MenuItem ()
+    finger :: MenuItem ()
+  , partner :: MenuItem ()
 }
 
 wxPlayersList :: Panel () -> IO.Handle -> IO (ListCtrl (), FicsMessage -> IO ())
@@ -34,6 +35,7 @@ wxPlayersList slp h = do
                 idx <- listEventGetIndex evt
                 player <- get sl $ item idx
                 set (finger ctxMenuPopup) [on command := IO.hPutStrLn h $ "6 finger " ++ head player]
+                set (partner ctxMenuPopup) [on command := IO.hPutStrLn h $ "6 partner " ++ head player]
                 menuPopup ctxMenu pt sl)
 
     imagePaths <- mapM getDataFileName imageFiles
@@ -73,7 +75,7 @@ imageIdx _ = 0
 createCtxMenu :: Menu () -> IO CtxMenu
 createCtxMenu ctxMenu = CtxMenu
   <$> menuItem ctxMenu [ text := "Finger"]
-
+  <*> menuItem ctxMenu [ text := "Partner"]
 
 toList :: Player -> [String]
 toList (Player rating status (Handle username ht)) =

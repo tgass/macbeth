@@ -2,6 +2,7 @@
 
 module Macbeth.Fics.Parsers.Players (
   players,
+  partnerNotOpen,
   players',
   player'
 ) where
@@ -17,6 +18,10 @@ import Data.Attoparsec.ByteString.Char8
 
 players :: Parser FicsMessage
 players = Players <$> (commandHead 146 *> players')
+
+
+partnerNotOpen :: Parser FicsMessage
+partnerNotOpen = PartnerNotOpen <$> (commandHead 84 *> many1 letter_ascii <* " is not open for bughouse.")
 
 
 players' :: Parser [Player]
