@@ -26,6 +26,7 @@ data FicsMessage =
 
   -- | If id in 'observe id' does not exist
   | NoSuchGame
+  | UserNotLoggedIn Username
 
   -- | Match offered by another player
   | MatchRequested Challenge
@@ -70,6 +71,7 @@ data FicsMessage =
   | Games [Game]
   | Players [Player]
   | Finger Username String
+  | History Username String
 
   | Login
   | LoginTimeout

@@ -48,6 +48,7 @@ parseFicsMessage = parseOnly parser where
                   , games
                   , observe
                   , noSuchGame
+                  , userNotLoggedIn
 
                   , abortRequest
                   , abortRequestDeclined
@@ -65,6 +66,7 @@ parseFicsMessage = parseOnly parser where
                   , promotionPiece
 
                   , finger
+                  , history
                   , pendingOffers
                   , players
                   , partnerNotOpen
@@ -111,6 +113,11 @@ observe = Boxed <$> sequence [
 
 noSuchGame :: Parser FicsMessage
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
+
+
+userNotLoggedIn :: Parser FicsMessage
+userNotLoggedIn = UserNotLoggedIn <$> (commandHead 80 *> many1 letter_ascii <* " is not logged in.\n\ETB")
+
 
 games :: Parser FicsMessage
 games = Games <$> (commandHead 43 *> parseGamesList)
@@ -174,10 +181,6 @@ promotionPiece :: Parser FicsMessage
 promotionPiece = PromotionPiece <$> (commandHead 92 *> "Promotion piece set to " *>
   ("QUEEN" *> pure Queen <|> "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> "ROOK" *> pure Rook <|> "KING" *> pure King))
 
-finger :: Parser FicsMessage
-finger = Finger
-  <$> (commandHead 37 *> "Finger of " *> manyTill anyChar ":")
-  <*> manyTill anyChar "\n\ETB"
 
 pendingOffers :: Parser FicsMessage
 pendingOffers = PendingOffers

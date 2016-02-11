@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Macbeth.Fics.Parsers.Players (
+  finger,
   players,
+  history,
   partnerNotOpen,
   players',
   player'
@@ -22,6 +24,28 @@ players = Players <$> (commandHead 146 *> players')
 
 partnerNotOpen :: Parser FicsMessage
 partnerNotOpen = PartnerNotOpen <$> (commandHead 84 *> many1 letter_ascii <* " is not open for bughouse.")
+
+
+finger :: Parser FicsMessage
+finger = Finger
+  <$> (commandHead 37 *> "Finger of " *> many1 letter_ascii <* ":")
+  <*> manyTill anyChar "\ETB"
+
+
+history :: Parser FicsMessage
+history = history' <|> emptyHistory
+
+
+history' :: Parser FicsMessage
+history' = History
+  <$> (commandHead 51 *> "\nHistory for " *> many1 letter_ascii <* ":")
+  <*> manyTill anyChar "\ETB"
+
+
+emptyHistory :: Parser FicsMessage
+emptyHistory = do
+  username <- commandHead 51 *> many1 letter_ascii <* " has no history games."
+  return $ History username (username ++ " has no history games.\n")
 
 
 players' :: Parser [Player]

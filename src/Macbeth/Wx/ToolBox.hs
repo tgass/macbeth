@@ -111,6 +111,10 @@ wxToolBox h chan = do
           set status [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
 
+        UserNotLoggedIn username -> do
+          set status [text := username ++ " is not logged in."]
+          hPutStrLn h "4 who"
+
         PartnerNotOpen username -> set status [text := username ++ " not open for bughouse."]
 
         SeekNotAvailable -> set status [text := "That seek is not available."]
@@ -129,7 +133,9 @@ wxToolBox h chan = do
         GuestLogin _ -> set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ] >>
                         set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
-        Finger name stats -> dupChan chan >>= wxFinger name stats
+        msg@(Finger {}) -> dupChan chan >>= wxInfo msg
+
+        msg@(History {}) -> dupChan chan >>= wxInfo msg
 
         LoginTimeout -> set status [ text := "Login Timeout." ]
 

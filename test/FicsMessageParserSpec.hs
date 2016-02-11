@@ -27,8 +27,8 @@ spec =
        parseFicsMessage (BS.pack $ "\NAK4\SYN80\SYNYou are now observing game 408.\nGame 408: CarlosFenix (2007) mandevil (1787) rated bughouse 2 0\n\a\n" ++ defaultMoveStr ++ "<b1> game 408 white [NNBQ] black []\n\ETB\n")
       `shouldBe` (Right $ Boxed [Observe defaultMove,  PieceHolding 408 [Knight, Knight, Bishop, Queen] []])
 
-    it "parse finger" $ parseFicsMessage (BS.pack "\NAK6\SYN37\SYNFinger of raffa:\n\nOn for: 6 mins   Idle: 13 secs\n(playing  Who knew?\n\ETB\n")
-      `shouldBe` Right (Finger "raffa" "\n\nOn for: 6 mins   Idle: 13 secs\n(playing  Who knew?")
+    it "user not logged in after observe" $ parseFicsMessage (BS.pack "\NAK6\SYN80\SYNDharmadhikari is not logged in.\n\ETB\n")
+      `shouldBe` (Right $ UserNotLoggedIn "Dharmadhikari")
 
     it "command message parser" $ commandMessageParserTest `shouldBe` True
 
