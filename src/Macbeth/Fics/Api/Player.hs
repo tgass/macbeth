@@ -1,7 +1,7 @@
 module Macbeth.Fics.Api.Player (
   Player (..),
   Status (..),
-  Handle (..),
+  UserHandle (..),
   HandleType (..)
 ) where
 
@@ -11,7 +11,7 @@ import Macbeth.Fics.Api.Rating hiding (None)
 data Player = Player {
     rating :: Rating
   , status :: Status
-  , handle :: Handle } deriving (Eq, Show)
+  , handle :: UserHandle } deriving (Eq, Show)
 
 data Status = InvolvedInAGame
             | RunningASimulMatch
@@ -22,14 +22,15 @@ data Status = InvolvedInAGame
             | InvolvedInATournament deriving (Eq, Show)
 
 
-data Handle = Handle {
-    username :: Username
-  , handleType :: HandleType }  deriving (Eq, Show)
+data UserHandle = UserHandle {
+    name :: Username
+  , handleType :: [HandleType] } deriving (Eq, Show)
 
-data HandleType = None
-                | Admin
+
+data HandleType = Admin
                 | Blindfold
                 | Computer
+                | NOT_DOCUMENTED -- ^ (D) is not documented
                 | Team
                 | Unregistered
                 | ChessAdvisor

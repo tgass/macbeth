@@ -4,6 +4,7 @@ module Macbeth.Fics.Parsers.Players (
   finger,
   players,
   history,
+  userHandle,
   partnerNotOpen,
   players',
   player'
@@ -28,7 +29,7 @@ partnerNotOpen = PartnerNotOpen <$> (commandHead 84 *> many1 letter_ascii <* " i
 
 finger :: Parser FicsMessage
 finger = Finger
-  <$> (commandHead 37 *> "Finger of " *> many1 letter_ascii <* ":")
+  <$> (commandHead 37 *> "Finger of " *> userHandle <* ":")
   <*> manyTill anyChar "\ETB"
 
 
@@ -38,14 +39,14 @@ history = history' <|> emptyHistory
 
 history' :: Parser FicsMessage
 history' = History
-  <$> (commandHead 51 *> "\nHistory for " *> many1 letter_ascii <* ":")
+  <$> (commandHead 51 *> "\nHistory for " *> userHandle <* ":")
   <*> manyTill anyChar "\ETB"
 
 
 emptyHistory :: Parser FicsMessage
 emptyHistory = do
-  username <- commandHead 51 *> many1 letter_ascii <* " has no history games."
-  return $ History username (username ++ " has no history games.\n")
+  userHandle <- commandHead 51 *> userHandle <* " has no history games."
+  return $ History userHandle (name userHandle ++ " has no history games.\n")
 
 
 players' :: Parser [Player]
@@ -56,7 +57,7 @@ player' :: Parser Player
 player' = Player
   <$> RP.rating
   <*> status'
-  <*> handle'
+  <*> userHandle
 
 
 status' :: Parser Status
@@ -70,27 +71,28 @@ status' =
   "&" *> pure InvolvedInATournament
 
 
-handle' :: Parser Handle
-handle' = Handle
+userHandle :: Parser UserHandle
+userHandle = UserHandle
   <$> many1' letter_ascii
-  <*> option None ("(" *> handleType' <* ")")
+  <*> option [] (many handleType')
 
 
 handleType' :: Parser HandleType
 handleType' =
-  "*" *> pure Admin <|>
-  "B" *> pure Blindfold <|>
-  "C" *> pure Computer <|>
-  "T" *> pure Team <|>
-  "U" *> pure Unregistered <|>
-  "CA" *> pure ChessAdvisor <|>
-  "SR" *> pure ServiceRepresentative <|>
-  "TD" *> pure ServiceRepresentative <|>
-  "TM" *> pure MamerManager <|>
-  "GM" *> pure GrandMaster <|>
-  "IM" *> pure InternationalMaster <|>
-  "FM" *> pure FideMaster <|>
-  "WGM" *> pure WomenGrandMaster <|>
-  "WIM" *> pure WomenInternationalMaster <|>
-  "WFM" *> pure WomenFideMaster
+  "(*)" *> pure Admin <|>
+  "(B)" *> pure Blindfold <|>
+  "(C)" *> pure Computer <|>
+  "(D)" *> pure NOT_DOCUMENTED <|>
+  "(T)" *> pure Team <|>
+  "(U)" *> pure Unregistered <|>
+  "(CA)" *> pure ChessAdvisor <|>
+  "(SR)" *> pure ServiceRepresentative <|>
+  "(TD)" *> pure ServiceRepresentative <|>
+  "(TM)" *> pure MamerManager <|>
+  "(GM)" *> pure GrandMaster <|>
+  "(IM)" *> pure InternationalMaster <|>
+  "(FM)" *> pure FideMaster <|>
+  "(WGM)" *> pure WomenGrandMaster <|>
+  "(WIM)" *> pure WomenInternationalMaster <|>
+  "(WFM)" *> pure WomenFideMaster
 

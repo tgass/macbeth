@@ -8,9 +8,10 @@ import Macbeth.Wx.Utils
 
 import Paths
 
+import Data.List
 import Graphics.UI.WX hiding (when)
 import Graphics.UI.WXCore hiding (when)
-import qualified System.IO as IO
+import System.IO
 
 
 data CtxMenu = CtxMenu {
@@ -19,9 +20,10 @@ data CtxMenu = CtxMenu {
   , history :: MenuItem ()
   , observe :: MenuItem ()
   , partner :: MenuItem ()
+  , follow :: MenuItem ()
 }
 
-wxPlayersList :: Panel () -> IO.Handle -> IO (ListCtrl (), FicsMessage -> IO ())
+wxPlayersList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
 wxPlayersList slp h = do
     sl <- listCtrl slp [columns := [
         ("Handle", AlignLeft, -1)
@@ -34,18 +36,13 @@ wxPlayersList slp h = do
 
     ctxMenu <- menuPane []
     ctxMenuPopup <- createCtxMenu ctxMenu
+    let updateM user (f, cmd) = set (f ctxMenuPopup) [on command := hPutStrLn h $ "6 " ++ cmd ++ " " ++ user]
 
     listItemRightClickEvent sl (\evt -> do
       player <- listEventGetIndex evt >>= get sl . item
-
-      set (finger ctxMenuPopup) [on command := IO.hPutStrLn h $ "6 finger " ++ head player]
-      set (partner ctxMenuPopup) [on command := IO.hPutStrLn h $ "6 partner " ++ head player]
-      set (match ctxMenuPopup) [on command := IO.hPutStrLn h $ "6 match " ++ head player]
-      set (history ctxMenuPopup) [on command := IO.hPutStrLn h $ "6 history " ++ head player]
-      set (observe ctxMenuPopup) [on command := IO.hPutStrLn h $ "6 observe " ++ head player]
-
-      pt <- listEventGetPoint evt
-      menuPopup ctxMenu pt sl)
+      sequence_ $ fmap (updateM (head player)) [(finger, "finger"), (partner, "partner"),
+        (match, "match"), (history, "history"), (observe, "observe"), (follow, "follow")]
+      listEventGetPoint evt >>= flip (menuPopup ctxMenu) sl)
 
     return (sl, handler sl)
 
@@ -78,9 +75,10 @@ addPlayer l player = do
   mapM_ (\(column,txt) -> listCtrlSetItem l count column txt (-1)) (zip [0..] (toList player))
 
   where
-    imageIdx :: HandleType -> Int
-    imageIdx Computer = 1
-    imageIdx _ = 0
+    imageIdx :: [HandleType] -> Int
+    imageIdx types
+      | Computer `elem` types = 1
+      | otherwise = 0
 
 
 createCtxMenu :: Menu () -> IO CtxMenu
@@ -90,10 +88,10 @@ createCtxMenu ctxMenu = CtxMenu
   <*> menuItem ctxMenu [ text := "History"]
   <*> menuItem ctxMenu [ text := "Observe"]
   <*> menuItem ctxMenu [ text := "Partner"]
-
+  <*> menuItem ctxMenu [ text := "Follow"]
 
 toList :: Player -> [String]
-toList (Player rating status (Handle username ht)) =
+toList (Player rating status (UserHandle username ht)) =
   [username, toStringStatus status, show rating, showHandleType ht]
   where
     toStringStatus InvolvedInAGame = "Playing"
@@ -104,7 +102,6 @@ toList (Player rating status (Handle username ht)) =
     toStringStatus NotBusy = "Not Busy"
     toStringStatus InvolvedInATournament = "Tournament"
 
-    showHandleType ht
-      | ht `elem` [None, Unregistered, Computer] = ""
-      | otherwise = show ht
+    showHandleType = intercalate ", " . fmap show .
+      filter (not . flip elem [Unregistered, Computer, NOT_DOCUMENTED, ServiceRepresentative])
 

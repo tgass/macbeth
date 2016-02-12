@@ -5,6 +5,7 @@ module Macbeth.Wx.ToolBox (
 ) where
 
 import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Configuration
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList
@@ -125,9 +126,9 @@ wxToolBox h chan = do
 
         InvalidPassword  -> void $ set status [text := "Invalid password."]
 
-        LoggedIn userName -> set nb [on click := (onMouse nb >=> clickHandler h nb)] >>
+        LoggedIn handle -> set nb [on click := (onMouse nb >=> clickHandler h nb)] >>
                              hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
-                             set statusLoggedIn [ text := userName] >>
+                             set statusLoggedIn [ text := name handle] >>
                              (`set` [ enabled := True ]) `mapM_` [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
         GuestLogin _ -> set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ] >>

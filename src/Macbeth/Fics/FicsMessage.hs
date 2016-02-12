@@ -70,14 +70,14 @@ data FicsMessage =
   -- | Answer to 'games' command (BLK_GAMES 43)
   | Games [Game]
   | Players [Player]
-  | Finger Username String
-  | History Username String
+  | Finger UserHandle String
+  | History UserHandle String
 
   | Login
   | LoginTimeout
   | Password
   | GuestLogin Username
-  | LoggedIn Username
+  | LoggedIn UserHandle
   | InvalidPassword
   | SettingsDone
   | TextMessage String

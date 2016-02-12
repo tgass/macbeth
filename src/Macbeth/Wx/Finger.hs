@@ -3,6 +3,7 @@ module Macbeth.Wx.Finger (
 ) where
 
 import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.Chan
@@ -18,8 +19,8 @@ wxInfo msg chan = do
   registerWxCloseEventListener f chan
 
 title :: FicsMessage -> String
-title (Finger username _) = "Finger of " ++ username
-title (History username _) = "History for " ++ username
+title (Finger userHandle _) = "Finger of " ++ name userHandle
+title (History userHandle _) = "History for " ++ name userHandle
 title _ = ""
 
 

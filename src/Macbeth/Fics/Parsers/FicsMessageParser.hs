@@ -207,10 +207,9 @@ guestLogin = GuestLogin <$> ("Press return to enter the server as \"" *> manyTil
 unknownUsername :: Parser FicsMessage
 unknownUsername = UnkownUsername <$> ("\"" *> manyTill anyChar "\" is not a registered name.")
 
--- | Beware the guest handles: ie GuestXWLW(U)
+
 loggedIn :: Parser FicsMessage
-loggedIn = LoggedIn
-  <$> ("**** Starting FICS session as " *> (Prelude.head . splitOn "(") `fmap` manyTill anyChar " ****")
+loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> userHandle <* " ****")
 
 invalidPassword :: Parser FicsMessage
 invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword
