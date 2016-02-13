@@ -23,3 +23,5 @@
 
 -- APP
 -- alternative icons: crosshair, child, flag, search
+
+TextMessage "\NAK6\SYN41\SYNYou will now be following bhimani's games.\nYou are now observing game 209.\nGame 209: bhimani (1039) GuestYHMK (++++) unrated blitz 9 0\n\a\n<12> -r-q--k- p-p-rppp ---p-b-B --p----- ----P-Q- --P---P- PP---P-P R---R-K- B -1 0 0 0 0 4 209 bhimani GuestYHMK 0 9 0 29 29 435 333 20 B/c1-h6 (0:03) Bh6 0 1 0\n\ETB\n"

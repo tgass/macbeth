@@ -19,10 +19,7 @@ import qualified Macbeth.Fics.Parsers.SeekMsgParsers as SP
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
-import Data.Char
-import Data.List.Split (splitOn)
 import qualified Data.ByteString.Char8 as BS
-
 
 
 parseFicsMessage :: BS.ByteString -> Either String FicsMessage
@@ -78,8 +75,6 @@ parseFicsMessage = parseOnly parser where
                   , unknownUsername
                   , loggedIn
                   , invalidPassword
-                  , acknoledge
-                  , settingsDone
                   ]
 
 gameMove :: Parser FicsMessage
@@ -213,9 +208,3 @@ loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> userHandle <* " ***
 
 invalidPassword :: Parser FicsMessage
 invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword
-
-acknoledge :: Parser FicsMessage
-acknoledge = commandHead 519 *> char (chr 23) *> pure Acknoledge
-
-settingsDone :: Parser FicsMessage
-settingsDone = char (chr 23) *> pure SettingsDone

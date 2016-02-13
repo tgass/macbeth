@@ -76,9 +76,7 @@ addPlayer l player = do
 
   where
     imageIdx :: [HandleType] -> Int
-    imageIdx types
-      | Computer `elem` types = 1
-      | otherwise = 0
+    imageIdx types = if Computer `elem` types then 1 else 0
 
 
 createCtxMenu :: Menu () -> IO CtxMenu

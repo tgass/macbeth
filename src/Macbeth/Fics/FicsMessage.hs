@@ -79,12 +79,10 @@ data FicsMessage =
   | GuestLogin Username
   | LoggedIn UserHandle
   | InvalidPassword
-  | SettingsDone
   | TextMessage String
 
   {- Unused -}
   | UnkownUsername Username
-  | Acknoledge
 
   {- Internal -}
   | WxClose

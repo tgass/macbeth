@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Macbeth.Wx.ToolBox (
   wxToolBox
@@ -122,17 +123,17 @@ wxToolBox h chan = do
 
         TextMessage text -> appendText ct text
 
-        SettingsDone -> hPutStrLn h `mapM_` ["4 iset seekinfo 1", "4 games", "4 pending", "4 who"]
-
         InvalidPassword  -> void $ set status [text := "Invalid password."]
 
-        LoggedIn handle -> set nb [on click := (onMouse nb >=> clickHandler h nb)] >>
-                             hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset nowrap 1", "iset block 1"] >>
-                             set statusLoggedIn [ text := name handle] >>
-                             (`set` [ enabled := True ]) `mapM_` [tbarItem_seek, tbarItem_match, tbarItem_finger]
+        LoggedIn handle -> do
+          set nb [on click := (onMouse nb >=> clickHandler h nb)]
+          hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset seekinfo 1", "iset nowrap 1", "iset block 1"]
+          set statusLoggedIn [ text := name handle]
+          mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
-        GuestLogin _ -> set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ] >>
-                        set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
+        GuestLogin _ -> do
+          set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ]
+          set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
         msg@(Finger {}) -> dupChan chan >>= wxInfo msg
 
@@ -167,9 +168,10 @@ onMouse :: Notebook() -> Point -> IO Int
 onMouse nb p = propagateEvent >> notebookHitTest nb p flag
 
 clickHandler :: Handle -> Notebook () -> Int -> IO ()
-clickHandler h nb idx = notebookGetPageText nb idx >>= \text -> case text of
+clickHandler h nb idx = notebookGetPageText nb idx >>= \case
   "Pending" -> hPutStrLn h "5 pending"
   "Games" -> hPutStrLn h "5 games"
+  "Players" -> hPutStrLn h "5 who"
   _ -> return ()
 
 
