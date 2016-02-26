@@ -20,7 +20,6 @@ data CtxMenu = CtxMenu {
   , history :: MenuItem ()
   , observe :: MenuItem ()
   , partner :: MenuItem ()
-  , follow :: MenuItem ()
 }
 
 wxPlayersList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
@@ -41,7 +40,7 @@ wxPlayersList slp h = do
     listItemRightClickEvent sl (\evt -> do
       player <- listEventGetIndex evt >>= get sl . item
       sequence_ $ fmap (updateM (head player)) [(finger, "finger"), (partner, "partner"),
-        (match, "match"), (history, "history"), (observe, "observe"), (follow, "follow")]
+        (match, "match"), (history, "history"), (observe, "observe")]
       listEventGetPoint evt >>= flip (menuPopup ctxMenu) sl)
 
     return (sl, handler sl)
@@ -86,7 +85,6 @@ createCtxMenu ctxMenu = CtxMenu
   <*> menuItem ctxMenu [ text := "History"]
   <*> menuItem ctxMenu [ text := "Observe"]
   <*> menuItem ctxMenu [ text := "Partner"]
-  <*> menuItem ctxMenu [ text := "Follow"]
 
 toList :: Player -> [String]
 toList (Player rating status (UserHandle username ht)) =
