@@ -165,7 +165,7 @@ wxToolBox h chan = do
 
         MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
 
-        Ping _ avg _ -> set statusLag [ text := show avg ++ "ms"]
+        Ping _ avg _ -> set statusLag [ text := "Lag: " ++ show avg ++ "ms"]
 
         TextMessage text -> appendText ct text
 

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module FicsMessageParserSpec (spec) where
 
 import Test.Hspec
@@ -27,7 +29,7 @@ spec =
        parseFicsMessage (BS.pack $ "\NAK4\SYN80\SYNYou are now observing game 408.\nGame 408: CarlosFenix (2007) mandevil (1787) rated bughouse 2 0\n\a\n" ++ defaultMoveStr ++ "<b1> game 408 white [NNBQ] black []\n\ETB\n")
       `shouldBe` (Right $ Boxed [Observe defaultMove,  PieceHolding 408 [Knight, Knight, Bishop, Queen] []])
 
-    it "user not logged in after observe" $ parseFicsMessage (BS.pack "\NAK6\SYN80\SYNDharmadhikari is not logged in.\n\ETB\n")
+    it "user not logged in after observe" $ (parseFicsMessage "\NAK6\SYN80\SYNDharmadhikari is not logged in.\n\ETB\n")
       `shouldBe` (Right $ UserNotLoggedIn "Dharmadhikari")
 
     it "command message parser" $ commandMessageParserTest `shouldBe` True
@@ -38,7 +40,7 @@ spec =
 
     it "position parser" $ positionTest `shouldBe` True
 
-    it "ping" $ parseFicsMessage (BS.pack ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n")
+    it "ping" $ (parseFicsMessage ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n")
       `shouldBe` Right (Ping 131 132 133)
 
 commandMessageParserTest :: Bool

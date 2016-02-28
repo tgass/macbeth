@@ -1,7 +1,6 @@
 --BUGS:
 
 -- FEATURES
--- implement ping
 -- use iv_pendinfo
 -- chatting
 -- formula (seek)
