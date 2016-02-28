@@ -38,6 +38,9 @@ spec =
 
     it "position parser" $ positionTest `shouldBe` True
 
+    it "ping" $ parseFicsMessage (BS.pack ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n")
+      `shouldBe` Right (Ping 131 132 133)
+
 commandMessageParserTest :: Bool
 commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
 

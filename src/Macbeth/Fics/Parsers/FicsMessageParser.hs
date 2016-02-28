@@ -78,6 +78,7 @@ parseFicsMessage = parseOnly parser where
                   , unknownUsername
                   , loggedIn
                   , invalidPassword
+                  , ping
                   ]
 
 gameMove :: Parser FicsMessage
@@ -211,3 +212,9 @@ loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> P.userHandle <* " *
 
 invalidPassword :: Parser FicsMessage
 invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword
+
+ping :: Parser FicsMessage
+ping = Ping
+  <$> (":min/avg/max/mdev = " *> round `fmap` double)
+  <*> ("/" *> round `fmap` double)
+  <*> ("/" *> round `fmap` double)

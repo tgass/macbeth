@@ -52,7 +52,10 @@ wxToolBox h chan = do
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
 
     status <- statusField []
+    statusLag <- statusField [ statusWidth := 60 ]
+    _ <- timer f [ interval := 300 * 1000, on command := hPutStrLn h "4 ping"]
     statusLoggedIn <- statusField [ statusWidth := 100]
+
 
     nb <- notebook f []
 
@@ -83,7 +86,7 @@ wxToolBox h chan = do
     m_file   <- menuPane [text := "&File"]
     menuItem m_file [text := "Settings", on command := dupChan chan >>= wxConfiguration ]
 
-    set f [ statusBar := [status, statusLoggedIn],
+    set f [ statusBar := [status, statusLoggedIn, statusLag],
             layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
@@ -136,7 +139,7 @@ wxToolBox h chan = do
 
         LoggedIn handle -> do
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
-          hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
+          hPutStrLn h `mapM_` [ "ping", "set seek 0", "set style 12", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name handle]
           mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
@@ -161,6 +164,8 @@ wxToolBox h chan = do
           set status [text := user ++ " declines the match offer."]
 
         MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
+
+        Ping _ avg _ -> set statusLag [ text := show avg ++ "ms"]
 
         TextMessage text -> appendText ct text
 

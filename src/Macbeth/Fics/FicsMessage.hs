@@ -75,6 +75,7 @@ data FicsMessage =
   | Players [Player]
   | Finger UserHandle String
   | History UserHandle String
+  | Ping {lagMin :: Int, lagAvg :: Int, lagMax :: Int}
 
   | Login
   | LoginTimeout
