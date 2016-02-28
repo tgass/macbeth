@@ -18,6 +18,7 @@ import Macbeth.Wx.PlayersList
 import Macbeth.Wx.SoughtList
 import Macbeth.Wx.Game
 import Macbeth.Wx.Challenge
+import Macbeth.Wx.PartnerOffer
 import Macbeth.Wx.Pending
 import Paths
 
@@ -57,11 +58,11 @@ wxToolBox h chan = do
 
     -- Sought list
     slp <- panel nb []
-    (sl, slHandler) <- wxSoughtList slp h
+    (sl, soughtListHandler) <- wxSoughtList slp h
 
     -- Games list
     glp <- panel nb []
-    (gl, glHandler)  <- wxGamesList glp h
+    (gl, gamesListHandler)  <- wxGamesList glp h
 
     -- Pending
     pending <- panel nb []
@@ -103,8 +104,8 @@ wxToolBox h chan = do
     windowOnDestroy f $ writeChan chan WxClose >> killThread threadId
 
     evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
-      glHandler cmd >>
-      slHandler cmd >>
+      gamesListHandler cmd >>
+      soughtListHandler cmd >>
       pendingHandler cmd >>
       playersHandler cmd >>
       case cmd of
@@ -117,7 +118,7 @@ wxToolBox h chan = do
           set status [text := username ++ " is not logged in."]
           hPutStrLn h "4 who"
 
-        PartnerNotOpen username -> set status [text := username ++ " not open for bughouse."]
+        PartnerNotOpen username -> set status [text := username ++ " is not open for bughouse."]
 
         SeekNotAvailable -> set status [text := "That seek is not available."]
 
@@ -127,7 +128,7 @@ wxToolBox h chan = do
 
         LoggedIn handle -> do
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
-          hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset seekinfo 1", "iset nowrap 1", "iset block 1"]
+          hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name handle]
           mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
@@ -146,6 +147,8 @@ wxToolBox h chan = do
         WxObserve move chan' -> wxGame h move chan'
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
+
+        PartnerOffer userHandle -> dupChan chan >>= wxPartnerOffer h userHandle
 
         WxMatchAccepted move chan' -> do
           hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.

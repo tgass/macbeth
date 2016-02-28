@@ -1,6 +1,8 @@
 --BUGS:
 
 -- FEATURES
+-- implement ping
+-- use iv_pendinfo
 -- chatting
 -- formula (seek)
 -- auto/manual (seek)
@@ -13,6 +15,7 @@
 -- new WxAbout
 
 -- ARCHITEX
+-- generalize Challenge / PartnerOffer
 -- newtype for perspective == view
 
 -- PARSERS

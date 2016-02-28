@@ -14,7 +14,7 @@ import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
 import Macbeth.Fics.Parsers.MoveParser
 import Macbeth.Fics.Parsers.RatingParser
-import Macbeth.Fics.Parsers.Players
+import qualified Macbeth.Fics.Parsers.Players as P
 import qualified Macbeth.Fics.Parsers.SeekMsgParsers as SP
 
 import Control.Applicative
@@ -62,11 +62,12 @@ parseFicsMessage = parseOnly parser where
 
                   , promotionPiece
 
-                  , finger
-                  , history
+                  , P.finger
+                  , P.history
                   , pendingOffers
-                  , players
-                  , partnerNotOpen
+                  , P.players
+                  , P.partnerNotOpen
+                  , P.partnerOffer
 
                   , login
                   , loginTimeout
@@ -204,7 +205,7 @@ unknownUsername = UnkownUsername <$> ("\"" *> manyTill anyChar "\" is not a regi
 
 
 loggedIn :: Parser FicsMessage
-loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> userHandle <* " ****")
+loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> P.userHandle <* " ****")
 
 invalidPassword :: Parser FicsMessage
 invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword

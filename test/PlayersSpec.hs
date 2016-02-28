@@ -23,6 +23,9 @@ spec =
     it "single player, Admin & TournamentDirectorOrBot" $ parseOnly player' (BS.pack "----:adminBOT(*)(TD)")
       `shouldBe` Right (Player R.Unrated NotOpenForMatch (UserHandle "adminBOT" [Admin,ServiceRepresentative]))
 
+    it "offer bughouse partner" $ parseOnly partnerOffer (BS.pack "GuestZTCG offers to be your bughouse partner; type \"partner GuestZTCG\" to accept.\n")
+      `shouldBe` Right (PartnerOffer (UserHandle "GuestZTCG" []))
+
     it "players" $ parseOnly players' (BS.pack "\n2985.BigMomma(C)                 ++++ xcx(U)\n1123^littledul                \n\n 1055 players displayed (of 1055). (*) indicates system administrator.\n\ETB")
       `shouldBe` Right [Player (R.Rating 2985 R.None) InactiveOrBusy (UserHandle "BigMomma" [Computer]),Player R.Guest NotBusy (UserHandle "xcx" [Unregistered]),Player (R.Rating 1123 R.None) InvolvedInAGame (UserHandle "littledul" [])]
 

@@ -5,7 +5,6 @@ module Macbeth.Fics.Api.Player (
   HandleType (..)
 ) where
 
-import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Rating hiding (None)
 
 data Player = Player {
@@ -23,7 +22,7 @@ data Status = InvolvedInAGame
 
 
 data UserHandle = UserHandle {
-    name :: Username
+    name :: String
   , handleType :: [HandleType] } deriving (Eq, Show)
 
 

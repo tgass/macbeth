@@ -66,6 +66,7 @@ data FicsMessage =
   | SeekNotAvailable
 
   | PartnerNotOpen Username
+  | PartnerOffer UserHandle
 
   -- | Answer to 'games' command (BLK_GAMES 43)
   | Games [Game]

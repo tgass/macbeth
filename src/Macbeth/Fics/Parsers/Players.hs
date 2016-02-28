@@ -6,6 +6,7 @@ module Macbeth.Fics.Parsers.Players (
   history,
   userHandle,
   partnerNotOpen,
+  partnerOffer,
   players',
   player'
 ) where
@@ -26,6 +27,8 @@ players = Players <$> (commandHead 146 *> players')
 partnerNotOpen :: Parser FicsMessage
 partnerNotOpen = PartnerNotOpen <$> (commandHead 84 *> many1 letter_ascii <* " is not open for bughouse.")
 
+partnerOffer :: Parser FicsMessage
+partnerOffer = PartnerOffer <$> (userHandle <* " offers to be your bughouse partner")
 
 finger :: Parser FicsMessage
 finger = Finger
