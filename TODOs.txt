@@ -26,9 +26,3 @@
 
 -- APP
 -- alternative icons: crosshair, child, flag, search
-
-GuestZTCG offers to be your bughouse partner; type "partner GuestZTCG" to accept.\n
-GuestCCGS accepts the partnership request.\n
-\NAK5\SYN11\SYNYou accept the partnership request from GuestZTCG.\nYou agree to be GuestZTCG's partner.\n\ETB\n
-GuestCCGS agrees to be your partner.\n
-GuestCCGS declines the partnership request.\n

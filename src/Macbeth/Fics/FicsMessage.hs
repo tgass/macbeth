@@ -65,8 +65,10 @@ data FicsMessage =
   | ClearSeek
   | SeekNotAvailable
 
-  | PartnerNotOpen Username
+  | PartnerNotOpen UserHandle
   | PartnerOffer UserHandle
+  | PartnerAccepted UserHandle
+  | PartnerDeclined UserHandle
 
   -- | Answer to 'games' command (BLK_GAMES 43)
   | Games [Game]

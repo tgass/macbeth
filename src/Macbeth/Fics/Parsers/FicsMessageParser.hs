@@ -46,6 +46,7 @@ parseFicsMessage = parseOnly parser where
                   , observe
                   , noSuchGame
                   , userNotLoggedIn
+                  , pendingOffers
 
                   , abortRequest
                   , abortRequestDeclined
@@ -64,10 +65,11 @@ parseFicsMessage = parseOnly parser where
 
                   , P.finger
                   , P.history
-                  , pendingOffers
                   , P.players
                   , P.partnerNotOpen
                   , P.partnerOffer
+                  , P.partnerAccepted
+                  , P.partnerDeclined
 
                   , login
                   , loginTimeout

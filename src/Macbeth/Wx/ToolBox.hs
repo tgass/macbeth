@@ -118,13 +118,21 @@ wxToolBox h chan = do
           set status [text := username ++ " is not logged in."]
           hPutStrLn h "4 who"
 
-        PartnerNotOpen username -> set status [text := username ++ " is not open for bughouse."]
+        PartnerNotOpen userHandle -> set status [text := name userHandle ++ " is not open for bughouse."]
+
+        PartnerOffer userHandle -> dupChan chan >>= wxPartnerOffer h userHandle
+
+        PartnerAccepted userHandle -> set status [text := name userHandle ++ " agrees to be your partner."]
+
+        PartnerDeclined userHandle -> set status [text := name userHandle ++ " declines the partnership request."]
 
         SeekNotAvailable -> set status [text := "That seek is not available."]
 
-        TextMessage text -> appendText ct text
-
         InvalidPassword  -> void $ set status [text := "Invalid password."]
+
+        LoginTimeout -> set status [ text := "Login Timeout." ]
+
+        Login -> dupChan chan >>= wxLogin h
 
         LoggedIn handle -> do
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
@@ -140,15 +148,9 @@ wxToolBox h chan = do
 
         msg@(History {}) -> dupChan chan >>= wxInfo msg
 
-        LoginTimeout -> set status [ text := "Login Timeout." ]
-
-        Login -> dupChan chan >>= wxLogin h
-
         WxObserve move chan' -> wxGame h move chan'
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
-
-        PartnerOffer userHandle -> dupChan chan >>= wxPartnerOffer h userHandle
 
         WxMatchAccepted move chan' -> do
           hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.
@@ -159,6 +161,8 @@ wxToolBox h chan = do
           set status [text := user ++ " declines the match offer."]
 
         MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
+
+        TextMessage text -> appendText ct text
 
         _ -> return ()
 
