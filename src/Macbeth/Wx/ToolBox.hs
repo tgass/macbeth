@@ -52,8 +52,8 @@ wxToolBox h chan = do
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
 
     status <- statusField []
-    statusLag <- statusField [ statusWidth := 60 ]
-    _ <- timer f [ interval := 300 * 1000, on command := hPutStrLn h "4 ping"]
+    statusLag <- statusField [ statusWidth := 100 ]
+    _ <- timer f [ interval := 2 * 60 * 1000, on command := hPutStrLn h "4 ping"]
     statusLoggedIn <- statusField [ statusWidth := 100]
 
 
