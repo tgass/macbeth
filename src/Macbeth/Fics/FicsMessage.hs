@@ -36,15 +36,13 @@ data FicsMessage =
   | MatchAccepted Move
   | MatchDeclined Username
   | MatchUserNotLoggedIn Username
-  -- | The user made the same match offer twice
-  | MatchOfferIdentical
-
 
   -- | Not concering if the user or his oponent is checkmated/out of time/.. GameResult informs
   -- that the game is over.
   | GameResult { gameId :: Int, reason :: String, result :: GameResult }
 
-  | PendingOffers { to :: [PendingOffer], from :: [PendingOffer] }
+  | Pending PendingOffer
+  | PendingRemoved Int
 
   -- | The oponents wants to draw.
   | DrawRequest

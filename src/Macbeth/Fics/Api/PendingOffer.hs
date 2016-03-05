@@ -1,5 +1,23 @@
 module Macbeth.Fics.Api.PendingOffer (
-  PendingOffer(..)
+  PendingOffer(..),
+  Origin (..),
+  isFrom,
+  isTo
 ) where
 
-data PendingOffer = PendingOffer { offerId :: Int, description :: String } deriving (Show, Eq)
+import Macbeth.Fics.Api.Player
+
+data Origin = From | To deriving (Show, Eq)
+
+data PendingOffer = PendingOffer {
+    origin :: Origin
+  , offerId :: Int
+  , playerName :: UserHandle
+  , offerType :: String
+  , params :: String } deriving (Show, Eq)
+
+isFrom :: PendingOffer -> Bool
+isFrom = (== From) . origin
+
+isTo :: PendingOffer -> Bool
+isTo = (== To) . origin

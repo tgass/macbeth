@@ -12,6 +12,7 @@ import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
+import qualified Macbeth.Fics.Api.Player as P
 import Macbeth.Fics.Parsers.FicsMessageParser
 import Macbeth.Fics.Parsers.MoveParser hiding (move)
 import Macbeth.Fics.Parsers.PositionParser
@@ -43,6 +44,22 @@ spec =
     it "ping" $ (parseFicsMessage ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n")
       `shouldBe` Right (Ping 131 132 133)
 
+    it "pending from" $ (parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n")
+      `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" "Schoon ( 999) GuestNXQS (----) unrated blitz 5 0")
+
+    it "pendingTo" $ (parseFicsMessage "\NAK4\SYN73\SYNIssuing: GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0.\n\n<pt> 3 w=GuestCVXP t=match p=GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0\n\ETB\n")
+      `shouldBe` Right (Pending $ PendingOffer To 3 (P.UserHandle "GuestCVXP" []) "match" "GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0")
+
+    it "pending removed" $ (parseFicsMessage "<pr> 28\n")
+      `shouldBe` Right (PendingRemoved 28)
+
+    it "accept match with <pr>" $ parseFicsMessage (BS.pack $ "\NAK5\SYN11\SYNYou accept the match offer from GuestFQHF.\n\n<pr> 3\n\nCreating: GuestFQHF (++++) GuestKQSZ (++++) unrated blitz 5 0\n{Game 367 (GuestFQHF vs. GuestKQSZ) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\ETB")
+      `shouldBe` Right (Boxed [PendingRemoved 3, MatchAccepted defaultMove])
+
+    it "pending removed, after withdraw" $ (parseFicsMessage "\NAK4\SYN147\SYNYou withdraw the match offer to GuestFZHQ.\n\n<pr> 1\n\ETB\n")
+      `shouldBe` Right (PendingRemoved 1)
+
+
 commandMessageParserTest :: Bool
 commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
 
@@ -57,15 +74,10 @@ commandMessageParserTestData = [
       -- seekMatchesAlreadyPosted
       , (Boxed [RemoveSeeks [130], MatchAccepted defaultMove], "\NAK4\SYN155\SYNYou are unregistered - setting to unrated.\nYour seek matches one already posted by GuestLQFZ.\n\n<sr> 130\nfics% \nCreating: GuestLQFZ (++++) GuestSFKS (++++) unrated blitz 5 0\n{Game 214 (GuestLQFZ vs. GuestSFKS) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\nGame 214: A disconnection will be considered a forfeit.\n\ETB")
       , (Boxed [RemoveSeeks [119], MatchAccepted defaultMove], "\NAK4\SYN155\SYNYour seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n")
-      , (MatchAccepted defaultMove, "\NAK5\SYN11\SYNYou accept the match offer from GuestFQHF.\n\nCreating: GuestFQHF (++++) GuestKQSZ (++++) unrated blitz 5 0\n{Game 367 (GuestFQHF vs. GuestKQSZ) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\ETB")
       , (GameCreation 484, "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
       -- seekInfoBlock
       , (Boxed [ClearSeek, NewSeek $ Seek 16 "CatNail" [Computer] (R.Rating 1997 R.None) 3 0 False Suicide Nothing (0, 9999)], "\NAK4\SYN56\SYNseekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n")
       , (Boxed [Observe defaultMove, NullCommand], "\NAK5\SYN80\SYNYou are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0" ++ defaultMoveStr)
-      , (PendingOffers [] [], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nThere are no offers pending from other players.\n\ETB")
-      , (PendingOffers [PendingOffer 45 "You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0"] [], "\NAK5\SYN87\SYNOffers to other players:\n\n  45: You are offering GuestSCPB a challenge: GuestSLFT (----) GuestSCPB (----) unrated blitz 5 0.\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\nThere are no offers pending from other players.\n\ETB")
-      , (PendingOffers [] [PendingOffer 43 "GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0"], "\NAK5\SYN87\SYNThere are no offers pending to other players.\n\nOffers from other players:\n\n  43: GuestWXFZ is offering a challenge: GuestWXFZ (----) Schoon (1019) unrated blitz 5 0.\n\nIf you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".\n\ETB")
-      , (MatchOfferIdentical, "\NAK4\SYN73\SYNYou are already offering an identical match to GuestSPLL.\n\ETB")
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
       , (GameResult 82 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN11\SYNYou accept the abort request from GuestSPLL.\n\n{Game 82 (GuestTKHJ vs. GuestSPLL) Game aborted by mutual agreement} *\n\ETB")

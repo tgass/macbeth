@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Macbeth.Wx.Challenge (
   wxChallenge
 ) where
@@ -36,7 +38,7 @@ wxChallenge h c chan = do
             , floatBottomRight $ row 5 [widget b_accept, widget b_decline, widget b_adjourn]]
         ]
 
-  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> case cmd of
+  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case
 
       MatchRequested c' -> when (isUpdate c c') $ close f
 
@@ -52,5 +54,3 @@ isUpdate :: Challenge -> Challenge -> Bool
 isUpdate c c' = (nameW c == nameW c') && (nameB c == nameB c')
 
 eventId = wxID_HIGHEST + 1
-
---main = start $ wxChallenge undefined (Challenge "foobar" (Rating 1200) "barbaz" Guest "12 2 blitz")

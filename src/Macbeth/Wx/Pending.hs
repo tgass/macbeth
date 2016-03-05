@@ -6,12 +6,15 @@ import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Wx.Utils
 
+import Control.Concurrent.STM
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import System.IO
 
 
-data PendingActions = PendingActions { accept :: MenuItem (), decline :: MenuItem ()}
+data PendingActions =
+    PendingTo { accept :: MenuItem (), decline :: MenuItem ()}
+  | PendingFrom { withdraw :: MenuItem () }
 
 
 wxPending :: Handle -> Panel () -> IO (Panel (), FicsMessage -> IO ())
@@ -19,6 +22,7 @@ wxPending h p' = do
   p <- panel p' []
   stFrom <- staticText p [ text := "Offers from other players:", fontSize := 12]
   lcFrom  <- listCtrl p [ columns := [ ("#", AlignLeft, -1), ("offer", AlignLeft, -1)]]
+  vPending <- newTVarIO ([] :: [PendingOffer])
 
   stTo <- staticText p [ text := "Offers to other players:", fontSize := 12]
   lcTo  <- listCtrl p [columns := [ ("#", AlignLeft, -1), ("offer", AlignLeft, -1)]]
@@ -31,36 +35,48 @@ wxPending h p' = do
                              , hfill $ widget stTo
                              , fill $ widget lcTo]]
 
+  listItemRightClickEvent lcFrom (ctxMenuHandler h lcFrom From)
+  listItemRightClickEvent lcTo (ctxMenuHandler h lcTo To)
+
   let handler cmd = case cmd of
 
-                PendingOffers tx fx -> do
-                  set lcFrom [items := [ toList offer | offer <- fx]]
-                  listItemRightClickEvent lcFrom (ctxMenuHandler h lcFrom fx)
-                  set lcTo [items := [ toList offer | offer <- tx]]
+                Pending offer -> do
+                  atomically $ modifyTVar vPending (++ [offer])
+                  itemAppend (if isFrom offer then lcFrom else lcTo) (toList offer)
 
+                PendingRemoved idx -> do
+                  items <- atomically $ do
+                    modifyTVar vPending $ filter ((/= idx) . offerId)
+                    readTVar vPending
+                  itemsDelete lcFrom
+                  itemsDelete lcTo
+                  mapM_ (itemAppend lcTo) (fmap toList (filter isTo items))
+                  mapM_ (itemAppend lcFrom) (fmap toList (filter isFrom items))
                 _ -> return ()
 
   return (p, handler)
 
 
 toList :: PendingOffer -> [String]
-toList (PendingOffer id offer) = [show id, offer]
+toList (PendingOffer _ id _ _ params) = [show id, params]
 
 
-getPendingActions ctxMenu = PendingActions
-  <$> menuItem ctxMenu [ text := "Accept" ]
-  <*> menuItem ctxMenu [ text := "Decline" ]
-
-
-ctxMenuHandler :: Handle -> ListCtrl () -> [PendingOffer] -> Graphics.UI.WXCore.ListEvent () -> IO ()
-ctxMenuHandler h listCtrl offerList evt = do
+ctxMenuHandler :: Handle -> ListCtrl () -> Origin -> Graphics.UI.WXCore.ListEvent () -> IO ()
+ctxMenuHandler h listCtrl origin evt = do
   ctxMenu <- menuPane []
-  opts <- getPendingActions ctxMenu
   idx <- listEventGetIndex evt
-  set (accept opts) [on command := hPutStrLn h ("4 accept " ++ show (offerId $ offerList !! idx))
-                                >> hPutStrLn h "4 pending"]
-  set (decline opts) [on command := hPutStrLn h ("4 decline " ++ show (offerId $ offerList !! idx))
-                                 >> hPutStrLn h "4 pending"]
-  pt <- listEventGetPoint evt
-  menuPopup ctxMenu pt listCtrl
+  offerId <- (head . (!! idx)) <$> get listCtrl items
+  _ <- (if origin == To then menuPendingTo else menuPendingFrom) ctxMenu h offerId
+  when (idx >= 0) $ listEventGetPoint evt >>= flip (menuPopup ctxMenu) listCtrl
+
+
+menuPendingFrom :: Menu () -> Handle -> String -> IO PendingActions
+menuPendingFrom ctxMenu h offerId = PendingTo
+  <$> menuItem ctxMenu [ text := "Accept", on command := hPutStrLn h ("4 accept " ++ offerId)]
+  <*> menuItem ctxMenu [ text := "Decline", on command := hPutStrLn h ("4 decline " ++ offerId)]
+
+
+menuPendingTo :: Menu () -> Handle -> String -> IO PendingActions
+menuPendingTo ctxMenu h offerId = PendingFrom
+  <$> menuItem ctxMenu [ text := "Withdraw", on command := hPutStrLn h ("4 withdraw " ++ offerId)]
 

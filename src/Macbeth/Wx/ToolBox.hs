@@ -139,7 +139,7 @@ wxToolBox h chan = do
 
         LoggedIn handle -> do
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
-          hPutStrLn h `mapM_` [ "ping", "set seek 0", "set style 12", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
+          hPutStrLn h `mapM_` [ "ping", "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name handle]
           mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
@@ -155,13 +155,9 @@ wxToolBox h chan = do
 
         MatchRequested c -> dupChan chan >>= wxChallenge h c
 
-        WxMatchAccepted move chan' -> do
-          hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.
-          wxGame h move chan'
+        WxMatchAccepted move chan' -> wxGame h move chan'
 
-        MatchDeclined user -> do
-          hPutStrLn h "4 pending" -- refresh pending list. Match might have been pending.
-          set status [text := user ++ " declines the match offer."]
+        MatchDeclined user -> set status [text := user ++ " declines the match offer."]
 
         MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
 
@@ -181,7 +177,6 @@ onMouse nb p = propagateEvent >> notebookHitTest nb p flag
 
 clickHandler :: Handle -> Notebook () -> Int -> IO ()
 clickHandler h nb idx = notebookGetPageText nb idx >>= \case
-  "Pending" -> hPutStrLn h "5 pending"
   "Games" -> hPutStrLn h "5 games"
   "Players" -> hPutStrLn h "5 who"
   _ -> return ()

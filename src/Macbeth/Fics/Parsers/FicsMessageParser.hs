@@ -40,13 +40,11 @@ parseFicsMessage = parseOnly parser where
                   , challenge
                   , matchDeclined
                   , matchUserNotLoggedIn
-                  , matchOfferIdentical
 
                   , games
                   , observe
                   , noSuchGame
                   , userNotLoggedIn
-                  , pendingOffers
 
                   , abortRequest
                   , abortRequestDeclined
@@ -71,6 +69,11 @@ parseFicsMessage = parseOnly parser where
                   , P.partnerAccepted
                   , P.partnerDeclined
 
+                  , pending
+                  , pendingTo
+                  , pendingRemoved
+                  , pendingWithdraw
+
                   , login
                   , loginTimeout
                   , password
@@ -93,7 +96,9 @@ confirmGameMove = do
 
 -- 11 = accept (match) ! don't delete this again: "You accept the match offer from"
 acceptMatchOffer :: Parser FicsMessage
-acceptMatchOffer = MatchAccepted <$> (commandHead 11 *> "You accept the match offer from" *> takeTill (== '<') *> move)
+acceptMatchOffer = Boxed <$> sequence [
+    commandHead 11 *> "You accept the match offer from" *> takeTill (== '<') *> pendingRemoved
+  , takeTill (== '<') *> (MatchAccepted <$> move)]
 
 -- 155 = Seek (User selects a seek)
 -- 158 = Play (Users' seek matches a seek already posted)
@@ -113,10 +118,8 @@ observe = Boxed <$> sequence [
 noSuchGame :: Parser FicsMessage
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
 
-
 userNotLoggedIn :: Parser FicsMessage
 userNotLoggedIn = UserNotLoggedIn <$> (commandHead 80 *> many1 letter_ascii <* " is not logged in.\n\ETB")
-
 
 games :: Parser FicsMessage
 games = Games <$> (commandHead 43 *> parseGamesList)
@@ -131,9 +134,6 @@ challenge = MatchRequested <$> (Challenge
 
 matchDeclined :: Parser FicsMessage
 matchDeclined = MatchDeclined <$> ("\"" *> manyTill anyChar "\" declines the match offer.")
-
-matchOfferIdentical :: Parser FicsMessage
-matchOfferIdentical = commandHead 73 *> "You are already offering an identical match to" *> pure MatchOfferIdentical
 
 matchUserNotLoggedIn :: Parser FicsMessage
 matchUserNotLoggedIn = MatchUserNotLoggedIn <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
@@ -180,16 +180,22 @@ promotionPiece :: Parser FicsMessage
 promotionPiece = PromotionPiece <$> (commandHead 92 *> "Promotion piece set to " *>
   ("QUEEN" *> pure Queen <|> "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> "ROOK" *> pure Rook <|> "KING" *> pure King))
 
+pending :: Parser FicsMessage
+pending = Pending <$> (PendingOffer
+  <$> (("<pf>" *> pure From) <|> ("<pt>" *> pure To))
+  <*> (" " *> decimal)
+  <*> (" w=" *> P.userHandle)
+  <*> (" t=" *> manyTill anyChar " ")
+  <*> ("p=" *> manyTill anyChar "\n"))
 
-pendingOffers :: Parser FicsMessage
-pendingOffers = PendingOffers
-  <$> (commandHead 87 *> (("There are no offers pending to other players.\n\n" *> pure []) <|>
-                          ("Offers to other players:\n\n" *> sepBy pendingOffer "\n\n" <* "\n\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\n")))
-  <*> (("There are no offers pending from other players." *> pure []) <|>
-        "Offers from other players:\n\n" *> sepBy pendingOffer "\n\n")
+pendingTo :: Parser FicsMessage
+pendingTo = commandHead 73 *> takeTill (=='<') *> pending
 
-pendingOffer :: Parser PendingOffer
-pendingOffer = PendingOffer <$> (skipSpace *> decimal <* ": ") <*> manyTill anyChar "."
+pendingRemoved :: Parser FicsMessage
+pendingRemoved = PendingRemoved <$> ("<pr> " *> decimal)
+
+pendingWithdraw :: Parser FicsMessage
+pendingWithdraw = commandHead 147 *> takeTill (=='<') *> pendingRemoved
 
 login :: Parser FicsMessage
 login = "login: " *> pure Login
@@ -205,7 +211,6 @@ guestLogin = GuestLogin <$> ("Press return to enter the server as \"" *> manyTil
 
 unknownUsername :: Parser FicsMessage
 unknownUsername = UnkownUsername <$> ("\"" *> manyTill anyChar "\" is not a registered name.")
-
 
 loggedIn :: Parser FicsMessage
 loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> P.userHandle <* " ****")

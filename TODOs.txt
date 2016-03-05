@@ -1,7 +1,7 @@
 --BUGS:
 
 -- FEATURES
--- use iv_pendinfo
+-- adjourn game
 -- chatting
 -- formula (seek)
 -- auto/manual (seek)
@@ -16,6 +16,7 @@
 -- ARCHITEX
 -- generalize Challenge / PartnerOffer
 -- newtype for perspective == view
+-- use wx ListView
 
 -- PARSERS
 -- while observing: Bughouse: "Game 136: White's partner won 1-0\n"
@@ -25,3 +26,6 @@
 
 -- APP
 -- alternative icons: crosshair, child, flag, search
+
+GuestQKTB withdraws the match offer.\n
+\NAK5\SYN13\SYNAll players must be registered to adjourn a game.  Use "abort".\n\ETB\n
