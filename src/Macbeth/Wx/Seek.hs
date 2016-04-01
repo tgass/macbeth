@@ -1,14 +1,16 @@
 module Macbeth.Wx.Seek (
-  wxSeek
+    wxSeek
+  , toString
+  , SeekInfo (..)
 ) where
 
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.Chan
 import Data.Map (keys)
-import Data.Char (toLower)
 import Graphics.UI.WX hiding (color)
 import Safe
 import System.IO
@@ -27,6 +29,19 @@ data WxSeek = WxSeek {
   , ratingTo :: TextCtrl ()
 }
 
+data SeekInfo = SeekInfo {
+    _category :: Category
+  , _board :: Maybe Board
+  , _time :: Int
+  , _inc :: Int
+  , _rated :: Bool
+  , _color :: Maybe PColor
+  , _manual :: Bool
+--  , _formula :: Bool
+  , _ratingFrom :: Int
+  , _ratingTo :: Int
+}
+
 
 wxSeek :: Handle -> Bool -> Chan FicsMessage -> IO ()
 wxSeek h isGuest chan = do
@@ -35,7 +50,7 @@ wxSeek h isGuest chan = do
   match <- matchInputs p isGuest
   set (category match) [on select ::= onSelectGameTypeCategory (board match)]
 
-  b_ok  <- button p [text := "Create", on command := toString match >>= hPutStrLn h >> close f ]
+  b_ok  <- button p [text := "Create", on command := readSeek match >>= hPutStrLn h . ("4 seek " ++) . toString >> close f ]
   b_can <- button p [text := "Cancel", on command := close f]
 
   set f [ defaultButton := b_ok
@@ -56,21 +71,37 @@ wxSeek h isGuest chan = do
 
 -- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide]
 --      [wild #] [auto|manual] [formula] [rating-range]
-toString:: WxSeek -> IO String
-toString m = (("4 seek " ++) . unwords) `fmap` sequence [
-    get (time m) text
-  , get (inc m) text
-  , convertIsRated <$> get (rated m) enabled
-  , convertColor <$> getDisplaySelection (color m)
-  , gameTypeSelectionToString <$> read `fmap` getDisplaySelection (category m)
-                              <*> readMay `fmap` getDisplaySelection (board m)
-  , convertAutoManual <$> get (manual m) checked
-  , convertRatingRange <$> get (ratingFrom m) text <*> get (ratingTo m) text]
+toString :: SeekInfo -> String
+toString m = unwords $ filter (/= "") [
+    show $ _time m
+  , show $ _inc m
+  , convertIsRated $ _rated m
+  , maybe "" convertColor (_color m)
+  , gameTypeSelectionToString (_category m) (_board m)
+  , convertAutoManual (_manual m)
+  , convertRatingRange (_ratingFrom m) (_ratingTo m)]
     where
-      convertIsRated r = if r then "rated" else "unrated"
-      convertColor x = if x == "Automatic" then "" else fmap toLower x
-      convertRatingRange from to = from ++ "-" ++ to
+      convertIsRated r = if r then "r" else "u"
+      convertColor White = "w"
+      convertColor Black = "b"
+      convertRatingRange from to = show from ++ "-" ++ show to
       convertAutoManual isManual = if isManual then "m" else "a"
+
+
+readSeek :: WxSeek -> IO SeekInfo
+readSeek m = SeekInfo
+  <$> read `fmap` getDisplaySelection (category m)
+  <*> readMay `fmap` getDisplaySelection (board m)
+  <*> read `fmap` get (time m) text
+  <*> read `fmap` get (inc m) text
+  <*> get (rated m) checked
+  <*> convertColor `fmap` getDisplaySelection (color m)
+  <*> get (manual m) checked
+  <*> read `fmap` get (ratingFrom m) text
+  <*> read `fmap` get (ratingTo m) text
+  where
+    convertColor "Automatic" = Nothing
+    convertColor c = read c
 
 
 matchInputs :: Panel () -> Bool -> IO WxSeek

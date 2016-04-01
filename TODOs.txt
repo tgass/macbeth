@@ -1,4 +1,5 @@
 --BUGS:
+closing observed game doesn't unobserve
 
 -- FEATURES
 -- adjourn game

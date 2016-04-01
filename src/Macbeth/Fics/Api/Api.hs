@@ -33,7 +33,7 @@ instance Show PType where
   show Queen = "Q"
   show King = "K"
 
-data PColor = Black | White deriving (Show, Eq)
+data PColor = Black | White deriving (Show, Eq, Read)
 
 data Piece = Piece PType PColor deriving (Show, Eq)
 
