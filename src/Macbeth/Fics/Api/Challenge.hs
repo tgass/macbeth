@@ -12,4 +12,4 @@ data Challenge = Challenge { nameW :: String
                            , params :: String } deriving (Show, Eq)
 
 displayChallenge :: Challenge -> String
-displayChallenge c = (nameW c) ++ " (" ++ (show $ ratingW c) ++ ") vs. " ++ (nameB c) ++ " (" ++ (show $ ratingB c) ++ ") " ++ (params c)
+displayChallenge c = nameW c ++ " (" ++ show (ratingW c) ++ ") vs. " ++ nameB c ++ " (" ++ show (ratingB c) ++ ") " ++ params c

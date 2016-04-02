@@ -155,7 +155,7 @@ cancelLastPreMove vBoardState = atomically $ modifyTVar vBoardState (\s ->
 performPreMoves :: TVar BoardState -> Handle -> IO ()
 performPreMoves vBoardState h = do
   preMoves' <- preMoves `fmap` readTVarIO vBoardState
-  when (not $ null preMoves') $ do
+  unless (null preMoves') $ do
     atomically $ modifyTVar vBoardState (\s -> s {
       isWaiting = False,
       preMoves = tail preMoves'})
