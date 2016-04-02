@@ -71,7 +71,7 @@ wxGame h move chan = do
   windowOnKeyUp p_board $ onKeyUpHandler vBoardState h promotion
 
   --set layout
-  set f [ statusBar := [status, promotion]
+  set f [ statusBar := [promotion | isGameUser move] ++ [status]
         , layout := fill $ widget p_back
         , on resize := resizeFrame f vBoardState p_board]
 
