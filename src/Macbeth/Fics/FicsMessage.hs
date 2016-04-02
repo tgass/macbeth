@@ -87,13 +87,13 @@ data FicsMessage =
   | UnkownUsername Username
 
   {- Internal -}
+  | GameCreation Int
+  | NullCommand
+  | Observing Int
+  | TakebackAccepted Username
   | WxClose
   | WxMatchAccepted Move (Chan FicsMessage)
-  | WxObserve Move (Chan FicsMessage)
-  | NullCommand
-  | GameCreation Int
-  | TakebackAccepted Username
-  | Boxed [FicsMessage] deriving (Show, Eq)
+  | WxObserve Move (Chan FicsMessage) deriving (Show, Eq)
 
 instance Show (Chan a) where
   show _ = "Chan"

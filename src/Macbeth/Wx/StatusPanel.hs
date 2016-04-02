@@ -4,7 +4,7 @@ module Macbeth.Wx.StatusPanel (
   createStatusPanel
 ) where
 
-import Macbeth.Fics.FicsMessage hiding (gameId)
+import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.Utils

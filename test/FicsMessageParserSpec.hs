@@ -26,11 +26,7 @@ spec :: Spec
 spec =
   describe "Parser test" $ do
 
-    it "parse observe game with piece holding" $
-       parseFicsMessage (BS.pack $ "\NAK4\SYN80\SYNYou are now observing game 408.\nGame 408: CarlosFenix (2007) mandevil (1787) rated bughouse 2 0\n\a\n" ++ defaultMoveStr ++ "<b1> game 408 white [NNBQ] black []\n\ETB\n")
-      `shouldBe` (Right $ Boxed [Observe defaultMove,  PieceHolding 408 [Knight, Knight, Bishop, Queen] []])
-
-    it "user not logged in after observe" $ (parseFicsMessage "\NAK6\SYN80\SYNDharmadhikari is not logged in.\n\ETB\n")
+    it "user not logged in after observe" $ parseFicsMessage "\NAK6\SYN80\SYNDharmadhikari is not logged in.\n\ETB\n"
       `shouldBe` (Right $ UserNotLoggedIn "Dharmadhikari")
 
     it "command message parser" $ commandMessageParserTest `shouldBe` True
@@ -41,22 +37,19 @@ spec =
 
     it "position parser" $ positionTest `shouldBe` True
 
-    it "ping" $ (parseFicsMessage ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n")
+    it "ping" $ parseFicsMessage ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n"
       `shouldBe` Right (Ping 131 132 133)
 
-    it "pending from" $ (parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n")
+    it "pending from" $ parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n"
       `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" "Schoon ( 999) GuestNXQS (----) unrated blitz 5 0")
 
-    it "pendingTo" $ (parseFicsMessage "\NAK4\SYN73\SYNIssuing: GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0.\n\n<pt> 3 w=GuestCVXP t=match p=GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0\n\ETB\n")
+    it "pendingTo" $ parseFicsMessage "\NAK4\SYN73\SYNIssuing: GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0.\n\n<pt> 3 w=GuestCVXP t=match p=GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0\n\ETB\n"
       `shouldBe` Right (Pending $ PendingOffer To 3 (P.UserHandle "GuestCVXP" []) "match" "GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0")
 
-    it "pending removed" $ (parseFicsMessage "<pr> 28\n")
+    it "pending removed" $ parseFicsMessage "<pr> 28\n"
       `shouldBe` Right (PendingRemoved 28)
 
-    it "accept match with <pr>" $ parseFicsMessage (BS.pack $ "\NAK5\SYN11\SYNYou accept the match offer from GuestFQHF.\n\n<pr> 3\n\nCreating: GuestFQHF (++++) GuestKQSZ (++++) unrated blitz 5 0\n{Game 367 (GuestFQHF vs. GuestKQSZ) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\ETB")
-      `shouldBe` Right (Boxed [PendingRemoved 3, MatchAccepted defaultMove])
-
-    it "pending removed, after withdraw" $ (parseFicsMessage "\NAK4\SYN147\SYNYou withdraw the match offer to GuestFZHQ.\n\n<pr> 1\n\ETB\n")
+    it "pending removed, after withdraw" $ parseFicsMessage "\NAK4\SYN147\SYNYou withdraw the match offer to GuestFZHQ.\n\n<pr> 1\n\ETB\n"
       `shouldBe` Right (PendingRemoved 1)
 
 
@@ -69,15 +62,7 @@ commandMessageParserTestData = [
       , (NoSuchGame, "\NAK5\SYN80\SYNThere is no such game.\n\ETB")
       , (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
       , (GuestLogin "FOOBAR", "Press return to enter the server as \"FOOBAR\":")
-      -- playSeek
-      , (Boxed [RemoveSeeks [25], MatchAccepted defaultMove], "\NAK4\SYN158\SYN\n<sr> 25\nfics% \nCreating: chicapucp (1658) GuestFTYL (++++) unrated blitz 3 0\n{Game 18 (chicapucp vs. GuestFTYL) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\nGame 18: A disconnection will be considered a forfeit.\n\ETB")
-      -- seekMatchesAlreadyPosted
-      , (Boxed [RemoveSeeks [130], MatchAccepted defaultMove], "\NAK4\SYN155\SYNYou are unregistered - setting to unrated.\nYour seek matches one already posted by GuestLQFZ.\n\n<sr> 130\nfics% \nCreating: GuestLQFZ (++++) GuestSFKS (++++) unrated blitz 5 0\n{Game 214 (GuestLQFZ vs. GuestSFKS) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n\nGame 214: A disconnection will be considered a forfeit.\n\ETB")
-      , (Boxed [RemoveSeeks [119], MatchAccepted defaultMove], "\NAK4\SYN155\SYNYour seek matches one already posted by GuestJYQC.\n\n<sr> 119\nfics% \nCreating: GuestJYQC (++++) GuestNGCB (++++) unrated blitz 2 12\n{Game 364 (GuestJYQC vs. GuestNGCB) Creating unrated blitz match.}\n\a\n" ++ defaultMoveStr ++ "\n")
       , (GameCreation 484, "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
-      -- seekInfoBlock
-      , (Boxed [ClearSeek, NewSeek $ Seek 16 "CatNail" [Computer] (R.Rating 1997 R.None) 3 0 False Suicide Nothing (0, 9999)], "\NAK4\SYN56\SYNseekinfo set.\n<sc>\n<s> 16 w=CatNail ti=02 rt=1997  t=3 i=0 r=u tp=suicide c=? rr=0-9999 a=f f=f\n")
-      , (Boxed [Observe defaultMove, NullCommand], "\NAK5\SYN80\SYNYou are now observing game 157.Game 157: IMUrkedal (2517) GMRomanov (2638) unrated standard 120 0" ++ defaultMoveStr)
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
       , (GameResult 82 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN11\SYNYou accept the abort request from GuestSPLL.\n\n{Game 82 (GuestTKHJ vs. GuestSPLL) Game aborted by mutual agreement} *\n\ETB")
@@ -95,11 +80,6 @@ commandMessageParserTestData = [
       , (PieceHolding 455 [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
       , (PieceHolding 182 [Pawn,Pawn,Bishop] [Pawn,Queen,Queen], "<b1> game 182 white [PPB] black [PQQ] <- BQ\n")
       , (SeekNotAvailable, "\NAK4\SYN158\SYNThat seek is not available.\n\ETB")
-
-      , (Boxed [GameMove None defaultMove, NullCommand], "\NAK6\SYN1\SYN\n\r\a\n\r" ++ defaultMoveStr ++ "\ETB")
-      , (Boxed [GameMove Illegal defaultMove, NullCommand], "\NAK6\SYN1\SYNIllegal move (d7d7).\n\a\n" ++ defaultMoveStr ++ "\ETB")
-      , (Boxed [GameMove None defaultMove, PieceHolding 26 [Pawn] [Pawn]], "\NAK6\SYN1\SYN\a\n" ++ defaultMoveStr ++ "<b1> game 26 white [P] black [P]\n\ETB")
-      , (Boxed [GameMove None defaultMove, PieceHolding 329 [] [Pawn]], "\NAK6\SYN1\SYN\n<b1> game 329 white [] black [P] <- BP\n\a\n" ++ defaultMoveStr ++ "<b1> game 329 white [] black [P]\n\ETB\n")
 
       , (MatchRequested $ Challenge "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated "unrated blitz 5 0", "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters.")
       , (PromotionPiece Knight, "\NAK5\SYN92\SYNPromotion piece set to KNIGHT.\n\ETB\n")

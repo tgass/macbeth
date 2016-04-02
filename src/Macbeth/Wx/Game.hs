@@ -6,7 +6,7 @@ module Macbeth.Wx.Game (
 ) where
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.FicsMessage hiding (gameId)
+import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.PGN
 import qualified Macbeth.Wx.BoardState as Api

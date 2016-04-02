@@ -8,7 +8,7 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Game
-import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
@@ -28,13 +28,9 @@ parseFicsMessage = parseOnly parser where
                   , SP.newSeek
                   , SP.removeSeeks
                   , SP.seekNotAvailable
-                  , SP.seekInfoBlock
 
                   , gameMove
-                  , confirmGameMove
-                  , acceptMatchOffer
                   , gameCreation
-                  , seek
                   , pieceHolding
 
                   , challenge
@@ -42,7 +38,7 @@ parseFicsMessage = parseOnly parser where
                   , matchUserNotLoggedIn
 
                   , games
-                  , observe
+                  , observing
                   , noSuchGame
                   , userNotLoggedIn
 
@@ -56,7 +52,6 @@ parseFicsMessage = parseOnly parser where
                   , drawRequest
                   , drawRequestDeclined
 
-                  , gameResult
                   , gameResult'
 
                   , promotionPiece
@@ -87,33 +82,11 @@ parseFicsMessage = parseOnly parser where
 gameMove :: Parser FicsMessage
 gameMove = GameMove <$> pure None <*> move
 
-confirmGameMove :: Parser FicsMessage
-confirmGameMove = do
-  ctx <- commandHead 1 *> option None ("Illegal move" *> pure Illegal)
-  move <- manyTill anyChar "<12>" *> moveOnly -- ^ there is potentially another pieceHolding in front
-  ph <- option NullCommand (manyTill anyChar "<b1>" *> pieceHoldingOnly)
-  return $ Boxed [GameMove ctx move, ph]
-
--- 11 = accept (match) ! don't delete this again: "You accept the match offer from"
-acceptMatchOffer :: Parser FicsMessage
-acceptMatchOffer = Boxed <$> sequence [
-    commandHead 11 *> "You accept the match offer from" *> takeTill (== '<') *> pendingRemoved
-  , takeTill (== '<') *> (MatchAccepted <$> move)]
-
--- 155 = Seek (User selects a seek)
--- 158 = Play (Users' seek matches a seek already posted)
-seek :: Parser FicsMessage
-seek = Boxed <$> ((commandHead 155 <|> commandHead 158) *> sequence
-  [ takeTill (== '<') *> SP.removeSeeks
-  , takeTill (== '<') *> (MatchAccepted <$> move)])
-
 gameCreation :: Parser FicsMessage
 gameCreation = GameCreation <$> ("{Game " *> decimal <* takeTill (== ')') <* ") Creating ")
 
-observe :: Parser FicsMessage
-observe = Boxed <$> sequence [
-    Observe <$> (commandHead 80 *> takeTill (=='<') *> move)
-  , option NullCommand (takeTill (=='<') *> pieceHolding)]
+observing :: Parser FicsMessage
+observing = Observing <$> ("You are now observing game " *> decimal)
 
 noSuchGame :: Parser FicsMessage
 noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
@@ -162,13 +135,6 @@ acceptTakeback :: Parser FicsMessage
 acceptTakeback = GameMove <$>
   pure (Takeback Nothing) <*> -- ^ User accepted takeback himself
   (commandHead 11 *> "You accept the takeback request from" *> takeTill (== '<') *> move)
-
--- 10 = Abort
--- 11 = Accept (Draw, Abort)
--- 34 = Draw (Mutual)
--- 103 = Resign
-gameResult :: Parser FicsMessage
-gameResult = choice [commandHead 10, commandHead 11, commandHead 34, commandHead 103] *> gameResult'
 
 gameResult' :: Parser FicsMessage
 gameResult' = GameResult

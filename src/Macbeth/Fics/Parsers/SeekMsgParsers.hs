@@ -4,8 +4,7 @@ module Macbeth.Fics.Parsers.SeekMsgParsers (
   clearSeek,
   newSeek,
   removeSeeks,
-  seekNotAvailable,
-  seekInfoBlock
+  seekNotAvailable
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -31,10 +30,6 @@ removeSeeks = RemoveSeeks <$> ("<sr>" *> many1 (space *> decimal))
 
 seekNotAvailable :: Parser FicsMessage
 seekNotAvailable = commandHead 158 *> "That seek is not available." *> pure SeekNotAvailable
-
-seekInfoBlock :: Parser FicsMessage
-seekInfoBlock = Boxed
-  <$> (commandHead 56 *> "seekinfo set.\n" *> sepBy (choice [ clearSeek, newSeek <* takeTill (== '\n')]) "\n")
 
 seek' :: Parser Seek
 seek' = Seek

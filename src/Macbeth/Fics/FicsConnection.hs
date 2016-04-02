@@ -7,7 +7,7 @@ module Macbeth.Fics.FicsConnection (
 
 import Macbeth.Fics.Configuration
 import Macbeth.Fics.FicsMessage hiding (gameId)
-import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Parsers.FicsMessageParser
 
 import Control.Concurrent.Chan
@@ -29,6 +29,7 @@ import qualified Data.ByteString.Char8 as BS
 
 data HelperState = HelperState { config :: Config
                                , takebackAccptedBy :: Maybe String -- ^ oponent accepted takeback request
+                               , observingGameId :: Maybe Int
                                , newGameId :: Maybe Int }
 
 
@@ -43,16 +44,18 @@ ficsConnection = runResourceT $ do
 
 
 chain :: Handle -> Config-> Chan FicsMessage -> IO ()
-chain h config chan = flip evalStateT (HelperState config Nothing Nothing) $ transPipe lift
+chain h config chan = flip evalStateT emptyState $ transPipe lift
   (sourceHandle h) $$
   linesC =$
   blockC BS.empty =$
+  unblockC =$
   fileLoggerC =$
   parseC =$
   stateC =$
   copyC chan =$
   loggingC =$
   sink chan
+  where emptyState = HelperState config Nothing Nothing Nothing
 
 
 sink :: Chan FicsMessage -> Sink FicsMessage (StateT HelperState IO) ()
@@ -81,10 +84,12 @@ stateC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
 stateC = awaitForever $ \cmd -> do
   state <- get
   case cmd of
-    Boxed cmds -> sourceList cmds
-
     GameCreation id -> do
       put $ state {newGameId = Just id}
+      sourceNull
+
+    Observing id -> do
+      put $ state {observingGameId = Just id}
       sourceNull
 
     TakebackAccepted username -> do
@@ -96,6 +101,9 @@ stateC = awaitForever $ \cmd -> do
       | isNewGameUser move && fromMaybe False ((== gameId move) <$> newGameId state) -> do
           put $ state {newGameId = Nothing }
           sourceList [MatchAccepted move]
+      | fromMaybe False ((== gameId move) <$> observingGameId state) -> do
+          put $ state {observingGameId = Nothing }
+          sourceList [Observe move]
       | isJust $ takebackAccptedBy state -> do
           put $ state {takebackAccptedBy = Nothing}
           sourceList [m{context = Takeback $ takebackAccptedBy state}]
@@ -108,6 +116,33 @@ parseC :: Conduit BS.ByteString (StateT HelperState IO) FicsMessage
 parseC = awaitForever $ \str -> case parseFicsMessage str of
   Left _    -> yield $ TextMessage $ BS.unpack str
   Right cmd -> yield cmd
+
+
+unblockC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+unblockC = awaitForever $ \block -> case ord $ BS.head block of
+  21 -> if readId block `elem` [
+       1 -- game move
+    , 10 -- Abort
+    , 11 -- Accept (Draw, Abort)
+    , 34 -- Draw (Mutual)
+    , 80 -- Observing
+    , 103 -- Resign
+    , 155 -- Seek (Users' seek matches a seek already posted)
+    , 158 -- Play (User selects a seek)
+    , 56 -- BLK_ISET, seekinfo set.
+    ]
+    then sourceList (lines $ crop block) else yield block
+  _ -> yield block
+  where
+    crop :: BS.ByteString -> BS.ByteString
+    crop bs = let lastIdx = maybe 0 (+1) (BS.elemIndexEnd (chr 22) bs) in
+              BS.drop lastIdx $ BS.init bs
+
+    lines :: BS.ByteString -> [BS.ByteString]
+    lines bs = fmap (`BS.snoc` '\n') $ init $ filter (not . BS.null) $ BS.split '\n' bs
+
+    readId :: BS.ByteString -> Int
+    readId = read . BS.unpack . BS.takeWhile (/= chr 22) . BS.tail . BS.dropWhile (/= chr 22)
 
 
 blockC :: BS.ByteString -> Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
