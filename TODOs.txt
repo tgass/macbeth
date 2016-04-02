@@ -1,5 +1,4 @@
 --BUGS:
-closing observed game doesn't unobserve
 
 -- FEATURES
 -- adjourn game
@@ -27,6 +26,3 @@ closing observed game doesn't unobserve
 
 -- APP
 -- alternative icons: crosshair, child, flag, search
-
-GuestQKTB withdraws the match offer.\n
-\NAK5\SYN13\SYNAll players must be registered to adjourn a game.  Use "abort".\n\ETB\n

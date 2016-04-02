@@ -4,7 +4,7 @@ description: A FICS client written with OSX in mind
 maintainer: Tilmann Gass
 homepage: http://www.macbeth-ficsclient.com
 category: Games
-version: 0.0.10
+version: 0.0.11
 cabal-version: >= 1.8
 build-type: Simple
 license: GPL
