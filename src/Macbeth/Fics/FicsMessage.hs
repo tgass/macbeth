@@ -88,7 +88,6 @@ data FicsMessage =
 
   {- Internal -}
   | GameCreation Int
-  | NullCommand
   | Observing Int
   | TakebackAccepted Username
   | WxClose
