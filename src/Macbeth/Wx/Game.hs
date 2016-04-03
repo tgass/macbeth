@@ -71,7 +71,7 @@ wxGame h move chan = do
   windowOnKeyUp p_board $ onKeyUpHandler vBoardState h promotion
 
   --set layout
-  set f [ statusBar := [promotion | isGameUser move] ++ [status]
+  set f [ statusBar := [status] ++ [promotion | isGameUser move]
         , layout := fill $ widget p_back
         , on resize := resizeFrame f vBoardState p_board]
 
@@ -167,9 +167,9 @@ onKeyDownHandler h p_board f vBoardState sf evt
 
 onKeyUpHandler :: TVar Api.BoardState -> Handle -> StatusField -> EventKey -> IO ()
 onKeyUpHandler vBoardState h sf evt
-        | (keyKey evt == KeyControl) && isNoneDown (keyModifiers evt) =
-            Api.promotion `fmap` readTVarIO vBoardState >>= \p -> do
-              hPutStrLn h $ "5 promote " ++ show p
-              set sf [text := "=" ]
-        | otherwise = return ()
+  | (keyKey evt == KeyControl) && isNoneDown (keyModifiers evt) =
+      Api.promotion `fmap` readTVarIO vBoardState >>= \p -> do
+        hPutStrLn h $ "5 promote " ++ show p
+        set sf [text := "=" ]
+  | otherwise = return ()
 

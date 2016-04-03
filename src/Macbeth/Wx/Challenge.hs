@@ -23,7 +23,6 @@ wxChallenge h c chan = do
 
   b_accept  <- button p [text := "Accept", on command := hPutStrLn h "5 accept" >> close f]
   b_decline <- button p [text := "Decline", on command := hPutStrLn h "5 decline" >> close f]
-  b_adjourn <- button p [text := "Adjourn", on command := hPutStrLn h "5 adjourn" >> close f]
   st_params <- staticText p [ text := displayChallenge c
                             , fontFace := "Avenir Next Medium"
                             , fontSize := 16
@@ -35,7 +34,7 @@ wxChallenge h c chan = do
               grid 5 5 [
                 [ hfill $ widget st_params]]
             )
-            , floatBottomRight $ row 5 [widget b_accept, widget b_decline, widget b_adjourn]]
+            , floatBottomRight $ row 5 [widget b_accept, widget b_decline]]
         ]
 
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case

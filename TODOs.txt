@@ -4,7 +4,6 @@
 -- adjourn game
 -- chatting
 -- formula (seek)
--- auto/manual (seek)
 -- save game if observing optional
 -- fisher random (0-0, 0-0-0 shortcuts)
 -- bughouse

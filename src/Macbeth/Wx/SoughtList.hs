@@ -28,6 +28,7 @@ wxSoughtList slp h = do
                                     , ("Time (start inc.)", AlignRight, -1)
                                     , ("Type", AlignRight, -1)]
                                     ]
+
     set sl [on listEvent := onSeekListEvent sl h]
     listCtrlSetColumnWidths sl 100
 

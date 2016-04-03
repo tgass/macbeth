@@ -124,6 +124,7 @@ unblockC = awaitForever $ \block -> case ord $ BS.head block of
        1 -- game move
     , 10 -- Abort
     , 11 -- Accept (Draw, Abort)
+    , 33 -- Decline (ie match offer)
     , 34 -- Draw (Mutual)
     , 80 -- Observing
     , 103 -- Resign
