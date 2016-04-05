@@ -1,15 +1,18 @@
-name: Macbeth-lib
-synopsis: Macbeth - A FICS client
-description: A FICS client written with OSX in mind
-maintainer: Tilmann Gass
+name: macbeth-lib
+synopsis: Macbeth - A beautiful and minimalistic FICS client
+description: A FICS client written with OSX in mind.
+author: Tilmann Gass
+maintainer: tilmann@macbeth-ficsclient.com
 homepage: http://www.macbeth-ficsclient.com
-category: Games
+bug-reports: https://github.com/tgass/macbeth/issues
+category: game
 version: 0.0.12
 cabal-version: >= 1.8
 build-type: Simple
 license: GPL
 license-file: LICENSE
 data-dir: resources
+extra-source-files: test/*.hs
 source-repository head
   type: git
   location: https://github.com/tgass/macbeth
@@ -17,7 +20,7 @@ source-repository head
 library
     build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
                    bytestring, split, attoparsec, filepath, containers, split, mtl, stm, sodium, directory, filepath,
-                   time, MissingH, old-locale, safe, FindBin, yaml, either-unwrap, lens
+                   time, MissingH, old-locale, safe, FindBin, yaml, either-unwrap
     hs-source-dirs: src
     exposed-modules: Paths,
                      Macbeth.Fics.FicsConnection
@@ -69,7 +72,7 @@ library
 
 executable Macbeth
   main-is: src/Macbeth.hs
-  build-depends: base  >= 4.2, wx, wxcore, Macbeth-lib, stm
+  build-depends: base  >= 4.2, wx, wxcore, macbeth-lib, stm
   ghc-options: -O3 -threaded -W
 
 test-suite macbeth-lib-test
@@ -77,4 +80,4 @@ test-suite macbeth-lib-test
     ghc-options: -W
     hs-source-dirs: test
     main-is: Spec.hs
-    build-depends: Macbeth-lib, base, hspec == 2.*, bytestring, attoparsec
+    build-depends: macbeth-lib, base, hspec == 2.*, bytestring, attoparsec
