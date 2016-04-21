@@ -9,7 +9,6 @@ import Macbeth.Fics.Api.Game (GameResult)
 import qualified Macbeth.Utils.FEN as FEN
 import Macbeth.Wx.BoardState
 
-import Control.Monad
 import Data.Maybe
 import Data.Time
 import System.FilePath
@@ -22,10 +21,9 @@ saveAsPGN' :: [Move] -> Maybe GameResult -> IO ()
 saveAsPGN' [] _ = return ()
 saveAsPGN' moves mGameResult = do
   dateTime <- getZonedTime
-  appDir <- directory `fmap` loadConfig
-  when (isJust appDir) $ do
-    path <- filepath (fromJust appDir) dateTime (head moves)
-    appendFile path $ toPGN (filter (isJust . movePretty) moves) mGameResult dateTime
+  appDir <- directory <$> loadConfig
+  path <- filepath appDir dateTime (head moves)
+  appendFile path $ toPGN (filter (isJust . movePretty) moves) mGameResult dateTime
 
 filepath :: FilePath -> ZonedTime -> Move -> IO FilePath
 filepath appDir dateTime m = return $ appDir </>

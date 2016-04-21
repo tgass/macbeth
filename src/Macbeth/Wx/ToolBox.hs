@@ -1,12 +1,13 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings, LambdaCase #-}
 
 module Macbeth.Wx.ToolBox (
   wxToolBox
 ) where
 
 import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Configuration
 import Macbeth.Fics.Api.Player
+import Macbeth.Utils.Utils
 import Macbeth.Wx.Configuration
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList
@@ -39,6 +40,7 @@ eventId = wxID_HIGHEST + 1
 
 wxToolBox :: Handle -> Chan FicsMessage -> IO ()
 wxToolBox h chan = do
+    config <- loadConfig
     f  <- frame [ text := "Macbeth"]
 
     tbar   <- toolBarEx f False False []
@@ -53,7 +55,7 @@ wxToolBox h chan = do
 
     status <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
-    _ <- timer f [ interval := 2 * 60 * 1000, on command := hPutStrLn h "4 ping"]
+    _ <- timer f [ interval := 5 * 60 * 1000, on command := hPutStrLn h "4 ping"]
     statusLoggedIn <- statusField [ statusWidth := 100]
 
 
@@ -135,7 +137,16 @@ wxToolBox h chan = do
 
         LoginTimeout -> set status [ text := "Login Timeout." ]
 
-        Login -> dupChan chan >>= wxLogin h
+        Login | autologin config -> hPutStrLn h (maybe (error "autologin: username not set") username $ user config)
+              | otherwise -> dupChan chan >>= wxLogin h
+
+        Password -> when (autologin config) $
+          hPutStrLn h (maybe (error "autologin: password not set") (decrypt . password) (user config))
+
+        GuestLogin _ -> do
+          when (autologin config) $ hPutStrLn h ""
+          set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ]
+          set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
         LoggedIn handle -> do
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
@@ -143,13 +154,9 @@ wxToolBox h chan = do
           set statusLoggedIn [ text := name handle]
           mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
-        GuestLogin _ -> do
-          set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ]
-          set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
+        msg@Finger {} -> dupChan chan >>= wxInfo msg
 
-        msg@(Finger {}) -> dupChan chan >>= wxInfo msg
-
-        msg@(History {}) -> dupChan chan >>= wxInfo msg
+        msg@History {} -> dupChan chan >>= wxInfo msg
 
         WxObserve move chan' -> wxGame h move chan'
 

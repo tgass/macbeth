@@ -171,8 +171,7 @@ dropPrompt line
 fileLoggerC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
 fileLoggerC = awaitForever $ \chunk -> do
    config <- config `fmap` get
-   when (file (logging config) && isJust (directory config)) $
-     liftIO $ logFile (fromJust $ directory config) chunk
+   when (file $ logging config) $ liftIO $ logFile (directory config) chunk
    yield chunk
 
 

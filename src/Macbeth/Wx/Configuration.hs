@@ -1,53 +1,75 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Macbeth.Wx.Configuration (
   wxConfiguration
 ) where
 
-import Macbeth.Fics.Configuration
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.Chan
-import Control.Monad
 import Control.Monad.Except
+import GHC.Generics
 import Graphics.UI.WX
 import Graphics.UI.WXCore
+import qualified Macbeth.Fics.Configuration as C
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Yaml as Y
+
+
+data ConfigSubset = ConfigSubset {
+    directory :: String
+  , autologin :: Bool
+} deriving (Show, Generic)
+
+
+instance Y.FromJSON ConfigSubset
+instance Y.ToJSON ConfigSubset
+
 
 wxConfiguration :: Chan FicsMessage -> IO ()
 wxConfiguration chan = do
   f  <- frame [ text := "Macbeth"]
   ct <- textCtrlEx f (wxTE_MULTILINE .+. wxTE_RICH) [font := fontFixed]
-  showConfig ct loadConfig
+  showConfig ct
   status <- statusField []
 
-  b_default <- button f [text := "Default", on command := showConfig ct loadDefaultConfig]
-  b_current <- button f [text := "Current", on command := showConfig ct loadConfig]
+  b_current <- button f [text := "Reset", on command := showConfig ct]
   b_save <- button f [ text := "Save",
-                       on command := void $ runExceptT $ parseAndSave ct status `catchError` showError status]
+                       on command := either (\_ -> set status [text := "Illegal file format."]) return
+                                     =<< runExceptT (parseAndSave ct status)]
 
 
   set f [ statusBar := [status],
           layout := margin 10 $ column 10 [
                        boxed "Configuration" $ fill $ minsize (Size 380 220) $ widget ct
-                     , hfloatRight $ row 5 [widget b_default, widget b_current, widget b_save]]
+                     , hfloatRight $ row 5 [widget b_current, widget b_save]]
         ]
   registerWxCloseEventListener f chan
 
-showConfig :: TextCtrl() -> IO Config -> IO ()
-showConfig ct io_config = io_config >>= \config -> set ct [text := comments ++ BS.unpack (Y.encode config)]
+
+showConfig :: TextCtrl() -> IO ()
+showConfig ct = do
+  config <- C.loadConfig
+  set ct [text := comments ++ BS.unpack (Y.encode $ toSubset config)]
 
 
 parseAndSave :: TextCtrl () -> StatusField -> ExceptT Y.ParseException IO ()
 parseAndSave ct status = do
-  config <- ExceptT $ (Y.decodeEither' . BS.pack) `fmap` get ct text
-  liftIO $ saveConfig config
-  liftIO $ set status [text := "Configuration saved."]
+  config <- liftIO C.loadConfig
+  sub <- ExceptT $ (Y.decodeEither' . BS.pack) `fmap` get ct text
+  liftIO $ do
+    C.saveConfig (fromSubset config sub)
+    set status [text := "Configuration saved."]
 
 
-showError :: StatusField -> Y.ParseException -> ExceptT Y.ParseException IO ()
-showError status _ = liftIO $ set status [text := "Illegal file format."]
+toSubset :: C.Config -> ConfigSubset
+toSubset c = ConfigSubset (C.directory c) (C.autologin c)
+
+
+fromSubset :: C.Config -> ConfigSubset -> C.Config
+fromSubset config sub = config { C.directory = directory sub, C.autologin = autologin sub}
 
 
 comments :: String

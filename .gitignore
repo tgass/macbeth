@@ -11,3 +11,4 @@ Sodium.hs
 scripts/
 .stack-work
 spec.sh
+resources/macbeth.yaml

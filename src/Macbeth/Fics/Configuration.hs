@@ -1,67 +1,92 @@
 {-# LANGUAGE DeriveGeneric #-}
+
 module Macbeth.Fics.Configuration (
   Config(..),
   Logging(..),
+  User(..),
+  initConfig,
   loadConfig,
-  loadDefaultConfig,
-  saveConfig
+  saveConfig,
+  saveCredentials
 ) where
 
+import Macbeth.Utils.Utils
 import Paths
 
+import Control.Monad
 import Control.Monad.Except
-import Data.Either.Unwrap
 import System.Directory
 import System.FilePath
 import GHC.Generics
 import qualified Data.Yaml as Y
 
+
 data Config = Config {
-  directory :: Maybe FilePath,
-  logging :: Logging
+    directory :: FilePath
+  , autologin :: Bool
+  , logging :: Logging
+  , user :: Maybe User
 } deriving (Show, Generic)
 
+
 data Logging = Logging {
-  stdOut :: Bool,
-  file :: Bool
+    stdOut :: Bool
+  , file :: Bool
 } deriving (Show, Generic)
+
+
+data User = User {
+    username :: String
+  , password :: String
+} deriving (Show, Generic)
+
 
 instance Y.FromJSON Config
 instance Y.ToJSON Config
+
 
 instance Y.FromJSON Logging
 instance Y.ToJSON Logging
 
 
+instance Y.FromJSON User
+instance Y.ToJSON User
+
+
+initConfig :: IO ()
+initConfig = do
+  appDir <- getAppDir ""
+  createDirectoryIfMissing False appDir
+  configExists <- doesFileExist =<< getAppDir "macbeth.yaml"
+  unless configExists $ do
+    dir <- (</> "Macbeth") <$> getUserDocumentsDirectory
+    createDirectoryIfMissing False dir
+    saveConfig $ defaultConfig dir
+
+
 loadConfig :: IO Config
-loadConfig = fmap fromRight $ runExceptT $ fromDisk `catchError` (\_ -> return defaultConfig)
-
-loadDefaultConfig :: IO Config
-loadDefaultConfig = do
-  dir <- getDefaultDirectory Nothing
-  return $ defaultConfig {directory = Just dir}
+loadConfig = either (error . show) return =<< runExceptT fromDisk
 
 
--- | If no directory is set, set default directory ~/Macbeth
 fromDisk :: ExceptT Y.ParseException IO Config
-fromDisk = do
-  config <- ExceptT $ getDataFileName "macbeth.yaml" >>= Y.decodeFileEither
-  dir <- liftIO $ getDefaultDirectory (directory config)
-  return $ config {directory = Just dir}
+fromDisk = ExceptT $ getAppDir "macbeth.yaml" >>= Y.decodeFileEither
 
--- | Create default directory if it doesn't exist
-getDefaultDirectory :: Maybe FilePath -> IO FilePath
-getDefaultDirectory Nothing = do
-  dir <- (</> "Macbeth") `fmap` getUserDocumentsDirectory
-  createDirectoryIfMissing False dir
-  return dir
-getDefaultDirectory (Just path) = return path
 
 saveConfig :: Config -> IO ()
-saveConfig config = getDataFileName "macbeth.yaml" >>= flip Y.encodeFile config
+saveConfig config = getAppDir "macbeth.yaml" >>= flip Y.encodeFile config
 
-defaultConfig = Config {
-  directory = Nothing,
-  logging = Logging False False
+
+saveCredentials :: String -> String -> IO ()
+saveCredentials username password = do
+  config <- loadConfig
+  saveConfig $ config {user = Just $ User username (encrypt password), autologin = True}
+
+
+defaultConfig :: String -> Config
+defaultConfig dir = Config {
+  directory = dir,
+  logging = Logging False False,
+  autologin = False,
+  user = Nothing
 }
 

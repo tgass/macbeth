@@ -1,4 +1,8 @@
 --BUGS:
+check when config init: is directory for saved games there?
+build step: replace ---KEY---
+? reset config if autologin fails
+
 
 -- FEATURES
 -- adjourn game
