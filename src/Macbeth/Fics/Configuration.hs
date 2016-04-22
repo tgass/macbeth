@@ -24,6 +24,7 @@ import qualified Data.Yaml as Y
 data Config = Config {
     directory :: FilePath
   , autologin :: Bool
+  , fontSize :: Int
   , logging :: Logging
   , user :: Maybe User
 } deriving (Show, Generic)
@@ -84,6 +85,7 @@ saveCredentials username password = do
 
 defaultConfig :: String -> Config
 defaultConfig dir = Config {
+  fontSize = 12,
   directory = dir,
   logging = Logging False False,
   autologin = False,

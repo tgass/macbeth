@@ -5,7 +5,6 @@ module Macbeth.Wx.ToolBox (
 ) where
 
 import Macbeth.Fics.FicsMessage
-import Macbeth.Fics.Configuration
 import Macbeth.Fics.Api.Player
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Configuration
@@ -22,6 +21,7 @@ import Macbeth.Wx.Challenge
 import Macbeth.Wx.PartnerOffer
 import Macbeth.Wx.Pending
 import Paths
+import qualified Macbeth.Fics.Configuration as C
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
@@ -40,7 +40,7 @@ eventId = wxID_HIGHEST + 1
 
 wxToolBox :: Handle -> Chan FicsMessage -> IO ()
 wxToolBox h chan = do
-    config <- loadConfig
+    config <- C.loadConfig
     f  <- frame [ text := "Macbeth"]
 
     tbar   <- toolBarEx f False False []
@@ -79,7 +79,7 @@ wxToolBox h chan = do
 
     -- Console
     cp <- panel nb []
-    ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed]
+    ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = C.fontSize config}]
     ce <- entry cp []
     set ce [on enterKey := emitCommand ce h]
 
@@ -137,14 +137,14 @@ wxToolBox h chan = do
 
         LoginTimeout -> set status [ text := "Login Timeout." ]
 
-        Login | autologin config -> hPutStrLn h (maybe (error "autologin: username not set") username $ user config)
+        Login | C.autologin config -> hPutStrLn h (maybe (error "autologin: username not set") C.username $ C.user config)
               | otherwise -> dupChan chan >>= wxLogin h
 
-        Password -> when (autologin config) $
-          hPutStrLn h (maybe (error "autologin: password not set") (decrypt . password) (user config))
+        Password -> when (C.autologin config) $
+          hPutStrLn h (maybe (error "autologin: password not set") (decrypt . C.password) (C.user config))
 
         GuestLogin _ -> do
-          when (autologin config) $ hPutStrLn h ""
+          when (C.autologin config) $ hPutStrLn h ""
           set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ]
           set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 

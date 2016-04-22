@@ -10,7 +10,7 @@ import Macbeth.Wx.Utils
 import Control.Concurrent.Chan
 import Control.Monad.Except
 import GHC.Generics
-import Graphics.UI.WX
+import Graphics.UI.WX hiding (fontSize)
 import Graphics.UI.WXCore
 import qualified Macbeth.Fics.Configuration as C
 
@@ -21,6 +21,7 @@ import qualified Data.Yaml as Y
 data ConfigSubset = ConfigSubset {
     directory :: String
   , autologin :: Bool
+  , fontSize :: Int
 } deriving (Show, Generic)
 
 
@@ -65,11 +66,15 @@ parseAndSave ct status = do
 
 
 toSubset :: C.Config -> ConfigSubset
-toSubset c = ConfigSubset (C.directory c) (C.autologin c)
+toSubset c = ConfigSubset (C.directory c) (C.autologin c) (C.fontSize c)
 
 
 fromSubset :: C.Config -> ConfigSubset -> C.Config
-fromSubset config sub = config { C.directory = directory sub, C.autologin = autologin sub}
+fromSubset config sub = config {
+    C.directory = directory sub
+  , C.autologin = autologin sub
+  , C.fontSize = fontSize sub
+}
 
 
 comments :: String
