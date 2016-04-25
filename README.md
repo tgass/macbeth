@@ -38,6 +38,19 @@ see: http://www.freechess.org/Help/HelpFiles/category.html
 | <kbd>B</kbd> | Bishop 
 | <kbd>P</kbd> | Pawn 
 
+### Building Macbeth
+```
+brew install haskell-stack  # if necesarry
+brew install wxmac
+
+git clone https://github.com/tgass/macbeth.git
+cd macbeth
+
+stack setup # if necesarry
+stack build # this will take a while!
+stack exec Macbeth
+```
+
 ### Download
 
 You can find a compiled and package version ready to play at http://www.macbeth-ficsclient.com 
