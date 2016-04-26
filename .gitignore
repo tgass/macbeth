@@ -1,15 +1,9 @@
-.DS_Store
+**/.DS_Store
 **/*.swp
 .cabal-sandbox/
 cabal.sandbox.config
 dist/
-src/.DS_Store
-XChess.cabal.lkshw
-XChess.cabal.lkshs
 src/wx/EnableGUI.*
 Sodium.hs
-scripts/
 .stack-work
-spec.sh
 resources/macbeth.yaml
-snapshot.yaml
