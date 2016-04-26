@@ -12,3 +12,4 @@ scripts/
 .stack-work
 spec.sh
 resources/macbeth.yaml
+snapshot.yaml

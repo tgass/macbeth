@@ -40,7 +40,7 @@ eventId = wxID_HIGHEST + 1
 
 wxToolBox :: Handle -> Chan FicsMessage -> IO ()
 wxToolBox h chan = do
-    config <- C.loadConfig
+    config <- C.initConfig
     f  <- frame [ text := "Macbeth"]
 
     tbar   <- toolBarEx f False False []

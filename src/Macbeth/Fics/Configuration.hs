@@ -54,7 +54,7 @@ instance Y.FromJSON User
 instance Y.ToJSON User
 
 
-initConfig :: IO ()
+initConfig :: IO Config
 initConfig = do
   appDir <- getAppDir ""
   createDirectoryIfMissing False appDir
@@ -63,10 +63,11 @@ initConfig = do
     dir <- (</> "Macbeth") <$> getUserDocumentsDirectory
     createDirectoryIfMissing False dir
     saveConfig $ defaultConfig dir
+  loadConfig
 
 
 loadConfig :: IO Config
-loadConfig = either (error . show) return =<< runExceptT fromDisk
+loadConfig = either (error . Y.prettyPrintParseException) return =<< runExceptT fromDisk
 
 
 fromDisk :: ExceptT Y.ParseException IO Config
