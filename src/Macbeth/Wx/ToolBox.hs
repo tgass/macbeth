@@ -20,8 +20,8 @@ import Macbeth.Wx.Game
 import Macbeth.Wx.Challenge
 import Macbeth.Wx.PartnerOffer
 import Macbeth.Wx.Pending
+import qualified Macbeth.Wx.UserConfig as C
 import Paths
-import qualified Macbeth.Fics.Configuration as C
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()

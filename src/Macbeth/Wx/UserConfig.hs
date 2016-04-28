@@ -1,8 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Macbeth.Fics.Configuration (
+module Macbeth.Wx.UserConfig (
   Config(..),
-  Logging(..),
   User(..),
   initConfig,
   loadConfig,
@@ -15,24 +14,17 @@ import Paths
 
 import Control.Monad
 import Control.Monad.Except
+import Data.Yaml
+import GHC.Generics
 import System.Directory
 import System.FilePath
-import GHC.Generics
-import qualified Data.Yaml as Y
 
 
 data Config = Config {
     directory :: FilePath
   , autologin :: Bool
   , fontSize :: Int
-  , logging :: Logging
   , user :: Maybe User
-} deriving (Show, Generic)
-
-
-data Logging = Logging {
-    stdOut :: Bool
-  , file :: Bool
 } deriving (Show, Generic)
 
 
@@ -42,16 +34,12 @@ data User = User {
 } deriving (Show, Generic)
 
 
-instance Y.FromJSON Config
-instance Y.ToJSON Config
+instance FromJSON Config
+instance ToJSON Config
 
 
-instance Y.FromJSON Logging
-instance Y.ToJSON Logging
-
-
-instance Y.FromJSON User
-instance Y.ToJSON User
+instance FromJSON User
+instance ToJSON User
 
 
 initConfig :: IO Config
@@ -67,15 +55,15 @@ initConfig = do
 
 
 loadConfig :: IO Config
-loadConfig = either (error . Y.prettyPrintParseException) return =<< runExceptT fromDisk
+loadConfig = either (error . prettyPrintParseException) return =<< runExceptT fromDisk
 
 
-fromDisk :: ExceptT Y.ParseException IO Config
-fromDisk = ExceptT $ getAppDir "macbeth.yaml" >>= Y.decodeFileEither
+fromDisk :: ExceptT ParseException IO Config
+fromDisk = ExceptT $ getAppDir "macbeth.yaml" >>= decodeFileEither
 
 
 saveConfig :: Config -> IO ()
-saveConfig config = getAppDir "macbeth.yaml" >>= flip Y.encodeFile config
+saveConfig config = getAppDir "macbeth.yaml" >>= flip encodeFile config
 
 
 saveCredentials :: String -> String -> IO ()
@@ -88,7 +76,6 @@ defaultConfig :: String -> Config
 defaultConfig dir = Config {
   fontSize = 12,
   directory = dir,
-  logging = Logging False False,
   autologin = False,
   user = Nothing
 }

@@ -5,8 +5,8 @@ module Macbeth.Wx.Login (
 ) where
 
 import Macbeth.Fics.FicsMessage
-import qualified Macbeth.Fics.Configuration as Config
 import Macbeth.Wx.Utils
+import qualified Macbeth.Wx.UserConfig as Config
 
 import Control.Concurrent.Chan
 import Control.Monad

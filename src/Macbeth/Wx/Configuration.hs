@@ -6,13 +6,13 @@ module Macbeth.Wx.Configuration (
 
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
+import qualified Macbeth.Wx.UserConfig as C
 
 import Control.Concurrent.Chan
 import Control.Monad.Except
 import GHC.Generics
 import Graphics.UI.WX hiding (fontSize)
 import Graphics.UI.WXCore
-import qualified Macbeth.Fics.Configuration as C
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Yaml as Y

@@ -1,11 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings, LambdaCase #-}
 
 module Macbeth.Fics.FicsConnection (
   ficsConnection
 ) where
 
-import Macbeth.Fics.Configuration
+import Macbeth.Fics.AppConfig
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Parsers.FicsMessageParser
@@ -19,16 +18,17 @@ import Data.Conduit
 import Data.Conduit.Binary
 import Data.Conduit.List hiding (filter)
 import Data.Maybe
-import Data.Time
+import System.Log.Logger
+import System.Log.Handler.Simple hiding (priority)
+import System.Log.Handler (setFormatter)
+import System.Log.Formatter
 import Network
-import System.FilePath
+import Prelude hiding (log)
 import System.IO
 
 import qualified Data.ByteString.Char8 as BS
 
-
-data HelperState = HelperState { config :: Config
-                               , takebackAccptedBy :: Maybe String -- ^ oponent accepted takeback request
+data HelperState = HelperState { takebackAccptedBy :: Maybe String -- ^ oponent accepted takeback request
                                , observingGameId :: Maybe Int
                                , newGameId :: Maybe Int }
 
@@ -37,35 +37,35 @@ ficsConnection :: IO (Handle, Chan FicsMessage)
 ficsConnection = runResourceT $ do
   (_, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
   liftIO $ hSetBuffering hsock LineBuffering
-  config <- liftIO loadConfig
+  liftIO $ initLogger . priority =<< loadAppConfig
   chan <- liftIO newChan
-  resourceForkIO $ liftIO $ chain hsock config chan
+  resourceForkIO $ liftIO $ chain hsock chan
   return (hsock, chan)
 
 
-chain :: Handle -> Config-> Chan FicsMessage -> IO ()
-chain h config chan = flip evalStateT emptyState $ transPipe lift
+chain :: Handle -> Chan FicsMessage -> IO ()
+chain h chan = flip evalStateT emptyState $ transPipe lift
   (sourceHandle h) $$
   linesC =$
   blockC BS.empty =$
   unblockC =$
-  fileLoggerC =$
+  logStreamC =$
   parseC =$
   stateC =$
   copyC chan =$
-  loggingC =$
+  logFicsMessageC =$
   sink chan
-  where emptyState = HelperState config Nothing Nothing Nothing
+  where emptyState = HelperState Nothing Nothing Nothing
 
 
 sink :: Chan FicsMessage -> Sink FicsMessage (StateT HelperState IO) ()
 sink chan = awaitForever $ liftIO . writeChan chan
 
 
-loggingC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
-loggingC = awaitForever $ \cmd -> do
-  logToStdOut <- (stdOut . logging . config) `fmap` get
-  when logToStdOut $ liftIO (printCmdMsg cmd)
+logFicsMessageC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
+logFicsMessageC = awaitForever $ \cmd -> do
+  liftIO $ debugM _fileL (logMsg cmd)
+  liftIO $ debugM _consoleL (logMsg cmd)
   yield cmd
 
 
@@ -168,11 +168,10 @@ dropPrompt line
         promptSz = BS.length prompt
 
 
-fileLoggerC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
-fileLoggerC = awaitForever $ \chunk -> do
-   config <- config `fmap` get
-   when (file $ logging config) $ liftIO $ logFile (directory config) chunk
-   yield chunk
+logStreamC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+logStreamC = awaitForever $ \chunk -> do
+  liftIO $ debugM _fileL $ (foldr (.) (showString "") $ fmap showLitChar (BS.unpack chunk)) ""
+  yield chunk
 
 
 toGameResult :: Move -> FicsMessage
@@ -180,16 +179,23 @@ toGameResult move = GameResult id reason result
   where (id, reason, result) = toGameResultTuple move
 
 
-printCmdMsg :: FicsMessage -> IO ()
-printCmdMsg NewSeek {} = return ()
-printCmdMsg RemoveSeeks {} = return ()
-printCmdMsg cmd = print cmd
+logMsg :: FicsMessage -> String
+logMsg NewSeek {} = ""
+logMsg RemoveSeeks {} = ""
+logMsg cmd = show cmd
 
+_consoleL = "_CONSOLE"
+_fileL = "_FILE"
 
-logFile :: FilePath -> BS.ByteString -> IO ()
-logFile path chunk = do
-  date <- fmap (formatTime Data.Time.defaultTimeLocale "%Y-%m-%d_") getZonedTime
-  dateTime <- fmap (formatTime Data.Time.defaultTimeLocale "%Y-%m-%d %H-%M-%S: ") getZonedTime
-  appendFile (path </> date ++ "macbeth.log") $
-    (foldr (.) (showString $ "\n" ++ dateTime) $ fmap showLitChar (BS.unpack chunk)) ""
+initLogger :: Priority -> IO ()
+initLogger prio = do
+  updateGlobalLogger rootLoggerName removeHandler
+  updateGlobalLogger rootLoggerName (setLevel prio)
+  fileH <- fileHandler "/tmp/macbeth.log" prio >>= \lh -> return $
+       setFormatter lh (simpleLogFormatter "$time $msg")
+  stdOutH <- streamHandler stdout prio >>= \lh -> return $
+       setFormatter lh (simpleLogFormatter "$time $msg")
+
+  updateGlobalLogger _fileL (addHandler fileH)
+  updateGlobalLogger _consoleL (addHandler stdOutH)
 
