@@ -12,6 +12,7 @@ import Macbeth.Fics.Parsers.FicsMessageParser
 import Control.Concurrent.Chan
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Resource
 import Data.Char
 import Data.Conduit
@@ -64,8 +65,9 @@ sink chan = awaitForever $ liftIO . writeChan chan
 
 logFicsMessageC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
 logFicsMessageC = awaitForever $ \cmd -> do
-  liftIO $ debugM _fileL (logMsg cmd)
-  liftIO $ debugM _consoleL (logMsg cmd)
+  liftIO $ runMaybeT ((MaybeT $ return $ logMsg cmd) >>= \msg -> do
+    lift $ debugM _fileL msg
+    lift $ debugM _consoleL msg)
   yield cmd
 
 
@@ -179,10 +181,10 @@ toGameResult move = GameResult id reason result
   where (id, reason, result) = toGameResultTuple move
 
 
-logMsg :: FicsMessage -> String
-logMsg NewSeek {} = ""
-logMsg RemoveSeeks {} = ""
-logMsg cmd = show cmd
+logMsg :: FicsMessage -> Maybe String
+logMsg NewSeek {} = Nothing
+logMsg RemoveSeeks {} = Nothing
+logMsg cmd = Just $ show cmd
 
 _consoleL = "_CONSOLE"
 _fileL = "_FILE"

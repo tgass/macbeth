@@ -15,6 +15,7 @@ module Macbeth.Fics.Api.Move (
   wasOponentMove,
   playerColor,
   nameOponent,
+  isCheck,
   isCheckmate,
   toGameResultTuple,
   dummyMove
@@ -111,6 +112,10 @@ playerColor :: String -> Move -> PColor
 playerColor name move
   | nameW move == name = White
   | otherwise = Black
+
+
+isCheck :: Move -> Bool
+isCheck =  maybe False ((== '+') . last) . movePretty
 
 
 isCheckmate :: Move -> Bool

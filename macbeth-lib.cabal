@@ -21,7 +21,7 @@ library
     build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
                    bytestring, split, attoparsec, filepath, containers, split, mtl, stm, sodium, directory, filepath,
                    time, MissingH, old-locale, safe, FindBin, yaml, either-unwrap, cryptocipher, crypto-cipher-types,
-                   binary, hslogger, aeson
+                   binary, hslogger, aeson, process
     hs-source-dirs: src
     exposed-modules: Paths,
                      Macbeth.Fics.FicsConnection
@@ -49,6 +49,7 @@ library
                      Macbeth.Utils.FEN,
                      Macbeth.Utils.Utils,
                      Macbeth.Utils.Salt,
+                     Macbeth.OSX.Sounds,
                      Macbeth.Wx.BoardState,
                      Macbeth.Wx.Board,
                      Macbeth.Wx.Challenge,

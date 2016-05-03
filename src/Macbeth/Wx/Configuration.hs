@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Macbeth.Wx.Configuration (
   wxConfiguration
 ) where
@@ -10,23 +8,11 @@ import qualified Macbeth.Wx.UserConfig as C
 
 import Control.Concurrent.Chan
 import Control.Monad.Except
-import GHC.Generics
 import Graphics.UI.WX hiding (fontSize)
 import Graphics.UI.WXCore
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Yaml as Y
-
-
-data ConfigSubset = ConfigSubset {
-    directory :: String
-  , autologin :: Bool
-  , fontSize :: Int
-} deriving (Show, Generic)
-
-
-instance Y.FromJSON ConfigSubset
-instance Y.ToJSON ConfigSubset
 
 
 wxConfiguration :: Chan FicsMessage -> IO ()
@@ -53,28 +39,24 @@ wxConfiguration chan = do
 showConfig :: TextCtrl() -> IO ()
 showConfig ct = do
   config <- C.loadConfig
-  set ct [text := comments ++ BS.unpack (Y.encode $ toSubset config)]
+  set ct [text := comments ++ BS.unpack (Y.encode $ removeUser config)]
 
 
 parseAndSave :: TextCtrl () -> StatusField -> ExceptT Y.ParseException IO ()
 parseAndSave ct status = do
-  config <- liftIO C.loadConfig
-  sub <- ExceptT $ (Y.decodeEither' . BS.pack) `fmap` get ct text
+  oldConf <- liftIO C.loadConfig
+  newConf <- ExceptT $ (Y.decodeEither' . BS.pack) <$> get ct text
   liftIO $ do
-    C.saveConfig (fromSubset config sub)
+    C.saveConfig (addUser newConf (C.user oldConf))
     set status [text := "Configuration saved."]
 
 
-toSubset :: C.Config -> ConfigSubset
-toSubset c = ConfigSubset (C.directory c) (C.autologin c) (C.fontSize c)
+removeUser :: C.Config -> C.Config
+removeUser c = c { C.user = Nothing }
 
 
-fromSubset :: C.Config -> ConfigSubset -> C.Config
-fromSubset config sub = config {
-    C.directory = directory sub
-  , C.autologin = autologin sub
-  , C.fontSize = fontSize sub
-}
+addUser :: C.Config -> Maybe C.User -> C.Config
+addUser c mUser = c { C.user = mUser }
 
 
 comments :: String

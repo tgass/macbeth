@@ -54,15 +54,17 @@ wxLogin h chan = do
 okBtnHandler :: WxLogin -> Frame () -> Handle -> Chan FicsMessage -> IO ()
 okBtnHandler wxInputs f h chan = do
   loginData' <- loginData wxInputs
-  runReaderT (putUsername >> putPassword) loginData' >> close f
+  runReaderT (putUsername >> putPassword >> lift (close f)) loginData'
   where
-    putUsername = usernameOrGuest <$> ask >>= lift . hPutStrLn h
+    putUsername :: ReaderT LoginData IO ()
+    putUsername = usernameOrGuest <$> ask >>= liftIO . hPutStrLn h
 
+    putPassword :: ReaderT LoginData IO ()
     putPassword = lift (readChan chan) >>= \case
       Password -> password' <$> ask >>= lift . hPutStrLn h >> putPassword
-      GuestLogin {} -> liftIO (hPutStrLn h "") >> putPassword
+      GuestLogin {} -> lift (hPutStrLn h "") >> putPassword
       Login -> return () -- close this frame, new one is opened in Toolbox
-      LoggedIn {} -> ask >>= \login -> liftIO $
+      LoggedIn {} -> ask >>= \login -> lift $
         when (saveCredentials' login) $ Config.saveCredentials (usernameOrGuest login) (password' login)
       _ -> putPassword
 
