@@ -8,6 +8,7 @@ import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
+import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Api.Seek
 
 import Control.Concurrent.Chan
@@ -39,7 +40,7 @@ data FicsMessage =
 
   -- | Not concering if the user or his oponent is checkmated/out of time/.. GameResult informs
   -- that the game is over.
-  | GameResult { gameId :: Int, playerW :: String, playerB :: String, reason :: String, result :: GameResult }
+  | GameResult Result
 
   | Pending PendingOffer
   | PendingRemoved Int

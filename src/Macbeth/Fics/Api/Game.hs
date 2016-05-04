@@ -2,7 +2,6 @@ module Macbeth.Fics.Api.Game (
   Game (..),
   GameType (..),
   GameSettings (..),
-  GameResult (..),
   GameInfo (..)
 ) where
 
@@ -32,12 +31,3 @@ data GameInfo = GameInfo {
   , _nameB :: String
   , _ratingB :: Rating
 } deriving (Show, Eq)
-
-data GameResult = WhiteWins | BlackWins | Draw | Aborted deriving (Eq)
-
-instance Show GameResult where
-  show WhiteWins = "1-0"
-  show BlackWins = "0-1"
-  show Draw      = "1/2-1/2"
-  show Aborted   = ""
-

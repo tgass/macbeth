@@ -1,13 +1,13 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE LambdaCase, ScopedTypeVariables #-}
 
 module Macbeth.Wx.Game.Game (
   wxGame
 ) where
 
-import Macbeth.Fics.Api.Api
 import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
+import qualified Macbeth.Fics.Api.Result as R
 import Macbeth.Utils.PGN
 import Macbeth.Wx.Utils
 import Macbeth.Wx.UserConfig
@@ -91,9 +91,9 @@ wxGame h move chan = do
       when (isNextMoveUser move') $ Api.performPreMoves vBoardState h
       repaint p_board
 
-    GameResult id _ _ reason result -> when (id == gameId move) $ do
-      set status [text := (show result ++ " " ++ reason)]
-      Api.setResult vBoardState result
+    GameResult result -> when (R.gameId result == gameId move) $ do
+      set status [text := R.toString result]
+      Api.setResult vBoardState (R.result result)
       repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId

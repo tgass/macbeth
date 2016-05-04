@@ -7,6 +7,7 @@ module Macbeth.Wx.Game.StatusPanel (
 import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
+import qualified Macbeth.Fics.Api.Result as R
 import Macbeth.Utils.Utils
 import Macbeth.Utils.BoardUtils
 import Macbeth.Wx.Game.BoardState
@@ -48,7 +49,7 @@ createStatusPanel p color vBoardState = do
           set st [text := formatTime time']
           set tx [enabled := isActive move' color]
 
-        GameResult id _ _ _ _ -> when (id == gameId move) $ set tx [enabled := False]
+        GameResult result -> when (R.gameId result == gameId move) $ set tx [enabled := False]
 
         PieceHolding id phW' phB' -> when (id == gameId move) $ do
           atomically $ modifyTVar vBoardState (\s -> s{ phW = phW', phB = phB' })

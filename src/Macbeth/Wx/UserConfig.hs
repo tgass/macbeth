@@ -95,6 +95,7 @@ data MoveS = MoveS {
   , castling :: Maybe String
   , pieceDrop :: Maybe String
   , illegal :: Maybe String
+  , takeback :: Maybe String
 --  , explosion :: Maybe String
 --  , cannotSmartmove :: Maybe String
 } deriving (Show, Generic)
@@ -110,7 +111,7 @@ data EndOfGameS = EndOfGameS {
   , blackWins :: Maybe String
   , draw :: Maybe String
   , abort :: Maybe String
-  , adjourned :: Maybe String
+--  , adjourned :: Maybe String
 } deriving (Show, Generic)
 
 instance FromJSON EndOfGameS
@@ -230,6 +231,7 @@ defGameSnds = GameS {
     , castling = Just "ching.wav"
     , pieceDrop = Nothing
     , illegal = Just "penalty.wav"
+    , takeback = Nothing
 --    , explosion = Nothing
 --    , cannotSmartmove = Nothing
   }
@@ -241,7 +243,7 @@ defGameSnds = GameS {
     , blackWins = Nothing
     , draw = Nothing
     , abort = Nothing
-    , adjourned = Nothing
+--    , adjourned = Nothing
   }
 }
 

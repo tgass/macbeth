@@ -7,9 +7,9 @@ module Macbeth.Fics.Parsers.FicsMessageParser (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.FicsMessage hiding (move)
-import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Api.PendingOffer
+import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
 import Macbeth.Fics.Parsers.MoveParser
@@ -137,12 +137,12 @@ acceptTakeback = GameMove <$>
   (commandHead 11 *> "You accept the takeback request from" *> takeTill (== '<') *> move)
 
 gameResult' :: Parser FicsMessage
-gameResult' = GameResult
+gameResult' = GameResult <$> (Result
   <$> (takeTill (== '{') *> "{Game " *> decimal)
   <*> (takeTill (== '(') *> "(" *> manyTill anyChar " vs. ")
   <*> manyTill anyChar ") "
-  <*> (manyTill anyChar "} ")
-  <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|> "1/2-1/2" *> pure Draw <|> "*" *> pure Aborted)
+  <*> manyTill anyChar "} "
+  <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|> "1/2-1/2" *> pure Draw <|> "*" *> pure Aborted))
 
 promotionPiece :: Parser FicsMessage
 promotionPiece = PromotionPiece <$> (commandHead 92 *> "Promotion piece set to " *>

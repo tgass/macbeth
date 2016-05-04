@@ -35,6 +35,7 @@ library
                      Macbeth.Fics.Api.PendingOffer,
                      Macbeth.Fics.Api.Seek,
                      Macbeth.Fics.Api.Player,
+                     Macbeth.Fics.Api.Result,
                      Macbeth.Fics.Parsers.Api,
                      Macbeth.Fics.Parsers.FicsMessageParser,
                      Macbeth.Fics.Parsers.GamesParser,

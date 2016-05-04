@@ -8,7 +8,7 @@ import Macbeth.Fics.AppConfig
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move hiding (Observing)
-import qualified Macbeth.Fics.Api.Game as Game
+import qualified Macbeth.Fics.Api.Result as R
 import Macbeth.Fics.Parsers.FicsMessageParser
 
 import Control.Concurrent.Chan
@@ -179,12 +179,12 @@ logStreamC = awaitForever $ \chunk -> do
 
 
 moveToResult :: Move -> FicsMessage
-moveToResult move = GameResult (gameId move) (nameW move) (nameB move) result (turnToGameResult colorTurn)
+moveToResult move = GameResult $ R.Result (gameId move) (nameW move) (nameB move) result (turnToGameResult colorTurn)
   where
     colorTurn = turn move
     result = namePlayer colorTurn move ++ " checkmated"
-    turnToGameResult Black = Game.WhiteWins
-    turnToGameResult White = Game.BlackWins
+    turnToGameResult Black = R.WhiteWins
+    turnToGameResult White = R.BlackWins
 
 
 logMsg :: FicsMessage -> Maybe String

@@ -30,8 +30,8 @@ module Macbeth.Wx.Game.BoardState (
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
-import Macbeth.Fics.Api.Game
 import Macbeth.Wx.Game.PieceSet
+import Macbeth.Fics.Api.Result
 
 import Control.Monad
 import Control.Concurrent.STM
