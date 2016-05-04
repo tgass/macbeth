@@ -6,7 +6,9 @@ module Macbeth.Fics.FicsConnection (
 
 import Macbeth.Fics.AppConfig
 import Macbeth.Fics.FicsMessage hiding (gameId)
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move hiding (Observing)
+import qualified Macbeth.Fics.Api.Game as Game
 import Macbeth.Fics.Parsers.FicsMessageParser
 
 import Control.Concurrent.Chan
@@ -99,7 +101,7 @@ stateC = awaitForever $ \cmd -> do
       sourceNull
 
     m@(GameMove _ move)
-      | isCheckmate move && isOponentMove move -> sourceList $ cmd : [toGameResult move]
+      | isCheckmate move && isOponentMove move -> sourceList $ cmd : [moveToResult move]
       | isNewGameUser move && fromMaybe False ((== gameId move) <$> newGameId state) -> do
           put $ state {newGameId = Nothing }
           sourceList [MatchAccepted move]
@@ -176,9 +178,13 @@ logStreamC = awaitForever $ \chunk -> do
   yield chunk
 
 
-toGameResult :: Move -> FicsMessage
-toGameResult move = GameResult id reason result
-  where (id, reason, result) = toGameResultTuple move
+moveToResult :: Move -> FicsMessage
+moveToResult move = GameResult (gameId move) (nameW move) (nameB move) result (turnToGameResult colorTurn)
+  where
+    colorTurn = turn move
+    result = namePlayer colorTurn move ++ " checkmated"
+    turnToGameResult Black = Game.WhiteWins
+    turnToGameResult White = Game.BlackWins
 
 
 logMsg :: FicsMessage -> Maybe String

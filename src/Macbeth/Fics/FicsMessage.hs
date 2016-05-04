@@ -39,7 +39,7 @@ data FicsMessage =
 
   -- | Not concering if the user or his oponent is checkmated/out of time/.. GameResult informs
   -- that the game is over.
-  | GameResult { gameId :: Int, reason :: String, result :: GameResult }
+  | GameResult { gameId :: Int, playerW :: String, playerB :: String, reason :: String, result :: GameResult }
 
   | Pending PendingOffer
   | PendingRemoved Int

@@ -9,10 +9,12 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.PGN
-import qualified Macbeth.Wx.Game.BoardState as Api
 import Macbeth.Wx.Utils
+import Macbeth.Wx.UserConfig
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Wx.Game.StatusPanel
+import Macbeth.Wx.Game.GameSounds
+import qualified Macbeth.Wx.Game.BoardState as Api
 import qualified Macbeth.Wx.Game.Board as Board
 
 import Control.Concurrent
@@ -28,6 +30,7 @@ eventId = wxID_HIGHEST + 1
 
 wxGame :: Handle -> Move -> Chan FicsMessage -> IO ()
 wxGame h move chan = do
+  config <- loadConfig
   vCmd <- newEmptyMVar
   f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move]
   p_back <- panel f []
@@ -80,7 +83,7 @@ wxGame h move chan = do
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
-    updateClockW cmd >> updateClockB cmd >> case cmd of
+    updateClockW cmd >> updateClockB cmd >> gameSounds config move cmd >> case cmd of
 
     GameMove ctx move' -> when (gameId move' == gameId move) $ do
       set status [text := show ctx]
@@ -88,7 +91,7 @@ wxGame h move chan = do
       when (isNextMoveUser move') $ Api.performPreMoves vBoardState h
       repaint p_board
 
-    GameResult id reason result -> when (id == gameId move) $ do
+    GameResult id _ _ reason result -> when (id == gameId move) $ do
       set status [text := (show result ++ " " ++ reason)]
       Api.setResult vBoardState result
       repaint p_board

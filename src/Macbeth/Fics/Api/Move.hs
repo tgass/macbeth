@@ -20,12 +20,10 @@ module Macbeth.Fics.Api.Move (
   isDrop,
   isCapture,
   isCastling,
-  toGameResultTuple,
   dummyMove
 ) where
 
 import Macbeth.Fics.Api.Api
-import qualified Macbeth.Fics.Api.Game as Game
 
 import Data.Maybe
 
@@ -135,14 +133,6 @@ isCapture = maybe False (elem 'x') . movePretty
 
 isCastling :: Move -> Bool
 isCastling = maybe False (elem 'O') . movePretty
-
-
-toGameResultTuple :: Move -> (Int, String, Game.GameResult)
-toGameResultTuple move = (gameId move, namePlayer colorTurn move ++ " checkmated", turnToGameResult colorTurn)
-  where
-    colorTurn = turn move
-    turnToGameResult Black = Game.WhiteWins
-    turnToGameResult White = Game.BlackWins
 
 
 dummyMove :: Move

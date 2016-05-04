@@ -48,7 +48,7 @@ createStatusPanel p color vBoardState = do
           set st [text := formatTime time']
           set tx [enabled := isActive move' color]
 
-        GameResult id _ _ -> when (id == gameId move) $ set tx [enabled := False]
+        GameResult id _ _ _ _ -> when (id == gameId move) $ set tx [enabled := False]
 
         PieceHolding id phW' phB' -> when (id == gameId move) $ do
           atomically $ modifyTVar vBoardState (\s -> s{ phW = phW', phB = phB' })

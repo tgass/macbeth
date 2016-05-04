@@ -52,7 +52,6 @@ spec =
     it "pending removed, after withdraw" $ parseFicsMessage "\NAK4\SYN147\SYNYou withdraw the match offer to GuestFZHQ.\n\n<pr> 1\n\ETB\n"
       `shouldBe` Right (PendingRemoved 1)
 
-
 commandMessageParserTest :: Bool
 commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
 
@@ -65,17 +64,6 @@ commandMessageParserTestData = [
       , (GameCreation 484, "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
-      , (GameResult 82 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN11\SYNYou accept the abort request from GuestSPLL.\n\n{Game 82 (GuestTKHJ vs. GuestSPLL) Game aborted by mutual agreement} *\n\ETB")
-      , (GameResult 112 "Game aborted on move 1" Aborted, "\NAK4\SYN10\SYNThe game has been aborted on move one.\n\n{Game 112 (GuestSPLL vs. GuestTKHJ) Game aborted on move 1} *\n\ETB")
-      , (GameResult 383 "Game aborted by mutual agreement" Aborted, "\NAK5\SYN10\SYN\n{Game 383 (GuestRVNY vs. GuestZTNM) Game aborted by mutual agreement} *\n\ETB")
-      , (GameResult 112 "Game aborted on move 1" Aborted, "{Game 112 (GuestSPLL vs. GuestTKHJ) Game aborted on move 1} *")
-      , (GameResult 297 "Game aborted by mutual agreement" Aborted, "{Game 297 (GuestSPLL vs. GuestTKHJ) Game aborted by mutual agreement} *")
-      , (GameResult 10 "Kratt forfeits on time" WhiteWins, "{Game 10 (GidonC vs. Kratt) Kratt forfeits on time} 1-0\n")
-      , (GameResult 368 "CalicoCat resigns" WhiteWins, "{Game 368 (ALTOTAS vs. CalicoCat) CalicoCat resigns} 1-0")
-      , (GameResult 406 "GuestQLHT resigns" BlackWins, "\n{Game 406 (GuestQLHT vs. GuestVYVJ) GuestQLHT resigns} 0-1\n\nNo ratings adjustment done.")
-      , (GameResult 181 "Danimateit forfeits on time" BlackWins, "{Game 181 (Danimateit vs. WhatKnight) Danimateit forfeits on time} 0-1")
-      , (GameResult 196 "Game drawn by mutual agreement" Draw, "\NAK4\SYN34\SYN\n{Game 196 (GuestCWVD vs. GuestDWTL) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB")
-      , (GameResult 202 "Game drawn by mutual agreement" Draw, "\NAK5\SYN11\SYNYou accept the draw request from GuestNMNG.\n\n{Game 202 (GuestDKZD vs. GuestNMNG) Game drawn by mutual agreement} 1/2-1/2\n\nNo ratings adjustment done.\n\ETB")
       , (MatchUserNotLoggedIn "GuestLHDG", "\NAK4\SYN73\SYNGuestLHDG is not logged in.\n\ETB")
       , (PieceHolding 455 [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
       , (PieceHolding 182 [Pawn,Pawn,Bishop] [Pawn,Queen,Queen], "<b1> game 182 white [PPB] black [PQQ] <- BQ\n")

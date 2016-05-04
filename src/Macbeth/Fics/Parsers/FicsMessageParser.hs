@@ -139,7 +139,9 @@ acceptTakeback = GameMove <$>
 gameResult' :: Parser FicsMessage
 gameResult' = GameResult
   <$> (takeTill (== '{') *> "{Game " *> decimal)
-  <*> (takeTill (== ')') *> ") " *> manyTill anyChar "} ")
+  <*> (takeTill (== '(') *> "(" *> manyTill anyChar " vs. ")
+  <*> manyTill anyChar ") "
+  <*> (manyTill anyChar "} ")
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|> "1/2-1/2" *> pure Draw <|> "*" *> pure Aborted)
 
 promotionPiece :: Parser FicsMessage
