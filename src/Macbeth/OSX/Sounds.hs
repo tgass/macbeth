@@ -1,8 +1,7 @@
 module Macbeth.OSX.Sounds (
-  sounds
+  playSound
 ) where
 
-import Macbeth.Fics.FicsMessage
 import qualified Macbeth.Wx.UserConfig as C
 import Paths
 
@@ -14,10 +13,16 @@ import System.FilePath
 import System.Process
 
 
-sounds :: C.Config -> (FicsMessage -> Maybe String) -> FicsMessage -> IO ()
-sounds config f msg = do
-  path <- runMaybeT $ findPath config (f msg)
+playSound :: C.Config -> Maybe String -> IO ()
+playSound config sound = do
+  path <- runMaybeT $ isSoundEnabled config *> findPath config sound
   mapM_ afplay path
+
+
+isSoundEnabled :: C.Config -> MaybeT IO ()
+isSoundEnabled config = do
+  isOn <- MaybeT $ return (C.sounds config >>= Just . C.enabled)
+  when isOn $ return ()
 
 
 findPath :: C.Config -> Maybe String -> MaybeT IO FilePath
@@ -29,7 +34,9 @@ findPath config msg = do
 
 existsPath :: FilePath -> MaybeT IO FilePath
 existsPath file = (MaybeT $ fmap boolToMaybe (doesFileExist file)) >>= \_ -> return file
-  where boolToMaybe x = if x then Just () else Nothing
+
+boolToMaybe :: Bool -> Maybe ()
+boolToMaybe x = if x then Just () else Nothing
 
 
 afplay :: FilePath -> IO ()

@@ -50,8 +50,8 @@ instance ToJSON User
 
 
 data Sounds = Sounds {
-    enable :: Bool
-  , enableObservedGames :: Bool
+    enabled :: Bool
+  , enabledObservedGames :: Bool
   , chat :: ChatS
   , game :: GameS
   , request :: RequestS
@@ -103,11 +103,14 @@ instance FromJSON MoveS
 instance ToJSON MoveS
 
 data EndOfGameS = EndOfGameS {
-    checkmate :: Maybe String
-  , youWin :: Maybe String
+    youWin :: Maybe String
   , youLose :: Maybe String
+  , youDraw :: Maybe String
+  , whiteWins :: Maybe String
+  , blackWins :: Maybe String
   , draw :: Maybe String
   , abort :: Maybe String
+  , adjourned :: Maybe String
 } deriving (Show, Generic)
 
 instance FromJSON EndOfGameS
@@ -115,10 +118,10 @@ instance ToJSON EndOfGameS
 
 data RequestS = RequestS {
     challenge :: Maybe String
-  , abortGame :: Maybe String
-  , drawOffer :: Maybe String
-  , adjourn :: Maybe String
-  , takeback :: Maybe String
+  , abortReq :: Maybe String
+  , drawReq :: Maybe String
+  , adjournReq :: Maybe String
+  , takebackReq :: Maybe String
   , pause :: Maybe String
   , unpause :: Maybe String
 } deriving (Show, Generic)
@@ -195,8 +198,8 @@ defaultConfig dir = Config {
 
 defaultSounds :: Maybe Sounds
 defaultSounds = Just Sounds {
-    enable = True
-  , enableObservedGames = True
+    enabled = True
+  , enabledObservedGames = True
   , chat = defChatSnds
   , game = defGameSnds
   , request = defRequestSnds
@@ -233,19 +236,22 @@ defGameSnds = GameS {
   , endOfGame = EndOfGameS {
       youWin = Nothing
     , youLose = Nothing
-    , checkmate = Nothing
+    , youDraw = Nothing
+    , whiteWins = Nothing
+    , blackWins = Nothing
     , draw = Nothing
     , abort = Nothing
+    , adjourned = Nothing
   }
 }
 
 defRequestSnds :: RequestS
 defRequestSnds = RequestS {
     challenge = Nothing
-  , abortGame = Nothing
-  , drawOffer = Nothing
-  , adjourn = Nothing
-  , takeback = Nothing
+  , abortReq = Nothing
+  , drawReq = Nothing
+  , adjournReq = Nothing
+  , takebackReq = Nothing
   , pause = Nothing
   , unpause = Nothing
 }
