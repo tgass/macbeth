@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Macbeth.Wx.Board (
+module Macbeth.Wx.Game.Board (
   draw,
   onMouseEvent
 ) where
@@ -8,7 +8,7 @@ module Macbeth.Wx.Board (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.BoardUtils
-import Macbeth.Wx.BoardState
+import Macbeth.Wx.Game.BoardState
 
 import Control.Monad.Reader
 import Control.Monad.Trans.Maybe

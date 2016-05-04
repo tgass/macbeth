@@ -6,7 +6,7 @@ module Macbeth.Utils.BoardUtils (
 ) where
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Wx.PieceSet
+import Macbeth.Wx.Game.PieceSet
 import Paths
 
 import Graphics.UI.WX

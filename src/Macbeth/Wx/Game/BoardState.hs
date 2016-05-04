@@ -1,4 +1,4 @@
-module Macbeth.Wx.BoardState (
+module Macbeth.Wx.Game.BoardState (
   BoardState(..),
   DraggedPiece(..),
   Origin(..),
@@ -31,7 +31,7 @@ module Macbeth.Wx.BoardState (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Game
-import Macbeth.Wx.PieceSet
+import Macbeth.Wx.Game.PieceSet
 
 import Control.Monad
 import Control.Concurrent.STM

@@ -1,4 +1,4 @@
-module Macbeth.Wx.PieceSet (
+module Macbeth.Wx.Game.PieceSet (
   PieceSet(..),
   pieceSets,
   pieceSetFindSize

@@ -6,7 +6,7 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Game (GameResult)
 import qualified Macbeth.Utils.FEN as FEN
-import Macbeth.Wx.BoardState
+import Macbeth.Wx.Game.BoardState
 import Macbeth.Wx.UserConfig
 
 import Data.Maybe

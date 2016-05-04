@@ -16,7 +16,7 @@ import Macbeth.Wx.Seek
 import Macbeth.Wx.Utils
 import Macbeth.Wx.PlayersList
 import Macbeth.Wx.SoughtList
-import Macbeth.Wx.Game
+import Macbeth.Wx.Game.Game
 import Macbeth.Wx.Challenge
 import Macbeth.Wx.PartnerOffer
 import Macbeth.Wx.Pending

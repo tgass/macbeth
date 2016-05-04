@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Macbeth.Wx.StatusPanel (
+module Macbeth.Wx.Game.StatusPanel (
   createStatusPanel
 ) where
 
@@ -9,8 +9,8 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.Utils
 import Macbeth.Utils.BoardUtils
-import Macbeth.Wx.BoardState
-import Macbeth.Wx.PieceSet
+import Macbeth.Wx.Game.BoardState
+import Macbeth.Wx.Game.PieceSet
 import Macbeth.Wx.Utils
 
 import Control.Arrow

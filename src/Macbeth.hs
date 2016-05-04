@@ -10,7 +10,5 @@ import Graphics.UI.WX
 
 main :: IO ()
 main = do
-  config <- initConfig
   (h, chan) <- ficsConnection
-  forkIO $ sounds config =<< dupChan chan
   start $ wxToolBox h chan

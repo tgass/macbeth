@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Macbeth.Wx.Game (
+module Macbeth.Wx.Game.Game (
   wxGame
 ) where
 
@@ -9,11 +9,11 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.PGN
-import qualified Macbeth.Wx.BoardState as Api
+import qualified Macbeth.Wx.Game.BoardState as Api
 import Macbeth.Wx.Utils
-import Macbeth.Wx.PieceSet
-import Macbeth.Wx.StatusPanel
-import qualified Macbeth.Wx.Board as Board
+import Macbeth.Wx.Game.PieceSet
+import Macbeth.Wx.Game.StatusPanel
+import qualified Macbeth.Wx.Game.Board as Board
 
 import Control.Concurrent
 import Control.Concurrent.STM
