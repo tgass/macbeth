@@ -5,6 +5,7 @@ module Macbeth.OSX.Sounds (
 ) where
 
 import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
 import qualified Macbeth.Wx.UserConfig as C
 import Paths
@@ -18,9 +19,8 @@ import System.FilePath
 import System.Process
 
 
-sounds :: Chan FicsMessage -> IO ()
-sounds chan = readChan chan >>= \msg -> do
-  config <- C.loadConfig
+sounds :: C.Config -> FicsMessage -> IO ()
+sounds config msg = do
   path <- runMaybeT $ findPath config msg
   mapM_ playSound path
 
@@ -33,9 +33,8 @@ findPath config msg = do
 
 
 existsPath :: FilePath -> MaybeT IO FilePath
-existsPath file = do
-  _ <- MaybeT $ fmap (\x -> if x then Just x else Nothing) (doesFileExist file)
-  return file
+existsPath file = (MaybeT $ fmap boolToMaybe (doesFileExist file)) >>= \_ -> return file
+  where boolToMaybe x = if x then Just () else Nothing
 
 
 playSound :: FilePath -> IO ()
@@ -44,17 +43,26 @@ playSound = void . runCommand . ("afplay " ++)
 
 mapSound :: FicsMessage -> C.Sounds -> Maybe String
 mapSound msg s = case msg of
-  LoggedIn {} -> Nothing
+  LoggedIn {} -> C.logonToServer $ C.other s
   MatchAccepted {} -> C.newGame $ C.game s
+  GameResult _ _ Draw -> C.draw $ C.endOfGame $ C.game s
+  GameResult _ _ Aborted -> C.draw $ C.endOfGame $ C.game s
+  GameResult {} -> Nothing -- is covered in moveSound
   GameMove mod move
     | not (C.enableObservedGames s) && not (isGameUser move) -> Nothing
-    | otherwise -> moveSound mod move (C.move $ C.game s)
+    | otherwise -> moveSound mod move (C.game s)
   _ -> Nothing
 
 
-moveSound :: MoveModifier -> Move -> C.MoveS -> Maybe String
-moveSound Illegal _ = C.illegal
+moveSound :: MoveModifier -> Move -> C.GameS -> Maybe String
+moveSound Illegal _ = C.illegal . C.move
 moveSound _ move
-  | isCheck move = C.check
-  | otherwise = C.normal
+  | isCheck move = C.check . C.move
+  | isCapture move = C.capture . C.move
+  | isCastling move = C.castling . C.move
+  | isDrop move = C.pieceDrop . C.move
+--  | userWins move = C.youWin . C.endOfGame
+--  | userLoses move = C.youLose . C.endOfGame
+--  | isCheckmake move = C.checkmate . C.endOfGame
+  | otherwise = C.normal . C.move
 

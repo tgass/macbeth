@@ -61,7 +61,7 @@ library
                      Macbeth.Wx.GameType,
                      Macbeth.Wx.Login,
                      Macbeth.Wx.Match,
-                     Macbeth.Wx.Game,
+                     Macbeth.Wx.Game.Game,
                      Macbeth.Wx.Pending,
                      Macbeth.Wx.PartnerOffer,
                      Macbeth.Wx.PieceSet,

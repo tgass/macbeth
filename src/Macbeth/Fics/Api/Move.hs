@@ -17,6 +17,9 @@ module Macbeth.Fics.Api.Move (
   nameOponent,
   isCheck,
   isCheckmate,
+  isDrop,
+  isCapture,
+  isCastling,
   toGameResultTuple,
   dummyMove
 ) where
@@ -115,11 +118,23 @@ playerColor name move
 
 
 isCheck :: Move -> Bool
-isCheck =  maybe False ((== '+') . last) . movePretty
+isCheck = maybe False ((== '+') . last) . movePretty
 
 
 isCheckmate :: Move -> Bool
 isCheckmate = maybe False ((== '#') . last) . movePretty
+
+
+isDrop :: Move -> Bool
+isDrop = maybe False (elem '@') . movePretty
+
+
+isCapture :: Move -> Bool
+isCapture = maybe False (elem 'x') . movePretty
+
+
+isCastling :: Move -> Bool
+isCastling = maybe False (elem 'O') . movePretty
 
 
 toGameResultTuple :: Move -> (Int, String, Game.GameResult)

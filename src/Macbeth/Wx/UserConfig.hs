@@ -6,6 +6,10 @@ module Macbeth.Wx.UserConfig (
   Sounds(..),
   GameS(..),
   MoveS(..),
+  EndOfGameS(..),
+  RequestS(..),
+  CountdownS(..),
+  OtherS(..),
   initConfig,
   loadConfig,
   saveConfig,
@@ -51,6 +55,9 @@ data Sounds = Sounds {
   , chat :: ChatS
   , game :: GameS
   , request :: RequestS
+  , countdown :: CountdownS
+  , notifications :: NotificationsS
+  , other :: OtherS
 } deriving (Show, Generic)
 
 instance FromJSON Sounds
@@ -88,8 +95,8 @@ data MoveS = MoveS {
   , castling :: Maybe String
   , pieceDrop :: Maybe String
   , illegal :: Maybe String
-  , explosion :: Maybe String
-  , cannotSmartmove :: Maybe String
+--  , explosion :: Maybe String
+--  , cannotSmartmove :: Maybe String
 } deriving (Show, Generic)
 
 instance FromJSON MoveS
@@ -97,6 +104,8 @@ instance ToJSON MoveS
 
 data EndOfGameS = EndOfGameS {
     checkmate :: Maybe String
+  , youWin :: Maybe String
+  , youLose :: Maybe String
   , draw :: Maybe String
   , abort :: Maybe String
 } deriving (Show, Generic)
@@ -117,6 +126,31 @@ data RequestS = RequestS {
 instance FromJSON RequestS
 instance ToJSON RequestS
 
+
+data CountdownS = CountdownS {
+    _10_sec :: Maybe String
+  , _30_sec :: Maybe String
+  , _60_sec :: Maybe String
+  , _120_sec :: Maybe String
+} deriving (Show, Generic)
+
+instance FromJSON CountdownS
+instance ToJSON CountdownS
+
+data NotificationsS = NotificationsS {
+
+} deriving (Show, Generic)
+
+instance FromJSON NotificationsS
+instance ToJSON NotificationsS
+
+
+data OtherS = OtherS {
+  logonToServer :: Maybe String
+} deriving (Show, Generic)
+
+instance FromJSON OtherS
+instance ToJSON OtherS
 
 initConfig :: IO Config
 initConfig = do
@@ -166,6 +200,9 @@ defaultSounds = Just Sounds {
   , chat = defChatSnds
   , game = defGameSnds
   , request = defRequestSnds
+  , countdown = defCountdownS
+  , notifications = NotificationsS
+  , other = defOtherS
 }
 
 
@@ -184,17 +221,19 @@ defGameSnds :: GameS
 defGameSnds = GameS {
     newGame = Just "ding1.wav"
   , move = MoveS {
-      normal = Just "move.wav"
+      normal = Just "woodthunk.wav"
     , capture = Nothing
     , check = Just "squeak.wav"
-    , castling = Nothing
+    , castling = Just "ching.wav"
     , pieceDrop = Nothing
     , illegal = Just "penalty.wav"
-    , explosion = Nothing
-    , cannotSmartmove = Nothing
+--    , explosion = Nothing
+--    , cannotSmartmove = Nothing
   }
   , endOfGame = EndOfGameS {
-      checkmate = Nothing
+      youWin = Nothing
+    , youLose = Nothing
+    , checkmate = Nothing
     , draw = Nothing
     , abort = Nothing
   }
@@ -209,4 +248,17 @@ defRequestSnds = RequestS {
   , takeback = Nothing
   , pause = Nothing
   , unpause = Nothing
+}
+
+defCountdownS :: CountdownS
+defCountdownS = CountdownS {
+    _10_sec = Nothing
+  , _30_sec = Nothing
+  , _60_sec = Nothing
+  , _120_sec = Nothing
+}
+
+defOtherS :: OtherS
+defOtherS = OtherS {
+  logonToServer = Nothing
 }
