@@ -1,16 +1,15 @@
-module Macbeth.OSX.Sounds (
+module Macbeth.Wx.Sounds (
   playSound
 ) where
 
-import qualified Macbeth.Wx.UserConfig as C
+import Macbeth.OSX.Afplay
+import qualified Macbeth.Wx.Config.UserConfig as C
 import Paths
 
 import Control.Applicative
-import Control.Monad
 import Control.Monad.Trans.Maybe
 import System.Directory
 import System.FilePath
-import System.Process
 
 
 playSound :: C.Config -> Maybe String -> IO ()
@@ -20,9 +19,11 @@ playSound config sound = do
 
 
 isSoundEnabled :: C.Config -> MaybeT IO ()
-isSoundEnabled config = do
-  isOn <- MaybeT $ return (C.sounds config >>= Just . C.enabled)
-  when isOn $ return ()
+isSoundEnabled config = MaybeT $ return $ mBoolToMaybe $ C.sounds config >>= Just . C.enabled
+  where
+    mBoolToMaybe :: Maybe Bool -> Maybe ()
+    mBoolToMaybe (Just True) = Just ()
+    mBoolToMaybe _ = Nothing
 
 
 findPath :: C.Config -> Maybe String -> MaybeT IO FilePath
@@ -34,10 +35,10 @@ findPath config msg = do
 
 existsPath :: FilePath -> MaybeT IO FilePath
 existsPath file = (MaybeT $ fmap boolToMaybe (doesFileExist file)) >>= \_ -> return file
+  where
+    boolToMaybe :: Bool -> Maybe ()
+    boolToMaybe x = if x then Just () else Nothing
 
-boolToMaybe :: Bool -> Maybe ()
-boolToMaybe x = if x then Just () else Nothing
 
 
-afplay :: FilePath -> IO ()
-afplay = void . runCommand . ("afplay " ++)
+

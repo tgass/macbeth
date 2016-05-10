@@ -7,7 +7,7 @@ import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Result hiding (toString)
 import qualified Macbeth.Utils.FEN as FEN
 import Macbeth.Wx.Game.BoardState
-import Macbeth.Wx.UserConfig
+import Macbeth.Wx.Config.UserConfig
 
 import Data.Maybe
 import Data.Time

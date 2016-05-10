@@ -10,10 +10,10 @@ import Macbeth.Fics.Api.Move
 import qualified Macbeth.Fics.Api.Result as R
 import Macbeth.Utils.PGN
 import Macbeth.Wx.Utils
-import Macbeth.Wx.UserConfig
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Wx.Game.StatusPanel
 import Macbeth.Wx.Game.GameSounds
+import Macbeth.Wx.Config.UserConfig
 import qualified Macbeth.Wx.Game.BoardState as Api
 import qualified Macbeth.Wx.Game.Board as Board
 

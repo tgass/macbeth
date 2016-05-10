@@ -50,7 +50,7 @@ library
                      Macbeth.Utils.FEN,
                      Macbeth.Utils.Utils,
                      Macbeth.Utils.Salt,
-                     Macbeth.OSX.Sounds,
+                     Macbeth.OSX.Afplay,
                      Macbeth.Wx.Challenge,
                      Macbeth.Wx.Configuration,
                      Macbeth.Wx.Finger,
@@ -64,15 +64,18 @@ library
                      Macbeth.Wx.PlayersList,
                      Macbeth.Wx.Seek,
                      Macbeth.Wx.SoughtList,
+                     Macbeth.Wx.Sounds,
                      Macbeth.Wx.ToolBox,
-                     Macbeth.Wx.UserConfig,
                      Macbeth.Wx.Utils,
                      Macbeth.Wx.Game.BoardState,
                      Macbeth.Wx.Game.Board,
                      Macbeth.Wx.Game.Game,
                      Macbeth.Wx.Game.PieceSet,
                      Macbeth.Wx.Game.StatusPanel,
-                     Macbeth.Wx.Game.GameSounds
+                     Macbeth.Wx.Game.GameSounds,
+                     Macbeth.Wx.Config.UserConfig,
+                     Macbeth.Wx.Config.DefaultSounds,
+                     Macbeth.Wx.Config.Sounds
   other-modules: Paths_Macbeth
   ghc-options: -W
 

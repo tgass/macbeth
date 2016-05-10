@@ -20,7 +20,7 @@ import Macbeth.Wx.Game.Game
 import Macbeth.Wx.Challenge
 import Macbeth.Wx.PartnerOffer
 import Macbeth.Wx.Pending
-import qualified Macbeth.Wx.UserConfig as C
+import qualified Macbeth.Wx.Config.UserConfig as C
 import Paths
 
 import Control.Concurrent

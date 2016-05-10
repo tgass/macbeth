@@ -4,7 +4,7 @@ module Macbeth.Wx.Configuration (
 
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
-import qualified Macbeth.Wx.UserConfig as C
+import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Concurrent.Chan
 import Control.Monad.Except
