@@ -20,6 +20,7 @@ import Macbeth.Wx.Game.Game
 import Macbeth.Wx.Challenge
 import Macbeth.Wx.PartnerOffer
 import Macbeth.Wx.Pending
+import Macbeth.Wx.Sounds
 import qualified Macbeth.Wx.Config.UserConfig as C
 import Paths
 
@@ -149,6 +150,7 @@ wxToolBox h chan = do
           set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
         LoggedIn handle -> do
+          playSound config (C.sounds config >>= C.logonToServer . C.other)
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
           hPutStrLn h `mapM_` [ "ping", "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name handle]
@@ -160,7 +162,9 @@ wxToolBox h chan = do
 
         WxObserve move chan' -> wxGame h move chan'
 
-        MatchRequested c -> dupChan chan >>= wxChallenge h c
+        MatchRequested c -> do
+          playSound config (C.sounds config >>= C.challenge . C.request)
+          dupChan chan >>= wxChallenge h c
 
         WxMatchAccepted move chan' -> wxGame h move chan'
 

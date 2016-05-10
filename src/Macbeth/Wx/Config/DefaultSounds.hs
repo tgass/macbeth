@@ -47,5 +47,5 @@ requestS = RequestS {
 
 otherS :: OtherS
 otherS = OtherS {
-  logonToServer = Just "gong.wav"
+  logonToServer = Just "ding1.wav"
 }

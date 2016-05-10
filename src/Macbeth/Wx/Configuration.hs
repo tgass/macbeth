@@ -62,4 +62,5 @@ addUser c mUser = c { C.user = mUser }
 comments :: String
 comments = "# Changes will take effect only after restart (for now).\n\n\
            \# If you change the directory make sure it exists.\n\
-           \# It will not be created for you.\n\n"
+           \# It will not be created for you.\n\n\
+           \# You can use your own sounds by putting them in MACBETH_USER_DIR/sounds\n\n\n"
