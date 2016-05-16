@@ -109,6 +109,8 @@ wxGame h move chan sounds = do
 
     TakebackRequest user numTakeback -> set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
 
+    TakebackRequestDeclined user -> set status [text := user ++ " declines the takeback request."]
+
     PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]
 
     _ -> return ()

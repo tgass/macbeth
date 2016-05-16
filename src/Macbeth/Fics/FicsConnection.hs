@@ -132,6 +132,7 @@ unblockC = awaitForever $ \block -> case ord $ BS.head block of
     , 34 -- Draw (Mutual)
     , 80 -- Observing
     , 103 -- Resign
+    , 131 -- BLK_TAKEBACK
     , 155 -- Seek (Users' seek matches a seek already posted)
     , 158 -- Play (User selects a seek)
     , 56 -- BLK_ISET, seekinfo set.

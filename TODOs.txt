@@ -1,20 +1,18 @@
 --BUGS:
 check when config init: is directory for saved games there?
-build step: replace ---KEY---
+
 ? reset config if autologin fails
 
+-- use pending from / to for in-game messages?
+-- ie: Pending (PendingOffer {origin = From, offerId = 3, playerName = UserHandle {name = "GuestFWXZ", handleType = []}, offerType = "abort", params = "#"})
 
-TextMessage "\NAK4\SYN131\SYN\n<pt> 43 w=GuestFWXZ t=takeback p=1\nTakeback request sent.\n\ETB\n"
-TextMessage "GuestFWXZ declines the takeback request.\n"
+-- display pending offer info: offerType
 
-Pending (PendingOffer {origin = From, offerId = 3, playerName = UserHandle {name = "GuestFWXZ", handleType = []}, offerType = "abort", params = "#"})
-
--- New Piece available in Bughouse
+-- sound: New Piece available in Bughouse
 
 
 -- FEATURES
 -- adjourn game
--- chatting
 -- formula (seek)
 -- save game if observing optional
 -- fisher random (0-0, 0-0-0 shortcuts)
@@ -32,7 +30,6 @@ Pending (PendingOffer {origin = From, offerId = 3, playerName = UserHandle {name
 -- PARSERS
 -- while observing: Bughouse: "Game 136: White's partner won 1-0\n"
 -- while observing: TextMessage "Game 84: Paet offers a draw."
--- "GuestKMZS declines takeback"
 
 
 -- APP

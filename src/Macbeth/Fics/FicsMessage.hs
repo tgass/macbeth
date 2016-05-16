@@ -53,8 +53,9 @@ data FicsMessage =
   | AbortRequest Username
   | AbortRequestDeclined Username
 
-  -- | The oponent wants to takeback one or more half-moves
+  -- | The oponent wants to takeback one or more half-moves.
   | TakebackRequest Username Int
+  | TakebackRequestDeclined Username
 
   -- | Promotion piece
   | PromotionPiece PType

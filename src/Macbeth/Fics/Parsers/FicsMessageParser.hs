@@ -48,6 +48,7 @@ parseFicsMessage = parseOnly parser where
                   , takebackRequest
                   , takebackAccepted
                   , acceptTakeback
+                  , takebackRequestDeclined
 
                   , drawRequest
                   , drawRequestDeclined
@@ -131,6 +132,9 @@ takebackRequest = TakebackRequest
 takebackAccepted :: Parser FicsMessage
 takebackAccepted = TakebackAccepted <$> manyTill anyChar " " <* "accepts the takeback request."
 
+takebackRequestDeclined :: Parser FicsMessage
+takebackRequestDeclined = TakebackRequestDeclined <$> manyTill anyChar space <* "declines the takeback request."
+
 acceptTakeback :: Parser FicsMessage
 acceptTakeback = GameMove <$>
   pure (Takeback Nothing) <*> -- ^ User accepted takeback himself
@@ -156,6 +160,7 @@ pending = Pending <$> (PendingOffer
   <*> (" t=" *> manyTill anyChar " ")
   <*> ("p=" *> manyTill anyChar "\n"))
 
+-- BLK_MATCH 73
 pendingTo :: Parser FicsMessage
 pendingTo = commandHead 73 *> takeTill (=='<') *> pending
 
