@@ -4,6 +4,7 @@ module Macbeth.Wx.Pending (
 
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.PendingOffer
+import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.STM
@@ -21,11 +22,21 @@ wxPending :: Handle -> Panel () -> IO (Panel (), FicsMessage -> IO ())
 wxPending h p' = do
   p <- panel p' []
   stFrom <- staticText p [ text := "Offers from other players:", fontSize := 12]
-  lcFrom  <- listCtrl p [ columns := [ ("#", AlignLeft, -1), ("offer", AlignLeft, -1)]]
+  lcFrom  <- listCtrl p [ columns := [
+        ("#", AlignLeft, -1)
+      , ("player", AlignLeft, -1)
+      , ("offer type", AlignLeft, -1)
+      , ("params", AlignLeft, -1)
+      ]]
   vPending <- newTVarIO ([] :: [PendingOffer])
 
   stTo <- staticText p [ text := "Offers to other players:", fontSize := 12]
-  lcTo  <- listCtrl p [columns := [ ("#", AlignLeft, -1), ("offer", AlignLeft, -1)]]
+  lcTo  <- listCtrl p [columns := [
+        ("#", AlignLeft, -1)
+      , ("player", AlignLeft, -1)
+      , ("offer type", AlignLeft, -1)
+      , ("params", AlignLeft, -1)
+      ]]
 
   set p [ layout := column 5 [ hfill $ widget stFrom
                              , fill $ widget lcFrom
@@ -58,7 +69,7 @@ wxPending h p' = do
 
 
 toList :: PendingOffer -> [String]
-toList (PendingOffer _ id _ _ params) = [show id, params]
+toList (PendingOffer _ id userHandle offerType params) = [show id, name userHandle, offerType, params]
 
 
 ctxMenuHandler :: Handle -> ListCtrl () -> Origin -> Graphics.UI.WXCore.ListEvent () -> IO ()
