@@ -12,7 +12,8 @@ module Macbeth.Wx.Config.UserConfig (
   initConfig,
   loadConfig,
   saveConfig,
-  saveCredentials
+  saveCredentials,
+  isSoundEnabled
 ) where
 
 import Macbeth.Utils.Utils
@@ -79,6 +80,14 @@ saveCredentials :: String -> String -> IO ()
 saveCredentials username password = do
   config <- loadConfig
   saveConfig $ config {user = Just $ User username (encrypt password), autologin = True}
+
+
+isSoundEnabled :: Config -> Bool
+isSoundEnabled config = case sounds config of
+  Just soundsConf
+    | enabled soundsConf -> True
+    | otherwise -> False
+  _ -> False
 
 
 defaultConfig :: String -> Config

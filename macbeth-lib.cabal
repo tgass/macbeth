@@ -21,7 +21,7 @@ library
     build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
                    bytestring, split, attoparsec, filepath, containers, split, mtl, stm, sodium, directory, filepath,
                    time, MissingH, old-locale, safe, FindBin, yaml, either-unwrap, cryptocipher, crypto-cipher-types,
-                   binary, hslogger, aeson, process
+                   binary, hslogger, aeson, process, OpenAL, ALUT, hashmap
     hs-source-dirs: src
     exposed-modules: Paths,
                      Macbeth.Fics.FicsConnection
@@ -50,7 +50,6 @@ library
                      Macbeth.Utils.FEN,
                      Macbeth.Utils.Utils,
                      Macbeth.Utils.Salt,
-                     Macbeth.OSX.Afplay,
                      Macbeth.Wx.Challenge,
                      Macbeth.Wx.Configuration,
                      Macbeth.Wx.Finger,
@@ -81,7 +80,8 @@ library
 
 executable Macbeth
   main-is: src/Macbeth.hs
-  build-depends: base  >= 4.2, wx, wxcore, macbeth-lib, stm
+  build-depends: base  >= 4.2, wx, wxcore, macbeth-lib, stm, ALUT
+  extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib /usr/local/Cellar/sdl/1.2.15/lib
   ghc-options: -O3 -threaded -W
 
 test-suite macbeth-lib-test

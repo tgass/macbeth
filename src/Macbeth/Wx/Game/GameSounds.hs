@@ -11,9 +11,10 @@ import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Applicative
 
-gameSounds :: C.Config -> Move -> FicsMessage -> IO ()
-gameSounds config move msg = playSound config sound
-  where sound = C.sounds config >>= findSound move msg
+gameSounds :: Maybe C.Sounds -> Move -> FicsMessage -> Sounds -> IO ()
+gameSounds Nothing _ _ _ = return ()
+gameSounds (Just soundC) move msg sounds = playSound (Just soundC) soundFile sounds
+  where soundFile =  findSound move msg soundC
 
 
 findSound :: Move -> FicsMessage -> C.Sounds -> Maybe String

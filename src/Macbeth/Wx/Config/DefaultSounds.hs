@@ -18,8 +18,8 @@ gameS :: GameS
 gameS = GameS {
     newGame = Just "ding1.wav"
   , move = MoveS {
-      normal = Just "woodthunk.wav"
-    , capture = Just "thud.wav"
+      normal = Just "move.wav"
+    , capture = Nothing
     , check = Just "slap.wav"
     , castling = Nothing
     , pieceDrop = Nothing

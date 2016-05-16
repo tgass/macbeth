@@ -10,10 +10,11 @@ import Macbeth.Fics.Api.Move
 import qualified Macbeth.Fics.Api.Result as R
 import Macbeth.Utils.PGN
 import Macbeth.Wx.Utils
+import Macbeth.Wx.Sounds
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Wx.Game.StatusPanel
 import Macbeth.Wx.Game.GameSounds
-import Macbeth.Wx.Config.UserConfig
+import qualified Macbeth.Wx.Config.UserConfig as C
 import qualified Macbeth.Wx.Game.BoardState as Api
 import qualified Macbeth.Wx.Game.Board as Board
 
@@ -22,15 +23,15 @@ import Control.Concurrent.STM
 import Control.Exception
 import Control.Monad
 import Data.Maybe
-import Graphics.UI.WX hiding (when, position)
+import Graphics.UI.WX hiding (when, position, play)
 import Graphics.UI.WXCore hiding (when, Timer)
 import System.IO
 
 eventId = wxID_HIGHEST + 1
 
-wxGame :: Handle -> Move -> Chan FicsMessage -> IO ()
-wxGame h move chan = do
-  config <- loadConfig
+wxGame :: Handle -> Move -> Chan FicsMessage -> Sounds -> IO ()
+wxGame h move chan sounds = do
+  config <- C.loadConfig
   vCmd <- newEmptyMVar
   f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move]
   p_back <- panel f []
@@ -83,7 +84,7 @@ wxGame h move chan = do
 
   threadId <- forkIO $ eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
-    updateClockW cmd >> updateClockB cmd >> gameSounds config move cmd >> case cmd of
+    updateClockW cmd >> updateClockB cmd >> gameSounds (C.sounds config) move cmd sounds >> case cmd of
 
     GameMove ctx move' -> when (gameId move' == gameId move) $ do
       set status [text := show ctx]

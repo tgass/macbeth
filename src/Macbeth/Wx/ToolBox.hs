@@ -31,7 +31,7 @@ import Foreign.Marshal.Alloc
 import Foreign.Storable
 import Foreign.Ptr
 import Foreign.C.Types
-import Graphics.UI.WX hiding (when)
+import Graphics.UI.WX hiding (when, play)
 import Graphics.UI.WXCore hiding (when)
 import System.FilePath
 import System.IO
@@ -39,8 +39,8 @@ import System.IO.Unsafe
 
 eventId = wxID_HIGHEST + 1
 
-wxToolBox :: Handle -> Chan FicsMessage -> IO ()
-wxToolBox h chan = do
+wxToolBox :: Handle -> Chan FicsMessage -> Sounds -> IO ()
+wxToolBox h chan sounds = do
     config <- C.initConfig
     f  <- frame [ text := "Macbeth"]
 
@@ -150,7 +150,7 @@ wxToolBox h chan = do
           set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
         LoggedIn handle -> do
-          playSound config (C.sounds config >>= C.logonToServer . C.other)
+          playSound (C.sounds config) (C.sounds config >>= C.logonToServer . C.other) sounds
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
           hPutStrLn h `mapM_` [ "ping", "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name handle]
@@ -160,13 +160,13 @@ wxToolBox h chan = do
 
         msg@History {} -> dupChan chan >>= wxInfo msg
 
-        WxObserve move chan' -> wxGame h move chan'
+        WxObserve move chan' -> wxGame h move chan' sounds
 
         MatchRequested c -> do
-          playSound config (C.sounds config >>= C.challenge . C.request)
+          playSound (C.sounds config) (C.sounds config >>= C.challenge . C.request) sounds
           dupChan chan >>= wxChallenge h c
 
-        WxMatchAccepted move chan' -> wxGame h move chan'
+        WxMatchAccepted move chan' -> wxGame h move chan' sounds
 
         MatchDeclined user -> set status [text := user ++ " declines the match offer."]
 
