@@ -13,8 +13,8 @@ import Control.Applicative
 
 gameSounds :: Maybe C.Sounds -> Move -> FicsMessage -> Sounds -> IO ()
 gameSounds Nothing _ _ _ = return ()
-gameSounds (Just soundC) move msg sounds = playSound (Just soundC) soundFile sounds
-  where soundFile =  findSound move msg soundC
+gameSounds snd@(Just soundC) move msg sounds = playSound snd soundFile sounds
+  where soundFile = findSound move msg soundC
 
 
 findSound :: Move -> FicsMessage -> C.Sounds -> Maybe String
