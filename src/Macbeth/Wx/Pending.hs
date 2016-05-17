@@ -26,7 +26,7 @@ wxPending h p' = do
         ("#", AlignLeft, -1)
       , ("player", AlignLeft, -1)
       , ("offer type", AlignLeft, -1)
-      , ("params", AlignLeft, -1)
+      , ("params", AlignLeft, 320)
       ]]
   vPending <- newTVarIO ([] :: [PendingOffer])
 
@@ -35,7 +35,7 @@ wxPending h p' = do
         ("#", AlignLeft, -1)
       , ("player", AlignLeft, -1)
       , ("offer type", AlignLeft, -1)
-      , ("params", AlignLeft, -1)
+      , ("params", AlignLeft, 320)
       ]]
 
   set p [ layout := column 5 [ hfill $ widget stFrom

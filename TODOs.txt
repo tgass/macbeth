@@ -6,8 +6,6 @@ check when config init: is directory for saved games there?
 -- use pending from / to for in-game messages?
 -- ie: Pending (PendingOffer {origin = From, offerId = 3, playerName = UserHandle {name = "GuestFWXZ", handleType = []}, offerType = "abort", params = "#"})
 
--- display pending offer info: offerType
-
 -- sound: New Piece available in Bughouse
 
 
