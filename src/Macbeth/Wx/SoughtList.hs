@@ -22,15 +22,14 @@ data SoughtOpts = SoughtOpts { computerOffers :: MenuItem ()
 
 wxSoughtList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
 wxSoughtList slp h = do
-    sl  <- listCtrl slp [columns := [ ("#", AlignLeft, -1)
-                                    , ("Handle", AlignLeft, -1)
-                                    , ("Rating", AlignLeft, -1)
-                                    , ("Time (start inc.)", AlignRight, -1)
-                                    , ("Type", AlignRight, -1)]
+    sl  <- listCtrlEx slp (wxLC_REPORT .+. wxLC_SORT_ASCENDING)
+                                    [columns := [ ("#", AlignLeft, 100)
+                                    , ("Handle", AlignLeft, 100)
+                                    , ("Rating", AlignLeft, 100)
+                                    , ("Time (start inc.)", AlignRight, 100)
+                                    , ("Type", AlignRight, 100)]
                                     ]
-
     set sl [on listEvent := onSeekListEvent sl h]
-    listCtrlSetColumnWidths sl 100
 
     ctxMenu <- menuPane []
     soughtOpts <- getSoughtOpts ctxMenu
