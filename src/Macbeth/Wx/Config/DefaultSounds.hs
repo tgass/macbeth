@@ -16,11 +16,11 @@ defaultSounds = Just Sounds {
 
 gameS :: GameS
 gameS = GameS {
-    newGame = Just "ding1.wav"
+    newGame = Nothing
   , move = MoveS {
       normal = Just "move.wav"
     , capture = Nothing
-    , check = Just "slap.wav"
+    , check = Nothing
     , castling = Nothing
     , pieceDrop = Nothing
     , illegal = Just "penalty.wav"

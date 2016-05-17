@@ -4,6 +4,7 @@ module Macbeth.Wx.Configuration (
 
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
+import Macbeth.Wx.Config.DefaultSounds
 import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Concurrent.Chan
@@ -23,6 +24,7 @@ wxConfiguration chan = do
   status <- statusField []
 
   b_current <- button f [text := "Reset", on command := showConfig ct]
+  b_resetSounds <- button f [text := "Reset Sounds", on command := resetSounds ct]
   b_save <- button f [ text := "Save",
                        on command := either (\_ -> set status [text := "Illegal file format."]) return
                                      =<< runExceptT (parseAndSave ct status)]
@@ -31,7 +33,7 @@ wxConfiguration chan = do
   set f [ statusBar := [status],
           layout := margin 10 $ column 10 [
                        boxed "Configuration" $ fill $ minsize (Size 380 220) $ widget ct
-                     , hfloatRight $ row 5 [widget b_current, widget b_save]]
+                     , hfloatRight $ row 5 [widget b_current, widget b_resetSounds, widget b_save]]
         ]
   registerWxCloseEventListener f chan
 
@@ -40,6 +42,11 @@ showConfig :: TextCtrl() -> IO ()
 showConfig ct = do
   config <- C.loadConfig
   set ct [text := comments ++ BS.unpack (Y.encode $ removeUser config)]
+
+resetSounds :: TextCtrl() -> IO ()
+resetSounds ct = do
+  c <- C.loadConfig
+  set ct [text := comments ++ BS.unpack (Y.encode $ removeUser c{C.sounds = defaultSounds})]
 
 
 parseAndSave :: TextCtrl () -> StatusField -> ExceptT Y.ParseException IO ()
