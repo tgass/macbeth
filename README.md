@@ -42,6 +42,7 @@ see: http://www.freechess.org/Help/HelpFiles/category.html
 ```
 brew install haskell-stack  # if necesarry
 brew install wxmac
+brew install freealut
 
 git clone https://github.com/tgass/macbeth.git
 cd macbeth
