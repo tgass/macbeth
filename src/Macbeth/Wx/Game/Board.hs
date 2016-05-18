@@ -42,9 +42,7 @@ setScale = do
 drawBoard :: BoardT a
 drawBoard = do
   (dc, state) <- ask
-  let perspective' = perspective state
-  let bw = concat $ replicate 4 (concat $ replicate 4 seed ++ replicate 4 (reverse seed))
-       where seed = if perspective' == White then [Black, White] else [White, Black]
+  let bw = let seed = (concat $ replicate 4 [Black, White]) in seed ++ reverse seed ++ bw
   let sq = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
   lift $ set dc [ pen := penTransparent ]
   lift $ withBrushStyle (BrushStyle BrushSolid (rgb (180::Int) 150 100)) $ \blackBrush ->
@@ -52,7 +50,7 @@ drawBoard = do
       mapM_ (\(c,sq) -> do
         dcSetBrush dc $ if c == White then whiteBrush else blackBrush
         paintSquare dc state sq)
-          (zip (if perspective' == White then bw else reverse bw) sq)
+          (zip bw sq)
 
 
 drawHighlightLastMove :: BoardT a
