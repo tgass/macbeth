@@ -9,7 +9,6 @@ import Macbeth.Fics.Parsers.Players
 
 import Test.Hspec
 import Data.Attoparsec.ByteString.Char8
-import qualified Data.ByteString.Char8 as BS
 
 
 spec :: Spec

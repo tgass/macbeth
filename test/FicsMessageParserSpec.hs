@@ -10,7 +10,6 @@ import qualified Macbeth.Fics.Api.Rating as R
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Seek
-import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
 import qualified Macbeth.Fics.Api.Player as P
 import Macbeth.Fics.Parsers.FicsMessageParser
@@ -61,12 +60,12 @@ commandMessageParserTestData = [
       , (NoSuchGame, "\NAK5\SYN80\SYNThere is no such game.\n\ETB")
       , (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
       , (GuestLogin "FOOBAR", "Press return to enter the server as \"FOOBAR\":")
-      , (GameCreation 484, "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
+      , (GameCreation (GameId 484), "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
       , (MatchUserNotLoggedIn "GuestLHDG", "\NAK4\SYN73\SYNGuestLHDG is not logged in.\n\ETB")
-      , (PieceHolding 455 [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
-      , (PieceHolding 182 [Pawn,Pawn,Bishop] [Pawn,Queen,Queen], "<b1> game 182 white [PPB] black [PQQ] <- BQ\n")
+      , (PieceHolding (GameId 455) [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
+      , (PieceHolding (GameId 182) [Pawn,Pawn,Bishop] [Pawn,Queen,Queen], "<b1> game 182 white [PPB] black [PQQ] <- BQ\n")
       , (SeekNotAvailable, "\NAK4\SYN158\SYNThat seek is not available.\n\ETB")
 
       , (MatchRequested $ Challenge "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated "unrated blitz 5 0", "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters.")
@@ -76,9 +75,6 @@ commandMessageParserTestData = [
       , (PromotionPiece Rook, "\NAK5\SYN92\SYNPromotion piece set to ROOK.\n\ETB\n")
       , (PromotionPiece King, "\NAK5\SYN92\SYNPromotion piece set to KING.\n\ETB\n") -- Suicide
       ]
-
-defaultMove = Move "-------- -------- -------- -------- -------- -------- -------- --------" [] White Nothing [WhiteShort,WhiteLong,BlackShort,BlackLong] 0 18 "nameWhite" "nameBlack" OponentsMove 3 0 39 39 180 180 1 Nothing "(0:00)" Nothing
-defaultMoveStr = "<12> -------- -------- -------- -------- -------- -------- -------- -------- W -1 1 1 1 1 0 18 nameWhite nameBlack -1 3 0 39 39 180 180 1 none (0:00) none 1 0 0\n"
 
 seekMsgParserTest :: Bool
 seekMsgParserTest = all (== Pass) $ fmap compareCmdMsg seekMsgParserTestData
@@ -121,14 +117,6 @@ moveParserTestData = [
   , (verboseMove', "o-o-o", Just CastleLong)
   , (verboseMove', "B/@@-g6", Just $ Drop $ Square G Six)
   ]
-
-{-
-parseGamesListTest :: Result
-parseGamesListTest = case parseFicsMessage $ BS.pack games of
-  Left txt -> Fail txt
-  Right (Games games) -> if length games == 584 then Pass else Fail $ show $ length games
-  where games = unsafePerformIO $ readFile "./test/Games.txt"
--}
 
 withParser :: (Show a, Eq a) => (Parser a, String, a) -> Result
 withParser (parser, str, x) = case parseOnly parser (BS.pack str) of

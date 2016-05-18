@@ -7,8 +7,6 @@ import Macbeth.Wx.Seek
 import Macbeth.Wx.GameType
 
 import Test.Hspec
-import Data.Attoparsec.ByteString.Char8
-import qualified Data.ByteString.Char8 as BS
 
 seekInfo :: SeekInfo
 seekInfo = SeekInfo {
@@ -31,4 +29,3 @@ spec =
     it "seekInfo to string" $ toString seekInfo `shouldBe` "5 10 u chess a 0-9999"
     it "seekInfo to string, color=white" $ toString seekInfo {_color = Just White} `shouldBe` "5 10 u w chess a 0-9999"
     it "seekInfo to string, color=white" $ toString seekInfo {_rated = True} `shouldBe` "5 10 r chess a 0-9999"
-
