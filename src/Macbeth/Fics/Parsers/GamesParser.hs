@@ -15,9 +15,6 @@ import Data.Attoparsec.ByteString.Char8
 parseGamesList :: Parser [Game]
 parseGamesList = many' gameP
 
-gameId' :: Parser GameId
-gameId' = GameId <$> decimal
-
 gameP :: Parser Game
 gameP = Game
   <$> (takeTill (== '\n') *> "\n" *> many space *> Api.gameId)
