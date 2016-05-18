@@ -10,10 +10,10 @@ import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Result
-import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Parsers.GamesParser
 import Macbeth.Fics.Parsers.MoveParser
 import Macbeth.Fics.Parsers.RatingParser
+import qualified Macbeth.Fics.Parsers.Api as Api
 import qualified Macbeth.Fics.Parsers.Players as P
 import qualified Macbeth.Fics.Parsers.SeekMsgParsers as SP
 
@@ -84,19 +84,19 @@ gameMove :: Parser FicsMessage
 gameMove = GameMove <$> pure None <*> move
 
 gameCreation :: Parser FicsMessage
-gameCreation = GameCreation <$> ("{Game " *> decimal <* takeTill (== ')') <* ") Creating ")
+gameCreation = GameCreation <$> ("{Game " *> Api.gameId <* takeTill (== ')') <* ") Creating ")
 
 observing :: Parser FicsMessage
-observing = Observing <$> ("You are now observing game " *> decimal)
+observing = Observing <$> ("You are now observing game " *> Api.gameId)
 
 noSuchGame :: Parser FicsMessage
-noSuchGame = commandHead 80 *> "There is no such game." *> pure NoSuchGame
+noSuchGame = Api.commandHead 80 *> "There is no such game." *> pure NoSuchGame
 
 userNotLoggedIn :: Parser FicsMessage
-userNotLoggedIn = UserNotLoggedIn <$> (commandHead 80 *> many1 letter_ascii <* " is not logged in.\n\ETB")
+userNotLoggedIn = UserNotLoggedIn <$> (Api.commandHead 80 *> many1 letter_ascii <* " is not logged in.\n\ETB")
 
 games :: Parser FicsMessage
-games = Games <$> (commandHead 43 *> parseGamesList)
+games = Games <$> (Api.commandHead 43 *> parseGamesList)
 
 challenge :: Parser FicsMessage
 challenge = MatchRequested <$> (Challenge
@@ -110,7 +110,7 @@ matchDeclined :: Parser FicsMessage
 matchDeclined = MatchDeclined <$> ("\"" *> manyTill anyChar "\" declines the match offer.")
 
 matchUserNotLoggedIn :: Parser FicsMessage
-matchUserNotLoggedIn = MatchUserNotLoggedIn <$> (commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
+matchUserNotLoggedIn = MatchUserNotLoggedIn <$> (Api.commandHead 73 *> manyTill anyChar " " <* "is not logged in.")
 
 drawRequest :: Parser FicsMessage
 drawRequest = manyTill anyChar space *> "offers you a draw." *> pure DrawRequest
@@ -138,18 +138,18 @@ takebackRequestDeclined = TakebackRequestDeclined <$> manyTill anyChar space <* 
 acceptTakeback :: Parser FicsMessage
 acceptTakeback = GameMove <$>
   pure (Takeback Nothing) <*> -- ^ User accepted takeback himself
-  (commandHead 11 *> "You accept the takeback request from" *> takeTill (== '<') *> move)
+  (Api.commandHead 11 *> "You accept the takeback request from" *> takeTill (== '<') *> move)
 
 gameResult' :: Parser FicsMessage
 gameResult' = GameResult <$> (Result
-  <$> (takeTill (== '{') *> "{Game " *> decimal)
+  <$> (takeTill (== '{') *> "{Game " *> Api.gameId)
   <*> (takeTill (== '(') *> "(" *> manyTill anyChar " vs. ")
   <*> manyTill anyChar ") "
   <*> manyTill anyChar "} "
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|> "1/2-1/2" *> pure Draw <|> "*" *> pure Aborted))
 
 promotionPiece :: Parser FicsMessage
-promotionPiece = PromotionPiece <$> (commandHead 92 *> "Promotion piece set to " *>
+promotionPiece = PromotionPiece <$> (Api.commandHead 92 *> "Promotion piece set to " *>
   ("QUEEN" *> pure Queen <|> "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> "ROOK" *> pure Rook <|> "KING" *> pure King))
 
 pending :: Parser FicsMessage
@@ -162,13 +162,13 @@ pending = Pending <$> (PendingOffer
 
 -- BLK_MATCH 73
 pendingTo :: Parser FicsMessage
-pendingTo = commandHead 73 *> takeTill (=='<') *> pending
+pendingTo = Api.commandHead 73 *> takeTill (=='<') *> pending
 
 pendingRemoved :: Parser FicsMessage
 pendingRemoved = PendingRemoved <$> ("<pr> " *> decimal)
 
 pendingWithdraw :: Parser FicsMessage
-pendingWithdraw = commandHead 147 *> takeTill (=='<') *> pendingRemoved
+pendingWithdraw = Api.commandHead 147 *> takeTill (=='<') *> pendingRemoved
 
 login :: Parser FicsMessage
 login = "login: " *> pure Login

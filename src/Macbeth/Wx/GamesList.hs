@@ -71,5 +71,5 @@ getGamesOpts ctxMenu = GamesOpts
 
 
 toList :: Game -> [String]
-toList g = [show $ Macbeth.Fics.Api.Game.id g, nameW g, show $ ratingW g, nameB g, show $ ratingB g, show $ gameType $ settings g]
+toList g = [show $ Macbeth.Fics.Api.Game.gameId g, nameW g, show $ ratingW g, nameB g, show $ ratingB g, show $ gameType $ settings g]
 

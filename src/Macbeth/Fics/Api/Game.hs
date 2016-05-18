@@ -1,4 +1,5 @@
 module Macbeth.Fics.Api.Game (
+  GameId(..),
   Game (..),
   GameType (..),
   GameSettings (..),
@@ -7,11 +8,16 @@ module Macbeth.Fics.Api.Game (
 
 import Macbeth.Fics.Api.Rating
 
+newtype GameId = GameId Int deriving (Eq)
+
+instance Show GameId where
+  show (GameId i) = show i
+
 data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
                  Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show, Eq)
 
 data Game = Game {
-    id :: Int
+    gameId :: GameId
   , isExample :: Bool
   , isSetup :: Bool
   , ratingW :: Rating

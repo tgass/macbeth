@@ -9,9 +9,10 @@ module Macbeth.Fics.Parsers.MoveParser (
 ) where
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.FicsMessage hiding (move, Observing)
-import Macbeth.Fics.Parsers.PositionParser
 import Macbeth.Fics.Api.Move hiding (relation)
+import Macbeth.Fics.FicsMessage hiding (move, Observing)
+import qualified Macbeth.Fics.Parsers.Api as Api
+import Macbeth.Fics.Parsers.PositionParser
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8 hiding (D)
@@ -36,7 +37,7 @@ moveOnly = do
     <*> (space *> ("-1" *> pure Nothing <|> Just `fmap` column)) -- doublePawnPush
     <*> (catMaybes <$> sequence [ castle WhiteShort, castle WhiteLong, castle BlackShort, castle BlackLong])
     <*> (space *> decimal) -- the number of moves made since the last irreversible move, halfmove clock
-    <*> (space *> decimal) -- gameId
+    <*> (space *> Api.gameId) -- gameId
     <*> (space *> manyTill anyChar space) -- nameW
     <*> manyTill anyChar space -- nameB
     <*> relation
@@ -98,7 +99,7 @@ pieceHolding = "<b1>" *> pieceHoldingOnly
 
 pieceHoldingOnly :: Parser FicsMessage
 pieceHoldingOnly = PieceHolding
-  <$> (" game " *> decimal <* " ")
+  <$> (" game " *> Api.gameId <* " ")
   <*> ("white [" *> many' dropablePiece <* "] ")
   <*> ("black [" *> many' dropablePiece <* "]" <* option "" " <-")
 

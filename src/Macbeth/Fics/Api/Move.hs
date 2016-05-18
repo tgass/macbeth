@@ -24,6 +24,7 @@ module Macbeth.Fics.Api.Move (
 ) where
 
 import Macbeth.Fics.Api.Api
+import qualified Macbeth.Fics.Api.Game as G
 
 import Data.Maybe
 
@@ -34,7 +35,7 @@ data Move = Move {
   , doublePawnPush :: Maybe Column
   , castlingAv :: [Castling]
   , ply :: Int
-  , gameId :: Int
+  , gameId :: G.GameId
   , nameW :: String
   , nameB :: String
   , relation :: Relation
@@ -149,7 +150,7 @@ dummyMove = Move {
     doublePawnPush = Nothing,
     castlingAv = [],
     ply = 0,
-    gameId = 1,
+    gameId = G.GameId 1,
     nameW = "foobar",
     nameB = "barbaz",
     relation = MyMove,

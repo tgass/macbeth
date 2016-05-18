@@ -5,6 +5,7 @@ module Macbeth.Fics.Parsers.GamesParser (
 ) where
 
 import Macbeth.Fics.Api.Game
+import qualified Macbeth.Fics.Parsers.Api as Api
 import Macbeth.Fics.Parsers.RatingParser
 
 import Control.Applicative
@@ -14,9 +15,12 @@ import Data.Attoparsec.ByteString.Char8
 parseGamesList :: Parser [Game]
 parseGamesList = many' gameP
 
+gameId' :: Parser GameId
+gameId' = GameId <$> decimal
+
 gameP :: Parser Game
 gameP = Game
-  <$> (takeTill (== '\n') *> "\n" *> many space *> decimal)
+  <$> (takeTill (== '\n') *> "\n" *> many space *> Api.gameId)
   <*> (many1 space *> option False ("(Exam." *> pure True))
   <*> (option False ("(Setup" *> pure True))
   <*> (many space *> rating)

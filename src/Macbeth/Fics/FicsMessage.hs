@@ -20,7 +20,7 @@ data FicsMessage =
     GameMove { context :: MoveModifier, move :: Move }
 
   -- | Pieces holdings in Bughouse / Crazyhouse games
-  | PieceHolding { gameId :: Int, phWhite :: [PType], phBlack :: [PType] }
+  | PieceHolding { gameId :: GameId, phWhite :: [PType], phBlack :: [PType] }
 
   -- | Answer to 'observe' command (BLK_OBSERVE 80)
   | Observe Move
@@ -89,8 +89,8 @@ data FicsMessage =
   | UnkownUsername Username
 
   {- Internal -}
-  | GameCreation Int
-  | Observing Int
+  | GameCreation GameId
+  | Observing GameId
   | TakebackAccepted Username
   | WxClose
   | WxMatchAccepted Move (Chan FicsMessage)

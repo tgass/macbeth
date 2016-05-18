@@ -8,8 +8,9 @@ import Macbeth.Fics.AppConfig
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move hiding (Observing)
-import qualified Macbeth.Fics.Api.Result as R
 import Macbeth.Fics.Parsers.FicsMessageParser
+import qualified Macbeth.Fics.Api.Result as R
+import qualified Macbeth.Fics.Api.Game as G
 
 import Control.Concurrent.Chan
 import Control.Monad
@@ -32,8 +33,8 @@ import System.IO
 import qualified Data.ByteString.Char8 as BS
 
 data HelperState = HelperState { takebackAccptedBy :: Maybe String -- ^ oponent accepted takeback request
-                               , observingGameId :: Maybe Int
-                               , newGameId :: Maybe Int }
+                               , observingGameId :: Maybe G.GameId
+                               , newGameId :: Maybe G.GameId }
 
 
 ficsConnection :: IO (Handle, Chan FicsMessage)

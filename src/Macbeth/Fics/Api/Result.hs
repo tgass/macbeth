@@ -4,9 +4,10 @@ module Macbeth.Fics.Api.Result (
   toString
 ) where
 
+import Macbeth.Fics.Api.Game
 
 data Result = Result {
-    gameId :: Int
+    gameId :: GameId
   , playerW :: String
   , playerB :: String
   , reason :: String
