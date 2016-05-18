@@ -4,13 +4,15 @@ check when config init: is directory for saved games there?
 ? reset config if autologin fails
 
 CHAT:
-TextMessage "\NAK5\SYN107\SYNI don't know who to say that to.\n\ETB\n"
-TextMessage "\NAK5\SYN107\SYN(told GuestFFHQ, who is playing)\n\ETB\n"
+2016-05-18 17:07:43 CEST \NAK5\SYN107\SYN(told GuestQRDR, who is playing)\n\ETB\n
+2016-05-18 17:07:43 CEST TextMessage "\NAK5\SYN107\SYN(told GuestQRDR, who is playing)\n\ETB\n"
+2016-05-18 17:07:43 CEST GuestYYPT(U)[386] says: hello\n
+2016-05-18 17:07:43 CEST TextMessage "GuestYYPT(U)[386] says: hello\n"
 
-
-TextMessage "\NAK5\SYN132\SYN(told GuestRBGN)\n\ETB\n"
-TextMessage "GuestPTLL(U) tells you: foobar\n"
-TextMessage "GuestPKFW(U)[348] says: GuestFFHQ foobar\n"
+2016-05-18 17:08:14 CEST GuestQRDR(U) tells you: foobar\n
+2016-05-18 17:08:14 CEST TextMessage "GuestQRDR(U) tells you: foobar\n"
+2016-05-18 17:08:14 CEST \NAK5\SYN132\SYN(told GuestYYPT, who is playing)\n\ETB\n
+2016-05-18 17:08:14 CEST TextMessage "\NAK5\SYN132\SYN(told GuestYYPT, who is playing)\n\ETB\n"
 
 Game 236: GuestSSNR requests to take back 2 half move(s).
 Game 236: GuestSSNR requests to take back 1 half move(s).
