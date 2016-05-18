@@ -166,7 +166,9 @@ wxToolBox h chan sounds = do
           playSound (C.sounds config) (C.sounds config >>= C.challenge . C.request) sounds
           dupChan chan >>= wxChallenge h c
 
-        WxMatchAccepted move chan' -> wxGame h move chan' sounds
+        WxMatchAccepted move chan' -> do
+          playSound (C.sounds config) (C.sounds config >>= C.newGame . C.game) sounds
+          wxGame h move chan' sounds
 
         MatchDeclined user -> set status [text := user ++ " declines the match offer."]
 
