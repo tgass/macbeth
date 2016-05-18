@@ -7,7 +7,6 @@ module Macbeth.Fics.Api.Api (
   Column (..),
   Position,
   MoveDetailed (..),
-  Username,
   pColor,
   invert
 ) where
@@ -40,8 +39,6 @@ data Piece = Piece PType PColor deriving (Show, Eq)
 type Position = [(Square, Piece)]
 
 data MoveDetailed = Simple Square Square | Drop Square | CastleLong | CastleShort deriving (Show, Eq)
-
-type Username = String
 
 pColor :: Piece -> PColor
 pColor (Piece _ color) = color

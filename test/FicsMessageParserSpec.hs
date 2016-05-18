@@ -51,13 +51,15 @@ spec =
     it "pending removed, after withdraw" $ parseFicsMessage "\NAK4\SYN147\SYNYou withdraw the match offer to GuestFZHQ.\n\n<pr> 1\n\ETB\n"
       `shouldBe` Right (PendingRemoved 1)
 
+    it "no such game" $ parseFicsMessage "There is no such game.\n" `shouldBe` Right NoSuchGame
+
+
 commandMessageParserTest :: Bool
 commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
 
 commandMessageParserTestData :: [(FicsMessage, String)]
 commandMessageParserTestData = [
         (DrawRequest, "GuestDWXY offers you a draw.")
-      , (NoSuchGame, "\NAK5\SYN80\SYNThere is no such game.\n\ETB")
       , (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
       , (GuestLogin "FOOBAR", "Press return to enter the server as \"FOOBAR\":")
       , (GameCreation (GameId 484), "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")

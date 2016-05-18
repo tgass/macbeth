@@ -1,6 +1,7 @@
 module Macbeth.Fics.Api.Player (
   Player (..),
   Status (..),
+  Username,
   UserHandle (..),
   HandleType (..)
 ) where
@@ -20,9 +21,10 @@ data Status = InvolvedInAGame
             | NotBusy
             | InvolvedInATournament deriving (Eq, Show)
 
+type Username = String
 
 data UserHandle = UserHandle {
-    name :: String
+    name :: Username
   , handleType :: [HandleType] } deriving (Eq, Show)
 
 

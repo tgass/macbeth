@@ -8,6 +8,7 @@ import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Player
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Configuration
+import Macbeth.Wx.ChatRegistry
 import Macbeth.Wx.Finger
 import Macbeth.Wx.GamesList
 import Macbeth.Wx.Login
@@ -78,6 +79,9 @@ wxToolBox h chan sounds = do
     players <- panel nb []
     (playersWidget, playersHandler) <- wxPlayersList players h
 
+    -- ChatRegistry
+    chatRegistryHandler <- dupChan chan >>= wxChatRegistry h sounds
+
     -- Console
     cp <- panel nb []
     ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = C.fontSize config}]
@@ -114,6 +118,7 @@ wxToolBox h chan sounds = do
       soughtListHandler cmd >>
       pendingHandler cmd >>
       playersHandler cmd >>
+      chatRegistryHandler cmd >>
       case cmd of
 
         NoSuchGame -> do

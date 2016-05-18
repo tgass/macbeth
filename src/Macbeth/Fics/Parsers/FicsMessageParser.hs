@@ -14,6 +14,7 @@ import Macbeth.Fics.Parsers.GamesParser
 import Macbeth.Fics.Parsers.MoveParser
 import Macbeth.Fics.Parsers.RatingParser
 import qualified Macbeth.Fics.Parsers.Api as Api
+import qualified Macbeth.Fics.Parsers.Chatting as Chatting
 import qualified Macbeth.Fics.Parsers.Players as P
 import qualified Macbeth.Fics.Parsers.SeekMsgParsers as SP
 
@@ -64,6 +65,10 @@ parseFicsMessage = parseOnly parser where
                   , P.partnerOffer
                   , P.partnerAccepted
                   , P.partnerDeclined
+
+                  , Chatting.says
+                  , Chatting.tell
+                  , Chatting.told
 
                   , pending
                   , pendingTo

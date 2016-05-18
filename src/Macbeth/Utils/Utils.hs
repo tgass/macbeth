@@ -2,10 +2,12 @@ module Macbeth.Utils.Utils (
     formatTime
   , encrypt
   , decrypt
+  , bind2
 ) where
 
 import Macbeth.Utils.Salt
 
+import Control.Monad
 import Control.Monad.State
 import Crypto.Cipher
 import qualified Data.ByteString.Char8 as B
@@ -40,3 +42,13 @@ encrypt = B.unpack . ctrCombine aes128 nullIV . B.pack
 
 decrypt :: String -> String
 decrypt = encrypt
+
+
+-- taken from Prelude.Generalize
+(.::) = (.) . (.) . (.)
+
+
+-- taken from Prelude.Generalize
+bind2 :: Monad m => (x -> y -> m a) -> m x -> m y -> m a
+bind2 = join .:: liftM2
+

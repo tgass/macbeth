@@ -25,7 +25,6 @@ import Data.Attoparsec.ByteString.Char8
 players :: Parser FicsMessage
 players = Players <$> (commandHead 146 *> players')
 
-
 partnerNotOpen :: Parser FicsMessage
 partnerNotOpen = PartnerNotOpen <$> (commandHead 84 *> userHandle <* " is not open for bughouse.")
 

@@ -5,6 +5,7 @@ module Macbeth.Fics.FicsMessage (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Challenge
+import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.PendingOffer
@@ -76,6 +77,9 @@ data FicsMessage =
   | Finger UserHandle String
   | History UserHandle String
   | Ping {lagMin :: Int, lagAvg :: Int, lagMax :: Int}
+
+  -- | Chatting
+  | Chat ChatMsg
 
   | Login
   | LoginTimeout

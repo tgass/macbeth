@@ -13,6 +13,9 @@ newtype GameId = GameId Int deriving (Eq)
 instance Show GameId where
   show (GameId i) = show i
 
+instance Ord GameId where
+  compare (GameId gi1) (GameId gi2) = gi1 `compare` gi2
+
 data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
                  Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show, Eq)
 

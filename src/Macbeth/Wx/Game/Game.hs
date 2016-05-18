@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, ScopedTypeVariables #-}
+{-# LANGUAGE LambdaCase, ScopedTypeVariables, MultiWayIf #-}
 
 module Macbeth.Wx.Game.Game (
   wxGame
@@ -6,10 +6,11 @@ module Macbeth.Wx.Game.Game (
 
 import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Move
 import qualified Macbeth.Fics.Api.Result as R
 import Macbeth.Utils.PGN
-import Macbeth.Wx.Utils
+import qualified Macbeth.Wx.Utils as Utl
 import Macbeth.Wx.Sounds
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Wx.Game.StatusPanel
@@ -33,6 +34,7 @@ wxGame :: Handle -> Move -> Chan FicsMessage -> Sounds -> IO ()
 wxGame h move chan sounds = do
   config <- C.loadConfig
   vCmd <- newEmptyMVar
+
   f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move]
   p_back <- panel f []
 
@@ -64,14 +66,34 @@ wxGame h move chan sounds = do
      menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
      menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
      menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
+     menuLine ctxMenu
+     menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (nameOponent move) (Just $ gameId move)]
      windowOnMouse p_board True (\pt -> Board.onMouseEvent h vBoardState pt >> repaint p_board)
+
   menuLine ctxMenu
   wxPieceSetsMenu ctxMenu vBoardState p_board
 
   set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
 
   -- key handler
-  windowOnKeyDown p_board $ onKeyDownHandler h p_board f vBoardState promotion
+  windowOnKeyDown p_board (\evt -> if
+    | Utl.onlyKey evt 'X' -> do Api.cancelLastPreMove vBoardState; repaint p_board
+
+    | Utl.onlyKey evt 'Q' -> do Api.pickUpPieceFromHolding vBoardState Queen; repaint p_board
+    | Utl.onlyKey evt 'B' -> do Api.pickUpPieceFromHolding vBoardState Bishop; repaint p_board
+    | Utl.onlyKey evt 'K' -> do Api.pickUpPieceFromHolding vBoardState Knight; repaint p_board
+    | Utl.onlyKey evt 'R' -> do Api.pickUpPieceFromHolding vBoardState Rook; repaint p_board
+    | Utl.onlyKey evt 'P' -> do Api.pickUpPieceFromHolding vBoardState Pawn; repaint p_board
+    | Utl.onlyKey evt 'T' -> writeChan chan $ Chat $ OpenChat (nameOponent move) (Just $ gameId move)
+    | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> do Api.discardDraggedPiece vBoardState; repaint p_board
+
+    | Utl.onlyKey evt 'N' -> hPutStrLn h "5 decline"
+    | Utl.onlyKey evt 'Y' -> hPutStrLn h "5 accept"
+
+    | Utl.keyWithMod evt 'W' justControl -> close f
+    | Utl.keyWithMod evt 'O' justControl -> Api.togglePromotion vBoardState >>= \p -> set promotion [text := "=" ++ show p]
+    | otherwise -> return ())
+
   windowOnKeyUp p_board $ onKeyUpHandler vBoardState h promotion
 
   --set layout
@@ -80,9 +102,9 @@ wxGame h move chan sounds = do
         , on resize := resizeFrame f vBoardState p_board]
 
   -- necessary: after GameResult no more events are handled
-  tiClose <- dupChan chan >>= registerWxCloseEventListenerWithThreadId f
+  tiClose <- dupChan chan >>= Utl.registerWxCloseEventListenerWithThreadId f
 
-  threadId <- forkIO $ eventLoop eventId chan vCmd f
+  threadId <- forkIO $ Utl.eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
     updateClockW cmd >> updateClockB cmd >> gameSounds (C.sounds config) move cmd sounds >> case cmd of
 
@@ -148,27 +170,6 @@ wxPieceSetsMenu ctxMenu vState p = do
   sub <- menuPane [text := "Piece Sets"]
   mapM_ (\ps -> menuItem sub [ text := display ps, on command := Api.setPieceSet vState ps >> repaint p ]) pieceSets
   void $ menuSub ctxMenu sub [ text := "Piece Sets" ]
-
-
-onKeyDownHandler :: Handle -> Panel () -> Frame () -> TVar Api.BoardState -> StatusField -> EventKey -> IO ()
-onKeyDownHandler h p_board f vBoardState sf evt
-    | onlyKey evt 'X' = do Api.cancelLastPreMove vBoardState; repaint p_board
-
-    | onlyKey evt 'Q' = do Api.pickUpPieceFromHolding vBoardState Queen; repaint p_board
-    | onlyKey evt 'B' = do Api.pickUpPieceFromHolding vBoardState Bishop; repaint p_board
-    | onlyKey evt 'K' = do Api.pickUpPieceFromHolding vBoardState Knight; repaint p_board
-    | onlyKey evt 'R' = do Api.pickUpPieceFromHolding vBoardState Rook; repaint p_board
-    | onlyKey evt 'P' = do Api.pickUpPieceFromHolding vBoardState Pawn; repaint p_board
-    | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) = do Api.discardDraggedPiece vBoardState; repaint p_board
-
-    | onlyKey evt 'N' = hPutStrLn h "5 decline"
-    | onlyKey evt 'Y' = hPutStrLn h "5 accept"
-
-    | keyWithMod evt 'W' justControl = close f
-    | keyWithMod evt 'O' justControl = Api.togglePromotion vBoardState >>= \p -> set sf [text := "=" ++ show p]
-    | otherwise = return ()
-    where onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
-          keyWithMod evt c mod = (keyKey evt == KeyChar c) && (keyModifiers evt == mod)
 
 
 onKeyUpHandler :: TVar Api.BoardState -> Handle -> StatusField -> EventKey -> IO ()

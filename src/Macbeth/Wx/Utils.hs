@@ -5,7 +5,9 @@ module Macbeth.Wx.Utils (
   listItemRightClickEvent,
   toWxColor,
   getDisplaySelection,
-  staticTextFormatted
+  staticTextFormatted,
+  onlyKey,
+  keyWithMod
 ) where
 
 import Macbeth.Fics.FicsMessage
@@ -49,6 +51,13 @@ listItemRightClickEvent listCtrl eventHandler
     where
       listHandler :: Graphics.UI.WXCore.Event () -> IO ()
       listHandler evt = eventHandler $ objectCast evt
+
+onlyKey :: EventKey -> Char -> Bool
+onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
+
+
+keyWithMod :: EventKey -> Char -> Modifiers -> Bool
+keyWithMod evt c mod = (keyKey evt == KeyChar c) && (keyModifiers evt == mod)
 
 
 getDisplaySelection :: Choice () -> IO String

@@ -24,6 +24,7 @@ module Macbeth.Fics.Api.Move (
 ) where
 
 import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Player
 import qualified Macbeth.Fics.Api.Game as G
 
 import Data.Maybe
