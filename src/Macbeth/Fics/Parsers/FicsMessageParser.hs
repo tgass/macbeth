@@ -90,7 +90,7 @@ observing :: Parser FicsMessage
 observing = Observing <$> ("You are now observing game " *> Api.gameId)
 
 noSuchGame :: Parser FicsMessage
-noSuchGame = Api.commandHead 80 *> "There is no such game." *> pure NoSuchGame
+noSuchGame = "There is no such game." *> pure NoSuchGame
 
 userNotLoggedIn :: Parser FicsMessage
 userNotLoggedIn = UserNotLoggedIn <$> (Api.commandHead 80 *> many1 letter_ascii <* " is not logged in.\n\ETB")
