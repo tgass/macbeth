@@ -3,11 +3,13 @@ module Macbeth.Wx.PlayersList (
 ) where
 
 import Macbeth.Fics.Api.Player
+import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 
 import Paths
 
+import Control.Concurrent.Chan
 import Data.List
 import Graphics.UI.WX hiding (when)
 import Graphics.UI.WXCore hiding (when)
@@ -20,10 +22,11 @@ data CtxMenu = CtxMenu {
   , history :: MenuItem ()
   , observe :: MenuItem ()
   , partner :: MenuItem ()
+  , chat :: MenuItem()
 }
 
-wxPlayersList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
-wxPlayersList slp h = do
+wxPlayersList :: Panel () -> Handle -> Chan FicsMessage -> IO (ListCtrl (), FicsMessage -> IO ())
+wxPlayersList slp h chan = do
     sl <- listCtrl slp [columns := [
         ("Handle", AlignLeft, -1)
       , ("State", AlignRight, -1)
@@ -41,6 +44,7 @@ wxPlayersList slp h = do
       player <- listEventGetIndex evt >>= get sl . item
       sequence_ $ fmap (updateM (head player)) [(finger, "finger"), (partner, "partner"),
         (match, "match"), (history, "history"), (observe, "observe")]
+      set (chat ctxMenuPopup) [on command := writeChan chan $ Chat $ OpenChat (head player) Nothing ]
       listEventGetPoint evt >>= flip (menuPopup ctxMenu) sl)
 
     return (sl, handler sl)
@@ -85,6 +89,8 @@ createCtxMenu ctxMenu = CtxMenu
   <*> menuItem ctxMenu [ text := "History"]
   <*> menuItem ctxMenu [ text := "Observe"]
   <*> menuItem ctxMenu [ text := "Partner"]
+  <*> menuItem ctxMenu [ text := "Chat"]
+
 
 toList :: Player -> [String]
 toList (Player rating status (UserHandle username ht)) =

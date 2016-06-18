@@ -77,7 +77,7 @@ wxToolBox h chan sounds = do
 
     -- Players
     players <- panel nb []
-    (playersWidget, playersHandler) <- wxPlayersList players h
+    (playersWidget, playersHandler) <- wxPlayersList players h chan
 
     -- ChatRegistry
     chatRegistryHandler <- dupChan chan >>= wxChatRegistry h sounds
