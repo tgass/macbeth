@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Macbeth.Wx.Game.GameSounds (
   gameSounds
 ) where
@@ -6,54 +8,49 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.FicsMessage
-import Macbeth.Wx.Sounds
+import Macbeth.Wx.RuntimeEnv
 import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Applicative
 
-gameSounds :: Maybe C.Sounds -> Move -> FicsMessage -> Sounds -> IO ()
-gameSounds Nothing _ _ _ = return ()
-gameSounds snd@(Just soundC) move msg sounds = playSound snd soundFile sounds
-  where soundFile = findSound move msg soundC
+gameSounds :: RuntimeEnv -> Move -> FicsMessage -> IO ()
+gameSounds env move msg
+  | not (isGameUser move) && not (env `getSoundConfig` C.enabledObservedGames) = return ()
+  | otherwise = playSound env $ findSound move msg
 
 
-findSound :: Move -> FicsMessage -> C.Sounds -> Maybe String
-findSound initMove msg config =
-  if not (isGameUser initMove) && not (C.enabledObservedGames config) then Nothing
-  else case msg of
-  GameMove Illegal _ -> C.illegal $ C.move $ C.game config
+findSound :: Move -> FicsMessage -> (C.Sounds -> Maybe String)
+findSound initMove = \case
+  GameMove Illegal _ -> C.illegal . C.move . C.game
 
-  GameMove Takeback{} _ -> C.takeback moveS
+  GameMove Takeback{} _ -> C.takeback . C.move . C.game
 
-  GameMove _ move ->
-    (isCheck move `withSound` C.check moveS) <|>
-    (isCapture move `withSound` C.capture moveS) <|>
-    (isCastling move `withSound` C.castling moveS) <|>
-    (isDrop move `withSound` C.pieceDrop moveS) <|>
-    C.normal moveS
+  GameMove _ move -> (\c ->
+    isCheck move `withSound` C.check (C.move $ C.game c) <|>
+    isCapture move `withSound` C.capture (C.move $ C.game c) <|>
+    isCastling move `withSound` C.castling (C.move $ C.game c) <|>
+    isDrop move `withSound` C.pieceDrop (C.move $ C.game c) <|>
+    C.normal (C.move $ C.game c))
 
   GameResult r
-    | isGameUser initMove && userWins initMove r -> C.youWin endOfGameS
-    | isGameUser initMove && userLoses initMove r -> C.youLose endOfGameS
-    | isGameUser initMove && (result r == Draw) -> C.youDraw endOfGameS
-    | result r == WhiteWins -> C.whiteWins endOfGameS
-    | result r == BlackWins -> C.blackWins endOfGameS
-    | result r == Draw -> C.draw endOfGameS
-    | result r == Aborted -> C.abort endOfGameS
-    | otherwise -> Nothing
+    | isGameUser initMove && userWins initMove r -> C.youWin . C.endOfGame . C.game
+    | isGameUser initMove && userLoses initMove r -> C.youLose . C.endOfGame . C.game
+    | isGameUser initMove && (result r == Draw) -> C.youDraw . C.endOfGame . C.game
+    | result r == WhiteWins -> C.whiteWins . C.endOfGame . C.game
+    | result r == BlackWins -> C.blackWins . C.endOfGame . C.game
+    | result r == Draw -> C.draw . C.endOfGame . C.game
+    | result r == Aborted -> C.abort . C.endOfGame . C.game
+    | otherwise -> const Nothing
 
-  DrawRequest -> C.drawReq $ C.request config
+  DrawRequest -> C.drawReq . C.request
 
-  AbortRequest {} -> C.abortReq $ C.request config
+  AbortRequest {} -> C.abortReq . C.request
 
-  TakebackRequest {} -> C.takebackReq $ C.request config
+  TakebackRequest {} -> C.takebackReq . C.request
 
-  _ -> Nothing
+  _ -> const Nothing
 
   where
-    endOfGameS = C.endOfGame $ C.game config
-    moveS = C.move $ C.game config
-
     withSound :: Bool -> Maybe String -> Maybe String
     withSound True (Just sound) = Just sound
     withSound _ _ = Nothing

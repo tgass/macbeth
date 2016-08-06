@@ -21,8 +21,8 @@ import Macbeth.Wx.Game.Game
 import Macbeth.Wx.Challenge
 import Macbeth.Wx.PartnerOffer
 import Macbeth.Wx.Pending
-import Macbeth.Wx.Sounds
 import qualified Macbeth.Wx.Config.UserConfig as C
+import qualified Macbeth.Wx.RuntimeEnv as E
 import Paths
 
 import Control.Concurrent
@@ -40,9 +40,9 @@ import System.IO.Unsafe
 
 eventId = wxID_HIGHEST + 1
 
-wxToolBox :: Handle -> Chan FicsMessage -> Sounds -> IO ()
-wxToolBox h chan sounds = do
-    config <- C.initConfig
+wxToolBox :: E.RuntimeEnv -> Chan FicsMessage -> IO ()
+wxToolBox env chan = do
+    let h = E.handle env
     f  <- frame [ text := "Macbeth"]
 
     tbar   <- toolBarEx f False False []
@@ -80,11 +80,11 @@ wxToolBox h chan sounds = do
     (playersWidget, playersHandler) <- wxPlayersList players h chan
 
     -- ChatRegistry
-    chatRegistryHandler <- dupChan chan >>= wxChatRegistry h sounds
+    chatRegistryHandler <- dupChan chan >>= wxChatRegistry env
 
     -- Console
     cp <- panel nb []
-    ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = C.fontSize config}]
+    ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = env `E.getConfig` C.fontSize}]
     ce <- entry cp []
     set ce [on enterKey := emitCommand ce h]
 
@@ -143,19 +143,20 @@ wxToolBox h chan sounds = do
 
         LoginTimeout -> set status [ text := "Login Timeout." ]
 
-        Login | C.autologin config -> hPutStrLn h (maybe (error "autologin: username not set") C.username $ C.user config)
+        Login | (env `E.getConfig` C.autologin) -> hPutStrLn h (maybe (error "autologin: username not set") C.username (env `E.getConfig` C.user))
               | otherwise -> dupChan chan >>= wxLogin h
 
-        Password -> when (C.autologin config) $
-          hPutStrLn h (maybe (error "autologin: password not set") (decrypt . C.password) (C.user config))
+        Password -> when (env `E.getConfig` C.autologin) $
+          hPutStrLn h (maybe (error "autologin: password not set") (decrypt . C.password) (env `E.getConfig` C.user))
 
         GuestLogin _ -> do
-          when (C.autologin config) $ hPutStrLn h ""
+          when (env `E.getConfig` C.autologin) $ hPutStrLn h ""
           set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ]
           set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
         LoggedIn handle -> do
-          playSound (C.sounds config) (C.sounds config >>= C.logonToServer . C.other) sounds
+          E.playSound env (C.logonToServer . C.other)
+          E.setUsername env (name handle)
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
           hPutStrLn h `mapM_` [ "ping", "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name handle]
@@ -165,15 +166,15 @@ wxToolBox h chan sounds = do
 
         msg@History {} -> dupChan chan >>= wxInfo msg
 
-        WxObserve move chan' -> wxGame h move chan' sounds
+        WxObserve move chan' -> wxGame env move chan'
 
         MatchRequested c -> do
-          playSound (C.sounds config) (C.sounds config >>= C.challenge . C.request) sounds
+          E.playSound env (C.challenge . C.request)
           dupChan chan >>= wxChallenge h c
 
         WxMatchAccepted move chan' -> do
-          playSound (C.sounds config) (C.sounds config >>= C.newGame . C.game) sounds
-          wxGame h move chan' sounds
+          E.playSound env (C.newGame . C.game)
+          wxGame env move chan'
 
         MatchDeclined user -> set status [text := user ++ " declines the match offer."]
 

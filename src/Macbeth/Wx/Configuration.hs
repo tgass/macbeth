@@ -46,7 +46,7 @@ showConfig ct = do
 resetSounds :: TextCtrl() -> IO ()
 resetSounds ct = do
   c <- C.loadConfig
-  set ct [text := comments ++ BS.unpack (Y.encode $ removeUser c{C.sounds = defaultSounds})]
+  set ct [text := comments ++ BS.unpack (Y.encode $ removeUser c{C.sounds = Just defaultSounds})]
 
 
 parseAndSave :: TextCtrl () -> StatusField -> ExceptT Y.ParseException IO ()

@@ -6,10 +6,9 @@ module Macbeth.Wx.Chat (
 
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Chat
-import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Player hiding (handle)
-import Macbeth.Wx.Sounds
 import Macbeth.Wx.Utils
+import qualified Macbeth.Wx.RuntimeEnv as E
 import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Concurrent
@@ -21,20 +20,20 @@ import System.IO
 
 eventId = wxID_HIGHEST + 1
 
-wxChat :: Username -> Maybe GameId -> Handle -> Sounds -> [ChatMsg] -> Chan FicsMessage -> IO ()
-wxChat username _ h _ chatMsgs chan = do
-  config <- C.loadConfig
+wxChat :: E.RuntimeEnv -> a -> [ChatMsg] -> Chan FicsMessage -> IO ()
+wxChat env _ chatMsgs chan = do
+  username <- E.username env
   vCmd <- newEmptyMVar
 
   f <- frame [ text := "Chat with " ++ username]
   windowSetFocus f
   p <- panel f []
 
-  ct <- textCtrlEx p (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = C.fontSize config}]
+  ct <- textCtrlEx p (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = env `E.getConfig` C.fontSize}]
   prefill ct chatMsgs
 
   ce <- entry p []
-  set ce [on enterKey := tell ce username h chan]
+  set ce [on enterKey := tell ce username (E.handle env) chan]
 
   set f [layout := minsize (Size 400 200) $ container p $ margin 10 $
                      column 5 [ fill $ widget ct, hfill $ widget ce]]

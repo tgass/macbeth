@@ -8,40 +8,39 @@ import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Chat
-import Macbeth.Wx.Sounds
+import Macbeth.Wx.RuntimeEnv
 
 import Control.Concurrent.Chan
 import Control.Concurrent.STM
 import Control.Monad
 import Data.Maybe
-import System.IO
 import qualified Data.Map.Strict as Map
 
 data ChatState = Open | Closed deriving (Eq, Show)
 
 type Chat = (ChatState, [ChatMsg])
 
-wxChatRegistry :: Handle -> Sounds -> Chan FicsMessage -> IO (FicsMessage -> IO ())
-wxChatRegistry h sounds chan = do
+wxChatRegistry :: RuntimeEnv -> Chan FicsMessage -> IO (FicsMessage -> IO ())
+wxChatRegistry env chan = do
   chatMap <- newTVarIO $ Map.fromList [("ROBOadmin", emptyChat Open)]
 
   let handler = \case
 
-       Chat msg -> handleChat h sounds chan chatMap msg
+       Chat msg -> handleChat env chan chatMap msg
 
        _ -> return ()
 
   return handler
 
 
-handleChat :: Handle -> Sounds -> Chan FicsMessage -> TVar (Map.Map Username Chat) -> ChatMsg -> IO ()
-handleChat h sounds chan chatMap msg = do
+handleChat :: RuntimeEnv -> Chan FicsMessage -> TVar (Map.Map Username Chat) -> ChatMsg -> IO ()
+handleChat env chan chatMap msg = do
 
   let updateAndOpenChat username mGameId = do
         chatState <- updateChatMap chatMap username msg
         unless (isOpen chatState) $ do
           setChat chatMap username Open
-          dupChan chan >>= wxChat username mGameId h sounds (snd chatState)
+          dupChan chan >>= wxChat env mGameId (snd chatState)
 
   case msg of
     Say (UserHandle username _) gameId _ -> updateAndOpenChat username (Just gameId)

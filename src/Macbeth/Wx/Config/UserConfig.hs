@@ -59,7 +59,7 @@ initConfig = do
     createDirectoryIfMissing False dir
     saveConfig $ defaultConfig dir
   config <- loadConfig
-  when (isNothing $ sounds config) $ saveConfig config {sounds = defaultSounds}
+  when (isNothing $ sounds config) $ saveConfig config {sounds = Just defaultSounds}
   loadConfig
 
 
@@ -95,7 +95,7 @@ defaultConfig dir = Config {
   directory = dir,
   autologin = False,
   user = Nothing,
-  sounds = defaultSounds
+  sounds = Just defaultSounds
 }
 
 

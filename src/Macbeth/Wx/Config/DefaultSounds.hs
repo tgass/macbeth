@@ -4,8 +4,8 @@ module Macbeth.Wx.Config.DefaultSounds (
 
 import Macbeth.Wx.Config.Sounds
 
-defaultSounds :: Maybe Sounds
-defaultSounds = Just Sounds {
+defaultSounds :: Sounds
+defaultSounds = Sounds {
     enabled = True
   , enabledObservedGames = True
   , game = gameS
