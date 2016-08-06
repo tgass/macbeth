@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Macbeth.Wx.PlayersList (
   wxPlayersList
 ) where
@@ -10,7 +12,10 @@ import Macbeth.Wx.Utils
 import Paths
 
 import Control.Concurrent.Chan
+import Control.Concurrent.STM
+import Control.Monad
 import Data.List
+import Data.Ord
 import Graphics.UI.WX hiding (when)
 import Graphics.UI.WXCore hiding (when)
 import System.IO
@@ -23,10 +28,21 @@ data CtxMenu = CtxMenu {
   , observe :: MenuItem ()
   , partner :: MenuItem ()
   , chat :: MenuItem()
+  , sortByName :: MenuItem()
+  , sortByStatus :: MenuItem()
+  , sortByRating :: MenuItem()
+}
+
+data SortOrder = Name | Status | Rating deriving Show
+
+data ListCfg = ListCfg {
+    sortOrder :: TVar SortOrder
+  , players :: TVar [Player]
 }
 
 wxPlayersList :: Panel () -> Handle -> Chan FicsMessage -> IO (ListCtrl (), FicsMessage -> IO ())
 wxPlayersList slp h chan = do
+    cfg <- ListCfg <$> newTVarIO Name <*> newTVarIO ([] :: [Player])
     sl <- listCtrl slp [columns := [
         ("Handle", AlignLeft, -1)
       , ("State", AlignRight, -1)
@@ -38,24 +54,45 @@ wxPlayersList slp h chan = do
 
     ctxMenu <- menuPane []
     ctxMenuPopup <- createCtxMenu ctxMenu
-    let updateM user (f, cmd) = set (f ctxMenuPopup) [on command := hPutStrLn h $ "6 " ++ cmd ++ " " ++ user]
+    set (sortByName ctxMenuPopup) [checked := True]
 
     listItemRightClickEvent sl (\evt -> do
       player <- listEventGetIndex evt >>= get sl . item
-      sequence_ $ fmap (updateM (head player)) [(finger, "finger"), (partner, "partner"),
-        (match, "match"), (history, "history"), (observe, "observe")]
+      set (match ctxMenuPopup) [on command := hPutStrLn h $ "6 match " ++ head player]
+      set (finger ctxMenuPopup) [on command := hPutStrLn h $ "6 finger " ++ head player]
+      set (history ctxMenuPopup) [on command := hPutStrLn h $ "6 history " ++ head player]
+      set (observe ctxMenuPopup) [on command := hPutStrLn h $ "6 observe " ++ head player]
+      set (partner ctxMenuPopup) [on command := hPutStrLn h $ "6 partner " ++ head player]
       set (chat ctxMenuPopup) [on command := writeChan chan $ Chat $ OpenChat (head player) Nothing ]
+      set (sortByName ctxMenuPopup) [on command := atomically (writeTVar (sortOrder cfg) Name) >> sortPlayers sl cfg ]
+      set (sortByStatus ctxMenuPopup) [on command := atomically (writeTVar (sortOrder cfg) Status) >> sortPlayers sl cfg ]
+      set (sortByRating ctxMenuPopup) [on command := atomically (writeTVar (sortOrder cfg) Rating) >> sortPlayers sl cfg ]
+
       listEventGetPoint evt >>= flip (menuPopup ctxMenu) sl)
 
-    return (sl, handler sl)
+    return (sl, handler sl cfg)
 
 
-handler :: ListCtrl () -> FicsMessage -> IO ()
-handler sl cmd = case cmd of
-  Players players -> do
-    listCtrlDeleteAllItems sl
-    sequence_ $ fmap (addPlayer sl) players
+handler :: ListCtrl () -> ListCfg -> FicsMessage -> IO ()
+handler sl cfg = \case
+  Players players' -> do
+    atomically $ modifyTVar (players cfg) (const players')
+    sortPlayers sl cfg
+
   _ -> return ()
+
+
+sortPlayers :: ListCtrl () -> ListCfg -> IO ()
+sortPlayers sl cfg = do
+  sortOrder' <- readTVarIO (sortOrder cfg)
+  players' <- readTVarIO (players cfg)
+  listCtrlDeleteAllItems sl
+  sequence_ $ fmap (addPlayer sl) (sortBy (convert sortOrder') players')
+  where
+    convert :: SortOrder -> (Player -> Player -> Ordering)
+    convert Name = comparing handle
+    convert Status = comparing status
+    convert Rating = comparing rating
 
 
 images :: IO (ImageList ())
@@ -71,7 +108,7 @@ addPlayer l player = do
 
   item <- listItemCreate
   listItemSetId item count
-  --when (Computer `elem` titles seek) $ listItemSetBackgroundColour item (colorRGB 125 149 184)
+  when (Computer `elem` handleType (handle player)) $ listItemSetBackgroundColour item (colorRGB 255 255 188)
   listItemSetImage item (fmap imageIdx handleType $ handle player)
 
   listCtrlInsertItem l item
@@ -90,6 +127,10 @@ createCtxMenu ctxMenu = CtxMenu
   <*> menuItem ctxMenu [ text := "Observe"]
   <*> menuItem ctxMenu [ text := "Partner"]
   <*> menuItem ctxMenu [ text := "Chat"]
+  <*> (menuLine ctxMenu >>
+      menuRadioItem ctxMenu [ text := "Sort by Name"])
+  <*> menuRadioItem ctxMenu [ text := "Sort by State"]
+  <*> menuRadioItem ctxMenu [ text := "Sort by Rating"]
 
 
 toList :: Player -> [String]
