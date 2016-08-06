@@ -52,9 +52,8 @@ instance ToJSON User
 
 initConfig :: IO Config
 initConfig = do
-  appDir <- getAppDir ""
-  createDirectoryIfMissing False appDir
-  configExists <- doesFileExist =<< getAppDir "macbeth.yaml"
+  createDirectoryIfMissing False =<< getMacbethUserDataDir ""
+  configExists <- doesFileExist =<< getMacbethUserDataDir "macbeth.yaml"
   unless configExists $ do
     dir <- (</> "Macbeth") <$> getUserDocumentsDirectory
     createDirectoryIfMissing False dir
@@ -69,11 +68,11 @@ loadConfig = either (error . prettyPrintParseException) return =<< runExceptT fr
 
 
 fromDisk :: ExceptT ParseException IO Config
-fromDisk = ExceptT $ getAppDir "macbeth.yaml" >>= decodeFileEither
+fromDisk = ExceptT $ getMacbethUserDataDir "macbeth.yaml" >>= decodeFileEither
 
 
 saveConfig :: Config -> IO ()
-saveConfig config = getAppDir "macbeth.yaml" >>= flip encodeFile config
+saveConfig config = getMacbethUserDataDir    "macbeth.yaml" >>= flip encodeFile config
 
 
 saveCredentials :: String -> String -> IO ()

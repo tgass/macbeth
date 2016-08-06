@@ -1,6 +1,6 @@
 module Paths (
     getDataFileName
-  , getAppDir
+  , getMacbethUserDataDir
 ) where
 
 import Data.List
@@ -16,8 +16,8 @@ getDataFileName f
   | otherwise = PM.getDataFileName f
 
 
-getAppDir :: FilePath -> IO FilePath
-getAppDir file
+getMacbethUserDataDir :: FilePath -> IO FilePath
+getMacbethUserDataDir file
   | "app" `isInfixOf` __Bin__ = (</> file) <$> getAppUserDataDirectory "macbeth"
-  | otherwise = PM.getAppDir file
+  | otherwise = PM.getMacbethUserDataDir file
 

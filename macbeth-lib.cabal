@@ -97,5 +97,6 @@ test-suite macbeth-lib-test
       FicsMessageParserSpec,
       GameResultSpec,
       PlayersSpec,
-      SeekSpec
+      SeekSpec,
+      ChattingSpec
     build-depends: macbeth-lib, base, hspec == 2.*, bytestring, attoparsec
