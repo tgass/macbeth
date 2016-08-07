@@ -16,8 +16,9 @@ instance Show GameId where
 instance Ord GameId where
   compare (GameId gi1) (GameId gi2) = gi1 `compare` gi2
 
-data GameType =  Blitz | Lightning | Untimed | ExaminedGame | Standard | Wild | Atomic |
-                 Crazyhouse | Bughouse | Losers | Suicide | NonStandardGame  deriving (Show, Eq)
+data GameType =
+  Lightning | Blitz | Standard | Wild | Atomic | Crazyhouse | Bughouse | Losers |
+  Suicide | Untimed | ExaminedGame | NonStandardGame  deriving (Show, Eq, Ord)
 
 data Game = Game {
     gameId :: GameId
