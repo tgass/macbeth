@@ -54,7 +54,10 @@ wxPlayersList slp h chan = do
 
     ctxMenu <- menuPane []
     ctxMenuPopup <- createCtxMenu ctxMenu
-    set (sortByName ctxMenuPopup) [checked := True]
+    set (sortByName ctxMenuPopup) [ on command := atomically (writeTVar (sortOrder cfg) Name) >> sortPlayers sl cfg
+                                  , checked := True ]
+    set (sortByStatus ctxMenuPopup) [ on command := atomically (writeTVar (sortOrder cfg) Status) >> sortPlayers sl cfg ]
+    set (sortByRating ctxMenuPopup) [ on command := atomically (writeTVar (sortOrder cfg) Rating) >> sortPlayers sl cfg ]
 
     listItemRightClickEvent sl (\evt -> do
       player <- listEventGetIndex evt >>= get sl . item
@@ -64,10 +67,6 @@ wxPlayersList slp h chan = do
       set (observe ctxMenuPopup) [on command := hPutStrLn h $ "6 observe " ++ head player]
       set (partner ctxMenuPopup) [on command := hPutStrLn h $ "6 partner " ++ head player]
       set (chat ctxMenuPopup) [on command := writeChan chan $ Chat $ OpenChat (head player) Nothing ]
-      set (sortByName ctxMenuPopup) [on command := atomically (writeTVar (sortOrder cfg) Name) >> sortPlayers sl cfg ]
-      set (sortByStatus ctxMenuPopup) [on command := atomically (writeTVar (sortOrder cfg) Status) >> sortPlayers sl cfg ]
-      set (sortByRating ctxMenuPopup) [on command := atomically (writeTVar (sortOrder cfg) Rating) >> sortPlayers sl cfg ]
-
       listEventGetPoint evt >>= flip (menuPopup ctxMenu) sl)
 
     return (sl, handler sl cfg)
