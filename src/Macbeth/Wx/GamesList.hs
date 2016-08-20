@@ -51,7 +51,7 @@ wxGamesList glp h = do
   glCtxSub <- menuPane []
 
   ctxSortMenu' <- ctxSortMenu glCtxSub
-  ctxMenuPopup <- getGamesOpts glCtxMenu glCtxSub
+  ctxMenuPopup <- ctxMenu glCtxMenu glCtxSub
 
   listItemRightClickEvent gl $ \evt -> do
     pt <- listEventGetPoint evt
@@ -105,9 +105,9 @@ sortFoo :: CtxSortMenu -> IO (Game -> Game -> Ordering)
 sortFoo ctxMenu = do
   gameId' <- foo gameId (sortByGameId ctxMenu)
   nameW' <- foo nameW (sortByNameW ctxMenu)
-  ratingW' <- foo ratingW (sortByRatingW ctxMenu)
+  ratingW' <- foo (Down . ratingW) (sortByRatingW ctxMenu)
   nameB' <- foo nameB (sortByNameB ctxMenu)
-  ratingB' <- foo ratingB (sortByRatingB ctxMenu)
+  ratingB' <- foo (Down . ratingB) (sortByRatingB ctxMenu)
   gameType'' <- foo (gameType . settings) (sortByGameType ctxMenu)
 
   return $ fromMaybe (comparing gameId)
@@ -122,12 +122,12 @@ whenMaybe :: Bool -> a -> Maybe a
 whenMaybe x = (guard x >>) . Just
 
 
-getGamesOpts :: Menu () -> Menu () -> IO CtxMenu
-getGamesOpts ctxMenu subSortBy = CtxMenu
+ctxMenu :: Menu () -> Menu () -> IO CtxMenu
+ctxMenu ctxMenu sub = CtxMenu
   <$> menuItem ctxMenu [ text := "Refresh" ]
   <*> menuItem ctxMenu [ text := "Show rated games", checkable := True, checked := True]
   <*> menuItem ctxMenu [ text := "Show unrated games", checkable := True, checked := True]
-  <*> menuSub ctxMenu subSortBy [ text := "Sort By" ]
+  <*> menuSub ctxMenu sub [ text := "Sort By" ]
 
 
 ctxSortMenu :: Menu () -> IO CtxSortMenu

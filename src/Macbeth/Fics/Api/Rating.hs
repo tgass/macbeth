@@ -3,7 +3,7 @@ module Macbeth.Fics.Api.Rating (
   ProvShow (..)
 ) where
 
-data Rating = Rating {r :: Int, provShow :: ProvShow} | Guest | Unrated deriving (Eq, Ord)
+data Rating = Unrated | Guest | Rating {r :: Int, provShow :: ProvShow} deriving (Eq, Ord)
 
 data ProvShow = None | Estimated | Provisional deriving (Eq, Ord)
 
@@ -16,4 +16,3 @@ instance Show Rating where
   show (Rating r' ps) = show r' ++ show ps
   show Guest = "Guest"
   show Unrated = "Unrated"
-
