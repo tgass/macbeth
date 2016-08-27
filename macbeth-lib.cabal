@@ -77,7 +77,6 @@ library
                      Macbeth.Wx.Game.StatusPanel,
                      Macbeth.Wx.Game.GameSounds,
                      Macbeth.Wx.Config.UserConfig,
-                     Macbeth.Wx.Config.DefaultSounds,
                      Macbeth.Wx.Config.Sounds
   other-modules: Paths_Macbeth
   ghc-options: -W

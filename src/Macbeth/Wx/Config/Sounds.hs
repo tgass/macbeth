@@ -6,7 +6,10 @@ module Macbeth.Wx.Config.Sounds (
   MoveS(..),
   EndOfGameS(..),
   RequestS(..),
-  OtherS(..)
+  ChatS(..),
+  OtherS(..),
+  defaultSounds,
+  chatS
 ) where
 
 import Data.Yaml
@@ -17,11 +20,12 @@ data Sounds = Sounds {
   , enabledObservedGames :: Bool
   , game :: GameS
   , request :: RequestS
+  , chat :: Maybe ChatS
   , other :: OtherS
 } deriving (Show, Generic)
 
-instance FromJSON Sounds
 instance ToJSON Sounds
+instance FromJSON Sounds
 
 
 data GameS = GameS {
@@ -71,9 +75,80 @@ instance FromJSON RequestS
 instance ToJSON RequestS
 
 
+data ChatS = ChatS {
+    say :: Maybe Bool
+  , privateTell :: Maybe Bool
+  , kibitz :: Maybe Bool
+  , whisper :: Maybe Bool
+  , shout :: Maybe Bool
+  , cShout :: Maybe Bool
+  , partnerTell :: Maybe Bool
+} deriving (Show, Generic)
+
+instance FromJSON ChatS
+instance ToJSON ChatS
+
+
 data OtherS = OtherS {
   logonToServer :: Maybe String
 } deriving (Show, Generic)
 
 instance FromJSON OtherS
 instance ToJSON OtherS
+
+defaultSounds :: Sounds
+defaultSounds = Sounds {
+    enabled = True
+  , enabledObservedGames = True
+  , game = gameS
+  , request = requestS
+  , chat = Just chatS
+  , other = otherS
+}
+
+gameS :: GameS
+gameS = GameS {
+    newGame = Nothing
+  , move = MoveS {
+      normal = Just "move.wav"
+    , capture = Nothing
+    , check = Nothing
+    , castling = Nothing
+    , pieceDrop = Nothing
+    , illegal = Just "penalty.wav"
+    , takeback = Nothing
+  }
+  , endOfGame = EndOfGameS {
+      youWin = Just "win.wav"
+    , youLose = Just "lose.wav"
+    , youDraw = Just "draw.wav"
+    , whiteWins = Just "cymbal.wav"
+    , blackWins = Just "cymbal.wav"
+    , draw = Just "cymbal.wav"
+    , abort = Nothing
+  }
+}
+
+requestS :: RequestS
+requestS = RequestS {
+    challenge = Just "challenge.wav"
+  , abortReq = Just "pop2.wav"
+  , drawReq = Just "pop2.wav"
+  , takebackReq = Just "pop2.wav"
+}
+
+chatS :: ChatS
+chatS = ChatS {
+    say = Nothing
+  , privateTell = Nothing
+  , kibitz = Nothing
+  , whisper = Nothing
+  , shout = Nothing
+  , cShout = Nothing
+  , partnerTell = Nothing
+}
+
+otherS :: OtherS
+otherS = OtherS {
+  logonToServer = Just "ding1.wav"
+}

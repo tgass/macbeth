@@ -4,7 +4,7 @@ module Macbeth.Wx.Configuration (
 
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
-import Macbeth.Wx.Config.DefaultSounds
+import Macbeth.Wx.Config.Sounds
 import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Concurrent.Chan
@@ -40,8 +40,9 @@ wxConfiguration chan = do
 
 showConfig :: TextCtrl() -> IO ()
 showConfig ct = do
-  config <- C.loadConfig
+  config <-  C.loadConfig
   set ct [text := comments ++ BS.unpack (Y.encode $ removeUser config)]
+
 
 resetSounds :: TextCtrl() -> IO ()
 resetSounds ct = do

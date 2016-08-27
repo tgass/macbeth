@@ -8,11 +8,9 @@ module Macbeth.Wx.RuntimeEnv (
   getSoundConfig
 ) where
 
-import Macbeth.Wx.Config.DefaultSounds
 import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Concurrent.STM
-import Data.Maybe
 import Paths
 import Sound.ALUT
 import System.FilePath
@@ -43,18 +41,18 @@ setUsername env username = atomically $ writeTVar (_username env) username
 
 
 getConfig :: RuntimeEnv -> (C.Config -> a) -> a
-getConfig env f = f (config env)
+getConfig env f = f $ config env
 
 
 getSoundConfig :: RuntimeEnv -> (C.Sounds -> a) -> a
-getSoundConfig env f = f (fromMaybe defaultSounds (C.sounds $ config env))
+getSoundConfig env f = f $ C.soundsOrDef $ config env
 
 
 playSound :: RuntimeEnv -> (C.Sounds -> Maybe String) -> IO ()
 playSound env f
   | C.enabled soundConfig = play' (sources env) mBuffer
   | otherwise = return ()
-  where soundConfig = fromMaybe defaultSounds (C.sounds $ config env)
+  where soundConfig = C.soundsOrDef $ config env
         mBuffer = f soundConfig >>= (`M.lookup` bufferMap env)
 
 

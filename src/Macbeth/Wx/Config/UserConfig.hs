@@ -2,6 +2,8 @@
 
 module Macbeth.Wx.Config.UserConfig (
   Config(..),
+  chatOrDef,
+  soundsOrDef,
   User(..),
   Sounds(..),
   GameS(..),
@@ -12,13 +14,11 @@ module Macbeth.Wx.Config.UserConfig (
   initConfig,
   loadConfig,
   saveConfig,
-  saveCredentials,
-  isSoundEnabled
+  saveCredentials
 ) where
 
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Config.Sounds
-import Macbeth.Wx.Config.DefaultSounds
 import Paths
 
 import Control.Monad
@@ -50,6 +50,15 @@ data User = User {
 instance FromJSON User
 instance ToJSON User
 
+
+chatOrDef :: Sounds -> ChatS
+chatOrDef = fromMaybe chatS . chat
+
+
+soundsOrDef :: Config -> Sounds
+soundsOrDef = fromMaybe defaultSounds . sounds
+
+
 initConfig :: IO Config
 initConfig = do
   createDirectoryIfMissing False =<< getMacbethUserDataDir ""
@@ -58,13 +67,21 @@ initConfig = do
     dir <- (</> "Macbeth") <$> getUserDocumentsDirectory
     createDirectoryIfMissing False dir
     saveConfig $ defaultConfig dir
-  config <- loadConfig
-  when (isNothing $ sounds config) $ saveConfig config {sounds = Just defaultSounds}
   loadConfig
 
 
 loadConfig :: IO Config
-loadConfig = either (error . prettyPrintParseException) return =<< runExceptT fromDisk
+loadConfig = setDefaults <$>
+  (either (error . prettyPrintParseException) return =<< runExceptT fromDisk)
+
+
+-- make sure that default values are always set
+-- this is important specially when the configuration is shown to the user
+setDefaults :: Config -> Config
+setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'})}
+  where
+    soundsOrDef' = soundsOrDef c
+    chatOrDef' = chatOrDef soundsOrDef'
 
 
 fromDisk :: ExceptT ParseException IO Config
@@ -79,14 +96,6 @@ saveCredentials :: String -> String -> IO ()
 saveCredentials username password = do
   config <- loadConfig
   saveConfig $ config {user = Just $ User username (encrypt password), autologin = True}
-
-
-isSoundEnabled :: Config -> Bool
-isSoundEnabled config = case sounds config of
-  Just soundsConf
-    | enabled soundsConf -> True
-    | otherwise -> False
-  _ -> False
 
 
 defaultConfig :: String -> Config
