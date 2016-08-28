@@ -1,13 +1,15 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, TemplateHaskell #-}
 
 module Macbeth.Wx.ChatRegistry (
   wxChatRegistry
 ) where
 
-import Macbeth.Fics.FicsMessage
+import qualified Macbeth.Fics.FicsMessage as F
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Chat
+import Macbeth.Wx.Config.Sounds
+import Macbeth.Wx.Config.UserConfig
 import Macbeth.Wx.RuntimeEnv
 
 import Control.Concurrent.Chan
@@ -18,23 +20,25 @@ import Data.Map.Strict
 
 data ChatState = Open | Closed deriving (Eq, Show)
 
-type Chat = (ChatState, [ChatMsg])
+data Chat = Chat { _state :: ChatState, messages :: [ChatMsg] }
+makeLenses ''Chat
 
-wxChatRegistry :: RuntimeEnv -> Chan FicsMessage -> IO (FicsMessage -> IO ())
+wxChatRegistry :: RuntimeEnv -> Chan F.FicsMessage -> IO (F.FicsMessage -> IO ())
 wxChatRegistry env chan = do
-  chatMap <- newTVarIO $ fromList [("ROBOadmin", (Open, []))]
+  chatMap <- newTVarIO $ fromList [("ROBOadmin", Chat Open [])]
 
   return $ \case
 
-       Chat msg -> let updateAndOpenChat username mGameId = do
-                         chat <- updateChatMap chatMap username msg
-                         unless (isOpen chat) $ do
+       F.Chat msg -> let updateAndOpenChat username mGameId = do
+                         (Chat state msgs) <- updateChatMap chatMap username msg
+                         unless (state == Open) $ do
                            setChatState chatMap username Open
-                           dupChan chan >>= wxChat env mGameId (snd chat)
+                           dupChan chan >>= wxChat env mGameId msgs
 
                    in case msg of
-                        Say (UserHandle username _) gameId _ ->
+                        Say (UserHandle username _) gameId _ -> do
                           updateAndOpenChat username (Just gameId)
+                          playSound env (say . chatOrDef)
 
                         Tell (UserHandle username _) _ ->
                           updateAndOpenChat username Nothing
@@ -55,19 +59,16 @@ wxChatRegistry env chan = do
 
 updateChatMap :: TVar (Map Username Chat) -> Username -> ChatMsg -> IO Chat
 updateChatMap chatMap  username msg = atomically $ do
-  modifyTVar chatMap $ insertWith appendMessage username (Closed, [msg])
+  modifyTVar chatMap $ insertWith appendMessage username $ Chat Closed [msg]
   (! username) <$> readTVar chatMap
 
 
 -- appendMessage newValue oldValue
 appendMessage :: Chat -> Chat -> Chat
-appendMessage (_, new_mx) (status, old_mx) = (status, old_mx ++ new_mx)
+appendMessage (Chat _ new_mx) (Chat status old_mx) = Chat status (old_mx ++ new_mx)
 
 
 setChatState :: TVar (Map Username Chat) -> Username -> ChatState -> IO ()
-setChatState chatMap username =
-  atomically . modifyTVar chatMap . flip adjust username . (_1 .~)
+setChatState chatMap username state' = atomically $
+  modifyTVar chatMap $ adjust (state .~ state') username
 
-
-isOpen :: Chat -> Bool
-isOpen = (Open ==) . fst

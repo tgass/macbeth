@@ -76,13 +76,13 @@ instance ToJSON RequestS
 
 
 data ChatS = ChatS {
-    say :: Maybe Bool
-  , privateTell :: Maybe Bool
-  , kibitz :: Maybe Bool
-  , whisper :: Maybe Bool
-  , shout :: Maybe Bool
-  , cShout :: Maybe Bool
-  , partnerTell :: Maybe Bool
+    say :: Maybe String
+  , privateTell :: Maybe String
+  , kibitz :: Maybe String
+  , whisper :: Maybe String
+  , shout :: Maybe String
+  , cShout :: Maybe String
+  , partnerTell :: Maybe String
 } deriving (Show, Generic)
 
 instance FromJSON ChatS
