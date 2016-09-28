@@ -1,6 +1,6 @@
 ## Macbeth - A beautiful FICS client for OSX
 
-![Screenshot] (homepage/Macbeth_observeGames.png "Screenshot")
+![Screenshot] (Macbeth_observeGames.png "Screenshot")
 
 ### Supported FICS categories
 * Chess
