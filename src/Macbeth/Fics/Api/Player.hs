@@ -3,6 +3,8 @@ module Macbeth.Fics.Api.Player (
   Status (..),
   Username,
   UserHandle (..),
+  emptyUserHandle,
+  isGuest,
   HandleType (..)
 ) where
 
@@ -28,6 +30,15 @@ type Username = String
 data UserHandle = UserHandle {
     name :: Username
   , handleType :: [HandleType] } deriving (Eq, Show)
+
+
+emptyUserHandle :: UserHandle
+emptyUserHandle = UserHandle "" [Unregistered]
+
+
+isGuest :: UserHandle -> Bool
+isGuest = elem Unregistered . handleType
+
 
 instance Ord UserHandle where
   compare = comparing name

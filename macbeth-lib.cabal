@@ -79,7 +79,7 @@ library
                      Macbeth.Wx.Config.UserConfig,
                      Macbeth.Wx.Config.Sounds
   other-modules: Paths_Macbeth
-  ghc-options: -Wall -fno-warn-unused-do-bind
+  ghc-options: -Wall
 
 executable Macbeth
   main-is: src/Macbeth.hs

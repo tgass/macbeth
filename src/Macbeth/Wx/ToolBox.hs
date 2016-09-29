@@ -58,7 +58,7 @@ wxToolBox env chan = do
 
     status' <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
-    _ <- timer f [ interval := 5 * 60 * 1000, on command := hPutStrLn h "4 ping"]
+    pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := hPutStrLn h "4 ping", enabled := False]
     statusLoggedIn <- statusField [ statusWidth := 100]
 
 
@@ -92,7 +92,7 @@ wxToolBox env chan = do
 
     -- menu
     m_file   <- menuPane [text := "&File"]
-    menuItem m_file [text := "Settings", on command := dupChan chan >>= wxConfiguration ]
+    _ <- menuItem m_file [text := "Settings", on command := dupChan chan >>= wxConfiguration ]
 
     set f [ statusBar := [status', statusLoggedIn, statusLag],
             layout := tabs nb
@@ -108,7 +108,7 @@ wxToolBox env chan = do
           ]
 
     -- preselect first tab
-    notebookSetSelection nb 0
+    _ <- notebookSetSelection nb 0
 
     vCmd <- newEmptyMVar
     threadId <- forkIO $ eventLoop eventId chan vCmd f
@@ -157,9 +157,10 @@ wxToolBox env chan = do
 
         LoggedIn userHandle -> do
           E.playSound env (C.logonToServer . C.other)
-          E.setUsername env (name userHandle)
+          E.setUsername env userHandle
+          unless (isGuest userHandle) $ hPutStrLn h "4 ping" >> set pingTimer [enabled := True]
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
-          hPutStrLn h `mapM_` [ "ping", "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
+          hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name userHandle]
           mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger]
 

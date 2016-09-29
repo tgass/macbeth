@@ -9,6 +9,7 @@ module Macbeth.Wx.RuntimeEnv (
 ) where
 
 import qualified Macbeth.Wx.Config.UserConfig as C
+import Macbeth.Fics.Api.Player
 
 import Control.Concurrent.STM
 import Paths
@@ -23,21 +24,21 @@ data RuntimeEnv = RuntimeEnv {
   , config :: C.Config
   , sources :: [Source]
   , bufferMap :: M.Map String Buffer
-  , _username :: TVar String
+  , userHandle :: TVar UserHandle
 }
 
 initRuntime :: Handle -> IO RuntimeEnv
 initRuntime h = do
-  config <- C.initConfig
-  RuntimeEnv h <$> return config <*> initSources <*> initBufferMap config <*> newTVarIO ""
+  c <- C.initConfig
+  RuntimeEnv h <$> return c <*> initSources <*> initBufferMap c <*> newTVarIO emptyUserHandle
 
 
-username :: RuntimeEnv -> IO String
-username = readTVarIO . _username
+username :: RuntimeEnv -> IO Username
+username = fmap name . readTVarIO . userHandle
 
 
-setUsername :: RuntimeEnv -> String -> IO ()
-setUsername env username = atomically $ writeTVar (_username env) username
+setUsername :: RuntimeEnv -> UserHandle -> IO ()
+setUsername env = atomically . writeTVar (userHandle env)
 
 
 getConfig :: RuntimeEnv -> (C.Config -> a) -> a
@@ -58,8 +59,8 @@ playSound env f
 
 play' :: [Source] -> Maybe Buffer -> IO ()
 play' sx b = do
-  source <- first sx
-  case source of
+  mSource <- first sx
+  case mSource of
     Just source -> do
       buffer source $= b
       play [source]
@@ -82,11 +83,11 @@ initSources = do
 
 
 initBufferMap :: C.Config -> IO (M.Map String Buffer)
-initBufferMap config = do
+initBufferMap c = do
   dir <- getDataFileName "sounds"
   appSounds <- loadSounds dir
-  userSounds <- loadSounds (C.directory config)
-  return (userSounds `M.union` appSounds)
+  userSounds <- loadSounds $ C.directory c
+  return $ userSounds `M.union` appSounds
 
 
 loadSounds :: FilePath -> IO (M.Map String Buffer)
