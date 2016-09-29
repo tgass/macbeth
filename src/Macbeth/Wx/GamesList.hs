@@ -20,7 +20,7 @@ data CtxMenu = CtxMenu {
     refresh :: MenuItem ()
   , showRated :: MenuItem ()
   , showUnrated :: MenuItem ()
-  , sortBy' :: MenuItem ()
+  , _sortBy :: MenuItem ()
 }
 
 data CtxSortMenu = CtxSortMenu {

@@ -20,7 +20,7 @@ import Data.Map.Strict
 
 data ChatState = Open | Closed deriving (Eq, Show)
 
-data Chat = Chat { _state :: ChatState, messages :: [ChatMsg] }
+data Chat = Chat { _state :: ChatState, _messages :: [ChatMsg] }
 makeLenses ''Chat
 
 wxChatRegistry :: RuntimeEnv -> Chan F.FicsMessage -> IO (F.FicsMessage -> IO ())

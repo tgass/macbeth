@@ -41,17 +41,14 @@ wxSoughtList slp h = do
     set (ratedOffers soughtOpts) [on command := filterSoughtList sl soughtOpts vSoughtList]
 
     listItemRightClickEvent sl (\evt -> do
-                pt <- listEventGetPoint evt
-                menuPopup ctxMenu pt sl)
+                pt' <- listEventGetPoint evt
+                menuPopup ctxMenu pt' sl)
 
-    imagePaths <- mapM getDataFileName imageFiles
-    images     <- imageListFromFiles (sz 16 16) imagePaths
-
-    listCtrlAssignImageList sl images wxIMAGE_LIST_SMALL
+    flip (listCtrlAssignImageList sl) wxIMAGE_LIST_SMALL =<< images
 
     let handler cmd = case cmd of
             NewSeek seek -> do
-              atomically $ modifyTVar vSoughtList (\sl -> sl ++ [seek])
+              atomically $ modifyTVar vSoughtList (++ [seek])
               showSeek' <- showSeek soughtOpts
               when (showSeek' seek) $ addSeek sl seek
 
@@ -65,23 +62,25 @@ wxSoughtList slp h = do
 
     return (sl, handler)
 
-imageNames = ["fa-user", "fa-desktop"]
 
-
-imageFiles = map (\name -> "icons/" ++ name ++ ".gif") imageNames
+images :: IO (ImageList ())
+images = do
+  let imageFiles = map (\n -> "icons/" ++ n ++ ".gif") ["fa-user", "fa-desktop"]
+  imagePaths <- mapM getDataFileName imageFiles
+  imageListFromFiles (sz 16 16) imagePaths
 
 
 addSeek :: ListCtrl () -> Seek -> IO ()
 addSeek l seek = do
   count <- listCtrlGetItemCount l
 
-  item <- listItemCreate
-  listItemSetId item count
+  item' <- listItemCreate
+  listItemSetId item' count
   --when (Computer `elem` titles seek) $ listItemSetBackgroundColour item (colorRGB 125 149 184)
-  listItemSetImage item $ if Computer `elem` titles seek then 1 else 0
+  listItemSetImage item' $ if Computer `elem` titles seek then 1 else 0
 
-  listCtrlInsertItem l item
-  mapM_ (\(column,txt) -> listCtrlSetItem l count column txt (-1)) (zip [0..] (toList seek))
+  listCtrlInsertItem l item'
+  mapM_ (\(col, txt) -> listCtrlSetItem l count col txt (-1)) (zip [0..] (toList seek))
 
 
 showSeek :: SoughtOpts -> IO (Seek -> Bool)
@@ -120,7 +119,7 @@ findSeekIdx seeks gameId = elemIndex gameId $ fmap (read . (!! 0)) seeks
 
 
 deleteSeek :: ListCtrl () -> Maybe Int -> IO ()
-deleteSeek sl (Just id) = itemDelete sl id
+deleteSeek sl (Just gameId) = itemDelete sl gameId
 deleteSeek _ _ = return ()
 
 

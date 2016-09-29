@@ -30,7 +30,7 @@ data CtxMenu = CtxMenu {
   , observe :: MenuItem ()
   , partner :: MenuItem ()
   , chat :: MenuItem ()
-  , sortBy' :: MenuItem ()
+  , _sortBy :: MenuItem ()
 }
 
 data CtxSortMenu = CtxSortMenu {
@@ -50,7 +50,7 @@ wxPlayersList slp h chan = do
       , ("Title", AlignRight, -1)]]
 
     listCtrlSetColumnWidths sl 120
-    images >>= flip (listCtrlAssignImageList sl) wxIMAGE_LIST_SMALL
+    flip (listCtrlAssignImageList sl) wxIMAGE_LIST_SMALL =<< images
 
     ctxMenuPane <- menuPane []
     ctxSortMenuPane <- menuPane []
@@ -111,7 +111,7 @@ whenMaybe x = (guard x >>) . Just
 
 images :: IO (ImageList ())
 images = do
-  let imageFiles = map (\name -> "icons/" ++ name ++ ".gif") ["fa-user", "fa-desktop"]
+  let imageFiles = map (\n -> "icons/" ++ n ++ ".gif") ["fa-user", "fa-desktop"]
   imagePaths <- mapM getDataFileName imageFiles
   imageListFromFiles (sz 16 16) imagePaths
 
@@ -122,11 +122,11 @@ addPlayer l player = do
 
   item <- listItemCreate
   listItemSetId item count
-  when (Computer `elem` handleType (handle player)) $ listItemSetBackgroundColour item (colorRGB 255 255 188)
+  when (Computer `elem` handleType (handle player)) $ listItemSetBackgroundColour item (colorRGB (255 :: Int) 255 188)
   listItemSetImage item (fmap imageIdx handleType $ handle player)
 
   listCtrlInsertItem l item
-  mapM_ (\(column,txt) -> listCtrlSetItem l count column txt (-1)) (zip [0..] (toList player))
+  mapM_ (\(col, txt) -> listCtrlSetItem l count col txt (-1)) (zip [0..] (toList player))
 
   where
     imageIdx :: [HandleType] -> Int

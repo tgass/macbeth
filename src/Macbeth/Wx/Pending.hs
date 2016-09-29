@@ -14,8 +14,8 @@ import System.IO
 
 
 data PendingActions =
-    PendingTo { accept :: MenuItem (), decline :: MenuItem ()}
-  | PendingFrom { withdraw :: MenuItem () }
+    PendingTo { _accept :: MenuItem (), _decline :: MenuItem ()}
+  | PendingFrom { _withdraw :: MenuItem () }
 
 
 wxPending :: Handle -> Panel () -> IO (Panel (), FicsMessage -> IO ())

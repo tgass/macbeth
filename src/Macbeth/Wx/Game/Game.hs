@@ -27,6 +27,7 @@ import Graphics.UI.WX hiding (when, position, play)
 import Graphics.UI.WXCore hiding (when, Timer)
 import System.IO
 
+eventId :: Int
 eventId = wxID_HIGHEST + 1
 
 wxGame :: E.RuntimeEnv -> Move -> Chan FicsMessage -> IO ()

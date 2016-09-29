@@ -38,6 +38,7 @@ import System.FilePath
 import System.IO
 import System.IO.Unsafe
 
+eventId :: Int
 eventId = wxID_HIGHEST + 1
 
 wxToolBox :: E.RuntimeEnv -> Chan FicsMessage -> IO ()
@@ -45,7 +46,7 @@ wxToolBox env chan = do
     let h = E.handle env
     f  <- frame [ text := "Macbeth"]
 
-    tbar   <- toolBarEx f False False []
+    tbar   <- toolBarEx f True False []
     tbarItem_seek <- toolItem tbar "Seek" False (unsafePerformIO $ getDataFileName $ "icons" </> "bullhorn.gif")
       [ on command := dupChan chan >>= wxSeek h False, enabled := False, tooltip := "Seek" ]
 
@@ -55,7 +56,7 @@ wxToolBox env chan = do
     tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName $ "icons" </> "fa-question.gif")
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
 
-    status <- statusField []
+    status' <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
     _ <- timer f [ interval := 5 * 60 * 1000, on command := hPutStrLn h "4 ping"]
     statusLoggedIn <- statusField [ statusWidth := 100]
@@ -93,7 +94,7 @@ wxToolBox env chan = do
     m_file   <- menuPane [text := "&File"]
     menuItem m_file [text := "Settings", on command := dupChan chan >>= wxConfiguration ]
 
-    set f [ statusBar := [status, statusLoggedIn, statusLag],
+    set f [ statusBar := [status', statusLoggedIn, statusLag],
             layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
@@ -122,29 +123,29 @@ wxToolBox env chan = do
       case cmd of
 
         NoSuchGame -> do
-          set status [text := "No such game. Updating games..."]
+          set status' [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
 
         UserNotLoggedIn username -> do
-          set status [text := username ++ " is not logged in."]
+          set status' [text := username ++ " is not logged in."]
           hPutStrLn h "4 who"
 
-        PartnerNotOpen userHandle -> set status [text := name userHandle ++ " is not open for bughouse."]
+        PartnerNotOpen userHandle -> set status' [text := name userHandle ++ " is not open for bughouse."]
 
         PartnerOffer userHandle -> dupChan chan >>= wxPartnerOffer h userHandle
 
-        PartnerAccepted userHandle -> set status [text := name userHandle ++ " agrees to be your partner."]
+        PartnerAccepted userHandle -> set status' [text := name userHandle ++ " agrees to be your partner."]
 
-        PartnerDeclined userHandle -> set status [text := name userHandle ++ " declines the partnership request."]
+        PartnerDeclined userHandle -> set status' [text := name userHandle ++ " declines the partnership request."]
 
-        SeekNotAvailable -> set status [text := "That seek is not available."]
+        SeekNotAvailable -> set status' [text := "That seek is not available."]
 
-        InvalidPassword  -> void $ set status [text := "Invalid password."]
+        InvalidPassword  -> void $ set status' [text := "Invalid password."]
 
-        LoginTimeout -> set status [ text := "Login Timeout." ]
+        LoginTimeout -> set status' [ text := "Login Timeout." ]
 
         Login | (env `E.getConfig` C.autologin) -> hPutStrLn h (maybe (error "autologin: username not set") C.username (env `E.getConfig` C.user))
-              | otherwise -> dupChan chan >>= wxLogin h
+              | otherwise -> dupChan chan >>= showLogin h
 
         Password -> when (env `E.getConfig` C.autologin) $
           hPutStrLn h (maybe (error "autologin: password not set") (decrypt . C.password) (env `E.getConfig` C.user))
@@ -154,41 +155,41 @@ wxToolBox env chan = do
           set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ]
           set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
-        LoggedIn handle -> do
+        LoggedIn userHandle -> do
           E.playSound env (C.logonToServer . C.other)
-          E.setUsername env (name handle)
+          E.setUsername env (name userHandle)
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
           hPutStrLn h `mapM_` [ "ping", "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
-          set statusLoggedIn [ text := name handle]
+          set statusLoggedIn [ text := name userHandle]
           mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger]
 
         msg@Finger {} -> dupChan chan >>= wxInfo msg
 
         msg@History {} -> dupChan chan >>= wxInfo msg
 
-        WxObserve move chan' -> wxGame env move chan'
+        WxObserve move' chan' -> wxGame env move' chan'
 
         MatchRequested c -> do
           E.playSound env (C.challenge . C.request)
           dupChan chan >>= wxChallenge h c
 
-        WxMatchAccepted move chan' -> do
+        WxMatchAccepted move' chan' -> do
           E.playSound env (C.newGame . C.game)
-          wxGame env move chan'
+          wxGame env move' chan'
 
-        MatchDeclined user -> set status [text := user ++ " declines the match offer."]
+        MatchDeclined user -> set status' [text := user ++ " declines the match offer."]
 
-        MatchUserNotLoggedIn user -> set status [text := user ++ " not logged in."]
+        MatchUserNotLoggedIn user -> set status' [text := user ++ " not logged in."]
 
         Ping _ avg _ -> set statusLag [ text := "Lag: " ++ show avg ++ "ms"]
 
-        TextMessage text -> appendText ct text
+        TextMessage text' -> appendText ct text'
 
         _ -> return ()
 
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
-emitCommand textCtrl h = get textCtrl text >>= hPutStrLn h . ("5 " ++) >> set textCtrl [text := ""]
+emitCommand tc h = get tc text >>= hPutStrLn h . ("5 " ++) >> set tc [text := ""]
 
 
 onMouse :: Notebook() -> Point -> IO Int
@@ -205,6 +206,6 @@ clickHandler h nb idx = notebookGetPageText nb idx >>= \case
 flag :: Ptr CInt
 flag  =  unsafePerformIO flag'
   where flag' = do
-             work <- malloc::IO (Ptr CInt)
+             work <- malloc :: IO (Ptr CInt)
              poke work (fromIntegral wxBK_HITTEST_ONPAGE)
              return work

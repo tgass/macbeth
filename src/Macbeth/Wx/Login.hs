@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Macbeth.Wx.Login (
-  wxLogin
+  showLogin
 ) where
 
 import Macbeth.Fics.FicsMessage
@@ -29,8 +29,8 @@ data LoginData = LoginData {
   , saveCredentials' :: Bool
 }
 
-wxLogin :: Handle -> Chan FicsMessage -> IO ()
-wxLogin h chan = do
+showLogin :: Handle -> Chan FicsMessage -> IO ()
+showLogin h chan = do
   f <- frameFixed [ text := "Macbeth" ]
   p <- panel f []
   wxInputs <- loginInputs p
