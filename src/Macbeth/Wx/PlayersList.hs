@@ -8,6 +8,7 @@ import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
+import qualified Macbeth.Wx.RuntimeEnv as E
 
 import Paths
 
@@ -110,10 +111,7 @@ whenMaybe x = (guard x >>) . Just
 
 
 images :: IO (ImageList ())
-images = do
-  let imageFiles = map (\n -> "icons/" ++ n ++ ".gif") ["fa-user", "fa-desktop"]
-  imagePaths <- mapM getDataFileName imageFiles
-  imageListFromFiles (sz 16 16) imagePaths
+images = imageListFromFiles (sz 16 16) $ fmap E.getIconFilePath ["fa-user", "fa-desktop"]
 
 
 addPlayer :: ListCtrl () -> Player -> IO ()

@@ -6,7 +6,7 @@ import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Api.Game hiding (gameType, isRated)
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
-import Paths
+import qualified Macbeth.Wx.RuntimeEnv as E
 
 import Control.Concurrent.STM
 import Control.Monad
@@ -64,10 +64,7 @@ wxSoughtList slp h = do
 
 
 images :: IO (ImageList ())
-images = do
-  let imageFiles = map (\n -> "icons/" ++ n ++ ".gif") ["fa-user", "fa-desktop"]
-  imagePaths <- mapM getDataFileName imageFiles
-  imageListFromFiles (sz 16 16) imagePaths
+images = imageListFromFiles (sz 16 16) $ fmap E.getIconFilePath ["fa-user", "fa-desktop"]
 
 
 addSeek :: ListCtrl () -> Seek -> IO ()
@@ -79,7 +76,7 @@ addSeek l seek = do
   --when (Computer `elem` titles seek) $ listItemSetBackgroundColour item (colorRGB 125 149 184)
   listItemSetImage item' $ if Computer `elem` titles seek then 1 else 0
 
-  listCtrlInsertItem l item'
+  _ <- listCtrlInsertItem l item'
   mapM_ (\(col, txt) -> listCtrlSetItem l count col txt (-1)) (zip [0..] (toList seek))
 
 
@@ -104,7 +101,7 @@ filterSoughtList :: ListCtrl () -> SoughtOpts -> TVar [Seek] -> IO ()
 filterSoughtList sl opts vSoughtList = do
   showSeek' <- showSeek opts
   soughts <- readTVarIO vSoughtList
-  listCtrlDeleteAllItems sl
+  void $ listCtrlDeleteAllItems sl
   mapM_ (\s -> when (showSeek' s) $ addSeek sl s) soughts
 
 
@@ -115,11 +112,11 @@ onSeekListEvent sl h evt = case evt of
 
 
 findSeekIdx :: [[String]] -> Int -> Maybe Int
-findSeekIdx seeks gameId = elemIndex gameId $ fmap (read . (!! 0)) seeks
+findSeekIdx seeks gameId' = elemIndex gameId' $ fmap (read . (!! 0)) seeks
 
 
 deleteSeek :: ListCtrl () -> Maybe Int -> IO ()
-deleteSeek sl (Just gameId) = itemDelete sl gameId
+deleteSeek sl (Just gameId') = itemDelete sl gameId'
 deleteSeek _ _ = return ()
 
 
@@ -131,7 +128,7 @@ getSoughtOpts ctxMenu = SoughtOpts
   <*> menuItem ctxMenu [ text := "Show rated offers", checkable := True, checked := True]
 
 toList :: Seek -> [String]
-toList (Seek id name _ rating time inc isRated gameType _ _) =
-  [show id, name, show rating, show time ++ " " ++ show inc, show gameType ++ " " ++ showIsRated isRated]
+toList (Seek gameId' name' _ rating' time inc isRated' gameType' _ _) =
+  [show gameId', name', show rating', show time ++ " " ++ show inc, show gameType' ++ " " ++ showIsRated isRated']
   where showIsRated True = "rated"
         showIsRated False = "unrated"

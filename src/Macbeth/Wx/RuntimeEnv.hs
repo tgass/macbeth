@@ -5,7 +5,8 @@ module Macbeth.Wx.RuntimeEnv (
   playSound,
   initRuntime,
   getConfig,
-  getSoundConfig
+  getSoundConfig,
+  getIconFilePath
 ) where
 
 import qualified Macbeth.Wx.Config.UserConfig as C
@@ -17,6 +18,7 @@ import Sound.ALUT
 import System.FilePath
 import System.Directory
 import System.IO
+import System.IO.Unsafe
 import qualified Data.HashMap as M
 
 data RuntimeEnv = RuntimeEnv {
@@ -55,6 +57,10 @@ playSound env f
   | otherwise = return ()
   where soundConfig = C.soundsOrDef $ config env
         mBuffer = f soundConfig >>= (`M.lookup` bufferMap env)
+
+
+getIconFilePath :: String -> FilePath
+getIconFilePath = unsafePerformIO . getDataFileName . ("icons" </>) . (++ ".gif")
 
 
 play' :: [Source] -> Maybe Buffer -> IO ()

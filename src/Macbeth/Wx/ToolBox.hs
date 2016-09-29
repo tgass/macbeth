@@ -23,7 +23,6 @@ import Macbeth.Wx.PartnerOffer
 import Macbeth.Wx.Pending
 import qualified Macbeth.Wx.Config.UserConfig as C
 import qualified Macbeth.Wx.RuntimeEnv as E
-import Paths
 
 import Control.Concurrent
 import Control.Concurrent.Chan ()
@@ -34,9 +33,9 @@ import Foreign.Ptr
 import Foreign.C.Types
 import Graphics.UI.WX hiding (when, play)
 import Graphics.UI.WXCore hiding (when)
-import System.FilePath
 import System.IO
 import System.IO.Unsafe
+
 
 eventId :: Int
 eventId = wxID_HIGHEST + 1
@@ -47,16 +46,16 @@ wxToolBox env chan = do
     f  <- frame [ text := "Macbeth"]
 
     tbar   <- toolBarEx f True False []
-    tbarItem_seek <- toolItem tbar "Seek" False (unsafePerformIO $ getDataFileName $ "icons" </> "bullhorn.gif")
+    tbarItem_seek <- toolItem tbar "Seek" False (E.getIconFilePath "bullhorn")
       [ on command := dupChan chan >>= wxSeek h False, enabled := False, tooltip := "Seek" ]
 
-    tbarItem_match <- toolItem tbar "Match" False  (unsafePerformIO $ getDataFileName $ "icons" </> "dot-circle-o.gif")
+    tbarItem_match <- toolItem tbar "Match" False  (E.getIconFilePath "dot-circle-o")
       [ on command := dupChan chan >>= wxMatch h False, enabled := False, tooltip := "Match" ]
 
-    tbarItem_finger <- toolItem tbar "Finger" False  (unsafePerformIO $ getDataFileName $ "icons" </> "fa-question.gif")
+    tbarItem_finger <- toolItem tbar "Finger" False  (E.getIconFilePath "fa-question")
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
 
-    status' <- statusField []
+    statusMsg <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
     pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := hPutStrLn h "4 ping", enabled := False]
     statusLoggedIn <- statusField [ statusWidth := 100]
@@ -94,7 +93,7 @@ wxToolBox env chan = do
     m_file   <- menuPane [text := "&File"]
     _ <- menuItem m_file [text := "Settings", on command := dupChan chan >>= wxConfiguration ]
 
-    set f [ statusBar := [status', statusLoggedIn, statusLag],
+    set f [ statusBar := [statusMsg, statusLoggedIn, statusLag],
             layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
@@ -123,26 +122,26 @@ wxToolBox env chan = do
       case cmd of
 
         NoSuchGame -> do
-          set status' [text := "No such game. Updating games..."]
+          set statusMsg [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
 
         UserNotLoggedIn username -> do
-          set status' [text := username ++ " is not logged in."]
+          set statusMsg [text := username ++ " is not logged in."]
           hPutStrLn h "4 who"
 
-        PartnerNotOpen userHandle -> set status' [text := name userHandle ++ " is not open for bughouse."]
+        PartnerNotOpen userHandle -> set statusMsg [text := name userHandle ++ " is not open for bughouse."]
 
         PartnerOffer userHandle -> dupChan chan >>= wxPartnerOffer h userHandle
 
-        PartnerAccepted userHandle -> set status' [text := name userHandle ++ " agrees to be your partner."]
+        PartnerAccepted userHandle -> set statusMsg [text := name userHandle ++ " agrees to be your partner."]
 
-        PartnerDeclined userHandle -> set status' [text := name userHandle ++ " declines the partnership request."]
+        PartnerDeclined userHandle -> set statusMsg [text := name userHandle ++ " declines the partnership request."]
 
-        SeekNotAvailable -> set status' [text := "That seek is not available."]
+        SeekNotAvailable -> set statusMsg [text := "That seek is not available."]
 
-        InvalidPassword  -> void $ set status' [text := "Invalid password."]
+        InvalidPassword  -> void $ set statusMsg [text := "Invalid password."]
 
-        LoginTimeout -> set status' [ text := "Login Timeout." ]
+        LoginTimeout -> set statusMsg [ text := "Login Timeout." ]
 
         Login | (env `E.getConfig` C.autologin) -> hPutStrLn h (maybe (error "autologin: username not set") C.username (env `E.getConfig` C.user))
               | otherwise -> dupChan chan >>= showLogin h
@@ -178,9 +177,9 @@ wxToolBox env chan = do
           E.playSound env (C.newGame . C.game)
           wxGame env move' chan'
 
-        MatchDeclined user -> set status' [text := user ++ " declines the match offer."]
+        MatchDeclined user -> set statusMsg [text := user ++ " declines the match offer."]
 
-        MatchUserNotLoggedIn user -> set status' [text := user ++ " not logged in."]
+        MatchUserNotLoggedIn user -> set statusMsg [text := user ++ " not logged in."]
 
         Ping _ avg _ -> set statusLag [ text := "Lag: " ++ show avg ++ "ms"]
 
