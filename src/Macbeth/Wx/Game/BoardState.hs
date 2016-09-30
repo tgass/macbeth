@@ -130,7 +130,7 @@ diffPosition before after =
 
 
 addtoHistory :: Move -> MoveModifier -> [Move] -> [Move]
-addtoHistory _ Illegal mx = mx
+addtoHistory _ (Illegal _) mx = mx
 addtoHistory m (Takeback _) mx = m : tail (dropWhile (not . equal m) mx)
   where
     equal :: Move -> Move -> Bool

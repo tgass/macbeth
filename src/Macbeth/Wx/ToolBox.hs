@@ -125,9 +125,7 @@ wxToolBox env chan = do
           set statusMsg [text := "No such game. Updating games..."]
           hPutStrLn h "4 games"
 
-        UserNotLoggedIn username -> do
-          set statusMsg [text := username ++ " is not logged in."]
-          hPutStrLn h "4 who"
+        UserNotLoggedIn username -> set statusMsg [text := username ++ " is not logged in."]
 
         PartnerNotOpen userHandle -> set statusMsg [text := name userHandle ++ " is not open for bughouse."]
 
@@ -177,9 +175,7 @@ wxToolBox env chan = do
           E.playSound env (C.newGame . C.game)
           wxGame env move' chan'
 
-        MatchDeclined user -> set statusMsg [text := user ++ " declines the match offer."]
-
-        MatchUserNotLoggedIn user -> set statusMsg [text := user ++ " not logged in."]
+        OponentDecline user MatchReq -> set statusMsg [text := user ++ " declines the match offer."]
 
         Ping _ avg _ -> set statusLag [ text := "Lag: " ++ show avg ++ "ms"]
 

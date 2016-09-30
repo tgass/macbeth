@@ -25,9 +25,6 @@ spec :: Spec
 spec =
   describe "Parser test" $ do
 
-    it "user not logged in after observe" $ parseFicsMessage "\NAK6\SYN80\SYNDharmadhikari is not logged in.\n\ETB\n"
-      `shouldBe` (Right $ UserNotLoggedIn "Dharmadhikari")
-
     it "command message parser" $ commandMessageParserTest `shouldBe` True
 
     it "seek msg parser" $ seekMsgParserTest `shouldBe` True
@@ -42,16 +39,16 @@ spec =
     it "pending from" $ parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n"
       `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" "Schoon ( 999) GuestNXQS (----) unrated blitz 5 0")
 
-    it "pendingTo" $ parseFicsMessage "\NAK4\SYN73\SYNIssuing: GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0.\n\n<pt> 3 w=GuestCVXP t=match p=GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0\n\ETB\n"
-      `shouldBe` Right (Pending $ PendingOffer To 3 (P.UserHandle "GuestCVXP" []) "match" "GuestFTYL (----) GuestCVXP (----) unrated blitz 5 0")
-
     it "pending removed" $ parseFicsMessage "<pr> 28\n"
       `shouldBe` Right (PendingRemoved 28)
 
-    it "pending removed, after withdraw" $ parseFicsMessage "\NAK4\SYN147\SYNYou withdraw the match offer to GuestFZHQ.\n\n<pr> 1\n\ETB\n"
-      `shouldBe` Right (PendingRemoved 1)
-
     it "no such game" $ parseFicsMessage "There is no such game.\n" `shouldBe` Right NoSuchGame
+
+    it "user not logged in" $ parseFicsMessage "Dharmadhikari is not logged in.\n" `shouldBe` Right (UserNotLoggedIn "Dharmadhikari")
+
+    it "match declined" $ parseFicsMessage "GuestHHZP declines the match offer.\n" `shouldBe` Right (MatchDeclined "GuestHHZP")
+
+    it "illegal move" $ parseFicsMessage "Illegal move (e2d2)." `shouldBe` Right (IllegalMove "e2d2")
 
 
 commandMessageParserTest :: Bool
@@ -65,7 +62,6 @@ commandMessageParserTestData = [
       , (GameCreation (GameId 484), "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
-      , (MatchUserNotLoggedIn "GuestLHDG", "\NAK4\SYN73\SYNGuestLHDG is not logged in.\n\ETB")
       , (PieceHolding (GameId 455) [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
       , (PieceHolding (GameId 182) [Pawn,Pawn,Bishop] [Pawn,Queen,Queen], "<b1> game 182 white [PPB] black [PQQ] <- BQ\n")
       , (SeekNotAvailable, "\NAK4\SYN158\SYNThat seek is not available.\n\ETB")

@@ -1,22 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Macbeth.Fics.Parsers.GamesParser (
-  parseGamesList
+  gamesList
 ) where
 
+import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Game
-import qualified Macbeth.Fics.Parsers.Api as Api
 import Macbeth.Fics.Parsers.RatingParser
+import qualified Macbeth.Fics.Parsers.Api as Api
 
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
 
 
-parseGamesList :: Parser [Game]
-parseGamesList = many' gameP
+gamesList :: Parser FicsMessage
+gamesList = Games <$> (Api.commandHead 43 *> many' game)
 
-gameP :: Parser Game
-gameP = Game
+
+game :: Parser Game
+game = Game
   <$> (takeTill (== '\n') *> "\n" *> many space *> Api.gameId)
   <*> (many1 space *> option False ("(Exam." *> pure True))
   <*> (option False ("(Setup" *> pure True))

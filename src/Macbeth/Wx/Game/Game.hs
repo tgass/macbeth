@@ -123,15 +123,13 @@ wxGame env move chan = do
 
     DrawRequest -> set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
 
-    DrawRequestDeclined user -> set status [text := user ++ " declines the draw request."]
-
     AbortRequest user -> set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
-
-    AbortRequestDeclined user -> set status [text := user ++ " declines the abort request."]
 
     TakebackRequest user numTakeback -> set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
 
-    TakebackRequestDeclined user -> set status [text := user ++ " declines the takeback request."]
+    OponentDecline user sub
+      | sub `elem` [DrawReq, TakebackReq, AbortReq] -> set status [text := user ++ " declines the " ++ show sub ++ " request."]
+      | otherwise -> return ()
 
     PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]
 

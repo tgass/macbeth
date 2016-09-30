@@ -56,10 +56,10 @@ data Relation = IsolatedPosition | ObservingExaminedGame | Examiner | MyMove | O
 
 data Castling = WhiteLong | WhiteShort | BlackLong | BlackShort deriving (Show, Eq)
 
-data MoveModifier = None | Illegal | Takeback (Maybe Username) deriving (Eq)
+data MoveModifier = None | Illegal String | Takeback (Maybe Username) deriving (Eq)
 
 instance Show MoveModifier where
-  show Illegal = "Illegal move."
+  show (Illegal move') = "Illegal move (" ++ move' ++ ")."
   show (Takeback (Just username)) = username ++ " accepts the takeback request."
   show (Takeback Nothing) = ""
   show None = ""

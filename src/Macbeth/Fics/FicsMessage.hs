@@ -1,5 +1,6 @@
 module Macbeth.Fics.FicsMessage (
-  FicsMessage (..)
+  FicsMessage (..),
+  DeclineSubject (..)
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -20,6 +21,8 @@ data FicsMessage =
   --   3. Move by oponent
     GameMove { context :: MoveModifier, move :: Move }
 
+  | IllegalMove String
+
   -- | Pieces holdings in Bughouse / Crazyhouse games
   | PieceHolding { gameId :: GameId, phWhite :: [PType], phBlack :: [PType] }
 
@@ -36,8 +39,6 @@ data FicsMessage =
   -- | Starts a new game. Let it be after 'seek' or 'match' or resuming a pending game.
   -- Indifferent of whether the user or his oponent started the interaction.
   | MatchAccepted Move
-  | MatchDeclined Username
-  | MatchUserNotLoggedIn Username
 
   -- | Not concering if the user or his oponent is checkmated/out of time/.. GameResult informs
   -- that the game is over.
@@ -46,17 +47,12 @@ data FicsMessage =
   | Pending PendingOffer
   | PendingRemoved Int
 
-  -- | The oponents wants to draw.
+  -- | In-game requests
   | DrawRequest
-  | DrawRequestDeclined Username
-
-  -- | The oponent wants to abort.
   | AbortRequest Username
-  | AbortRequestDeclined Username
-
-  -- | The oponent wants to takeback one or more half-moves.
   | TakebackRequest Username Int
-  | TakebackRequestDeclined Username
+  | OponentDecline Username DeclineSubject
+
 
   -- | Promotion piece
   | PromotionPiece PType
@@ -99,6 +95,17 @@ data FicsMessage =
   | WxClose
   | WxMatchAccepted Move (Chan FicsMessage)
   | WxObserve Move (Chan FicsMessage) deriving (Show, Eq)
+
+
+data DeclineSubject = DrawReq | TakebackReq | AbortReq | MatchReq deriving Eq
+
+
+instance Show DeclineSubject where
+  show DrawReq = "draw"
+  show TakebackReq = "takeback"
+  show AbortReq = "abort"
+  show MatchReq = "match"
+
 
 instance Show (Chan a) where
   show _ = "Chan"

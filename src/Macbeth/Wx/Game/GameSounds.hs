@@ -21,7 +21,7 @@ gameSounds env move msg
 
 findSound :: Move -> FicsMessage -> (C.Sounds -> Maybe String)
 findSound initMove = \case
-  GameMove Illegal _ -> C.illegal . C.move . C.game
+  GameMove (Illegal _) _ -> C.illegal . C.move . C.game
 
   GameMove Takeback{} _ -> C.takeback . C.move . C.game
 

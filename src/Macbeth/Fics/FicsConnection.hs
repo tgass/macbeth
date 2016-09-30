@@ -34,7 +34,8 @@ import qualified Data.ByteString.Char8 as BS
 
 data HelperState = HelperState { takebackAccptedBy :: Maybe String -- ^ oponent accepted takeback request
                                , observingGameId :: Maybe G.GameId
-                               , newGameId :: Maybe G.GameId }
+                               , newGameId :: Maybe G.GameId
+                               , illegalMove :: Maybe String }
 
 
 ficsConnection :: IO (Handle, Chan FicsMessage)
@@ -43,7 +44,7 @@ ficsConnection = runResourceT $ do
   liftIO $ hSetBuffering hsock LineBuffering
   liftIO $ initLogger . priority =<< loadAppConfig
   chan <- liftIO newChan
-  resourceForkIO $ liftIO $ chain hsock chan
+  _ <- resourceForkIO $ liftIO $ chain hsock chan
   return (hsock, chan)
 
 
@@ -52,14 +53,14 @@ chain h chan = flip evalStateT emptyState $ transPipe lift
   (sourceHandle h) $$
   linesC =$
   blockC BS.empty =$
-  unblockC =$
   logStreamC =$
+  unblockC =$
   parseC =$
   stateC =$
   copyC chan =$
   logFicsMessageC =$
   sink chan
-  where emptyState = HelperState Nothing Nothing Nothing
+  where emptyState = HelperState Nothing Nothing Nothing Nothing
 
 
 sink :: Chan FicsMessage -> Sink FicsMessage (StateT HelperState IO) ()
@@ -69,8 +70,8 @@ sink chan = awaitForever $ liftIO . writeChan chan
 logFicsMessageC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
 logFicsMessageC = awaitForever $ \cmd -> do
   liftIO $ runMaybeT ((MaybeT $ return $ logMsg cmd) >>= \msg -> do
-    lift $ debugM _fileL msg
-    lift $ debugM _consoleL msg)
+    lift $ debugM fileLogger msg
+    lift $ debugM consoleLogger msg)
   yield cmd
 
 
@@ -89,17 +90,13 @@ stateC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
 stateC = awaitForever $ \cmd -> do
   state <- get
   case cmd of
-    GameCreation id -> do
-      put $ state {newGameId = Just id}
-      sourceNull
+    GameCreation gameId' -> put (state {newGameId = Just gameId'}) >> sourceNull
 
-    Observing id -> do
-      put $ state {observingGameId = Just id}
-      sourceNull
+    Observing gameId' -> put (state {observingGameId = Just gameId'}) >> sourceNull
 
-    TakebackAccepted username -> do
-      put $ state {takebackAccptedBy = Just username}
-      sourceNull
+    TakebackAccepted username -> put (state {takebackAccptedBy = Just username}) >> sourceNull
+
+    IllegalMove m -> put (state {illegalMove = Just m}) >> sourceNull
 
     m@(GameMove _ move)
       | isCheckmate move && isOponentMove move -> sourceList $ cmd : [moveToResult move]
@@ -112,6 +109,9 @@ stateC = awaitForever $ \cmd -> do
       | isJust $ takebackAccptedBy state -> do
           put $ state {takebackAccptedBy = Nothing}
           sourceList [m{context = Takeback $ takebackAccptedBy state}]
+      | isJust $ illegalMove state -> do
+          put $ state {illegalMove = Nothing}
+          sourceList [m{context = Illegal $ fromJust $ illegalMove state}]
       | otherwise -> sourceList [m]
 
     _ -> yield cmd
@@ -131,22 +131,24 @@ unblockC = awaitForever $ \block -> case ord $ BS.head block of
     , 11 -- Accept (Draw, Abort)
     , 33 -- Decline (ie match offer)
     , 34 -- Draw (Mutual)
+    , 73 -- BLK_MATCH
     , 80 -- Observing
     , 103 -- Resign
     , 131 -- BLK_TAKEBACK
+    , 147 -- BLK_WITHDRAW
     , 155 -- Seek (Users' seek matches a seek already posted)
     , 158 -- Play (User selects a seek)
     , 56 -- BLK_ISET, seekinfo set.
     ]
-    then sourceList (lines $ crop block) else yield block
+    then sourceList (lines' $ crop block) else yield block
   _ -> yield block
   where
     crop :: BS.ByteString -> BS.ByteString
     crop bs = let lastIdx = maybe 0 (+1) (BS.elemIndexEnd (chr 22) bs) in
               BS.drop lastIdx $ BS.init bs
 
-    lines :: BS.ByteString -> [BS.ByteString]
-    lines bs = fmap (`BS.snoc` '\n') $ init $ filter (not . BS.null) $ BS.split '\n' bs
+    lines' :: BS.ByteString -> [BS.ByteString]
+    lines' bs = fmap (`BS.snoc` '\n') $ init $ filter (not . BS.null) $ BS.split '\n' bs
 
     readId :: BS.ByteString -> Int
     readId = read . BS.unpack . BS.takeWhile (/= chr 22) . BS.tail . BS.dropWhile (/= chr 22)
@@ -176,7 +178,7 @@ dropPrompt line
 
 logStreamC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
 logStreamC = awaitForever $ \chunk -> do
-  liftIO $ debugM _fileL $ (foldr (.) (showString "") $ fmap showLitChar (BS.unpack chunk)) ""
+  liftIO $ debugM fileLogger $ (foldr (.) (showString "") $ fmap showLitChar (BS.unpack chunk)) ""
   yield chunk
 
 
@@ -194,8 +196,14 @@ logMsg NewSeek {} = Nothing
 logMsg RemoveSeeks {} = Nothing
 logMsg cmd = Just $ show cmd
 
-_consoleL = "_CONSOLE"
-_fileL = "_FILE"
+
+consoleLogger :: String
+consoleLogger = "_CONSOLE"
+
+
+fileLogger :: String
+fileLogger = "_FILE"
+
 
 initLogger :: Priority -> IO ()
 initLogger prio = do
@@ -206,6 +214,6 @@ initLogger prio = do
   stdOutH <- streamHandler stdout prio >>= \lh -> return $
        setFormatter lh (simpleLogFormatter "$time $msg")
 
-  updateGlobalLogger _fileL (addHandler fileH)
-  updateGlobalLogger _consoleL (addHandler stdOutH)
+  updateGlobalLogger fileLogger (addHandler fileH)
+  updateGlobalLogger consoleLogger (addHandler stdOutH)
 
