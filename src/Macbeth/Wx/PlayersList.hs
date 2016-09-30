@@ -10,8 +10,6 @@ import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 import qualified Macbeth.Wx.RuntimeEnv as E
 
-import Paths
-
 import Control.Applicative
 import Control.Concurrent.Chan
 import Control.Concurrent.STM
@@ -89,7 +87,7 @@ sortPlayers :: ListCtrl () -> CtxSortMenu -> TVar [Player] -> IO ()
 sortPlayers sl sortMenu players = do
   sortOrder' <- sortFoo sortMenu
   players' <- readTVarIO players
-  listCtrlDeleteAllItems sl
+  _ <- listCtrlDeleteAllItems sl
   sequence_ $ fmap (addPlayer sl) (sortBy sortOrder' players')
 
 
