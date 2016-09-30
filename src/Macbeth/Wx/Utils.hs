@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Macbeth.Wx.Utils (
   eventLoop,
   registerWxCloseEventListener,
@@ -15,13 +17,14 @@ import Macbeth.Fics.Api.Api
 
 import Control.Concurrent
 import Graphics.UI.WX
-import Graphics.UI.WXCore hiding (Column, Row)
+import Graphics.UI.WXCore
 
 
 eventLoop :: Int -> Chan FicsMessage -> MVar FicsMessage -> Frame () -> IO ()
-eventLoop id chan vCmd f = readChan chan >>= putMVar vCmd >>
-  commandEventCreate wxEVT_COMMAND_MENU_SELECTED id >>= evtHandlerAddPendingEvent f >>
-  eventLoop id chan vCmd f
+eventLoop eventId chan vCmd f = readChan chan >>= putMVar vCmd >>
+  commandEventCreate wxEVT_COMMAND_MENU_SELECTED eventId >>= evtHandlerAddPendingEvent f >>
+  eventLoop eventId chan vCmd f
+
 
 registerWxCloseEventListener :: Frame () -> Chan FicsMessage -> IO ()
 registerWxCloseEventListener f chan = do
@@ -29,16 +32,17 @@ registerWxCloseEventListener f chan = do
   threadId <- forkIO $ eventLoop (wxID_HIGHEST + 13) chan vCmd f
   windowOnDestroy f $ killThread threadId
 
-  evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \cmd -> case cmd of
+  evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \case
     WxClose -> close f
     _ -> return ()
+
 
 registerWxCloseEventListenerWithThreadId :: Frame () -> Chan FicsMessage -> IO ThreadId
 registerWxCloseEventListenerWithThreadId f chan = do
   vCmd <- newEmptyMVar
   threadId <- forkIO $ eventLoop (wxID_HIGHEST + 13) chan vCmd f
 
-  evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \cmd -> case cmd of
+  evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \case
     WxClose -> close f
     _ -> return ()
 
@@ -46,18 +50,19 @@ registerWxCloseEventListenerWithThreadId f chan = do
 
 
 listItemRightClickEvent :: ListCtrl a -> (Graphics.UI.WXCore.ListEvent () -> IO ()) -> IO ()
-listItemRightClickEvent listCtrl eventHandler
-  = windowOnEvent listCtrl [wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK] eventHandler listHandler
+listItemRightClickEvent lc eventHandler
+  = windowOnEvent lc [wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK] eventHandler listHandler
     where
       listHandler :: Graphics.UI.WXCore.Event () -> IO ()
       listHandler evt = eventHandler $ objectCast evt
+
 
 onlyKey :: EventKey -> Char -> Bool
 onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
 
 
 keyWithMod :: EventKey -> Char -> Modifiers -> Bool
-keyWithMod evt c mod = (keyKey evt == KeyChar c) && (keyModifiers evt == mod)
+keyWithMod evt c modifier = (keyKey evt == KeyChar c) && (keyModifiers evt == modifier)
 
 
 getDisplaySelection :: Choice () -> IO String
