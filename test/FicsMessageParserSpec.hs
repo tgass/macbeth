@@ -46,7 +46,7 @@ spec =
 
     it "user not logged in" $ parseFicsMessage "Dharmadhikari is not logged in.\n" `shouldBe` Right (UserNotLoggedIn "Dharmadhikari")
 
-    it "match declined" $ parseFicsMessage "GuestHHZP declines the match offer.\n" `shouldBe` Right (MatchDeclined "GuestHHZP")
+    it "match declined" $ parseFicsMessage "GuestHHZP declines the match offer.\n" `shouldBe` Right (OponentDecline "GuestHHZP" MatchReq)
 
     it "illegal move" $ parseFicsMessage "Illegal move (e2d2)." `shouldBe` Right (IllegalMove "e2d2")
 

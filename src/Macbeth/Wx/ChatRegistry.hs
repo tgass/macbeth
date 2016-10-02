@@ -9,8 +9,8 @@ import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Chat
 import Macbeth.Wx.Config.Sounds
-import Macbeth.Wx.Config.UserConfig
-import Macbeth.Wx.RuntimeEnv
+import Macbeth.Wx.Config.UserConfig (chatOrDef)
+import Macbeth.Wx.RuntimeEnv (RuntimeEnv(), playSound)
 
 import Control.Concurrent.Chan
 import Control.Concurrent.STM
@@ -30,10 +30,10 @@ wxChatRegistry env chan = do
   return $ \case
 
        F.Chat msg -> let updateAndOpenChat username mGameId = do
-                         (Chat state msgs) <- updateChatMap chatMap username msg
-                         unless (state == Open) $ do
+                         (Chat state' msgs) <- updateChatMap chatMap username msg
+                         unless (state' == Open) $ do
                            setChatState chatMap username Open
-                           dupChan chan >>= wxChat env mGameId msgs
+                           dupChan chan >>= wxChat env username mGameId msgs
 
                    in case msg of
                         Say (UserHandle username _) gameId _ -> do

@@ -9,7 +9,7 @@ CHAT:
 Game 236: GuestSSNR requests to take back 2 half move(s).
 Game 236: GuestSSNR requests to take back 1 half move(s).
 Game 236: GuestNDJN declines the takeback request.
-
+Game 84: Paet offers a draw.
 
 -- Close window/frames with CMD-W
 
@@ -39,7 +39,7 @@ Game 236: GuestNDJN declines the takeback request.
 
 -- PARSERS
 -- while observing: Bughouse: "Game 136: White's partner won 1-0\n"
--- while observing: TextMessage "Game 84: Paet offers a draw."
+
 
 
 -- APP

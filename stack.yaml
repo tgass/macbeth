@@ -1,0 +1,17 @@
+flags: {}
+
+packages:
+- '.'
+
+extra-deps: 
+- wx-0.92.2.0
+- wxcore-0.92.2.0
+- wxc-0.92.2.0
+- wxdirect-0.92.2.0
+- ALUT-2.4.0.2
+- OpenAL-1.7.0.4
+
+extra-lib-dirs: 
+- /usr/local/Cellar/freealut/1.1.0/lib/
+
+resolver: lts-5.0
