@@ -63,7 +63,7 @@ okBtnHandler wxInputs f h chan = do
     putPassword = lift (readChan chan) >>= \case
       Password -> password' <$> ask >>= lift . hPutStrLn h >> putPassword
       GuestLogin {} -> lift (hPutStrLn h "") >> putPassword
-      Login -> return () -- close this frame, new one is opened in Toolbox
+      LoginPrompt -> return () -- close this frame, new one is opened in Toolbox
       LoggedIn {} -> ask >>= \login -> lift $
         when (saveCredentials' login) $ Config.saveCredentials (usernameOrGuest login) (password' login)
       _ -> putPassword

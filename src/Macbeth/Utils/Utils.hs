@@ -45,6 +45,7 @@ decrypt = encrypt
 
 
 -- taken from Prelude.Generalize
+(.::) :: (b -> c) -> (a -> a1 -> a2 -> b) -> a -> a1 -> a2 -> c
 (.::) = (.) . (.) . (.)
 
 

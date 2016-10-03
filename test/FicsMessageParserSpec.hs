@@ -50,6 +50,7 @@ spec =
 
     it "illegal move" $ parseFicsMessage "Illegal move (e2d2)." `shouldBe` Right (IllegalMove "e2d2")
 
+    it "observing game" $ parseFicsMessage "Game 289: Erron (1686) Donattello (1731) rated lightning 1 0\n" `shouldBe` Right (Observing (GameId 289) "Erron" "Donattello")
 
 commandMessageParserTest :: Bool
 commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
@@ -59,7 +60,7 @@ commandMessageParserTestData = [
         (DrawRequest, "GuestDWXY offers you a draw.")
       , (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
       , (GuestLogin "FOOBAR", "Press return to enter the server as \"FOOBAR\":")
-      , (GameCreation (GameId 484), "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
+      , (GameCreation (GameId 484) "GuestYLCL" "GuestBYPB", "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
       , (PieceHolding (GameId 455) [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
@@ -67,11 +68,11 @@ commandMessageParserTestData = [
       , (SeekNotAvailable, "\NAK4\SYN158\SYNThat seek is not available.\n\ETB")
 
       , (MatchRequested $ Challenge "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated "unrated blitz 5 0", "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters.")
-      , (PromotionPiece Knight, "\NAK5\SYN92\SYNPromotion piece set to KNIGHT.\n\ETB\n")
-      , (PromotionPiece Queen, "\NAK5\SYN92\SYNPromotion piece set to QUEEN.\n\ETB\n")
-      , (PromotionPiece Bishop, "\NAK5\SYN92\SYNPromotion piece set to BISHOP.\n\ETB\n")
-      , (PromotionPiece Rook, "\NAK5\SYN92\SYNPromotion piece set to ROOK.\n\ETB\n")
-      , (PromotionPiece King, "\NAK5\SYN92\SYNPromotion piece set to KING.\n\ETB\n") -- Suicide
+      , (PromotionPiece Knight, "Promotion piece set to KNIGHT.\n")
+      , (PromotionPiece Queen, "Promotion piece set to QUEEN.\n")
+      , (PromotionPiece Bishop, "Promotion piece set to BISHOP.\n")
+      , (PromotionPiece Rook, "Promotion piece set to ROOK.\n")
+      , (PromotionPiece King, "Promotion piece set to KING.\n") -- Suicide
       ]
 
 seekMsgParserTest :: Bool

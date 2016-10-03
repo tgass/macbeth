@@ -13,14 +13,14 @@ import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Applicative
 
-gameSounds :: RuntimeEnv -> Move -> FicsMessage -> IO ()
-gameSounds env move msg
-  | not (isGameUser move) && not (env `getSoundConfig` C.enabledObservedGames) = return ()
-  | otherwise = playSound env $ findSound move msg
+gameSounds :: RuntimeEnv -> Bool -> Move -> FicsMessage -> IO ()
+gameSounds env isGameUser move msg
+  | not isGameUser && not (env `getSoundConfig` C.enabledObservedGames) = return ()
+  | otherwise = playSound env $ findSound isGameUser move msg
 
 
-findSound :: Move -> FicsMessage -> (C.Sounds -> Maybe String)
-findSound initMove = \case
+findSound :: Bool -> Move -> FicsMessage -> (C.Sounds -> Maybe String)
+findSound isGameUser initMove = \case
   GameMove (Illegal _) _ -> C.illegal . C.move . C.game
 
   GameMove Takeback{} _ -> C.takeback . C.move . C.game
@@ -33,9 +33,9 @@ findSound initMove = \case
     C.normal (C.move $ C.game c))
 
   GameResult r
-    | isGameUser initMove && userWins initMove r -> C.youWin . C.endOfGame . C.game
-    | isGameUser initMove && userLoses initMove r -> C.youLose . C.endOfGame . C.game
-    | isGameUser initMove && (result r == Draw) -> C.youDraw . C.endOfGame . C.game
+    | isGameUser && userWins initMove r -> C.youWin . C.endOfGame . C.game
+    | isGameUser && userLoses initMove r -> C.youLose . C.endOfGame . C.game
+    | isGameUser && (result r == Draw) -> C.youDraw . C.endOfGame . C.game
     | result r == WhiteWins -> C.whiteWins . C.endOfGame . C.game
     | result r == BlackWins -> C.blackWins . C.endOfGame . C.game
     | result r == Draw -> C.draw . C.endOfGame . C.game

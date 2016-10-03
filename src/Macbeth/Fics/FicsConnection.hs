@@ -10,7 +10,6 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Parsers.FicsMessageParser
 import qualified Macbeth.Fics.Api.Result as R
-import qualified Macbeth.Fics.Api.Game as G
 
 import Control.Concurrent.Chan
 import Control.Monad
@@ -32,9 +31,7 @@ import System.IO
 
 import qualified Data.ByteString.Char8 as BS
 
-data HelperState = HelperState { takebackAccptedBy :: Maybe String -- ^ oponent accepted takeback request
-                               , observingGameId :: Maybe G.GameId
-                               , newGameId :: Maybe G.GameId
+data HelperState = HelperState { takebackAccptedBy :: Maybe (Maybe String)
                                , illegalMove :: Maybe String }
 
 
@@ -60,7 +57,7 @@ chain h chan = flip evalStateT emptyState $ transPipe lift
   copyC chan =$
   logFicsMessageC =$
   sink chan
-  where emptyState = HelperState Nothing Nothing Nothing Nothing
+  where emptyState = HelperState Nothing Nothing
 
 
 sink :: Chan FicsMessage -> Sink FicsMessage (StateT HelperState IO) ()
@@ -69,7 +66,7 @@ sink chan = awaitForever $ liftIO . writeChan chan
 
 logFicsMessageC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
 logFicsMessageC = awaitForever $ \cmd -> do
-  liftIO $ runMaybeT ((MaybeT $ return $ logMsg cmd) >>= \msg -> do
+  _ <- liftIO $ runMaybeT ((MaybeT $ return $ logMsg cmd) >>= \msg -> do
     lift $ debugM fileLogger msg
     lift $ debugM consoleLogger msg)
   yield cmd
@@ -77,41 +74,32 @@ logFicsMessageC = awaitForever $ \cmd -> do
 
 copyC :: Chan FicsMessage -> Conduit FicsMessage (StateT HelperState IO) FicsMessage
 copyC chan = awaitForever $ \case
-  m@(MatchAccepted move) -> do
+  m@(GameCreation gameId' playerW playerB) -> do
     chan' <- liftIO $ dupChan chan
-    sourceList [m, WxMatchAccepted move chan']
-  m@(Observe move) -> do
+    sourceList [m, WxGameCreation gameId' playerW playerB chan']
+  m@(Observing gameId' playerW playerB) -> do
     chan' <- liftIO $ dupChan chan
-    sourceList [m, WxObserve move chan']
+    sourceList [m, WxObserving gameId' playerW playerB chan']
   cmd -> yield cmd
 
 
 stateC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
 stateC = awaitForever $ \cmd -> do
-  state <- get
+  state' <- get
   case cmd of
-    GameCreation gameId' -> put (state {newGameId = Just gameId'}) >> sourceNull
 
-    Observing gameId' -> put (state {observingGameId = Just gameId'}) >> sourceNull
+    TakebackAccepted username -> put (state' {takebackAccptedBy = Just username}) >> sourceNull
 
-    TakebackAccepted username -> put (state {takebackAccptedBy = Just username}) >> sourceNull
+    IllegalMove m -> put (state' {illegalMove = Just m}) >> sourceNull
 
-    IllegalMove m -> put (state {illegalMove = Just m}) >> sourceNull
-
-    m@(GameMove _ move)
-      | isCheckmate move && isOponentMove move -> sourceList $ cmd : [moveToResult move]
-      | isNewGameUser move && fromMaybe False ((== gameId move) <$> newGameId state) -> do
-          put $ state {newGameId = Nothing }
-          sourceList [MatchAccepted move]
-      | fromMaybe False ((== gameId move) <$> observingGameId state) -> do
-          put $ state {observingGameId = Nothing }
-          sourceList [Observe move]
-      | isJust $ takebackAccptedBy state -> do
-          put $ state {takebackAccptedBy = Nothing}
-          sourceList [m{context = Takeback $ takebackAccptedBy state}]
-      | isJust $ illegalMove state -> do
-          put $ state {illegalMove = Nothing}
-          sourceList [m{context = Illegal $ fromJust $ illegalMove state}]
+    m@(GameMove _ move')
+      | isCheckmate move' && isOponentMove move' -> sourceList $ cmd : [moveToResult move']
+      | isJust $ takebackAccptedBy state' -> do
+          put $ state' {takebackAccptedBy = Nothing}
+          sourceList [m{context = Takeback $ fromJust $ takebackAccptedBy state'}]
+      | isJust $ illegalMove state' -> do
+          put $ state' {illegalMove = Nothing}
+          sourceList [m{context = Illegal $ fromJust $ illegalMove state'}]
       | otherwise -> sourceList [m]
 
     _ -> yield cmd
@@ -125,22 +113,8 @@ parseC = awaitForever $ \str -> case parseFicsMessage str of
 
 unblockC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
 unblockC = awaitForever $ \block -> case ord $ BS.head block of
-  21 -> if readId block `elem` [
-       1 -- game move
-    , 10 -- Abort
-    , 11 -- Accept (Draw, Abort)
-    , 33 -- Decline (ie match offer)
-    , 34 -- Draw (Mutual)
-    , 73 -- BLK_MATCH
-    , 80 -- Observing
-    , 103 -- Resign
-    , 131 -- BLK_TAKEBACK
-    , 147 -- BLK_WITHDRAW
-    , 155 -- Seek (Users' seek matches a seek already posted)
-    , 158 -- Play (User selects a seek)
-    , 56 -- BLK_ISET, seekinfo set.
-    ]
-    then sourceList (lines' $ crop block) else yield block
+  21 -> if readId block `elem` [ 107, 132, 43, 146, 84, 37, 51, 158]
+        then yield block else sourceList (lines' $ crop block)
   _ -> yield block
   where
     crop :: BS.ByteString -> BS.ByteString
@@ -183,10 +157,10 @@ logStreamC = awaitForever $ \chunk -> do
 
 
 moveToResult :: Move -> FicsMessage
-moveToResult move = GameResult $ R.Result (gameId move) (nameW move) (nameB move) result (turnToGameResult colorTurn)
+moveToResult move' = GameResult $ R.Result (gameId move') (nameW move') (nameB move') result (turnToGameResult colorTurn)
   where
-    colorTurn = turn move
-    result = namePlayer colorTurn move ++ " checkmated"
+    colorTurn = turn move'
+    result = namePlayer colorTurn move' ++ " checkmated"
     turnToGameResult Black = R.WhiteWins
     turnToGameResult White = R.BlackWins
 
@@ -209,7 +183,7 @@ initLogger :: Priority -> IO ()
 initLogger prio = do
   updateGlobalLogger rootLoggerName removeHandler
   updateGlobalLogger rootLoggerName (setLevel prio)
-  fileH <- fileHandler "/tmp/macbeth.log" prio >>= \lh -> return $
+  fileH <- fileHandler "/tmp/macbeth2.log" prio >>= \lh -> return $
        setFormatter lh (simpleLogFormatter "$time $msg")
   stdOutH <- streamHandler stdout prio >>= \lh -> return $
        setFormatter lh (simpleLogFormatter "$time $msg")

@@ -8,26 +8,21 @@ module Macbeth.Fics.Api.Move (
   nameUser,
   colorUser,
   namePlayer,
-  isGameUser,
   isNextMoveUser,
-  isNewGameUser,
   isOponentMove,
   wasOponentMove,
   playerColor,
-  nameOponent,
   isCheck,
   isCheckmate,
   isDrop,
   isCapture,
   isCastling,
-  dummyMove
+  initMove
 ) where
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import qualified Macbeth.Fics.Api.Game as G
-
-import Data.Maybe
 
 data Move = Move {
     positionRaw :: String
@@ -82,16 +77,8 @@ colorUser :: Move -> PColor
 colorUser m = if relation m == MyMove then turn m else invert $ turn m
 
 
-isGameUser :: Move -> Bool
-isGameUser m = relation m `elem` [MyMove, OponentsMove]
-
-
 isNextMoveUser :: Move -> Bool
 isNextMoveUser m = relation m == MyMove
-
-
-isNewGameUser :: Move -> Bool
-isNewGameUser m = isGameUser m && isNothing (movePretty m)
 
 
 isOponentMove :: Move -> Bool
@@ -105,10 +92,6 @@ wasOponentMove m = colorUser m == turn m
 namePlayer :: PColor -> Move -> String
 namePlayer White = nameW
 namePlayer Black = nameB
-
-
-nameOponent :: Move -> String
-nameOponent m = namePlayer (invert $ colorUser m) m
 
 
 playerColor :: String -> Move -> PColor
@@ -137,32 +120,26 @@ isCastling :: Move -> Bool
 isCastling = maybe False (elem 'O') . movePretty
 
 
-dummyMove :: Move
-dummyMove = Move {
+initMove :: Int -> Username -> Username -> Move
+initMove gameId' playerW playerB = Move {
     positionRaw = "",
-    position = [ (Square A One, Piece Rook White)
-                   , (Square A Two, Piece Pawn White)
-                   , (Square B Two, Piece Pawn White)
-                   , (Square C Two, Piece Pawn White)
-                   , (Square E Eight, Piece King Black)
-                   , (Square D Eight, Piece Queen Black)
-                   ],
-    turn = Black,
+    position = [],
+    turn = White,
     doublePawnPush = Nothing,
     castlingAv = [],
     ply = 0,
-    gameId = G.GameId 1,
-    nameW = "foobar",
-    nameB = "barbaz",
+    gameId = G.GameId gameId',
+    nameW = playerW,
+    nameB = playerB,
     relation = MyMove,
     moveNumber = 0,
     moveVerbose = Nothing,
-    timeTaken = "0",
-    remainingTimeW = 0,
-    remainingTimeB = 0,
-    movePretty = Just "f2"
-  , initialTime = 300
+    timeTaken = "0"
+  , remainingTimeW = 0
+  , remainingTimeB = 0
+  , movePretty = Nothing
+  , initialTime = 0
   , incPerMove = 0
-  , whiteRelStrength = 120
-  , blackRelStrength = 120
+  , whiteRelStrength = 0
+  , blackRelStrength = 0
   }

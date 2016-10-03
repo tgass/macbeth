@@ -7,11 +7,12 @@ module Macbeth.Wx.Game.Game (
 import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Chat
-import Macbeth.Fics.Api.Move
 import Macbeth.Utils.PGN
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Wx.Game.StatusPanel
 import Macbeth.Wx.Game.GameSounds
+import qualified Macbeth.Fics.Api.Move as M
+import qualified Macbeth.Fics.Api.Game as G
 import qualified Macbeth.Fics.Api.Result as R
 import qualified Macbeth.Wx.Utils as Utl
 import qualified Macbeth.Wx.RuntimeEnv as E
@@ -23,23 +24,25 @@ import Control.Concurrent.STM
 import Control.Exception
 import Control.Monad
 import Data.Maybe
-import Graphics.UI.WX hiding (when, position, play)
-import Graphics.UI.WXCore hiding (when, Timer)
+import Graphics.UI.WX hiding (when, position, play, point, white, black)
+import Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import System.IO
 
 eventId :: Int
 eventId = wxID_HIGHEST + 1
 
-wxGame :: E.RuntimeEnv -> Move -> Chan FicsMessage -> IO ()
-wxGame env move chan = do
+wxGame :: E.RuntimeEnv -> G.GameId -> String -> String -> Chan FicsMessage -> IO ()
+wxGame env gameId@(G.GameId gid') playerW playerB chan = do
   let h = E.handle env
+  username' <- E.username env
+  let nameOponent = if username' == playerW then playerB else playerW
   vCmd <- newEmptyMVar
 
-  f <- frame [ text := "[Game " ++ show (gameId move) ++ "] " ++ nameW move ++ " vs " ++ nameB move]
+  f <- frame [ text := "[Game " ++ show gid' ++ "] " ++ playerW ++ " vs. " ++ playerB]
   p_back <- panel f []
 
   -- board
-  let boardState = Api.initBoardState move
+  let boardState = Api.initBoardState gameId username' playerW playerB
   vBoardState <- newTVarIO boardState
   p_board <- panel p_back [ on paint := Board.draw vBoardState]
 
@@ -51,29 +54,28 @@ wxGame env move chan = do
   let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f
   updateBoardLayoutIO
 
-  -- status line
+
   status <- statusField []
-  promotion <- statusField [ statusWidth := 30, text := "=" ++ show (Api.promotion boardState)]
+  promotion <- statusField [ statusWidth := 30, text := "=Q"]
 
   -- context menu
   ctxMenu <- menuPane []
-  menuItem ctxMenu [ text := "Turn board", on command :=
+  _ <- menuItem ctxMenu [ text := "Turn board", on command :=
     Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
-  when (isGameUser move) $ do
+  when (Api.isGameUser boardState) $ do
      menuLine ctxMenu
-     menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
-     menuItem ctxMenu [ text := "Request takeback 2", on command := hPutStrLn h "4 takeback 2"]
-     menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
-     menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
-     menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
+     _ <- menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
+     _ <- menuItem ctxMenu [ text := "Request takeback 2", on command := hPutStrLn h "4 takeback 2"]
+     _ <- menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
+     _ <- menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+     _ <- menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
      menuLine ctxMenu
-     menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (nameOponent move) (Just $ gameId move)]
-     windowOnMouse p_board True (\pt -> Board.onMouseEvent h vBoardState pt >> repaint p_board)
-
+     _ <- menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat nameOponent (Just gameId)]
+     windowOnMouse p_board True (\point -> Board.onMouseEvent h vBoardState point >> repaint p_board)
   menuLine ctxMenu
   wxPieceSetsMenu ctxMenu vBoardState p_board
 
-  set p_board [ on clickRight := (\pt -> menuPopup ctxMenu pt p_board) ]
+  set p_board [ on clickRight := (\point -> menuPopup ctxMenu point p_board) ]
 
   -- key handler
   windowOnKeyDown p_board (\evt -> if
@@ -84,7 +86,7 @@ wxGame env move chan = do
     | Utl.onlyKey evt 'K' -> do Api.pickUpPieceFromHolding vBoardState Knight; repaint p_board
     | Utl.onlyKey evt 'R' -> do Api.pickUpPieceFromHolding vBoardState Rook; repaint p_board
     | Utl.onlyKey evt 'P' -> do Api.pickUpPieceFromHolding vBoardState Pawn; repaint p_board
-    | Utl.onlyKey evt 'T' -> writeChan chan $ Chat $ OpenChat (nameOponent move) (Just $ gameId move)
+    | Utl.onlyKey evt 'T' -> writeChan chan $ Chat $ OpenChat nameOponent (Just gameId)
     | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> do Api.discardDraggedPiece vBoardState; repaint p_board
 
     | Utl.onlyKey evt 'N' -> hPutStrLn h "5 decline"
@@ -97,7 +99,7 @@ wxGame env move chan = do
   windowOnKeyUp p_board $ onKeyUpHandler vBoardState h promotion
 
   --set layout
-  set f [ statusBar := [status] ++ [promotion | isGameUser move]
+  set f [ statusBar := [status] ++ [promotion | Api.isGameUser boardState]
         , layout := fill $ widget p_back
         , on resize := resizeFrame f vBoardState p_board]
 
@@ -106,22 +108,22 @@ wxGame env move chan = do
 
   threadId <- forkIO $ Utl.eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
-    updateClockW cmd >> updateClockB cmd >> gameSounds env move cmd >> case cmd of
+    updateClockW cmd >> updateClockB cmd >> case cmd of
 
-    GameMove ctx move' -> when (gameId move' == gameId move) $ do
+    GameMove ctx move' -> when (M.gameId move' == gameId) $ do
       set status [text := show ctx]
       Api.update vBoardState move' ctx
-      when (isNextMoveUser move') $ Api.performPreMoves vBoardState h
+      when (M.isNextMoveUser move') $ Api.performPreMoves vBoardState h
       repaint p_board
 
-    GameResult result -> when (R.gameId result == gameId move) $ do
+    GameResult result -> when (R.gameId result == gameId) $ do
       set status [text := R.toString result]
       Api.setResult vBoardState (R.result result)
       repaint p_board
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
-    DrawRequest -> set status [text := nameOponent move ++ " offered a draw. Accept? (y/n)"]
+    DrawRequest -> set status [text := nameOponent ++ " offered a draw. Accept? (y/n)"]
 
     AbortRequest user -> set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
 
@@ -137,13 +139,11 @@ wxGame env move chan = do
 
   windowOnDestroy f $ do
     sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClose]
-    boardState <- readTVarIO vBoardState
-    when (isGameUser move) $ saveAsPGN boardState
-    unless (isJust $ Api.gameResult boardState) $ case relation move of
-      MyMove -> hPutStrLn h "5 resign"
-      OponentsMove -> hPutStrLn h "5 resign"
-      Observing -> hPutStrLn h $ "5 unobserve " ++ show (gameId move)
-      _ -> return ()
+    boardState' <- readTVarIO vBoardState
+    when (Api.isGameUser boardState) $ saveAsPGN boardState'
+    unless (isJust $ Api.gameResult boardState) $
+      if Api.isGameUser boardState then hPutStrLn h "5 resign"
+                                   else hPutStrLn h $ "5 unobserve " ++ show gid'
 
 
 resizeFrame :: Frame () -> TVar Api.BoardState -> Panel() -> IO ()

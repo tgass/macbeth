@@ -29,6 +29,7 @@ module Macbeth.Wx.Game.BoardState (
 ) where
 
 import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Fics.Api.Result
@@ -44,6 +45,7 @@ import System.IO
 
 data BoardState = BoardState {
     lastMove :: Move
+  , isGameUser :: Bool
   , gameResult :: Maybe GameResult
   , pieceMove :: [PieceMove]
   , moves :: [Move]
@@ -75,7 +77,7 @@ instance Show PieceMove where
 pickUpPieceFromHolding :: TVar BoardState -> PType -> IO ()
 pickUpPieceFromHolding vState p = atomically $ modifyTVar vState
   (\s -> let color = colorUser (lastMove s)
-             isAllowed = isGameUser (lastMove s) && p `elem` getPieceHolding color s
+             isAllowed = (isGameUser s) && p `elem` getPieceHolding color s
          in if isAllowed
             then s{draggedPiece = Just $ DraggedPiece (mousePt s) (Piece p color) FromHolding }
             else s)
@@ -201,19 +203,20 @@ movePiece (PieceMove piece from to) position = filter (\(s, _) -> s /= from && s
 movePiece (DropMove piece sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece)]
 
 
-initBoardState :: Move -> BoardState
-initBoardState move = BoardState {
-    lastMove = move
+initBoardState :: GameId -> String -> String -> String -> BoardState
+initBoardState (GameId gameId') user playerW playerB = BoardState {
+    lastMove = initMove gameId' playerW playerB
+  , isGameUser = user `elem` [playerW, playerB]
   , gameResult = Nothing
   , pieceMove = []
-  , moves = [move] -- ^ accept empty positions, filter when creating pgn
-  , _position = Macbeth.Fics.Api.Move.position move
+  , moves = []
+  , _position = []
   , preMoves = []
-  , perspective = if relation move == Observing then White else colorUser move
+  , perspective = White
   , mousePt = Point 0 0
   , promotion = Queen
   , draggedPiece = Nothing
-  , isWaiting = relation move == MyMove
+  , isWaiting = True
   , psize = 40
   , scale = 1.0
   , pieceSet = head pieceSets

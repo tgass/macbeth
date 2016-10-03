@@ -83,7 +83,7 @@ drawPieces = do
 drawSelectedSquare :: BoardT a
 drawSelectedSquare = do
   (dc, state) <- ask
-  liftIO $ when (isGameUser (lastMove state) && isNothing (gameResult state)) $
+  liftIO $ when (isGameUser state && isNothing (gameResult state)) $
     withBrushStyle brushTransparent $ \transparent -> do
       dcSetBrush dc transparent
       set dc [pen := penColored red 1]

@@ -53,7 +53,7 @@ gameType' =
   "untimed" *> pure Untimed <|>
   "examined" *> pure ExaminedGame <|>
   "standard" *> pure Standard <|>
-  "wild/" *> decimal *> pure Wild <|>
+  "wild/" *> (decimal :: Parser Int) *> pure Wild <|>
   "atomic" *> pure Atomic <|>
   "crazyhouse" *> pure Crazyhouse <|>
   "bughouse" *> pure Bughouse <|>

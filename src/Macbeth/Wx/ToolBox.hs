@@ -141,8 +141,8 @@ wxToolBox env chan = do
 
         LoginTimeout -> set statusMsg [ text := "Login Timeout." ]
 
-        Login | (env `E.getConfig` C.autologin) -> hPutStrLn h (maybe (error "autologin: username not set") C.username (env `E.getConfig` C.user))
-              | otherwise -> dupChan chan >>= showLogin h
+        LoginPrompt | (env `E.getConfig` C.autologin) -> hPutStrLn h (maybe (error "autologin: username not set") C.username (env `E.getConfig` C.user))
+                    | otherwise -> dupChan chan >>= showLogin h
 
         Password -> when (env `E.getConfig` C.autologin) $
           hPutStrLn h (maybe (error "autologin: password not set") (decrypt . C.password) (env `E.getConfig` C.user))
@@ -165,15 +165,15 @@ wxToolBox env chan = do
 
         msg@History {} -> dupChan chan >>= wxInfo msg
 
-        WxObserve move' chan' -> wxGame env move' chan'
+        WxObserving gameId' playerW playerB chain' -> wxGame env gameId' playerW playerB chain'
 
         MatchRequested c -> do
           E.playSound env (C.challenge . C.request)
           dupChan chan >>= wxChallenge h c
 
-        WxMatchAccepted move' chan' -> do
-          E.playSound env (C.newGame . C.game)
-          wxGame env move' chan'
+        WxGameCreation gameId' playerW playerB chain' -> do
+           E.playSound env (C.newGame . C.game)
+           wxGame env gameId' playerW playerB chain'
 
         OponentDecline user MatchReq -> set statusMsg [text := user ++ " declines the match offer."]
 

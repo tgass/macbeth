@@ -47,6 +47,9 @@ parseFicsMessage = parseOnly $ choice [
   , abortRequest
   , drawRequest
   , takebackRequest
+
+  , takebackAccepted
+  , takebackAccepted'
   , oponentDecline
 
   , P.finger
@@ -89,11 +92,17 @@ illegalMove = IllegalMove <$> ("Illegal move (" *> fmap BS.unpack (takeTill (== 
 
 
 gameCreation :: Parser FicsMessage
-gameCreation = GameCreation <$> ("{Game " *> Api.gameId <* takeTill (== ')') <* ") Creating ")
+gameCreation = GameCreation
+  <$> ("{Game " *> Api.gameId)
+  <*> (" (" *> username)
+  <*> (" vs. " *> username <* ") Creating ")
 
 
 observing :: Parser FicsMessage
-observing = Observing <$> ("You are now observing game " *> Api.gameId)
+observing = Observing
+  <$> ("Game " *> Api.gameId <* ": ")
+  <*> (username <* " (" <* rating)
+  <*> (") " *> username)
 
 
 noSuchGame :: Parser FicsMessage
@@ -125,6 +134,14 @@ takebackRequest :: Parser FicsMessage
 takebackRequest = TakebackRequest <$> username <* " would like to take back " <*> decimal <* " half move(s)."
 
 
+takebackAccepted :: Parser FicsMessage
+takebackAccepted = (TakebackAccepted . Just <$> username) <* " accepts the takeback request."
+
+
+takebackAccepted' :: Parser FicsMessage
+takebackAccepted' = TakebackAccepted <$> pure Nothing <* "You accept the takeback request"
+
+
 oponentDecline :: Parser FicsMessage
 oponentDecline = OponentDecline
   <$> (username <* " declines the ")
@@ -141,8 +158,8 @@ gameResult' = GameResult <$> (Result
 
 
 promotionPiece :: Parser FicsMessage
-promotionPiece = PromotionPiece <$> (Api.commandHead 92 *> "Promotion piece set to " *>
-  ("QUEEN" *> pure Queen <|> "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> "ROOK" *> pure Rook <|> "KING" *> pure King))
+promotionPiece = PromotionPiece <$> ("Promotion piece set to " *> ("QUEEN" *> pure Queen <|>
+  "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> "ROOK" *> pure Rook <|> "KING" *> pure King))
 
 
 pending :: Parser FicsMessage
@@ -159,7 +176,7 @@ pendingRemoved = PendingRemoved <$> ("<pr> " *> decimal)
 
 
 login :: Parser FicsMessage
-login = "login: " *> pure Login
+login = "login: " *> pure LoginPrompt
 
 
 loginTimeout :: Parser FicsMessage
