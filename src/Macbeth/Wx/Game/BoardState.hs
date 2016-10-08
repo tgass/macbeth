@@ -31,6 +31,7 @@ module Macbeth.Wx.Game.BoardState (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Fics.Api.Result
 
@@ -46,6 +47,7 @@ import System.IO
 data BoardState = BoardState {
     lastMove :: Move
   , isGameUser :: Bool
+  , isWhiteUser :: Bool
   , gameResult :: Maybe GameResult
   , pieceMove :: [PieceMove]
   , moves :: [Move]
@@ -76,10 +78,10 @@ instance Show PieceMove where
 
 pickUpPieceFromHolding :: TVar BoardState -> PType -> IO ()
 pickUpPieceFromHolding vState p = atomically $ modifyTVar vState
-  (\s -> let color = colorUser (lastMove s)
-             isAllowed = (isGameUser s) && p `elem` getPieceHolding color s
+  (\s -> let color' = colorUser (lastMove s)
+             isAllowed = isGameUser s && p `elem` getPieceHolding color' s
          in if isAllowed
-            then s{draggedPiece = Just $ DraggedPiece (mousePt s) (Piece p color) FromHolding }
+            then s{draggedPiece = Just $ DraggedPiece (mousePt s) (Piece p color') FromHolding }
             else s)
 
 
@@ -195,7 +197,7 @@ pointToSquare state (Point x y) = Square
 
 
 movePieces :: [PieceMove] -> Position -> Position
-movePieces moves pos = foldl (flip movePiece) pos moves
+movePieces moves' pos = foldl (flip movePiece) pos moves'
 
 
 movePiece :: PieceMove -> Position -> Position
@@ -203,10 +205,11 @@ movePiece (PieceMove piece from to) position = filter (\(s, _) -> s /= from && s
 movePiece (DropMove piece sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece)]
 
 
-initBoardState :: GameId -> String -> String -> String -> BoardState
-initBoardState (GameId gameId') user playerW playerB = BoardState {
-    lastMove = initMove gameId' playerW playerB
-  , isGameUser = user `elem` [playerW, playerB]
+initBoardState :: GameProperties -> Username -> BoardState
+initBoardState gameProperties' username' = BoardState {
+    lastMove = initMove gameProperties'
+  , isGameUser = isGameUser' gameProperties'
+  , isWhiteUser = playerW' gameProperties' == username'
   , gameResult = Nothing
   , pieceMove = []
   , moves = []

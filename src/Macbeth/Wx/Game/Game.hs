@@ -31,18 +31,18 @@ import System.IO
 eventId :: Int
 eventId = wxID_HIGHEST + 1
 
-wxGame :: E.RuntimeEnv -> G.GameId -> String -> String -> Chan FicsMessage -> IO ()
-wxGame env gameId@(G.GameId gid') playerW playerB chan = do
+wxGame :: E.RuntimeEnv -> G.GameProperties  -> Chan FicsMessage -> IO ()
+wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
   let h = E.handle env
   username' <- E.username env
   let nameOponent = if username' == playerW then playerB else playerW
   vCmd <- newEmptyMVar
 
-  f <- frame [ text := "[Game " ++ show gid' ++ "] " ++ playerW ++ " vs. " ++ playerB]
+  f <- frame [ text := G.toTitle gameProperties]
   p_back <- panel f []
 
   -- board
-  let boardState = Api.initBoardState gameId username' playerW playerB
+  let boardState = Api.initBoardState gameProperties username'
   vBoardState <- newTVarIO boardState
   p_board <- panel p_back [ on paint := Board.draw vBoardState]
 
@@ -108,7 +108,7 @@ wxGame env gameId@(G.GameId gid') playerW playerB chan = do
 
   threadId <- forkIO $ Utl.eventLoop eventId chan vCmd f
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
-    updateClockW cmd >> updateClockB cmd >> case cmd of
+    updateClockW cmd >> updateClockB cmd >> gameSounds env boardState cmd >> case cmd of
 
     GameMove ctx move' -> when (M.gameId move' == gameId) $ do
       set status [text := show ctx]
@@ -123,7 +123,7 @@ wxGame env gameId@(G.GameId gid') playerW playerB chan = do
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
-    DrawRequest -> set status [text := nameOponent ++ " offered a draw. Accept? (y/n)"]
+    DrawRequest user -> set status [text := user ++ " offered a draw. Accept? (y/n)"]
 
     AbortRequest user -> set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
 
@@ -143,7 +143,7 @@ wxGame env gameId@(G.GameId gid') playerW playerB chan = do
     when (Api.isGameUser boardState) $ saveAsPGN boardState'
     unless (isJust $ Api.gameResult boardState) $
       if Api.isGameUser boardState then hPutStrLn h "5 resign"
-                                   else hPutStrLn h $ "5 unobserve " ++ show gid'
+                                   else hPutStrLn h $ "5 unobserve " ++ show gameId
 
 
 resizeFrame :: Frame () -> TVar Api.BoardState -> Panel() -> IO ()

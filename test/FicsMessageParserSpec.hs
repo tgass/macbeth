@@ -50,17 +50,20 @@ spec =
 
     it "illegal move" $ parseFicsMessage "Illegal move (e2d2)." `shouldBe` Right (IllegalMove "e2d2")
 
-    it "observing game" $ parseFicsMessage "Game 289: Erron (1686) Donattello (1731) rated lightning 1 0\n" `shouldBe` Right (Observing (GameId 289) "Erron" "Donattello")
+    it "observing game" $ parseFicsMessage "Game 289: Erron (1686) Donattello (1731) rated lightning 1 0\n" `shouldBe` Right (Observing $ GameProperties (GameId 289) "Erron" "Donattello" False)
+
+    it "create game" $ parseFicsMessage "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n" `shouldBe` Right (GameCreation $ GameProperties (GameId 484) "GuestYLCL" "GuestBYPB" True)
+
+    it "draw request" $ parseFicsMessage "GuestDWXY offers you a draw." `shouldBe` Right (DrawRequest "GuestDWXY")
+
 
 commandMessageParserTest :: Bool
 commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
 
 commandMessageParserTestData :: [(FicsMessage, String)]
 commandMessageParserTestData = [
-        (DrawRequest, "GuestDWXY offers you a draw.")
-      , (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
+        (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
       , (GuestLogin "FOOBAR", "Press return to enter the server as \"FOOBAR\":")
-      , (GameCreation (GameId 484) "GuestYLCL" "GuestBYPB", "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n")
       , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
       , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
       , (PieceHolding (GameId 455) [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")

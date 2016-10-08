@@ -74,12 +74,12 @@ logFicsMessageC = awaitForever $ \cmd -> do
 
 copyC :: Chan FicsMessage -> Conduit FicsMessage (StateT HelperState IO) FicsMessage
 copyC chan = awaitForever $ \case
-  m@(GameCreation gameId' playerW playerB) -> do
+  m@(GameCreation gameProperties) -> do
     chan' <- liftIO $ dupChan chan
-    sourceList [m, WxGameCreation gameId' playerW playerB chan']
-  m@(Observing gameId' playerW playerB) -> do
+    sourceList [m, WxNewGame gameProperties chan']
+  m@(Observing gameProperties) -> do
     chan' <- liftIO $ dupChan chan
-    sourceList [m, WxObserving gameId' playerW playerB chan']
+    sourceList [m, WxNewGame gameProperties chan']
   cmd -> yield cmd
 
 

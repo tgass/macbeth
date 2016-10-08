@@ -120,17 +120,17 @@ isCastling :: Move -> Bool
 isCastling = maybe False (elem 'O') . movePretty
 
 
-initMove :: Int -> Username -> Username -> Move
-initMove gameId' playerW playerB = Move {
+initMove :: G.GameProperties -> Move
+initMove gameProperties' = Move {
     positionRaw = "",
     position = [],
     turn = White,
     doublePawnPush = Nothing,
     castlingAv = [],
     ply = 0,
-    gameId = G.GameId gameId',
-    nameW = playerW,
-    nameB = playerB,
+    gameId = G.gameId' gameProperties',
+    nameW = G.playerW' gameProperties',
+    nameB = G.playerB' gameProperties',
     relation = MyMove,
     moveNumber = 0,
     moveVerbose = Nothing,

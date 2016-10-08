@@ -19,11 +19,11 @@ saveAsPGN b = saveAsPGN' (reverse $ moves b) (gameResult b)
 
 saveAsPGN' :: [Move] -> Maybe GameResult -> IO ()
 saveAsPGN' [] _ = return ()
-saveAsPGN' moves mGameResult = do
+saveAsPGN' moves' mGameResult = do
   dateTime <- getZonedTime
   appDir <- directory <$> loadConfig
-  path <- filepath appDir dateTime (head moves)
-  appendFile path $ toPGN (filter (isJust . movePretty) moves) mGameResult dateTime
+  path <- filepath appDir dateTime (head moves')
+  appendFile path $ toPGN (filter (isJust . movePretty) moves') mGameResult dateTime
 
 filepath :: FilePath -> ZonedTime -> Move -> IO FilePath
 filepath appDir dateTime m = return $ appDir </>
@@ -31,9 +31,9 @@ filepath appDir dateTime m = return $ appDir </>
 
 toPGN :: [Move] -> Maybe GameResult -> ZonedTime -> String
 toPGN [] _ _ = ""
-toPGN moves@(m:_) mGameResult dateTime =
+toPGN moves'@(m:_) mGameResult dateTime =
   tagsSection m mGameResult dateTime ++ "\n\n" ++
-  moveSection (if FEN.available $ head moves then tail moves else moves) ++
+  moveSection (if FEN.available $ head moves' then tail moves' else moves') ++
   " " ++ maybe "" show mGameResult ++ "\n\n"
 
 moveSection :: [Move] -> String
@@ -60,5 +60,6 @@ toSAN :: Move -> (Int, PColor, String)
 toSAN m = (moveNumber m, turn m, fromJust $ movePretty m)
 
 toString :: (Int, PColor, String) -> String
-toString (num, Black, move) = show num ++ "." ++ move
-toString (_, White, move) = move
+toString (num, Black, move') = show num ++ "." ++ move'
+toString (_, White, move') = move'
+

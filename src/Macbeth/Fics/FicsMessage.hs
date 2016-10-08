@@ -22,8 +22,8 @@ data FicsMessage =
   | PieceHolding { gameId :: GameId, phWhite :: [PType], phBlack :: [PType] }
   | GameResult Result
 
-  | GameCreation GameId Username Username
-  | Observing GameId Username Username
+  | GameCreation GameProperties
+  | Observing GameProperties
   | NoSuchGame -- | If id in 'observe id' does not exist
   | UserNotLoggedIn Username
 
@@ -31,7 +31,7 @@ data FicsMessage =
   | Pending PendingOffer
   | PendingRemoved Int
 
-  | DrawRequest
+  | DrawRequest Username
   | AbortRequest Username
   | TakebackRequest Username Int
   | OponentDecline Username DeclineSubject
@@ -69,8 +69,7 @@ data FicsMessage =
   | TakebackAccepted (Maybe Username)
   | IllegalMove String
   | WxClose
-  | WxObserving GameId Username Username (Chan FicsMessage)
-  | WxGameCreation GameId Username Username (Chan FicsMessage) deriving (Show, Eq)
+  | WxNewGame GameProperties (Chan FicsMessage) deriving (Show, Eq)
 
 
 data DeclineSubject = DrawReq | TakebackReq | AbortReq | MatchReq deriving Eq

@@ -8,6 +8,7 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Move hiding (Observing)
+import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Parsers.MoveParser
@@ -92,17 +93,19 @@ illegalMove = IllegalMove <$> ("Illegal move (" *> fmap BS.unpack (takeTill (== 
 
 
 gameCreation :: Parser FicsMessage
-gameCreation = GameCreation
+gameCreation = GameCreation <$> (GameProperties
   <$> ("{Game " *> Api.gameId)
   <*> (" (" *> username)
   <*> (" vs. " *> username <* ") Creating ")
+  <*> pure True)
 
 
 observing :: Parser FicsMessage
-observing = Observing
+observing = Observing <$> (GameProperties
   <$> ("Game " *> Api.gameId <* ": ")
   <*> (username <* " (" <* rating)
   <*> (") " *> username)
+  <*> pure False)
 
 
 noSuchGame :: Parser FicsMessage
@@ -123,7 +126,7 @@ challenge = MatchRequested <$> (Challenge
 
 
 drawRequest :: Parser FicsMessage
-drawRequest = username *> " offers you a draw." *> pure DrawRequest
+drawRequest = DrawRequest <$> username <* " offers you a draw."
 
 
 abortRequest :: Parser FicsMessage

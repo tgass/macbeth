@@ -65,7 +65,7 @@ updateChatMap chatMap  username msg = atomically $ do
 
 -- appendMessage newValue oldValue
 appendMessage :: Chat -> Chat -> Chat
-appendMessage (Chat _ new_mx) (Chat status old_mx) = Chat status (old_mx ++ new_mx)
+appendMessage (Chat _ new_mx) (Chat status' old_mx) = Chat status' (old_mx ++ new_mx)
 
 
 setChatState :: TVar (Map Username Chat) -> Username -> ChatState -> IO ()

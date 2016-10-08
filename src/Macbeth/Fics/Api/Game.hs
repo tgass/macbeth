@@ -1,11 +1,14 @@
 module Macbeth.Fics.Api.Game (
   GameId(..),
+  GameProperties(..),
   Game (..),
   GameType (..),
   GameSettings (..),
-  GameInfo (..)
+  GameInfo (..),
+  toTitle
 ) where
 
+import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Rating
 
 newtype GameId = GameId Int deriving (Eq)
@@ -15,6 +18,12 @@ instance Show GameId where
 
 instance Ord GameId where
   compare (GameId gi1) (GameId gi2) = gi1 `compare` gi2
+
+data GameProperties = GameProperties {
+    gameId' :: GameId
+  , playerW' :: Username
+  , playerB' :: Username
+  , isGameUser' :: Bool } deriving (Show, Eq)
 
 data GameType =
   Lightning | Blitz | Standard | Wild | Atomic | Crazyhouse | Bughouse | Losers |
@@ -41,3 +50,12 @@ data GameInfo = GameInfo {
   , _nameB :: String
   , _ratingB :: Rating
 } deriving (Show, Eq)
+
+
+toTitle :: GameProperties -> String
+toTitle (GameProperties id' pw pb _) =  "[Game " ++ show id' ++ "] " ++ pw ++ " vs. " ++ pb
+
+
+isWhite :: GameProperties -> Username -> Bool
+isWhite (GameProperties _ w _ _) username = username == w
+
