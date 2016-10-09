@@ -34,15 +34,15 @@ eventId = wxID_HIGHEST + 1
 wxGame :: E.RuntimeEnv -> G.GameProperties  -> Chan FicsMessage -> IO ()
 wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
   let h = E.handle env
-  username' <- E.username env
-  let nameOponent = if username' == playerW then playerB else playerW
+  username <- E.username env
+  let nameOponent = if username == playerW then playerB else playerW
   vCmd <- newEmptyMVar
 
   f <- frame [ text := G.toTitle gameProperties]
   p_back <- panel f []
 
   -- board
-  let boardState = Api.initBoardState gameProperties username'
+  let boardState = Api.initBoardState gameProperties username
   vBoardState <- newTVarIO boardState
   p_board <- panel p_back [ on paint := Board.draw vBoardState]
 
@@ -79,15 +79,15 @@ wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
 
   -- key handler
   windowOnKeyDown p_board (\evt -> if
-    | Utl.onlyKey evt 'X' -> do Api.cancelLastPreMove vBoardState; repaint p_board
+    | Utl.onlyKey evt 'X' -> Api.cancelLastPreMove vBoardState >> repaint p_board
 
-    | Utl.onlyKey evt 'Q' -> do Api.pickUpPieceFromHolding vBoardState Queen; repaint p_board
-    | Utl.onlyKey evt 'B' -> do Api.pickUpPieceFromHolding vBoardState Bishop; repaint p_board
-    | Utl.onlyKey evt 'K' -> do Api.pickUpPieceFromHolding vBoardState Knight; repaint p_board
-    | Utl.onlyKey evt 'R' -> do Api.pickUpPieceFromHolding vBoardState Rook; repaint p_board
-    | Utl.onlyKey evt 'P' -> do Api.pickUpPieceFromHolding vBoardState Pawn; repaint p_board
+    | Utl.onlyKey evt 'Q' -> Api.pickUpPieceFromHolding vBoardState Queen >> repaint p_board
+    | Utl.onlyKey evt 'B' -> Api.pickUpPieceFromHolding vBoardState Bishop >> repaint p_board
+    | Utl.onlyKey evt 'K' -> Api.pickUpPieceFromHolding vBoardState Knight >> repaint p_board
+    | Utl.onlyKey evt 'R' -> Api.pickUpPieceFromHolding vBoardState Rook >> repaint p_board
+    | Utl.onlyKey evt 'P' -> Api.pickUpPieceFromHolding vBoardState Pawn >> repaint p_board
     | Utl.onlyKey evt 'T' -> writeChan chan $ Chat $ OpenChat nameOponent (Just gameId)
-    | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> do Api.discardDraggedPiece vBoardState; repaint p_board
+    | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> Api.discardDraggedPiece vBoardState >> repaint p_board
 
     | Utl.onlyKey evt 'N' -> hPutStrLn h "5 decline"
     | Utl.onlyKey evt 'Y' -> hPutStrLn h "5 accept"

@@ -33,14 +33,11 @@ spec =
 
     it "position parser" $ positionTest `shouldBe` True
 
-    it "ping" $ parseFicsMessage ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n"
-      `shouldBe` Right (Ping 131 132 133)
+    it "ping" $ parseFicsMessage ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n" `shouldBe` Right (Ping 131 132 133)
 
-    it "pending from" $ parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n"
-      `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" "Schoon ( 999) GuestNXQS (----) unrated blitz 5 0")
+    it "pending from" $ parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n" `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" "Schoon ( 999) GuestNXQS (----) unrated blitz 5 0")
 
-    it "pending removed" $ parseFicsMessage "<pr> 28\n"
-      `shouldBe` Right (PendingRemoved 28)
+    it "pending removed" $ parseFicsMessage "<pr> 28\n" `shouldBe` Right (PendingRemoved 28)
 
     it "no such game" $ parseFicsMessage "There is no such game.\n" `shouldBe` Right NoSuchGame
 
@@ -56,17 +53,21 @@ spec =
 
     it "draw request" $ parseFicsMessage "GuestDWXY offers you a draw." `shouldBe` Right (DrawRequest "GuestDWXY")
 
+    it "guest login" $ parseFicsMessage "Press return to enter the server as \"FOOBAR\":" `shouldBe` Right (GuestLogin "FOOBAR")
+
+    it "challenge" $ parseFicsMessage "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12." `shouldBe` Right (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12")
+
+    it "abort request" $ parseFicsMessage "GuestSPLL would like to abort the game; type \"abort\" to accept." `shouldBe` Right (AbortRequest "GuestSPLL")
+
+    it "takeback request" $ parseFicsMessage "GuestTYLF would like to take back 2 half move(s)." `shouldBe` Right (TakebackRequest "GuestTYLF" 2)
+
 
 commandMessageParserTest :: Bool
 commandMessageParserTest = all (== Pass) $ fmap compareCmdMsg commandMessageParserTestData
 
 commandMessageParserTestData :: [(FicsMessage, String)]
 commandMessageParserTestData = [
-        (MatchRequested $ Challenge "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated "unrated blitz 2 12", "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12.")
-      , (GuestLogin "FOOBAR", "Press return to enter the server as \"FOOBAR\":")
-      , (AbortRequest "GuestSPLL", "GuestSPLL would like to abort the game; type \"abort\" to accept.")
-      , (TakebackRequest "GuestTYLF" 2, "GuestTYLF would like to take back 2 half move(s).")
-      , (PieceHolding (GameId 455) [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
+        (PieceHolding (GameId 455) [Pawn,Rook,Knight] [Bishop,Queen],  "<b1> game 455 white [PRN] black [BQ]")
       , (PieceHolding (GameId 182) [Pawn,Pawn,Bishop] [Pawn,Queen,Queen], "<b1> game 182 white [PPB] black [PQQ] <- BQ\n")
       , (SeekNotAvailable, "\NAK4\SYN158\SYNThat seek is not available.\n\ETB")
 
