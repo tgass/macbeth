@@ -14,8 +14,8 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
 import Data.Maybe
 import Control.Concurrent.STM
-import Graphics.UI.WX hiding (position, update, resize, when)
-import Graphics.UI.WXCore hiding (Row, Column, when)
+import Graphics.UI.WX hiding (position, update, resize, when, pt, size, value, color)
+import Graphics.UI.WXCore hiding (Row, Column, when, pt)
 import System.IO
 
 type BoardT a = ReaderT (DC a, BoardState) IO ()
@@ -47,9 +47,9 @@ drawBoard = do
   lift $ set dc [ pen := penTransparent ]
   lift $ withBrushStyle (BrushStyle BrushSolid (rgb (180::Int) 150 100)) $ \blackBrush ->
     withBrushStyle (BrushStyle BrushSolid white) $ \whiteBrush ->
-      mapM_ (\(c,sq) -> do
+      mapM_ (\(c,sq') -> do
         dcSetBrush dc $ if c == White then whiteBrush else blackBrush
-        paintSquare dc state sq)
+        paintSquare dc state sq')
           (zip bw sq)
 
 
@@ -99,11 +99,11 @@ drawDraggedPiece = do
 
 
 drawDraggedPiece'' :: BoardState -> DC a -> DraggedPiece -> IO ()
-drawDraggedPiece'' state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBitmap size (pieceSet state) piece) (scalePoint pt) True []
+drawDraggedPiece'' state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBitmap size (pieceSet state) piece) scalePoint True []
   where
     scale' = scale state
     size = psize state
-    scalePoint pt = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
+    scalePoint = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
     scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale') / scale'
 
 
@@ -145,10 +145,10 @@ onMouseEvent h vState = \case
 
 updateMousePosition :: TVar BoardState -> Point -> IO ()
 updateMousePosition vState pt = atomically $ modifyTVar vState
-  (\s -> s{ mousePt = pt, draggedPiece = draggedPiece s >>= setNewPoint pt})
+  (\s -> s{ mousePt = pt, draggedPiece = draggedPiece s >>= setNewPoint})
   where
-    setNewPoint :: Point -> DraggedPiece -> Maybe DraggedPiece
-    setNewPoint pt (DraggedPiece _ p o) = Just (DraggedPiece pt p o)
+    setNewPoint :: DraggedPiece -> Maybe DraggedPiece
+    setNewPoint (DraggedPiece _ p o) = Just (DraggedPiece pt p o)
 
 
 dropDraggedPiece :: TVar BoardState -> Handle -> Point -> IO ()
@@ -162,14 +162,14 @@ dropDraggedPiece vState h click_pt = do
         varSet vState state { _position = newPosition, draggedPiece = Nothing}
         if isWaiting state
           then hPutStrLn h $ "6 " ++ show pieceMove
-          else addPreMove vState pieceMove
+          else addPreMove pieceMove
   where
     toPieceMove :: Square -> DraggedPiece -> PieceMove
     toPieceMove toSq (DraggedPiece _ piece (FromBoard fromSq)) = PieceMove piece fromSq toSq
     toPieceMove toSq (DraggedPiece _ piece FromHolding) = DropMove piece toSq
 
-    addPreMove :: TVar BoardState -> PieceMove -> IO ()
-    addPreMove vState pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
+    addPreMove :: PieceMove -> IO ()
+    addPreMove pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
 
 
 pickUpPiece :: TVar BoardState -> Point -> IO ()
