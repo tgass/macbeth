@@ -5,7 +5,6 @@ module Macbeth.Fics.Api.Move (
   MoveModifier(..),
   remainingTime,
   decreaseRemainingTime,
-  nameUser,
   colorUser,
   namePlayer,
   isNextMoveUser,
@@ -23,6 +22,7 @@ module Macbeth.Fics.Api.Move (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import qualified Macbeth.Fics.Api.Game as G
+
 
 data Move = Move {
     positionRaw :: String
@@ -44,20 +44,24 @@ data Move = Move {
   , moveNumber :: Int
   , moveVerbose :: Maybe MoveDetailed
   , timeTaken :: String
-  , movePretty :: Maybe String
-  } deriving (Eq, Show)
+  , movePretty :: Maybe String } deriving (Eq, Show)
+
 
 data Relation = IsolatedPosition | ObservingExaminedGame | Examiner | MyMove | OponentsMove | Observing deriving (Show, Eq)
 
+
 data Castling = WhiteLong | WhiteShort | BlackLong | BlackShort deriving (Show, Eq)
 
+
 data MoveModifier = None | Illegal String | Takeback (Maybe Username) deriving (Eq)
+
 
 instance Show MoveModifier where
   show (Illegal move') = "Illegal move (" ++ move' ++ ")."
   show (Takeback (Just username)) = username ++ " accepts the takeback request."
   show (Takeback Nothing) = ""
   show None = ""
+
 
 remainingTime :: PColor -> Move -> Int
 remainingTime Black = remainingTimeB
@@ -67,10 +71,6 @@ remainingTime White = remainingTimeW
 decreaseRemainingTime :: PColor -> Move -> Move
 decreaseRemainingTime Black move = move {remainingTimeB = max 0 $ remainingTimeB move - 1}
 decreaseRemainingTime White move = move {remainingTimeW = max 0 $ remainingTimeW move - 1}
-
-
-nameUser :: Move -> String
-nameUser m = namePlayer (colorUser m) m
 
 
 colorUser :: Move -> PColor
@@ -95,9 +95,7 @@ namePlayer Black = nameB
 
 
 playerColor :: String -> Move -> PColor
-playerColor name move
-  | nameW move == name = White
-  | otherwise = Black
+playerColor name' move = if nameW move == name' then White else Black
 
 
 isCheck :: Move -> Bool
@@ -122,24 +120,23 @@ isCastling = maybe False (elem 'O') . movePretty
 
 initMove :: G.GameProperties -> Move
 initMove gameProperties' = Move {
-    positionRaw = "",
-    position = [],
-    turn = White,
-    doublePawnPush = Nothing,
-    castlingAv = [],
-    ply = 0,
-    gameId = G.gameId' gameProperties',
-    nameW = G.playerW' gameProperties',
-    nameB = G.playerB' gameProperties',
-    relation = MyMove,
-    moveNumber = 0,
-    moveVerbose = Nothing,
-    timeTaken = "0"
+    positionRaw = ""
+  , position = []
+  , turn = White
+  , doublePawnPush = Nothing
+  , castlingAv = []
+  , ply = 0
+  , gameId = G.gameId' gameProperties'
+  , nameW = G.playerW' gameProperties'
+  , nameB = G.playerB' gameProperties'
+  , relation = MyMove
+  , moveNumber = 0
+  , moveVerbose = Nothing
+  , timeTaken = "0"
   , remainingTimeW = 0
   , remainingTimeB = 0
   , movePretty = Nothing
   , initialTime = 0
   , incPerMove = 0
   , whiteRelStrength = 0
-  , blackRelStrength = 0
-  }
+  , blackRelStrength = 0 }
