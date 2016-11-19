@@ -19,13 +19,13 @@ import System.FilePath
 import System.Directory
 import System.IO
 import System.IO.Unsafe
-import qualified Data.HashMap as M
+import qualified Data.HashMap.Strict as M
 
 data RuntimeEnv = RuntimeEnv {
     handle :: Handle
   , config :: C.Config
   , sources :: [Source]
-  , bufferMap :: M.Map String Buffer
+  , bufferMap :: M.HashMap String Buffer
   , userHandle :: TVar UserHandle
 }
 
@@ -88,7 +88,7 @@ initSources = do
   genObjectNames 20
 
 
-initBufferMap :: C.Config -> IO (M.Map String Buffer)
+initBufferMap :: C.Config -> IO (M.HashMap String Buffer)
 initBufferMap c = do
   dir <- getDataFileName "sounds"
   appSounds <- loadSounds dir
@@ -96,7 +96,7 @@ initBufferMap c = do
   return $ userSounds `M.union` appSounds
 
 
-loadSounds :: FilePath -> IO (M.Map String Buffer)
+loadSounds :: FilePath -> IO (M.HashMap String Buffer)
 loadSounds dir = do
   files <- filter ((== ".wav") . takeExtension) <$> getDirectoryContents dir
   bufferTuples <- bar $ fmap (\f -> dir </> f) files

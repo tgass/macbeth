@@ -21,7 +21,7 @@ library
     build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
                    bytestring, split, attoparsec, filepath, containers, split, mtl, stm, sodium, directory, filepath,
                    time, MissingH, old-locale, safe, FindBin, yaml, either-unwrap, cryptocipher, crypto-cipher-types,
-                   binary, hslogger, aeson, process, OpenAL, ALUT, hashmap, lens
+                   binary, hslogger, aeson, process, OpenAL, ALUT, lens, unordered-containers
     hs-source-dirs: src
     exposed-modules: Paths,
                      Macbeth.Fics.FicsConnection

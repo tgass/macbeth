@@ -14,4 +14,4 @@ extra-deps:
 extra-lib-dirs: 
 - /usr/local/Cellar/freealut/1.1.0/lib/
 
-resolver: lts-7.8
+resolver: lts-6.25
