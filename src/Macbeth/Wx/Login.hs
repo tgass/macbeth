@@ -59,6 +59,7 @@ okBtnHandler wxInputs f h chan = do
     putUsername :: ReaderT LoginData IO ()
     putUsername = usernameOrGuest <$> ask >>= liftIO . hPutStrLn h
 
+    -- TODO: do this with `fix`
     putPassword :: ReaderT LoginData IO ()
     putPassword = lift (readChan chan) >>= \case
       Password -> password' <$> ask >>= lift . hPutStrLn h >> putPassword
