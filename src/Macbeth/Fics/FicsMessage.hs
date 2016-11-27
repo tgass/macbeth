@@ -23,7 +23,6 @@ data FicsMessage =
   | GameResult Result
 
   | GameCreation GameProperties
-  | Observing GameProperties
   | NoSuchGame -- | If id in 'observe id' does not exist
   | UserNotLoggedIn Username
 

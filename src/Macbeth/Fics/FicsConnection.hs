@@ -77,9 +77,6 @@ copyC chan = awaitForever $ \case
   m@(GameCreation gameProperties) -> do
     chan' <- liftIO $ dupChan chan
     sourceList [m, WxNewGame gameProperties chan']
-  m@(Observing gameProperties) -> do
-    chan' <- liftIO $ dupChan chan
-    sourceList [m, WxNewGame gameProperties chan']
   cmd -> yield cmd
 
 
@@ -113,7 +110,16 @@ parseC = awaitForever $ \str -> case parseFicsMessage str of
 
 unblockC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
 unblockC = awaitForever $ \block -> case ord $ BS.head block of
-  21 -> if readId block `elem` [ 107, 132, 43, 146, 84, 37, 51, 158]
+  21 -> if readId block `elem` [
+          37 -- BLK_FINGER
+        , 43 -- BLK_GAMES
+        , 51 -- BLK_HISTORY
+        , 84 -- BLK_PARTNER
+        , 107 -- BLK_SAY
+        , 132 -- BLK_TELL
+        , 146 -- BLK_WHO
+        , 158 -- BLK_PLgAY
+        ]
         then yield block else sourceList (lines' $ crop block)
   _ -> yield block
   where

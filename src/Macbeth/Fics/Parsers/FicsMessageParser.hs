@@ -101,7 +101,7 @@ gameCreation = GameCreation <$> (GameProperties
 
 
 observing :: Parser FicsMessage
-observing = Observing <$> (GameProperties
+observing = GameCreation <$> (GameProperties
   <$> ("Game " *> Api.gameId <* ": ")
   <*> (username <* " (" <* rating)
   <*> (") " *> username)
