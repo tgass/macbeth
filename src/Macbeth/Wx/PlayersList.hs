@@ -118,7 +118,7 @@ addPlayer l player = do
 
   item <- listItemCreate
   listItemSetId item count
-  when (Computer `elem` handleType (handle player)) $ listItemSetBackgroundColour item (colorRGB (255 :: Int) 255 188)
+--  when (Computer `elem` handleType (handle player)) $ listItemSetBackgroundColour item (colorRGB (255 :: Int) 255 188)
   listItemSetImage item (fmap imageIdx handleType $ handle player)
 
   listCtrlInsertItem l item
