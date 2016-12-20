@@ -50,11 +50,14 @@ wxToolBox env chan = do
     tbarItem_seek <- toolItem tbar "Seek" False (E.getIconFilePath "bullhorn")
       [ on command := dupChan chan >>= wxSeek h False, enabled := False, tooltip := "Seek" ]
 
-    tbarItem_match <- toolItem tbar "Match" False  (E.getIconFilePath "dot-circle-o")
+    tbarItem_match <- toolItem tbar "Match" False (E.getIconFilePath "match")
       [ on command := dupChan chan >>= wxMatch h False, enabled := False, tooltip := "Match" ]
 
-    tbarItem_finger <- toolItem tbar "Finger" False  (E.getIconFilePath "fa-question")
+    tbarItem_finger <- toolItem tbar "Finger" False (E.getIconFilePath "fa-question")
       [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
+
+    tbarItem_history <- toolItem tbar "History" False (E.getIconFilePath "history")
+      [ on command := hPutStrLn h "4 history", enabled := False, tooltip := "History"]
 
     statusMsg <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
@@ -160,7 +163,7 @@ wxToolBox env chan = do
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
           hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name userHandle]
-          mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger]
+          mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger, tbarItem_history]
 
         msg@Finger {} -> dupChan chan >>= wxInfo msg
 
