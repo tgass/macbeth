@@ -59,6 +59,9 @@ wxToolBox env chan = do
     tbarItem_history <- toolItem tbar "History" False (E.getIconFilePath "history")
       [ on command := hPutStrLn h "4 history", enabled := False, tooltip := "History"]
 
+    tbarItem_settings <- toolItem tbar "Settings" False (E.getIconFilePath "settings")
+      [ on command := dupChan chan >>= wxConfiguration, enabled := False, tooltip := "Settings"]
+
     statusMsg <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
     pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := hPutStrLn h "4 ping", enabled := False]
@@ -92,11 +95,6 @@ wxToolBox env chan = do
     ce <- entry cp []
     set ce [on enterKey := emitCommand ce h]
 
-
-    -- menu
-    m_file   <- menuPane [text := "&File"]
-    _ <- menuItem m_file [text := "Settings", on command := dupChan chan >>= wxConfiguration ]
-
     set f [ statusBar := [statusMsg, statusLoggedIn, statusLag],
             layout := tabs nb
                         [ tab "Sought" $ container slp $ fill $ widget sl
@@ -106,8 +104,7 @@ wxToolBox env chan = do
                         , tab "Console" $ container cp ( column 5  [ fill $ widget ct
                                                                    , hfill $ widget ce])
                         ]
-          , menuBar := [m_file]
-          , outerSize := sz 600 600
+          , outerSize := sz 650 600
           ]
 
     -- preselect first tab
@@ -163,7 +160,7 @@ wxToolBox env chan = do
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
           hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name userHandle]
-          mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger, tbarItem_history]
+          mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger, tbarItem_history, tbarItem_settings]
 
         msg@Finger {} -> dupChan chan >>= wxInfo msg
 
