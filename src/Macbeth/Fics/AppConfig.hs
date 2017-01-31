@@ -2,6 +2,7 @@
 
 module Macbeth.Fics.AppConfig (
   AppConfig(..),
+  Stage(..),
   loadAppConfig
 ) where
 
@@ -11,13 +12,14 @@ import Control.Monad.Except
 import Data.Aeson.Types
 import Data.Yaml
 import GHC.Generics
-import System.Log.Logger
 
 
 data AppConfig = AppConfig {
-  priority :: Priority
+  stage :: Stage
 } deriving (Show, Generic)
 
+
+data Stage = Prod | Dev deriving (Show, Eq, Generic)
 
 instance ToJSON AppConfig
 instance FromJSON AppConfig
@@ -31,26 +33,14 @@ fromDisk :: ExceptT ParseException IO AppConfig
 fromDisk = ExceptT $ getDataFileName "appConfig.yaml" >>= decodeFileEither
 
 
-instance ToJSON Priority where
-  toJSON DEBUG = String "DEBUG"
-  toJSON INFO = String "INFO"
-  toJSON NOTICE = String "NOTICE"
-  toJSON WARNING = String "WARNING"
-  toJSON ERROR = String "ERROR"
-  toJSON CRITICAL = String "CRITICAL"
-  toJSON ALERT = String "ALERT"
-  toJSON EMERGENCY = String "EMERGENCY"
+instance ToJSON Stage where
+  toJSON Dev = String "Dev"
+  toJSON Prod = String "Prod"
 
 
-instance FromJSON Priority where
-  parseJSON (String "DEBUG") = pure DEBUG
-  parseJSON (String "INFO") = pure INFO
-  parseJSON (String "NOTICE") = pure NOTICE
-  parseJSON (String "WARNING") = pure WARNING
-  parseJSON (String "ERROR") = pure ERROR
-  parseJSON (String "CRITICAL") = pure CRITICAL
-  parseJSON (String "ALERT") = pure ALERT
-  parseJSON (String "EMERGENCY") = pure EMERGENCY
+instance FromJSON Stage where
+  parseJSON (String "Dev") = pure Dev
+  parseJSON (String "Prod") = pure Prod
 
   parseJSON invalid = typeMismatch "priority" invalid
 

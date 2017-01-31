@@ -4,7 +4,7 @@ module Macbeth.Fics.FicsConnection (
   ficsConnection
 ) where
 
-import Macbeth.Fics.AppConfig
+
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move hiding (Observing)
@@ -14,22 +14,24 @@ import qualified Macbeth.Fics.Api.Result as R
 import Control.Concurrent.Chan
 import Control.Monad
 import Control.Monad.State
-import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Resource
 import Data.Char
 import Data.Conduit
 import Data.Conduit.Binary
 import Data.Conduit.List hiding (filter)
 import Data.Maybe
+import GHC.Show (showLitString)
 import System.Log.Logger
-import System.Log.Handler.Simple hiding (priority)
-import System.Log.Handler (setFormatter)
-import System.Log.Formatter
 import Network
 import Prelude hiding (log)
 import System.IO
 
 import qualified Data.ByteString.Char8 as BS
+
+
+logger :: String
+logger = "Macbeth.Fics.FicsConnection"
+
 
 data HelperState = HelperState { takebackAccptedBy :: Maybe (Maybe String)
                                , illegalMove :: Maybe String }
@@ -39,7 +41,6 @@ ficsConnection :: IO (Handle, Chan FicsMessage)
 ficsConnection = runResourceT $ do
   (_, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
   liftIO $ hSetBuffering hsock LineBuffering
-  liftIO $ initLogger . priority =<< loadAppConfig
   chan <- liftIO newChan
   _ <- resourceForkIO $ liftIO $ chain hsock chan
   return (hsock, chan)
@@ -65,11 +66,10 @@ sink chan = awaitForever $ liftIO . writeChan chan
 
 
 logFicsMessageC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
-logFicsMessageC = awaitForever $ \cmd -> do
-  _ <- liftIO $ runMaybeT ((MaybeT $ return $ logMsg cmd) >>= \msg -> do
-    lift $ debugM fileLogger msg
-    lift $ debugM consoleLogger msg)
-  yield cmd
+logFicsMessageC = awaitForever $ \cmd -> case cmd of
+  NewSeek{} -> yield cmd
+  RemoveSeeks{} -> yield cmd
+  _ -> liftIO (infoM "console" $ show cmd) >> yield cmd
 
 
 copyC :: Chan FicsMessage -> Conduit FicsMessage (StateT HelperState IO) FicsMessage
@@ -90,7 +90,7 @@ stateC = awaitForever $ \cmd -> do
     IllegalMove m -> put (state' {illegalMove = Just m}) >> sourceNull
 
     m@(GameMove _ move')
-      | isCheckmate move' && isOponentMove move' -> sourceList $ cmd : [moveToResult move']
+      | isCheckmate move' && isOponentMove move' -> sourceList $ cmd : [convertMoveToResult move']
       | isJust $ takebackAccptedBy state' -> do
           put $ state' {takebackAccptedBy = Nothing}
           sourceList [m{context = Takeback $ fromJust $ takebackAccptedBy state'}]
@@ -157,43 +157,16 @@ dropPrompt line
 
 
 logStreamC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
-logStreamC = awaitForever $ \chunk -> do
-  liftIO $ debugM fileLogger $ (foldr (.) (showString "") $ fmap showLitChar (BS.unpack chunk)) ""
-  yield chunk
+logStreamC = awaitForever $ \block -> do
+  liftIO $ infoM logger $ showLitString (BS.unpack block) ""
+  yield block
 
 
-moveToResult :: Move -> FicsMessage
-moveToResult move' = GameResult $ R.Result (gameId move') (nameW move') (nameB move') result (turnToGameResult colorTurn)
+convertMoveToResult :: Move -> FicsMessage
+convertMoveToResult move' = GameResult $ R.Result (gameId move') (nameW move') (nameB move') result (turnToGameResult colorTurn)
   where
     colorTurn = turn move'
     result = namePlayer colorTurn move' ++ " checkmated"
     turnToGameResult Black = R.WhiteWins
     turnToGameResult White = R.BlackWins
-
-
-logMsg :: FicsMessage -> Maybe String
-logMsg NewSeek {} = Nothing
-logMsg RemoveSeeks {} = Nothing
-logMsg cmd = Just $ show cmd
-
-
-consoleLogger :: String
-consoleLogger = "_CONSOLE"
-
-
-fileLogger :: String
-fileLogger = "_FILE"
-
-
-initLogger :: Priority -> IO ()
-initLogger prio = do
-  updateGlobalLogger rootLoggerName removeHandler
-  updateGlobalLogger rootLoggerName (setLevel prio)
-  fileH <- fileHandler "/tmp/macbeth2.log" prio >>= \lh -> return $
-       setFormatter lh (simpleLogFormatter "$time $msg")
-  stdOutH <- streamHandler stdout prio >>= \lh -> return $
-       setFormatter lh (simpleLogFormatter "$time $msg")
-
-  updateGlobalLogger fileLogger (addHandler fileH)
-  updateGlobalLogger consoleLogger (addHandler stdOutH)
 

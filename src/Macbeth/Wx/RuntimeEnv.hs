@@ -11,8 +11,10 @@ module Macbeth.Wx.RuntimeEnv (
 
 import qualified Macbeth.Wx.Config.UserConfig as C
 import Macbeth.Fics.Api.Player
+import Macbeth.Fics.AppConfig
 
 import Control.Concurrent.STM
+import Control.Monad
 import Paths
 import Sound.ALUT
 import System.FilePath
@@ -20,6 +22,10 @@ import System.Directory
 import System.IO
 import System.IO.Unsafe
 import qualified Data.HashMap.Strict as M
+import System.Log.Logger
+import System.Log.Handler.Simple hiding (priority)
+import System.Log.Handler (setFormatter)
+import System.Log.Formatter
 
 data RuntimeEnv = RuntimeEnv {
     handle :: Handle
@@ -32,6 +38,7 @@ data RuntimeEnv = RuntimeEnv {
 initRuntime :: Handle -> IO RuntimeEnv
 initRuntime h = do
   c <- C.initConfig
+  initLogger . stage =<< loadAppConfig
   RuntimeEnv h <$> return c <*> initSources <*> initBufferMap c <*> newTVarIO emptyUserHandle
 
 
@@ -108,4 +115,19 @@ loadSounds dir = do
 
     foo :: FilePath -> IO (String, Buffer)
     foo f = (,) (takeFileName f) <$> createBuffer (File f)
+
+
+initLogger :: Stage -> IO ()
+initLogger stage' = do
+  updateGlobalLogger rootLoggerName removeHandler
+  updateGlobalLogger rootLoggerName $ setLevel DEBUG
+
+  fileH <- fileHandler "/tmp/macbeth.log" INFO >>= \lh -> return $
+       setFormatter lh (simpleLogFormatter "$time $msg")
+
+  stdOutH <- streamHandler stdout INFO >>= \lh -> return $
+       setFormatter lh (simpleLogFormatter "$time $msg")
+
+  updateGlobalLogger rootLoggerName (addHandler fileH)
+  when (stage' == Dev) $ updateGlobalLogger "console" (addHandler stdOutH)
 
