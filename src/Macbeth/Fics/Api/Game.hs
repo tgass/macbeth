@@ -5,9 +5,11 @@ module Macbeth.Fics.Api.Game (
   GameType (..),
   GameSettings (..),
   GameInfo (..),
+  userColor,
   toTitle
 ) where
 
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Rating
 
@@ -56,6 +58,8 @@ toTitle :: GameProperties -> String
 toTitle (GameProperties id' pw pb _) =  "[Game " ++ show id' ++ "] " ++ pw ++ " vs. " ++ pb
 
 
-isWhite :: GameProperties -> Username -> Bool
-isWhite (GameProperties _ w _ _) username = username == w
-
+userColor :: GameProperties -> Username -> Maybe PColor
+userColor (GameProperties _ _ _ False) _ = Nothing
+userColor (GameProperties _ playerW _ True) username
+  | playerW == username = Just White
+  | otherwise = Just Black
