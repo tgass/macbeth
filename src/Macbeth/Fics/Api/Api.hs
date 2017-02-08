@@ -8,6 +8,9 @@ module Macbeth.Fics.Api.Api (
   Position,
   MoveDetailed (..),
   pColor,
+  hasColor,
+  removePiece,
+  getPiece,
   invert
 ) where
 
@@ -42,6 +45,15 @@ data MoveDetailed = Simple Square Square | Drop Square | CastleLong | CastleShor
 
 pColor :: Piece -> PColor
 pColor (Piece _ color) = color
+
+hasColor :: PColor -> Piece -> Bool
+hasColor color (Piece _ pc) = pc == color
+
+removePiece :: Position -> Square -> Position
+removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
+
+getPiece :: Position -> Square -> Maybe Piece
+getPiece p sq = sq `lookup` p
 
 invert :: PColor -> PColor
 invert White = Black

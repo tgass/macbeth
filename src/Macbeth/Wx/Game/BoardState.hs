@@ -12,6 +12,7 @@ module Macbeth.Wx.Game.BoardState (
 
   pointToSquare,
   movePiece,
+  getPiece,
 
   update,
   setResult,
@@ -47,11 +48,11 @@ import System.IO
 data BoardState = BoardState {
     lastMove :: Move
   , isGameUser :: Bool
-  , isWhiteUser :: Bool
+  , userColor_ :: Maybe PColor
   , gameResult :: Maybe GameResult
   , pieceMove :: [PieceMove]
   , moves :: [Move]
-  , _position :: Position
+  , preMovesPosition :: Position
   , preMoves :: [PieceMove]
   , perspective :: PColor
   , mousePt :: Point
@@ -78,17 +79,18 @@ instance Show PieceMove where
 
 pickUpPieceFromHolding :: TVar BoardState -> PType -> IO ()
 pickUpPieceFromHolding vState p = atomically $ modifyTVar vState
-  (\s -> let color' = colorUser (lastMove s)
-             isAllowed = isGameUser s && p `elem` getPieceHolding color' s
-         in if isAllowed
-            then s{draggedPiece = Just $ DraggedPiece (mousePt s) (Piece p color') FromHolding }
-            else s)
+  (\state -> case userColor_ state of
+           Just color'
+             | p `elem` getPieceHolding color' state ->
+                 state{draggedPiece = Just $ DraggedPiece (mousePt state) (Piece p color') FromHolding }
+             | otherwise -> state
+           Nothing -> state)
 
 
 discardDraggedPiece :: TVar BoardState -> IO ()
 discardDraggedPiece vState = atomically $ modifyTVar vState (\s -> s {
     draggedPiece = Nothing
-  , _position = movePieces (preMoves s) (position $ lastMove s)})
+  , preMovesPosition = foldl (flip movePiece) (position $ lastMove s) (preMoves s)})
 
 
 invertPerspective :: TVar BoardState -> IO ()
@@ -98,7 +100,7 @@ invertPerspective vState = atomically $ modifyTVar vState (\s -> s{perspective =
 setResult :: TVar BoardState -> GameResult -> IO ()
 setResult vState r = atomically $ modifyTVar vState (\s -> s{
      gameResult = Just r
-   , _position = position $ lastMove s
+   , preMovesPosition = position $ lastMove s
    , preMoves = []
    , draggedPiece = Nothing})
 
@@ -123,7 +125,7 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
   , pieceMove = diffPosition (position $ lastMove s) (position move)
   , moves = addtoHistory move ctx (moves s)
   , lastMove = move
-  , _position = movePieces (preMoves s) (position move)})
+  , preMovesPosition = foldl (flip movePiece) (position move) (preMoves s)})
 
 
 diffPosition :: Position -> Position -> [PieceMove]
@@ -153,7 +155,7 @@ cancelLastPreMove :: TVar BoardState -> IO ()
 cancelLastPreMove vBoardState = atomically $ modifyTVar vBoardState (\s ->
   let preMoves' = fromMaybe [] $ initMay (preMoves s) in s {
       preMoves = preMoves'
-    , _position = movePieces preMoves' (position $ lastMove s)})
+    , preMovesPosition = foldl (flip movePiece) (position $ lastMove s) preMoves'})
 
 
 performPreMoves :: TVar BoardState -> Handle -> IO ()
@@ -196,10 +198,6 @@ pointToSquare state (Point x y) = Square
     fieldSize bs = scale bs * fromIntegral (psize bs)
 
 
-movePieces :: [PieceMove] -> Position -> Position
-movePieces moves' pos = foldl (flip movePiece) pos moves'
-
-
 movePiece :: PieceMove -> Position -> Position
 movePiece (PieceMove piece from to) position = filter (\(s, _) -> s /= from && s /= to) position ++ [(to, piece)]
 movePiece (DropMove piece sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece)]
@@ -209,11 +207,11 @@ initBoardState :: GameProperties -> Username -> BoardState
 initBoardState gameProperties' username' = BoardState {
     lastMove = initMove gameProperties'
   , isGameUser = isGameUser' gameProperties'
-  , isWhiteUser = playerW' gameProperties' == username'
+  , userColor_ = userColor gameProperties' username'
   , gameResult = Nothing
   , pieceMove = []
   , moves = []
-  , _position = []
+  , preMovesPosition = []
   , preMoves = []
   , perspective = fromMaybe White (userColor gameProperties' username')
   , mousePt = Point 0 0

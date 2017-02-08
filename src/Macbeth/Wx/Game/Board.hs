@@ -72,7 +72,7 @@ drawHighlightPreMove = do
 drawPieces :: BoardT a
 drawPieces = do
   (dc, state) <- ask
-  liftIO $ sequence_ $ drawPiece dc state `fmap` _position state
+  liftIO $ sequence_ $ drawPiece dc state `fmap` preMovesPosition state
   where
     drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
     drawPiece dc state (sq, p) = drawBitmap dc
@@ -157,9 +157,9 @@ dropDraggedPiece vState h click_pt = do
   void $ runMaybeT $ do
       dp <- MaybeT $ return (draggedPiece state)
       let pieceMove = toPieceMove (pointToSquare state click_pt) dp
-      let newPosition = movePiece pieceMove (_position state)
+      let newPosition = movePiece pieceMove (preMovesPosition state)
       liftIO $ do
-        varSet vState state { _position = newPosition, draggedPiece = Nothing}
+        varSet vState state { preMovesPosition = newPosition, draggedPiece = Nothing}
         if isWaiting state
           then hPutStrLn h $ "6 " ++ show pieceMove
           else addPreMove pieceMove
@@ -172,21 +172,14 @@ dropDraggedPiece vState h click_pt = do
     addPreMove pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
 
 
+-- | Pick up piece from board
+-- only possible if, user is playing (has a color) and color of piece matches color of user
 pickUpPiece :: TVar BoardState -> Point -> IO ()
 pickUpPiece vState pt = do
   state <- readTVarIO vState
   let square' = pointToSquare state pt
-  case getPiece (_position state) square' (colorUser $ lastMove state) of
-     Just piece -> varSet vState state { _position = removePiece (_position state) square'
-                                          , draggedPiece = Just $ DraggedPiece pt piece $ FromBoard square'}
+  case userColor_ state >>= \color' -> mfilter (hasColor color') (getPiece (preMovesPosition state) square') of
+     Just piece' -> varSet vState state { preMovesPosition = removePiece (preMovesPosition state) square'
+                                        , draggedPiece = Just $ DraggedPiece pt piece' $ FromBoard square'}
      _ -> return ()
-  where
-    removePiece :: Position -> Square -> Position
-    removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
-
-    getPiece :: Position -> Square -> PColor -> Maybe Piece
-    getPiece pos sq color = sq `lookup` pos >>= checkColor color
-      where
-        checkColor :: PColor -> Piece -> Maybe Piece
-        checkColor c p@(Piece _ c') = if c == c' then Just p else Nothing
 

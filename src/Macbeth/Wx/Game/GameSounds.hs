@@ -4,6 +4,7 @@ module Macbeth.Wx.Game.GameSounds (
   gameSounds
 ) where
 
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.FicsMessage
@@ -33,9 +34,9 @@ findSound boardState = \case
     C.normal (C.move $ C.game c))
 
   GameResult (Result _ _ _ _ result')
-    | isGameUser' && userWins isWhite' result' -> C.youWin . C.endOfGame . C.game
-    | isGameUser' && not (userWins isWhite' result') -> C.youLose . C.endOfGame . C.game
-    | isGameUser' && (result' == Draw) -> C.youDraw . C.endOfGame . C.game
+    | userWins (userColor_ boardState) result' -> C.youWin . C.endOfGame . C.game
+    | userLoses (userColor_ boardState) result' -> C.youLose . C.endOfGame . C.game
+    | userDraws (userColor_ boardState) result'  -> C.youDraw . C.endOfGame . C.game
     | result' == WhiteWins -> C.whiteWins . C.endOfGame . C.game
     | result' == BlackWins -> C.blackWins . C.endOfGame . C.game
     | result' == Draw -> C.draw . C.endOfGame . C.game
@@ -55,11 +56,20 @@ findSound boardState = \case
     withSound True (Just sound) = Just sound
     withSound _ _ = Nothing
 
-    isWhite' = isWhiteUser boardState
-    isGameUser' = isGameUser boardState
+
+userWins :: Maybe PColor -> GameResult -> Bool
+userWins Nothing _ = False
+userWins (Just White) result' = result' == WhiteWins
+userWins (Just Black) result' = result' == BlackWins
 
 
-userWins :: Bool -> GameResult -> Bool
-userWins isWhite result' =
-  (isWhite && result' == WhiteWins) || (not isWhite && result' == BlackWins)
+userLoses :: Maybe PColor -> GameResult -> Bool
+userLoses Nothing _ = False
+userLoses (Just Black) result' = result' == WhiteWins
+userLoses (Just White) result' = result' == BlackWins
+
+
+userDraws :: Maybe PColor -> GameResult -> Bool
+userDraws Nothing _ = False
+userDraws _ result' = result' == Draw
 
