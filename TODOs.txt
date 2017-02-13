@@ -1,6 +1,4 @@
---
 TextMessage "Ambiguous move (nd2).\n"
-
 
 
 --BUGS:

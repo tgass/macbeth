@@ -55,7 +55,7 @@ spec =
 
     it "parse piece holding" $ parseFicsMessage "<b1> game 182 white [PPB] black [PQQ] <- BQ\n" `shouldBe` Right (PieceHolding (GameId 182) [Pawn,Pawn,Bishop] [Pawn,Queen,Queen])
 
-    it "parse seek not available" $ parseFicsMessage "\NAK4\SYN158\SYNThat seek is not available.\n\ETB" `shouldBe` Right SeekNotAvailable
+    it "parse seek not available" $ parseFicsMessage "That seek is not available.\n" `shouldBe` Right SeekNotAvailable
 
     it "parse match requested" $ parseFicsMessage "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters." `shouldBe` Right (MatchRequested $ Challenge "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated "unrated blitz 5 0")
 

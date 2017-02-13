@@ -29,7 +29,7 @@ removeSeeks :: Parser FicsMessage
 removeSeeks = RemoveSeeks <$> ("<sr>" *> many1 (space *> decimal))
 
 seekNotAvailable :: Parser FicsMessage
-seekNotAvailable = commandHead 158 *> "That seek is not available." *> pure SeekNotAvailable
+seekNotAvailable = "That seek is not available." *> pure SeekNotAvailable
 
 seek' :: Parser Seek
 seek' = Seek

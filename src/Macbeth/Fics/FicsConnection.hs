@@ -1,7 +1,14 @@
 {-# LANGUAGE OverloadedStrings, LambdaCase #-}
 
 module Macbeth.Fics.FicsConnection (
-  ficsConnection
+  ficsConnection,
+  linesC,
+  parseC,
+  blockC,
+  unblockC,
+  crop,
+  lines',
+  readId
 ) where
 
 
@@ -102,13 +109,13 @@ stateC = awaitForever $ \cmd -> do
     _ -> yield cmd
 
 
-parseC :: Conduit BS.ByteString (StateT HelperState IO) FicsMessage
+parseC :: (Monad m) => Conduit BS.ByteString m FicsMessage
 parseC = awaitForever $ \str -> case parseFicsMessage str of
   Left _    -> yield $ TextMessage $ BS.unpack str
   Right cmd -> yield cmd
 
 
-unblockC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+unblockC :: (Monad m) => Conduit BS.ByteString m BS.ByteString
 unblockC = awaitForever $ \block -> case ord $ BS.head block of
   21 -> if readId block `elem` [
           37 -- BLK_FINGER
@@ -118,23 +125,22 @@ unblockC = awaitForever $ \block -> case ord $ BS.head block of
         , 107 -- BLK_SAY
         , 132 -- BLK_TELL
         , 146 -- BLK_WHO
-        , 158 -- BLK_PLgAY
         ]
         then yield block else sourceList (lines' $ crop block)
   _ -> yield block
-  where
-    crop :: BS.ByteString -> BS.ByteString
-    crop bs = let lastIdx = maybe 0 (+1) (BS.elemIndexEnd (chr 22) bs) in
-              BS.drop lastIdx $ BS.init bs
 
-    lines' :: BS.ByteString -> [BS.ByteString]
-    lines' bs = fmap (`BS.snoc` '\n') $ init $ filter (not . BS.null) $ BS.split '\n' bs
+crop :: BS.ByteString -> BS.ByteString
+crop bs = let lastIdx = maybe 0 (+1) (BS.elemIndexEnd (chr 22) bs) in
+          BS.drop lastIdx $ BS.init bs
 
-    readId :: BS.ByteString -> Int
-    readId = read . BS.unpack . BS.takeWhile (/= chr 22) . BS.tail . BS.dropWhile (/= chr 22)
+lines' :: BS.ByteString -> [BS.ByteString]
+lines' = filter (not . BS.null) . BS.split '\n'
+
+readId :: BS.ByteString -> Int
+readId = read . BS.unpack . BS.takeWhile (/= chr 22) . BS.tail . BS.dropWhile (/= chr 22)
 
 
-blockC :: BS.ByteString -> Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+blockC :: (Monad m) => BS.ByteString -> Conduit BS.ByteString m BS.ByteString
 blockC block = awaitForever $ \line -> case ord $ BS.head line of
   21 -> blockC line
   23 -> yield (block `BS.append` line) >> blockC BS.empty -- ^ don't ever delete this again!
@@ -144,7 +150,7 @@ blockC block = awaitForever $ \line -> case ord $ BS.head line of
 
 
 -- remember!! "fics% \NAK4\SYN87\SYNThere are no offers pending to other players."
-linesC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+linesC :: (Monad m) => Conduit BS.ByteString m BS.ByteString
 linesC = awaitForever $ sourceList . filter (not . BS.null) . fmap dropPrompt . BS.split '\r'
 
 
