@@ -14,6 +14,7 @@ import Control.Applicative
 import Control.Concurrent.Chan
 import Control.Concurrent.STM
 import Control.Monad
+import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ord
@@ -92,10 +93,10 @@ sortPlayers sl sortMenu players = do
 
 
 sortFoo :: CtxSortMenu -> IO (Player -> Player -> Ordering)
-sortFoo ctxMenu = do
-  name' <- foo (name . handle) (sortByName ctxMenu)
-  status' <- foo status (sortByStatus ctxMenu)
-  rating' <- foo (Down . rating) (sortByRating ctxMenu)
+sortFoo ctxMenu' = do
+  name' <- foo (fmap toLower . name . handle) (sortByName ctxMenu')
+  status' <- foo status (sortByStatus ctxMenu')
+  rating' <- foo (Down . rating) (sortByRating ctxMenu')
 
   return $ fromMaybe (comparing (name . handle)) (name' <|> status' <|> rating')
 
@@ -116,12 +117,12 @@ addPlayer :: ListCtrl () -> Player -> IO ()
 addPlayer l player = do
   count <- listCtrlGetItemCount l
 
-  item <- listItemCreate
-  listItemSetId item count
+  item' <- listItemCreate
+  listItemSetId item' count
 --  when (Computer `elem` handleType (handle player)) $ listItemSetBackgroundColour item (colorRGB (255 :: Int) 255 188)
-  listItemSetImage item (fmap imageIdx handleType $ handle player)
+  listItemSetImage item' (fmap imageIdx handleType $ handle player)
 
-  listCtrlInsertItem l item
+  _ <- listCtrlInsertItem l item'
   mapM_ (\(col, txt) -> listCtrlSetItem l count col txt (-1)) (zip [0..] (toList player))
 
   where
@@ -130,26 +131,26 @@ addPlayer l player = do
 
 
 ctxMenu :: Menu () -> Menu () -> IO CtxMenu
-ctxMenu ctxMenu sub = CtxMenu
-  <$> menuItem ctxMenu [ text := "Match"]
-  <*> menuItem ctxMenu [ text := "Finger"]
-  <*> menuItem ctxMenu [ text := "History"]
-  <*> menuItem ctxMenu [ text := "Observe"]
-  <*> menuItem ctxMenu [ text := "Partner"]
-  <*> menuItem ctxMenu [ text := "Chat"]
-  <*> menuSub ctxMenu sub [ text := "Sort by" ]
+ctxMenu ctxMenu' sub = CtxMenu
+  <$> menuItem ctxMenu' [ text := "Match"]
+  <*> menuItem ctxMenu' [ text := "Finger"]
+  <*> menuItem ctxMenu' [ text := "History"]
+  <*> menuItem ctxMenu' [ text := "Observe"]
+  <*> menuItem ctxMenu' [ text := "Partner"]
+  <*> menuItem ctxMenu' [ text := "Chat"]
+  <*> menuSub ctxMenu' sub [ text := "Sort by" ]
 
 
 ctxSortMenu :: Menu () -> IO CtxSortMenu
-ctxSortMenu menu = CtxSortMenu
-  <$> menuRadioItem menu [ text := "Name"]
-  <*> menuRadioItem menu [ text := "State"]
-  <*> menuRadioItem menu [ text := "Rating"]
+ctxSortMenu menu' = CtxSortMenu
+  <$> menuRadioItem menu' [ text := "Name"]
+  <*> menuRadioItem menu' [ text := "State"]
+  <*> menuRadioItem menu' [ text := "Rating"]
 
 
 toList :: Player -> [String]
-toList (Player rating status (UserHandle username ht)) =
-  [username, toStringStatus status, show rating, showHandleType ht]
+toList (Player rating' status' (UserHandle username ht)) =
+  [username, toStringStatus status', show rating', showHandleType ht]
   where
     toStringStatus InvolvedInAGame = "Playing"
     toStringStatus RunningASimulMatch = "Playing Simul"
