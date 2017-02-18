@@ -25,7 +25,6 @@ module Macbeth.Wx.Game.BoardState (
   setPieceSet,
   getPieceHolding,
 
-  getSelectedSquare,
   initBoardState
 ) where
 
@@ -130,9 +129,9 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
 
 diffPosition :: Position -> Position -> [PieceMove]
 diffPosition before after =
-  let from = before \\ after
-      to = after \\ before
-  in [PieceMove piece1 s1 s2 | (s1, piece1) <- from, (s2, piece2) <- to, piece1 == piece2, s1 /= s2 ]
+  let from' = before \\ after
+      to' = after \\ before
+  in [PieceMove piece1 s1 s2 | (s1, piece1) <- from', (s2, piece2) <- to', piece1 == piece2, s1 /= s2 ]
 
 
 addtoHistory :: Move -> MoveModifier -> [Move] -> [Move]
@@ -160,7 +159,7 @@ cancelLastPreMove vBoardState = atomically $ modifyTVar vBoardState (\s ->
 
 performPreMoves :: TVar BoardState -> Handle -> IO ()
 performPreMoves vBoardState h = do
-  preMoves' <- preMoves `fmap` readTVarIO vBoardState
+  preMoves' <- preMoves <$> readTVarIO vBoardState
   unless (null preMoves') $ do
     atomically $ modifyTVar vBoardState (\s -> s {
       isWaiting = False,
@@ -177,30 +176,26 @@ getPieceHolding White bs = phW bs
 getPieceHolding Black bs = phB bs
 
 
-getSelectedSquare :: BoardState -> Square
-getSelectedSquare state = pointToSquare state (mousePt state)
-
-
-pointToSquare :: BoardState -> Point -> Square
+pointToSquare :: BoardState -> Point -> Maybe Square
 pointToSquare state (Point x y) = Square
-  (intToCol (perspective state) (floor $ fromIntegral x / fieldSize state))
-  (intToRow (perspective state) (floor $ fromIntegral y / fieldSize state))
+  <$> intToCol (perspective state) (floor $ fromIntegral x / fieldSize state)
+  <*> intToRow (perspective state) (floor $ fromIntegral y / fieldSize state)
   where
-    intToRow :: PColor -> Int -> Row
-    intToRow White = toEnum . abs . (7-)
-    intToRow Black = toEnum
+    intToRow :: PColor -> Int -> Maybe Row
+    intToRow White = toEnumMay . (7-)
+    intToRow Black = toEnumMay
 
-    intToCol :: PColor -> Int -> Column
-    intToCol White = toEnum
-    intToCol Black = toEnum . abs . (7-)
+    intToCol :: PColor -> Int -> Maybe Column
+    intToCol White = toEnumMay
+    intToCol Black = toEnumMay . (7-)
 
     fieldSize :: BoardState -> Double
     fieldSize bs = scale bs * fromIntegral (psize bs)
 
 
 movePiece :: PieceMove -> Position -> Position
-movePiece (PieceMove piece from to) position = filter (\(s, _) -> s /= from && s /= to) position ++ [(to, piece)]
-movePiece (DropMove piece sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece)]
+movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from' && s /= to') position' ++ [(to', piece')]
+movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
 
 
 initBoardState :: GameProperties -> Username -> BoardState

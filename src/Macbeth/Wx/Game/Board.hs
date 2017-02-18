@@ -87,7 +87,9 @@ drawSelectedSquare = do
     withBrushStyle brushTransparent $ \transparent -> do
       dcSetBrush dc transparent
       set dc [pen := penColored red 1]
-      paintSquare dc state (getSelectedSquare state)
+      void $ runMaybeT $ do
+        square <- MaybeT $ return $ pointToSquare state $ mousePt state
+        liftIO $ paintSquare dc state square
 
 
 drawDraggedPiece :: BoardT a
@@ -99,7 +101,7 @@ drawDraggedPiece = do
 
 
 drawDraggedPiece'' :: BoardState -> DC a -> DraggedPiece -> IO ()
-drawDraggedPiece'' state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBitmap size (pieceSet state) piece) scalePoint True []
+drawDraggedPiece'' state dc (DraggedPiece pt piece' _) = drawBitmap dc (pieceToBitmap size (pieceSet state) piece') scalePoint True []
   where
     scale' = scale state
     size = psize state
@@ -155,18 +157,21 @@ dropDraggedPiece :: TVar BoardState -> Handle -> Point -> IO ()
 dropDraggedPiece vState h click_pt = do
   state <- readTVarIO vState
   void $ runMaybeT $ do
-      dp <- MaybeT $ return (draggedPiece state)
-      let pieceMove = toPieceMove (pointToSquare state click_pt) dp
-      let newPosition = movePiece pieceMove (preMovesPosition state)
-      liftIO $ do
-        varSet vState state { preMovesPosition = newPosition, draggedPiece = Nothing}
-        if isWaiting state
-          then hPutStrLn h $ "6 " ++ show pieceMove
-          else addPreMove pieceMove
+      dp <- MaybeT $ return $ draggedPiece state
+      case toPieceMove dp <$> pointToSquare state click_pt  of
+        Just pieceMove' -> do
+          let newPosition = movePiece pieceMove' (preMovesPosition state)
+          liftIO $ do
+              varSet vState state { preMovesPosition = newPosition, draggedPiece = Nothing}
+              if isWaiting state
+                then hPutStrLn h $ "6 " ++ show pieceMove'
+                else addPreMove pieceMove'
+        Nothing -> liftIO $ discardDraggedPiece vState
+
   where
-    toPieceMove :: Square -> DraggedPiece -> PieceMove
-    toPieceMove toSq (DraggedPiece _ piece (FromBoard fromSq)) = PieceMove piece fromSq toSq
-    toPieceMove toSq (DraggedPiece _ piece FromHolding) = DropMove piece toSq
+    toPieceMove :: DraggedPiece -> Square -> PieceMove
+    toPieceMove (DraggedPiece _ piece' (FromBoard fromSq)) toSq = PieceMove piece' fromSq toSq
+    toPieceMove (DraggedPiece _ piece' FromHolding) toSq = DropMove piece' toSq
 
     addPreMove :: PieceMove -> IO ()
     addPreMove pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
@@ -177,9 +182,10 @@ dropDraggedPiece vState h click_pt = do
 pickUpPiece :: TVar BoardState -> Point -> IO ()
 pickUpPiece vState pt = do
   state <- readTVarIO vState
-  let square' = pointToSquare state pt
-  case userColor_ state >>= \color' -> mfilter (hasColor color') (getPiece (preMovesPosition state) square') of
-     Just piece' -> varSet vState state { preMovesPosition = removePiece (preMovesPosition state) square'
-                                        , draggedPiece = Just $ DraggedPiece pt piece' $ FromBoard square'}
-     _ -> return ()
+  void $ runMaybeT $ do
+    square' <- MaybeT $ return $ pointToSquare state pt
+    piece' <- MaybeT $ return $ userColor_ state >>= \color' -> mfilter (hasColor color') (getPiece (preMovesPosition state) square')
+    liftIO $ varSet vState state {
+               preMovesPosition = removePiece (preMovesPosition state) square'
+             , draggedPiece = Just $ DraggedPiece pt piece' $ FromBoard square'}
 
