@@ -120,6 +120,7 @@ wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
       set status [text := R.toString result]
       Api.setResult vBoardState (R.result result)
       repaint p_board
+      when (Api.isGameUser boardState) $ readTVarIO vBoardState >>= saveAsPGN
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
@@ -140,10 +141,9 @@ wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
   windowOnDestroy f $ do
     sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClose]
     boardState' <- readTVarIO vBoardState
-    when (Api.isGameUser boardState) $ saveAsPGN boardState'
-    unless (isJust $ Api.gameResult boardState) $
-      if Api.isGameUser boardState then hPutStrLn h "5 resign"
-                                   else hPutStrLn h $ "5 unobserve " ++ show gameId
+
+    when (isNothing (Api.gameResult boardState') && not (Api.isGameUser boardState)) $
+      hPutStrLn h $ "5 unobserve " ++ show gameId
 
 
 resizeFrame :: Frame () -> TVar Api.BoardState -> Panel() -> IO ()
