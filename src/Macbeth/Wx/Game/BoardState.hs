@@ -51,7 +51,7 @@ data BoardState = BoardState {
   , gameResult :: Maybe GameResult
   , pieceMove :: [PieceMove]
   , moves :: [Move]
-  , preMovesPosition :: Position
+  , virtualPosition :: Position
   , preMoves :: [PieceMove]
   , perspective :: PColor
   , mousePt :: Point
@@ -87,9 +87,14 @@ pickUpPieceFromHolding vState p = atomically $ modifyTVar vState
 
 
 discardDraggedPiece :: TVar BoardState -> IO ()
-discardDraggedPiece vState = atomically $ modifyTVar vState (\s -> s {
-    draggedPiece = Nothing
-  , preMovesPosition = foldl (flip movePiece) (position $ lastMove s) (preMoves s)})
+discardDraggedPiece vState = atomically $ modifyTVar vState (
+  \s -> maybe s (discardDraggedPiece' s) (draggedPiece s))
+
+
+discardDraggedPiece' :: BoardState -> DraggedPiece -> BoardState
+discardDraggedPiece' s (DraggedPiece _ piece' (FromBoard sq')) = s { draggedPiece = Nothing, virtualPosition = (sq', piece') : virtualPosition s}
+discardDraggedPiece' s (DraggedPiece _ (Piece p White) FromHolding) = s { draggedPiece = Nothing, phW = p : phW s }
+discardDraggedPiece' s (DraggedPiece _ (Piece p Black) FromHolding) = s { draggedPiece = Nothing, phB = p : phB s }
 
 
 invertPerspective :: TVar BoardState -> IO ()
@@ -99,7 +104,7 @@ invertPerspective vState = atomically $ modifyTVar vState (\s -> s{perspective =
 setResult :: TVar BoardState -> GameResult -> IO ()
 setResult vState r = atomically $ modifyTVar vState (\s -> s{
      gameResult = Just r
-   , preMovesPosition = position $ lastMove s
+   , virtualPosition = position $ lastMove s
    , preMoves = []
    , draggedPiece = Nothing})
 
@@ -124,7 +129,15 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
   , pieceMove = diffPosition (position $ lastMove s) (position move)
   , moves = addtoHistory move ctx (moves s)
   , lastMove = move
-  , preMovesPosition = foldl (flip movePiece) (position move) (preMoves s)})
+  , virtualPosition = let preMovePos' = foldl (flip movePiece) (position move) (preMoves s)
+                      in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)
+  })
+
+
+removeDraggedPiece :: Position -> DraggedPiece -> Position
+removeDraggedPiece position' (DraggedPiece _ _ (FromBoard sq')) = removePiece position' sq'
+removeDraggedPiece position' _ = position'
+
 
 
 diffPosition :: Position -> Position -> [PieceMove]
@@ -152,18 +165,18 @@ resize p vState = do
 
 cancelLastPreMove :: TVar BoardState -> IO ()
 cancelLastPreMove vBoardState = atomically $ modifyTVar vBoardState (\s ->
-  let preMoves' = fromMaybe [] $ initMay (preMoves s) in s {
-      preMoves = preMoves'
-    , preMovesPosition = foldl (flip movePiece) (position $ lastMove s) preMoves'})
+  let preMoves' = fromMaybe [] $ initMay (preMoves s)
+  in s { preMoves = preMoves'
+       , virtualPosition = foldl (flip movePiece) (position $ lastMove s) preMoves'})
 
 
 performPreMoves :: TVar BoardState -> Handle -> IO ()
 performPreMoves vBoardState h = do
   preMoves' <- preMoves <$> readTVarIO vBoardState
   unless (null preMoves') $ do
-    atomically $ modifyTVar vBoardState (\s -> s {
-      isWaiting = False,
-      preMoves = tail preMoves'})
+    atomically $ modifyTVar vBoardState (\s ->
+      s { isWaiting = False
+        , preMoves = tail preMoves'})
     hPutStrLn h $ "6 " ++ show (head preMoves' )
 
 
@@ -206,7 +219,7 @@ initBoardState gameProperties' username' = BoardState {
   , gameResult = Nothing
   , pieceMove = []
   , moves = []
-  , preMovesPosition = []
+  , virtualPosition = []
   , preMoves = []
   , perspective = fromMaybe White (userColor gameProperties' username')
   , mousePt = Point 0 0

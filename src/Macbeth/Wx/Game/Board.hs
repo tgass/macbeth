@@ -57,7 +57,7 @@ drawHighlightLastMove :: BoardT a
 drawHighlightLastMove = do
   (dc, state) <- ask
   liftIO $ when (isHighlightMove $ lastMove state) $
-    sequence_ $ paintHighlight dc state blue `fmap` pieceMove state
+    sequence_ $ paintHighlight dc state blue <$> pieceMove state
   where
     isHighlightMove :: Move -> Bool
     isHighlightMove m = (isJust . moveVerbose) m && (wasOponentMove m || relation m == Observing)
@@ -66,13 +66,13 @@ drawHighlightLastMove = do
 drawHighlightPreMove :: BoardT a
 drawHighlightPreMove = do
   (dc, state) <- ask
-  liftIO $ sequence_ $ paintHighlight dc state yellow `fmap` preMoves state
+  liftIO $ sequence_ $ paintHighlight dc state yellow <$> preMoves state
 
 
 drawPieces :: BoardT a
 drawPieces = do
   (dc, state) <- ask
-  liftIO $ sequence_ $ drawPiece dc state `fmap` preMovesPosition state
+  liftIO $ sequence_ $ drawPiece dc state <$> virtualPosition state
   where
     drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
     drawPiece dc state (sq, p) = drawBitmap dc
@@ -135,8 +135,10 @@ onMouseEvent h vState = \case
     MouseMotion pt _ -> updateMousePosition vState pt
 
     MouseLeftDown pt _ -> do
-      dp <- draggedPiece `fmap` readTVarIO vState
-      if isJust dp then dropDraggedPiece vState h pt else pickUpPiece vState pt
+      dp <- draggedPiece <$> readTVarIO vState
+      case dp of
+        (Just _) -> dropDraggedPiece vState h pt -- if draggedPiece is from holding
+        Nothing -> pickUpPiece vState pt
 
     MouseLeftUp click_pt _ -> dropDraggedPiece vState h click_pt
 
@@ -147,10 +149,10 @@ onMouseEvent h vState = \case
 
 updateMousePosition :: TVar BoardState -> Point -> IO ()
 updateMousePosition vState pt = atomically $ modifyTVar vState
-  (\s -> s{ mousePt = pt, draggedPiece = draggedPiece s >>= setNewPoint})
+  (\s -> s{ mousePt = pt, draggedPiece = setNewPoint <$> draggedPiece s})
   where
-    setNewPoint :: DraggedPiece -> Maybe DraggedPiece
-    setNewPoint (DraggedPiece _ p o) = Just (DraggedPiece pt p o)
+    setNewPoint :: DraggedPiece -> DraggedPiece
+    setNewPoint (DraggedPiece _ p o) = DraggedPiece pt p o
 
 
 dropDraggedPiece :: TVar BoardState -> Handle -> Point -> IO ()
@@ -160,9 +162,9 @@ dropDraggedPiece vState h click_pt = do
       dp <- MaybeT $ return $ draggedPiece state
       case toPieceMove dp <$> pointToSquare state click_pt  of
         Just pieceMove' -> do
-          let newPosition = movePiece pieceMove' (preMovesPosition state)
+          let newPosition = movePiece pieceMove' (virtualPosition state)
           liftIO $ do
-              varSet vState state { preMovesPosition = newPosition, draggedPiece = Nothing}
+              varSet vState state { virtualPosition = newPosition, draggedPiece = Nothing}
               if isWaiting state
                 then hPutStrLn h $ "6 " ++ show pieceMove'
                 else addPreMove pieceMove'
@@ -180,12 +182,11 @@ dropDraggedPiece vState h click_pt = do
 -- | Pick up piece from board
 -- only possible if, user is playing (has a color) and color of piece matches color of user
 pickUpPiece :: TVar BoardState -> Point -> IO ()
-pickUpPiece vState pt = do
-  state <- readTVarIO vState
-  void $ runMaybeT $ do
-    square' <- MaybeT $ return $ pointToSquare state pt
-    piece' <- MaybeT $ return $ userColor_ state >>= \color' -> mfilter (hasColor color') (getPiece (preMovesPosition state) square')
-    liftIO $ varSet vState state {
-               preMovesPosition = removePiece (preMovesPosition state) square'
-             , draggedPiece = Just $ DraggedPiece pt piece' $ FromBoard square'}
+pickUpPiece vState pt =
+  atomically $ modifyTVar vState (\state' -> fromMaybe state' $ do
+    sq' <- pointToSquare state' pt
+    color' <- userColor_ state'
+    piece' <- mfilter (hasColor color') (getPiece (virtualPosition state') sq')
+    return state' { virtualPosition = removePiece (virtualPosition state') sq'
+                  , draggedPiece = Just $ DraggedPiece pt piece' $ FromBoard sq'})
 
