@@ -15,7 +15,7 @@ import System.FilePath
 
 
 saveAsPGN :: BoardState ->  IO ()
-saveAsPGN b = saveAsPGN' (reverse $ moves b) (gameResult b)
+saveAsPGN b = saveAsPGN' (reverse $ history b) (gameResult b)
 
 saveAsPGN' :: [Move] -> Maybe GameResult -> IO ()
 saveAsPGN' [] _ = return ()

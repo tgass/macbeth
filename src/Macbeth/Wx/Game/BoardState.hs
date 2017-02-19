@@ -50,7 +50,7 @@ data BoardState = BoardState {
   , userColor_ :: Maybe PColor
   , gameResult :: Maybe GameResult
   , pieceMove :: [PieceMove]
-  , moves :: [Move]
+  , history :: [Move]
   , virtualPosition :: Position
   , preMoves :: [PieceMove]
   , perspective :: PColor
@@ -127,7 +127,7 @@ update :: TVar BoardState -> Move -> MoveModifier -> IO ()
 update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
     isWaiting = isNextMoveUser move
   , pieceMove = diffPosition (position $ lastMove s) (position move)
-  , moves = addtoHistory move ctx (moves s)
+  , history = addtoHistory move ctx (history s)
   , lastMove = move
   , virtualPosition = let preMovePos' = foldl (flip movePiece) (position move) (preMoves s)
                       in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)
@@ -218,7 +218,7 @@ initBoardState gameProperties' username' = BoardState {
   , userColor_ = userColor gameProperties' username'
   , gameResult = Nothing
   , pieceMove = []
-  , moves = []
+  , history = []
   , virtualPosition = []
   , preMoves = []
   , perspective = fromMaybe White (userColor gameProperties' username')
