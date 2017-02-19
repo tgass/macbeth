@@ -138,55 +138,11 @@ onMouseEvent h vState = \case
       dp <- draggedPiece <$> readTVarIO vState
       case dp of
         (Just _) -> dropDraggedPiece vState h pt -- if draggedPiece is from holding
-        Nothing -> pickUpPiece vState pt
+        Nothing -> pickUpPieceFromBoard vState pt
 
     MouseLeftUp click_pt _ -> dropDraggedPiece vState h click_pt
 
     MouseLeftDrag pt _ -> updateMousePosition vState pt
 
     _ -> return ()
-
-
-updateMousePosition :: TVar BoardState -> Point -> IO ()
-updateMousePosition vState pt = atomically $ modifyTVar vState
-  (\s -> s{ mousePt = pt, draggedPiece = setNewPoint <$> draggedPiece s})
-  where
-    setNewPoint :: DraggedPiece -> DraggedPiece
-    setNewPoint (DraggedPiece _ p o) = DraggedPiece pt p o
-
-
-dropDraggedPiece :: TVar BoardState -> Handle -> Point -> IO ()
-dropDraggedPiece vState h click_pt = do
-  state <- readTVarIO vState
-  void $ runMaybeT $ do
-      dp <- MaybeT $ return $ draggedPiece state
-      case toPieceMove dp <$> pointToSquare state click_pt  of
-        Just pieceMove' -> do
-          let newPosition = movePiece pieceMove' (virtualPosition state)
-          liftIO $ do
-              varSet vState state { virtualPosition = newPosition, draggedPiece = Nothing}
-              if isWaiting state
-                then hPutStrLn h $ "6 " ++ show pieceMove'
-                else addPreMove pieceMove'
-        Nothing -> liftIO $ discardDraggedPiece vState
-
-  where
-    toPieceMove :: DraggedPiece -> Square -> PieceMove
-    toPieceMove (DraggedPiece _ piece' (FromBoard fromSq)) toSq = PieceMove piece' fromSq toSq
-    toPieceMove (DraggedPiece _ piece' FromHolding) toSq = DropMove piece' toSq
-
-    addPreMove :: PieceMove -> IO ()
-    addPreMove pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
-
-
--- | Pick up piece from board
--- only possible if, user is playing (has a color) and color of piece matches color of user
-pickUpPiece :: TVar BoardState -> Point -> IO ()
-pickUpPiece vState pt =
-  atomically $ modifyTVar vState (\state' -> fromMaybe state' $ do
-    sq' <- pointToSquare state' pt
-    color' <- userColor_ state'
-    piece' <- mfilter (hasColor color') (getPiece (virtualPosition state') sq')
-    return state' { virtualPosition = removePiece (virtualPosition state') sq'
-                  , draggedPiece = Just $ DraggedPiece pt piece' $ FromBoard sq'})
 

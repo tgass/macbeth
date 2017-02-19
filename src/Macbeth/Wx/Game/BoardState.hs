@@ -10,6 +10,8 @@ module Macbeth.Wx.Game.BoardState (
   setPromotion,
   togglePromotion,
 
+  pickUpPieceFromBoard,
+
   pointToSquare,
   movePiece,
   getPiece,
@@ -21,6 +23,9 @@ module Macbeth.Wx.Game.BoardState (
 
   performPreMoves,
   cancelLastPreMove,
+
+  updateMousePosition,
+  dropDraggedPiece,
 
   setPieceSet,
   getPieceHolding,
@@ -35,8 +40,10 @@ import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Fics.Api.Result
 
-import Control.Monad
 import Control.Concurrent.STM
+import Control.Monad
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Maybe
 import Data.Maybe
 import Data.List
 import Graphics.UI.WX hiding (position, update, resize, when)
@@ -75,26 +82,65 @@ instance Show PieceMove where
   show (PieceMove _ s1 s2) = show s1 ++ show s2
   show (DropMove (Piece p _) s) = show p ++ "@" ++ show s
 
+updateMousePosition :: TVar BoardState -> Point -> IO ()
+updateMousePosition vState pt' = atomically $ modifyTVar vState
+  (\s -> s{ mousePt = pt', draggedPiece = setNewPoint <$> draggedPiece s})
+  where
+    setNewPoint :: DraggedPiece -> DraggedPiece
+    setNewPoint (DraggedPiece _ p o) = DraggedPiece pt' p o
+
+
+dropDraggedPiece :: TVar BoardState -> Handle -> Point -> IO ()
+dropDraggedPiece vState h click_pt = do
+  state <- readTVarIO vState
+  void $ runMaybeT $ do
+      dp <- MaybeT $ return $ draggedPiece state
+      case toPieceMove dp <$> pointToSquare state click_pt  of
+        Just pieceMove' -> do
+          let newPosition = movePiece pieceMove' (virtualPosition state)
+          liftIO $ do
+              varSet vState state { virtualPosition = newPosition, draggedPiece = Nothing}
+              if isWaiting state
+                then hPutStrLn h $ "6 " ++ show pieceMove'
+                else addPreMove pieceMove'
+        Nothing -> liftIO $ discardDraggedPiece vState
+
+  where
+    toPieceMove :: DraggedPiece -> Square -> PieceMove
+    toPieceMove (DraggedPiece _ piece' (FromBoard fromSq)) toSq = PieceMove piece' fromSq toSq
+    toPieceMove (DraggedPiece _ piece' FromHolding) toSq = DropMove piece' toSq
+
+    addPreMove :: PieceMove -> IO ()
+    addPreMove pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
+
+
+pickUpPieceFromBoard :: TVar BoardState -> Point -> IO ()
+pickUpPieceFromBoard vState pt' =
+  atomically $ modifyTVar vState (\state' -> fromMaybe state' $ do
+    sq' <- pointToSquare state' pt'
+    color' <- userColor_ state'
+    piece' <- mfilter (hasColor color') (getPiece (virtualPosition state') sq')
+    return state' { virtualPosition = removePiece (virtualPosition state') sq'
+                  , draggedPiece = Just $ DraggedPiece pt' piece' $ FromBoard sq'})
+
 
 pickUpPieceFromHolding :: TVar BoardState -> PType -> IO ()
 pickUpPieceFromHolding vState p = atomically $ modifyTVar vState
-  (\state -> case userColor_ state of
-           Just color'
-             | p `elem` getPieceHolding color' state ->
-                 state{draggedPiece = Just $ DraggedPiece (mousePt state) (Piece p color') FromHolding }
-             | otherwise -> state
-           Nothing -> state)
+  (\state -> maybe state (pickUpPieceFromHolding' state) (userColor_ state))
+  where
+    pickUpPieceFromHolding' :: BoardState -> PColor -> BoardState
+    pickUpPieceFromHolding' state color'
+      | p `elem` getPieceHolding color' state = state { draggedPiece = Just $ DraggedPiece (mousePt state) (Piece p color') FromHolding }
+      | otherwise = state
 
 
 discardDraggedPiece :: TVar BoardState -> IO ()
 discardDraggedPiece vState = atomically $ modifyTVar vState (
-  \s -> maybe s (discardDraggedPiece' s) (draggedPiece s))
-
-
-discardDraggedPiece' :: BoardState -> DraggedPiece -> BoardState
-discardDraggedPiece' s (DraggedPiece _ piece' (FromBoard sq')) = s { draggedPiece = Nothing, virtualPosition = (sq', piece') : virtualPosition s}
-discardDraggedPiece' s (DraggedPiece _ (Piece p White) FromHolding) = s { draggedPiece = Nothing, phW = p : phW s }
-discardDraggedPiece' s (DraggedPiece _ (Piece p Black) FromHolding) = s { draggedPiece = Nothing, phB = p : phB s }
+  \state -> maybe state (discardDraggedPiece' state) (draggedPiece state))
+  where
+    discardDraggedPiece' :: BoardState -> DraggedPiece -> BoardState
+    discardDraggedPiece' s (DraggedPiece _ piece' (FromBoard sq')) = s { draggedPiece = Nothing, virtualPosition = (sq', piece') : virtualPosition s}
+    discardDraggedPiece' s _ = s { draggedPiece = Nothing }
 
 
 invertPerspective :: TVar BoardState -> IO ()
@@ -133,11 +179,9 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
                       in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)
   })
 
-
 removeDraggedPiece :: Position -> DraggedPiece -> Position
 removeDraggedPiece position' (DraggedPiece _ _ (FromBoard sq')) = removePiece position' sq'
 removeDraggedPiece position' _ = position'
-
 
 
 diffPosition :: Position -> Position -> [PieceMove]
