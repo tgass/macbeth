@@ -23,7 +23,7 @@ wxChallenge h c chan = do
 
   b_accept  <- button p [text := "Accept", on command := hPutStrLn h "5 accept" >> close f]
   b_decline <- button p [text := "Decline", on command := hPutStrLn h "5 decline" >> close f]
-  st_params <- staticText p [ text := displayChallenge c
+  st_params <- staticText p [ text := showChallenge c
                             , fontFace := "Avenir Next Medium"
                             , fontSize := 16
                             , fontWeight := WeightBold]
@@ -49,7 +49,6 @@ wxChallenge h c chan = do
   windowOnDestroy f $ killThread threadId
 
 
-isUpdate :: Challenge -> Challenge -> Bool
-isUpdate c c' = (nameW c == nameW c') && (nameB c == nameB c')
+
 
 eventId = wxID_HIGHEST + 1

@@ -9,7 +9,6 @@ import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Api.Game
-import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Parsers.MoveParser
 import Macbeth.Fics.Parsers.RatingParser
@@ -117,12 +116,7 @@ userNotLoggedIn = UserNotLoggedIn <$> username <* " is not logged in."
 
 
 challenge :: Parser FicsMessage
-challenge = MatchRequested <$> (Challenge
-  <$> ("Challenge: " *> manyTill anyChar space)
-  <*> ("(" *> skipSpace *> rating)
-  <*> (") " *> manyTill anyChar space)
-  <*> ("(" *> skipSpace *> rating)
-  <*> (") " *> manyTill anyChar ".")) --unrated blitz 2 12."
+challenge = MatchRequested <$> (Challenge <$> ("Challenge: " *> gameParams'))
 
 
 drawRequest :: Parser FicsMessage
@@ -171,7 +165,19 @@ pending = Pending <$> (PendingOffer
   <*> (" " *> decimal)
   <*> (" w=" *> P.userHandle)
   <*> (" t=" *> manyTill anyChar " ")
-  <*> ("p=" *> manyTill anyChar "\n"))
+  <*> ("p=" *> gameParams'))
+
+
+gameParams' :: Parser GameParams
+gameParams' = GameParams
+  <$> username
+  <*> (" (" *> skipSpace *> rating)
+  <*> (") " *> username)
+  <*> (" (" *> rating <* ") ")
+  <*> (("rated" *> pure True) <|> ("unrated" *> pure False))
+  <*> (skipSpace *> manyTill anyChar " ")
+  <*> (skipSpace *> decimal)
+  <*> (skipSpace *> decimal)
 
 
 pendingRemoved :: Parser FicsMessage

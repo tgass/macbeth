@@ -33,7 +33,6 @@ library
                      Macbeth.Fics.Api.Game,
                      Macbeth.Fics.Api.Move,
                      Macbeth.Fics.Api.Rating,
-                     Macbeth.Fics.Api.PendingOffer,
                      Macbeth.Fics.Api.Seek,
                      Macbeth.Fics.Api.Player,
                      Macbeth.Fics.Api.Result,
@@ -84,8 +83,8 @@ library
 executable Macbeth
   main-is: src/Macbeth.hs
   build-depends: base  >= 4.2, wx, wxcore, macbeth-lib, stm, ALUT
-  extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
   ghc-options: -O3 -threaded -W
+  extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
 
 test-suite macbeth-lib-test
     type: exitcode-stdio-1.0

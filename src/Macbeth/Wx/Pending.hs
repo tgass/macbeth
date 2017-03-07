@@ -3,8 +3,8 @@ module Macbeth.Wx.Pending (
 ) where
 
 import Macbeth.Fics.FicsMessage
-import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Player
+import Macbeth.Fics.Api.Challenge
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.STM
@@ -56,38 +56,38 @@ wxPending h p' = do
                   itemAppend (if isFrom offer then lcFrom else lcTo) (toList offer)
 
                 PendingRemoved idx -> do
-                  items <- atomically $ do
+                  items' <- atomically $ do
                     modifyTVar vPending $ filter ((/= idx) . offerId)
                     readTVar vPending
                   itemsDelete lcFrom
                   itemsDelete lcTo
-                  mapM_ (itemAppend lcTo) (fmap toList (filter isTo items))
-                  mapM_ (itemAppend lcFrom) (fmap toList (filter isFrom items))
+                  mapM_ (itemAppend lcTo) (fmap toList (filter isTo items'))
+                  mapM_ (itemAppend lcFrom) (fmap toList (filter isFrom items'))
                 _ -> return ()
 
   return (p, handler)
 
 
 toList :: PendingOffer -> [String]
-toList (PendingOffer _ id userHandle offerType params) = [show id, name userHandle, offerType, params]
+toList (PendingOffer _ id' userHandle offerType' params) = [show id', name userHandle, offerType', showShortGameParams params]
 
 
 ctxMenuHandler :: Handle -> ListCtrl () -> Origin -> Graphics.UI.WXCore.ListEvent () -> IO ()
-ctxMenuHandler h listCtrl origin evt = do
+ctxMenuHandler h listCtrl' origin' evt = do
   ctxMenu <- menuPane []
   idx <- listEventGetIndex evt
-  offerId <- (head . (!! idx)) <$> get listCtrl items
-  _ <- (if origin == To then menuPendingTo else menuPendingFrom) ctxMenu h offerId
-  when (idx >= 0) $ listEventGetPoint evt >>= flip (menuPopup ctxMenu) listCtrl
+  offerId' <- (head . (!! idx)) <$> get listCtrl' items
+  _ <- (if origin' == To then menuPendingTo else menuPendingFrom) ctxMenu h offerId'
+  when (idx >= 0) $ listEventGetPoint evt >>= flip (menuPopup ctxMenu) listCtrl'
 
 
 menuPendingFrom :: Menu () -> Handle -> String -> IO PendingActions
-menuPendingFrom ctxMenu h offerId = PendingTo
-  <$> menuItem ctxMenu [ text := "Accept", on command := hPutStrLn h ("4 accept " ++ offerId)]
-  <*> menuItem ctxMenu [ text := "Decline", on command := hPutStrLn h ("4 decline " ++ offerId)]
+menuPendingFrom ctxMenu h offerId' = PendingTo
+  <$> menuItem ctxMenu [ text := "Accept", on command := hPutStrLn h ("4 accept " ++ offerId')]
+  <*> menuItem ctxMenu [ text := "Decline", on command := hPutStrLn h ("4 decline " ++ offerId')]
 
 
 menuPendingTo :: Menu () -> Handle -> String -> IO PendingActions
-menuPendingTo ctxMenu h offerId = PendingFrom
-  <$> menuItem ctxMenu [ text := "Withdraw", on command := hPutStrLn h ("4 withdraw " ++ offerId)]
+menuPendingTo ctxMenu h offerId' = PendingFrom
+  <$> menuItem ctxMenu [ text := "Withdraw", on command := hPutStrLn h ("4 withdraw " ++ offerId')]
 

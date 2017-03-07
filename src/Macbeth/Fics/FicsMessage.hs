@@ -11,7 +11,6 @@ import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
-import Macbeth.Fics.Api.PendingOffer
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Api.Seek
 
