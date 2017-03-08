@@ -50,5 +50,5 @@ wxChallenge h c chan = do
 
 
 
-
+eventId :: Int
 eventId = wxID_HIGHEST + 1
