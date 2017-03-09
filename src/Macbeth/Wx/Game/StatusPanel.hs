@@ -4,7 +4,7 @@ module Macbeth.Wx.Game.StatusPanel (
   createStatusPanel
 ) where
 
-import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
+import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import qualified Macbeth.Fics.Api.Result as R
@@ -22,19 +22,19 @@ import Graphics.UI.WX hiding (when)
 
 
 createStatusPanel :: Panel () -> PColor -> TVar BoardState -> IO (Panel (), FicsMessage -> IO ())
-createStatusPanel p color vBoardState = do
-  move <- lastMove `fmap` readTVarIO vBoardState
+createStatusPanel p color' vBoardState = do
+  lastMove' <- lastMove <$> readTVarIO vBoardState
 
   p_status <- panel p []
-  t <- newTVarIO $ remainingTime color move
-  st <- staticTextFormatted p_status (formatTime $ remainingTime color move)
+  t <- newTVarIO $ remainingTime color' lastMove'
+  st <- staticTextFormatted p_status (formatTime $ remainingTime color' lastMove')
   tx <- timer p_status [ interval := 1000
                 , on command := updateTime t st
-                , enabled := isActive move color]
+                , enabled := isActive lastMove' color']
 
-  p_color <- panel p_status [bgcolor := toWxColor color]
-  st_playerName <- staticTextFormatted p_status (namePlayer color move)
-  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color vBoardState]
+  p_color <- panel p_status [bgcolor := toWxColor color']
+  st_playerName <- staticTextFormatted p_status (namePlayer color' lastMove')
+  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState]
 
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st
@@ -43,15 +43,15 @@ createStatusPanel p color vBoardState = do
 
   let handler = \case
 
-        GameMove _ move' -> when (gameId move' == gameId move) $ do
-          let time' = remainingTime color move'
-          atomically $ swapTVar t time'
+        GameMove _ move' -> when (gameId move' == gameId lastMove') $ do
+          let time' = remainingTime color' move'
+          _ <- atomically $ swapTVar t time'
           set st [text := formatTime time']
-          set tx [enabled := isActive move' color]
+          set tx [enabled := isActive move' color']
 
-        GameResult result -> when (R.gameId result == gameId move) $ set tx [enabled := False]
+        GameResult result -> when (R.gameId result == gameId lastMove') $ set tx [enabled := False]
 
-        PieceHolding id phW' phB' -> when (id == gameId move) $ do
+        PieceHolding id' phW' phB' -> when (id' == gameId lastMove') $ do
           atomically $ modifyTVar vBoardState (\s -> s{ phW = phW', phB = phB' })
           repaint p_status
 
@@ -61,16 +61,17 @@ createStatusPanel p color vBoardState = do
 
 
 paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()
-paintPieceHolding color state dc _ = do
-  px <- getPieceHolding color `fmap` readTVarIO state
-  zipWithM_ (drawPiece dc color) [A .. H] (frequency px)
+paintPieceHolding color' state dc _ = do
+  px <- getPieceHolding color' <$> readTVarIO state
+  zipWithM_ (drawPiece dc color') [A .. H] (frequency px)
   where
     frequency :: Ord a => [a] -> [(a, Int)]
     frequency = map (head &&& length) . group . sort
 
+
 drawPiece :: DC a -> PColor -> Column -> (PType, Int) -> IO ()
-drawPiece dc color col (ptype, freq) = do
-  drawBitmap dc (pieceToBitmap pieceSize (head pieceSets) (Piece ptype color))
+drawPiece dc color' col (ptype, freq) = do
+  drawBitmap dc (pieceToBitmap pieceSize (head pieceSets) (Piece ptype color'))
                 (toPos' fieldSize (Square col Eight) White) True []
   set dc [pen := penColored black 2]
   drawText dc (show freq) (Point (22 + fromEnum col * fieldSize) 15)
@@ -88,7 +89,7 @@ updateTime vTime st = do
 
 
 isActive :: Move -> PColor -> Bool
-isActive move' color =
+isActive move' color' =
   (moveNumber move' /= 1) &&
-  (turn move' == color) &&
+  (turn move' == color') &&
   (relation move' `elem` [OponentsMove, MyMove, Observing])
