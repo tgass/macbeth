@@ -69,7 +69,9 @@ data BoardState = BoardState {
   , scale :: Double
   , pieceSet :: PieceSet
   , phW :: [PType]
-  , phB :: [PType] }
+  , phB :: [PType]
+  , capturedW :: [PType]
+  , capturedB :: [PType]  }
 
 
 data DraggedPiece = DraggedPiece Point Piece Origin deriving (Show)
@@ -177,7 +179,10 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
   , lastMove = move
   , virtualPosition = let preMovePos' = foldl (flip movePiece) (position move) (preMoves s)
                       in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)
+  , capturedW = capturedPieces White (position move)
+  , capturedB = capturedPieces Black (position move)
   })
+
 
 removeDraggedPiece :: Position -> DraggedPiece -> Position
 removeDraggedPiece position' (DraggedPiece _ _ (FromBoard sq')) = removePiece position' sq'
@@ -274,5 +279,8 @@ initBoardState gameProperties' username' = BoardState {
   , scale = 1.0
   , pieceSet = head pieceSets
   , phW = []
-  , phB = []}
+  , phB = []
+  , capturedW = []
+  , capturedB = []
+  }
 

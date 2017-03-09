@@ -11,10 +11,12 @@ module Macbeth.Fics.Api.Api (
   hasColor,
   removePiece,
   getPiece,
+  capturedPieces,
   invert
 ) where
 
 import Data.Char
+import Data.List
 
 data Column = A | B | C | D | E | F | G | H deriving (Show, Enum, Bounded, Eq)
 
@@ -54,6 +56,12 @@ removePiece pos sq = filter (\(sq', _) -> sq /= sq') pos
 
 getPiece :: Position -> Square -> Maybe Piece
 getPiece p sq = sq `lookup` p
+
+capturedPieces :: PColor -> Position -> [PType]
+capturedPieces color' = (allPieces \\) . fmap pType . filter (hasColor color') . fmap snd
+  where allPieces = replicate 8 Pawn ++ replicate 2 Rook ++
+                    replicate 2 Knight ++ replicate 2 Bishop ++ [Queen, King]
+        pType (Piece pt _) = pt
 
 invert :: PColor -> PColor
 invert White = Black
