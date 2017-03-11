@@ -1,3 +1,13 @@
+\NAK4\SYN80\SYNYou are now observing game 193.\nGame 193: SirNighted (1277) TTDo (1381) rated blitz 7 0\n\n<12> --k----r -bp----- -p--p--- ----P--- P-N----- -------- r------p --RR--K- W -1 0 0 0 0 0 193 SirNighted TTDo -2 7 0 15 17 29 135 39 P/h3-h2 (0:02) h2+ 0 0 0\n\ETB\n
+2017-03-11 18:27:46 CET TextMessage "You are now observing game 193."
+
+Creating: Schoon (1125) Lavonado ( 947) rated blitz 5 0\n
+2017-03-11 18:31:04 CET TextMessage "Creating: Schoon (1125) Lavonado ( 947) rated blitz 5 0\n"
+2017-03-11 18:31:04 CET {Game 102 (Schoon vs. Lavonado) Creating rated blitz match.}\n
+
+Creating: Schoon (1079) HDMaa (1069) rated blitz 5 5\n{Game 90 (Schoon vs. HDMaa) Creating rated blitz match.}\n\n<12> rnbqkbnr
+
+
 TextMessage "Ambiguous move (nd2).\n"
 
 
