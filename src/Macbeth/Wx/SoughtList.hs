@@ -112,11 +112,11 @@ onSeekListEvent sl h evt = case evt of
 
 
 findSeekIdx :: [[String]] -> Int -> Maybe Int
-findSeekIdx seeks gameId' = elemIndex gameId' $ fmap (read . (!! 0)) seeks
+findSeekIdx seeks gameId'' = elemIndex gameId'' $ fmap (read . (!! 0)) seeks
 
 
 deleteSeek :: ListCtrl () -> Maybe Int -> IO ()
-deleteSeek sl (Just gameId') = itemDelete sl gameId'
+deleteSeek sl (Just gameId'') = itemDelete sl gameId''
 deleteSeek _ _ = return ()
 
 
@@ -128,7 +128,7 @@ getSoughtOpts ctxMenu = SoughtOpts
   <*> menuItem ctxMenu [ text := "Show rated offers", checkable := True, checked := True]
 
 toList :: Seek -> [String]
-toList (Seek gameId' name' _ rating' time inc isRated' gameType' _ _) =
-  [show gameId', name', show rating', show time ++ " " ++ show inc, show gameType' ++ " " ++ showIsRated isRated']
+toList (Seek gameId'' name' _ rating' time inc isRated' gameType' _ _) =
+  [show gameId'', name', show rating', show time ++ " " ++ show inc, show gameType' ++ " " ++ showIsRated isRated']
   where showIsRated True = "rated"
         showIsRated False = "unrated"

@@ -74,9 +74,9 @@ data BoardState = BoardState {
   , capturedB :: [PType]  }
 
 
-data DraggedPiece = DraggedPiece Point Piece Origin deriving (Show)
+data DraggedPiece = DraggedPiece Point Piece PieceSource deriving (Show)
 
-data Origin = FromHolding | FromBoard Square deriving (Show)
+data PieceSource = FromHolding | FromBoard Square deriving (Show)
 
 data PieceMove = PieceMove { piece :: Piece, from :: Square, to :: Square } | DropMove Piece Square
 

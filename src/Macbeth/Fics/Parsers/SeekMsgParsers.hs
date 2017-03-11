@@ -12,7 +12,6 @@ import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Rating
 import Macbeth.Fics.Api.Seek
-import Macbeth.Fics.Parsers.Api
 import Macbeth.Fics.Utils.Bitmask
 
 import Control.Applicative

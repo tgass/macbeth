@@ -16,11 +16,11 @@ data CommandHead = CommandHead Int deriving (Show)
 
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
-  char $ chr 21
-  id <- decimal
-  char $ chr 22
-  string $ BS.pack $ show code
-  char $ chr 22
-  return $ CommandHead id
+  _ <- char $ chr 21
+  id' <- decimal
+  _ <- char $ chr 22
+  _ <- string $ BS.pack $ show code
+  _ <- char $ chr 22
+  return $ CommandHead id'
 
 

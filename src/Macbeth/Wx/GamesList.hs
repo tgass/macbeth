@@ -54,8 +54,8 @@ wxGamesList glp h = do
   ctxMenuPopup <- ctxMenu glCtxMenu glCtxSub
 
   listItemRightClickEvent gl $ \evt -> do
-    pt <- listEventGetPoint evt
-    menuPopup glCtxMenu pt gl
+    pt' <- listEventGetPoint evt
+    menuPopup glCtxMenu pt' gl
 
   set (refresh ctxMenuPopup) [on command := hPutStrLn h "4 games"]
 
@@ -102,16 +102,16 @@ displayGames gl opts sub games = do
 
 
 sortFoo :: CtxSortMenu -> IO (Game -> Game -> Ordering)
-sortFoo ctxMenu = do
-  gameId' <- foo gameId (sortByGameId ctxMenu)
-  nameW' <- foo nameW (sortByNameW ctxMenu)
-  ratingW' <- foo (Down . ratingW) (sortByRatingW ctxMenu)
-  nameB' <- foo nameB (sortByNameB ctxMenu)
-  ratingB' <- foo (Down . ratingB) (sortByRatingB ctxMenu)
-  gameType'' <- foo (gameType . settings) (sortByGameType ctxMenu)
+sortFoo ctxMenu' = do
+  gameId'' <- foo gameId (sortByGameId ctxMenu')
+  nameW' <- foo nameW (sortByNameW ctxMenu')
+  ratingW' <- foo (Down . ratingW) (sortByRatingW ctxMenu')
+  nameB' <- foo nameB (sortByNameB ctxMenu')
+  ratingB' <- foo (Down . ratingB) (sortByRatingB ctxMenu')
+  gameType'' <- foo (gameType . settings) (sortByGameType ctxMenu')
 
   return $ fromMaybe (comparing gameId)
-           (gameId' <|> nameW'  <|> ratingW' <|> nameB' <|> ratingB' <|> gameType'')
+           (gameId'' <|> nameW'  <|> ratingW' <|> nameB' <|> ratingB' <|> gameType'')
 
 
 foo :: Ord a => (Game -> a) -> MenuItem () -> IO (Maybe (Game -> Game -> Ordering))
@@ -123,21 +123,21 @@ whenMaybe x = (guard x >>) . Just
 
 
 ctxMenu :: Menu () -> Menu () -> IO CtxMenu
-ctxMenu ctxMenu sub = CtxMenu
-  <$> menuItem ctxMenu [ text := "Refresh" ]
-  <*> menuItem ctxMenu [ text := "Show rated games", checkable := True, checked := True]
-  <*> menuItem ctxMenu [ text := "Show unrated games", checkable := True, checked := True]
-  <*> menuSub ctxMenu sub [ text := "Sort By" ]
+ctxMenu ctxMenu' sub = CtxMenu
+  <$> menuItem ctxMenu' [ text := "Refresh" ]
+  <*> menuItem ctxMenu' [ text := "Show rated games", checkable := True, checked := True]
+  <*> menuItem ctxMenu' [ text := "Show unrated games", checkable := True, checked := True]
+  <*> menuSub ctxMenu' sub [ text := "Sort By" ]
 
 
 ctxSortMenu :: Menu () -> IO CtxSortMenu
-ctxSortMenu menu = CtxSortMenu
-  <$> menuRadioItem menu [ text := "Game Id" ]
-  <*> menuRadioItem menu [ text := "White's Name"]
-  <*> menuRadioItem menu [ text := "White's Rating"]
-  <*> menuRadioItem menu [ text := "Black's Name"]
-  <*> menuRadioItem menu [ text := "Black's Rating"]
-  <*> menuRadioItem menu [ text := "Game Type"]
+ctxSortMenu menu' = CtxSortMenu
+  <$> menuRadioItem menu' [ text := "Game Id" ]
+  <*> menuRadioItem menu' [ text := "White's Name"]
+  <*> menuRadioItem menu' [ text := "White's Rating"]
+  <*> menuRadioItem menu' [ text := "Black's Name"]
+  <*> menuRadioItem menu' [ text := "Black's Rating"]
+  <*> menuRadioItem menu' [ text := "Game Type"]
 
 
 toList :: Game -> [String]

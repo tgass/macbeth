@@ -7,7 +7,6 @@ import Data.Attoparsec.ByteString.Char8 (parseOnly)
 
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Parsers.FicsMessageParser
@@ -46,6 +45,8 @@ spec =
 
     it "challenge" $ parseFicsMessage "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12." `shouldBe` Right (MatchRequested $ Challenge $ GameParams "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated False "blitz" 2 12)
 
+    it "match requested" $ parseFicsMessage "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters." `shouldBe` Right (MatchRequested $ Challenge $ GameParams "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated False "blitz" 5 0)
+
     it "abort request" $ parseFicsMessage "GuestSPLL would like to abort the game; type \"abort\" to accept." `shouldBe` Right (AbortRequest "GuestSPLL")
 
     it "takeback request" $ parseFicsMessage "GuestTYLF would like to take back 2 half move(s)." `shouldBe` Right (TakebackRequest "GuestTYLF" 2)
@@ -55,8 +56,6 @@ spec =
     it "parse piece holding" $ parseFicsMessage "<b1> game 182 white [PPB] black [PQQ] <- BQ\n" `shouldBe` Right (PieceHolding (GameId 182) [Pawn,Pawn,Bishop] [Pawn,Queen,Queen])
 
     it "parse seek not available" $ parseFicsMessage "That seek is not available.\n" `shouldBe` Right SeekNotAvailable
-
-    it "parse match requested" $ parseFicsMessage "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters." `shouldBe` Right (MatchRequested $ Challenge $ GameParams "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated False "blitz" 5 0)
 
     it "parse promotion piece" $ parseFicsMessage "Promotion piece set to KNIGHT.\n" `shouldBe` Right (PromotionPiece Knight)
 

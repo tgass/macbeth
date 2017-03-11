@@ -55,8 +55,8 @@ history' = History
 
 emptyHistory :: Parser FicsMessage
 emptyHistory = do
-  userHandle <- commandHead 51 *> userHandle <* " has no history games."
-  return $ History userHandle (name userHandle ++ " has no history games.\n")
+  userHandle' <- commandHead 51 *> userHandle <* " has no history games."
+  return $ History userHandle' (name userHandle' ++ " has no history games.\n")
 
 
 players' :: Parser [Player]

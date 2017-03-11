@@ -25,20 +25,20 @@ colToInt Black = abs . (7-) . fromEnum
 
 
 toPos' :: Int -> Square -> PColor -> Point
-toPos' size (Square c r) color = point (colToInt color c * size) (rowToInt color r * size)
+toPos' size' (Square c r) color' = point (colToInt color' c * size') (rowToInt color' r * size')
 
 
 squareToRect' :: Int -> Square -> PColor -> Rect
-squareToRect' size sq color = Rect pointX' pointY' size size
-  where pointX' = pointX $ toPos' size sq color
-        pointY' = pointY $ toPos' size sq color
+squareToRect' size' sq color' = Rect pointX' pointY' size' size'
+  where pointX' = pointX $ toPos' size' sq color'
+        pointY' = pointY $ toPos' size' sq color'
 
-
-drawArrow dc size s1 s2 perspective =
+drawArrow :: DC a -> Int -> Square -> Square -> PColor -> IO ()
+drawArrow dc size' s1 s2 perspective =
   drawArrowPt dc (pt (x1+size_half) (y1+size_half)) (pt (x2'+size_half) (y2'+size_half))
-    where (Rect x1 y1 _ _ ) = squareToRect' size s1 perspective
-          (Rect x2 y2 _ _ ) = squareToRect' size s2 perspective
-          size_half = round $ fromIntegral size / 2
+    where (Rect x1 y1 _ _ ) = squareToRect' size' s1 perspective
+          (Rect x2 y2 _ _ ) = squareToRect' size' s2 perspective
+          size_half = round $ fromIntegral size' / (2 :: Double)
           x2'
              | x2 > x1 = x2 - size_half
              | x2 < x1 = x2 + size_half
@@ -48,6 +48,7 @@ drawArrow dc size s1 s2 perspective =
              | y2 < y1 = y2 + size_half
              | otherwise = y2
 
+drawArrowPt :: DC a -> Point -> Point -> IO ()
 drawArrowPt dc p1 p2 = do
   line dc p1 p2 []
   polygon dc (fmap (movePt (pointX p2) (pointY p2) . rotate (dfix-90)) triangle) []
@@ -57,7 +58,7 @@ drawArrowPt dc p1 p2 = do
     deltaX = pointX p2 - pointX p1
     deltaY = pointY p2 - pointY p1
     d = atan(fromIntegral deltaY / fromIntegral deltaX) * 180 / pi
-    dfix = if deltaX < 0 then d -180 else d
+    dfix = if deltaX < 0 then d - 180 else d
 
 
 rotate :: Double -> (Int, Int) -> Point
@@ -68,7 +69,7 @@ rotate d ptx = pt (round $ x * cos rad - y * sin rad) (round $ x * sin rad + y *
 
 
 pieceToBitmap :: Int -> PieceSet -> Piece -> Bitmap ()
-pieceToBitmap size pieceSet p = bitmap $ unsafePerformIO $ getDataFileName $ path pieceSet </> show size </> pieceToFile p ++ ".png"
+pieceToBitmap size' pieceSet p = bitmap $ unsafePerformIO $ getDataFileName $ path pieceSet </> show size' </> pieceToFile p ++ ".png"
   where
     pieceToFile :: Piece -> String
     pieceToFile (Piece King Black) = "bk"

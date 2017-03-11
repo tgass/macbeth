@@ -5,7 +5,6 @@ module Macbeth.Fics.Parsers.FicsMessageParser (
 ) where
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Api.Game

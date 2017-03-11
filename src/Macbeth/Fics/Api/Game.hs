@@ -4,9 +4,17 @@ module Macbeth.Fics.Api.Game (
   Game (..),
   GameType (..),
   GameSettings (..),
-  GameInfo (..),
+  Challenge (..),
+  PendingOffer(..),
+  GameParams(..),
+  Origin(..),
+  toTitle,
   userColor,
-  toTitle
+  isFrom,
+  isTo,
+  isUpdate,
+  showChallenge,
+  showShortGameParams
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -46,12 +54,52 @@ data GameSettings = GameSettings {
   , gameType :: GameType
   , isRated :: Bool} deriving (Show, Eq)
 
-data GameInfo = GameInfo {
+
+data Challenge = Challenge GameParams deriving (Show, Eq)
+
+showChallenge :: Challenge -> String
+showChallenge (Challenge p) =
+  _nameW p ++ " (" ++ show (_ratingW p) ++ ") vs. " ++ _nameB p ++ " (" ++ show (_ratingB p) ++ ") "
+  ++ showShortGameParams p
+
+
+data Origin = From | To deriving (Show, Eq)
+
+
+data PendingOffer = PendingOffer {
+    origin :: Origin
+  , offerId :: Int
+  , playerName :: UserHandle
+  , offerType :: String
+  , gameParams :: GameParams } deriving (Show, Eq)
+
+
+data GameParams = GameParams {
     _nameW :: String
   , _ratingW :: Rating
   , _nameB :: String
   , _ratingB :: Rating
-} deriving (Show, Eq)
+  , rated :: Bool
+  , speed :: String
+  , initialTime :: Int
+  , incTime :: Int } deriving (Show, Eq)
+
+
+showShortGameParams :: GameParams -> String
+showShortGameParams p = rated'' ++ " " ++ speed p ++ " " ++ show (initialTime p) ++ " " ++ show (incTime p)
+  where rated'' = if rated p then "rated" else "unrated"
+
+
+isFrom :: PendingOffer -> Bool
+isFrom = (== From) . origin
+
+
+isTo :: PendingOffer -> Bool
+isTo = (== To) . origin
+
+
+isUpdate :: Challenge -> Challenge -> Bool
+isUpdate (Challenge p) (Challenge p') = (_nameW p == _nameW p') && (_nameB p == _nameB p')
 
 
 toTitle :: GameProperties -> String

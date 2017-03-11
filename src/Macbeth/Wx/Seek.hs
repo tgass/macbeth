@@ -90,7 +90,7 @@ toString m = unwords $ filter (/= "") [
 
 readSeek :: WxSeek -> IO SeekInfo
 readSeek m = SeekInfo
-  <$> read `fmap` getDisplaySelection (category m)
+  <$> read <$> getDisplaySelection (category m)
   <*> readMay `fmap` getDisplaySelection (board m)
   <*> read `fmap` get (time m) text
   <*> read `fmap` get (inc m) text

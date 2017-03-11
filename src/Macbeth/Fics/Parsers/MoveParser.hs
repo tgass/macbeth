@@ -10,7 +10,7 @@ module Macbeth.Fics.Parsers.MoveParser (
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move hiding (relation)
-import Macbeth.Fics.FicsMessage hiding (move, Observing)
+import Macbeth.Fics.FicsMessage hiding (move)
 import qualified Macbeth.Fics.Parsers.Api as Api
 import Macbeth.Fics.Parsers.PositionParser
 
@@ -81,6 +81,7 @@ row =
   "5" *> pure Five <|> "6" *> pure Six <|> "7" *> pure Seven <|> "8" *> pure Eight
 
 
+relation :: Parser Relation
 relation =
   "-3" *> pure IsolatedPosition <|> "-2" *> pure ObservingExaminedGame <|> "2"  *> pure Examiner <|>
   "-1" *> pure OponentsMove <|> "1"  *> pure MyMove <|> "0"  *> pure Observing
@@ -92,10 +93,9 @@ column =
   "4" *> pure E <|> "5" *> pure F <|> "6" *> pure G <|> "7" *> pure H
 
 
--- <b1> game 455 white [PP] black []
-
 pieceHolding :: Parser FicsMessage
 pieceHolding = "<b1>" *> pieceHoldingOnly
+
 
 pieceHoldingOnly :: Parser FicsMessage
 pieceHoldingOnly = PieceHolding

@@ -11,14 +11,14 @@ import Data.Maybe
 
 
 parsePosition :: String -> [(Square, Piece)]
-parsePosition str = fmap (second fromJust) $ filter (\(_,p) -> isJust p) squares
+parsePosition str = second fromJust <$> filter (\(_,p) -> isJust p) squares
                 where rows = parseRows str
-                      squares = concat $ fmap parseSquares rows
+                      squares = concatMap parseSquares rows
 
 parseRows :: String -> [(Row, String)]
-parseRows str = zip rows lines
+parseRows str = zip rows lines'
              where rows = [Eight, Seven .. One]
-                   lines = splitOn " " str
+                   lines' = splitOn " " str
 
 
 parseColumn :: String -> [(Column, Maybe Piece)]

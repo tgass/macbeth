@@ -30,9 +30,10 @@ enPassant _ _ = "-"
 
 castlingAv' :: [Castling] -> String
 castlingAv' [] = "-"
-castlingAv' cx = concat $ fmap castlingToStr cx
+castlingAv' cx = concatMap castlingToStr cx
 
 
+castlingToStr :: Castling -> String
 castlingToStr WhiteLong = "Q"
 castlingToStr WhiteShort = "K"
 castlingToStr BlackLong = "q"

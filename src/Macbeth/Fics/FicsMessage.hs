@@ -7,7 +7,6 @@ module Macbeth.Fics.FicsMessage (
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
-import Macbeth.Fics.Api.Challenge
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
