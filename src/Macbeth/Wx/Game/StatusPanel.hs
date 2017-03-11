@@ -8,6 +8,7 @@ import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import qualified Macbeth.Fics.Api.Result as R
+import qualified Macbeth.Wx.RuntimeEnv as E
 import Macbeth.Utils.Utils
 import Macbeth.Utils.BoardUtils
 import Macbeth.Wx.Game.BoardState
@@ -21,8 +22,8 @@ import Data.List
 import Graphics.UI.WX hiding (when)
 
 
-createStatusPanel :: Panel () -> PColor -> TVar BoardState -> IO (Panel (), FicsMessage -> IO ())
-createStatusPanel p color' vBoardState = do
+createStatusPanel :: Panel () -> PColor -> TVar BoardState -> E.RuntimeEnv -> IO (Panel (), FicsMessage -> IO ())
+createStatusPanel p color' vBoardState env = do
   lastMove' <- lastMove <$> readTVarIO vBoardState
 
   p_status <- panel p []
@@ -34,7 +35,7 @@ createStatusPanel p color' vBoardState = do
 
   p_color <- panel p_status [bgcolor := toWxColor color']
   st_playerName <- staticTextFormatted p_status (namePlayer color' lastMove')
-  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState]
+  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState env]
 
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st
@@ -60,8 +61,8 @@ createStatusPanel p color' vBoardState = do
   return (p_status, handler)
 
 
-paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()
-paintPieceHolding color' state dc _ = do
+paintPieceHolding :: PColor -> TVar BoardState -> E.RuntimeEnv -> DC a -> t -> IO ()
+paintPieceHolding color' state env dc _ = do
   px <- getPieceHolding color' <$> readTVarIO state
   zipWithM_ (drawPiece dc color') [A .. H] (frequency px)
   where

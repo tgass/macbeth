@@ -47,8 +47,8 @@ wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
   p_board <- panel p_back [ on paint := Board.draw vBoardState]
 
   -- player panels
-  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState
-  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState
+  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState env
+  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState env
 
   -- layout helper
   let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f

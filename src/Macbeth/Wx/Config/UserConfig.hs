@@ -19,6 +19,7 @@ module Macbeth.Wx.Config.UserConfig (
 
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Config.Sounds
+import Macbeth.Wx.Config.GameConfig
 import Paths
 
 import Control.Monad
@@ -35,6 +36,7 @@ data Config = Config {
   , autologin :: Bool
   , fontSize :: Int
   , user :: Maybe User
+  , gameConfig :: Maybe GameConfig
   , sounds :: Maybe Sounds
 } deriving (Show, Generic)
 
@@ -93,18 +95,19 @@ saveConfig config = getMacbethUserDataDir    "macbeth.yaml" >>= flip encodeFile 
 
 
 saveCredentials :: String -> String -> IO ()
-saveCredentials username password = do
+saveCredentials username' password' = do
   config <- loadConfig
-  saveConfig $ config {user = Just $ User username (encrypt password), autologin = True}
+  saveConfig $ config {user = Just $ User username' (encrypt password'), autologin = True}
 
 
 defaultConfig :: String -> Config
 defaultConfig dir = Config {
-  fontSize = 12,
-  directory = dir,
-  autologin = False,
-  user = Nothing,
-  sounds = Just defaultSounds
+    fontSize = 12
+  , directory = dir
+  , autologin = False
+  , gameConfig = Just (GameConfig $ Just False)
+  , user = Nothing
+  , sounds = Just defaultSounds
 }
 
 
