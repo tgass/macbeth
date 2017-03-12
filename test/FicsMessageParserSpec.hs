@@ -8,6 +8,7 @@ import Data.Attoparsec.ByteString.Char8 (parseOnly)
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Parsers.FicsMessageParser
 import Macbeth.Fics.Parsers.MoveParser hiding (move)
@@ -23,7 +24,7 @@ spec =
 
     it "ping" $ parseFicsMessage ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n" `shouldBe` Right (Ping 131 132 133)
 
-    it "pending from" $ parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n" `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" $ GameParams "Schoon" (R.Rating 999 R.None) "GuestNXQS" R.Unrated False "blitz" 5 0)
+    it "pending from" $ parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n" `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" $ GameParams True "Schoon" (R.Rating 999 R.None) "GuestNXQS" R.Unrated False "blitz" 5 0)
 
     it "pending removed" $ parseFicsMessage "<pr> 28\n" `shouldBe` Right (PendingRemoved 28)
 
@@ -35,17 +36,17 @@ spec =
 
     it "illegal move" $ parseFicsMessage "Illegal move (e2d2)." `shouldBe` Right (IllegalMove "e2d2")
 
-    it "observing game" $ parseFicsMessage "Game 289: Erron (1686) Donattello (1731) rated lightning 1 0\n" `shouldBe` Right (GameCreation $ GameProperties (GameId 289) "Erron" "Donattello" False)
+    it "observing game" $ parseFicsMessage "Game 289: Erron (1686) Donattello (1731) rated lightning 1 0\n" `shouldBe` Right (Observing (GameId 289) (GameParams False "Erron" (R.Rating 1686 R.None) "Donattello" (R.Rating 1731 R.None) True "lightning" 1 0))
 
-    it "create game" $ parseFicsMessage "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n" `shouldBe` Right (GameCreation $ GameProperties (GameId 484) "GuestYLCL" "GuestBYPB" True)
+    it "create game" $ parseFicsMessage "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n" `shouldBe` Right (NewGameIdUser (GameId 484))
 
     it "draw request" $ parseFicsMessage "GuestDWXY offers you a draw." `shouldBe` Right (DrawRequest "GuestDWXY")
 
     it "guest login" $ parseFicsMessage "Press return to enter the server as \"FOOBAR\":" `shouldBe` Right (GuestLogin "FOOBAR")
 
-    it "challenge" $ parseFicsMessage "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12." `shouldBe` Right (MatchRequested $ Challenge $ GameParams "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated False "blitz" 2 12)
+    it "challenge" $ parseFicsMessage "Challenge: GuestYWYK (----) GuestMGSD (----) unrated blitz 2 12." `shouldBe` Right (MatchRequested $ Challenge $ GameParams True "GuestYWYK" R.Unrated "GuestMGSD" R.Unrated False "blitz" 2 12)
 
-    it "match requested" $ parseFicsMessage "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters." `shouldBe` Right (MatchRequested $ Challenge $ GameParams "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated False "blitz" 5 0)
+    it "match requested" $ parseFicsMessage "Challenge: Schoon ( 997) GuestPCFH (----) unrated blitz 5 0.\n\r\aYou can \"accept\" or \"decline\", or propose different parameters." `shouldBe` Right (MatchRequested $ Challenge $ GameParams True "Schoon" (R.Rating 997 R.None) "GuestPCFH" R.Unrated False "blitz" 5 0)
 
     it "abort request" $ parseFicsMessage "GuestSPLL would like to abort the game; type \"abort\" to accept." `shouldBe` Right (AbortRequest "GuestSPLL")
 

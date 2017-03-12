@@ -1,14 +1,10 @@
 module Macbeth.Fics.Api.Game (
-  GameId(..),
-  GameProperties(..),
-  Game (..),
-  GameType (..),
-  GameSettings (..),
   Challenge (..),
   PendingOffer(..),
   GameParams(..),
   Origin(..),
   toTitle,
+  nameOponent,
   userColor,
   isFrom,
   isTo,
@@ -21,50 +17,8 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Rating
 
-newtype GameId = GameId Int deriving (Eq)
-
-instance Show GameId where
-  show (GameId i) = show i
-
-instance Ord GameId where
-  compare (GameId gi1) (GameId gi2) = gi1 `compare` gi2
-
-data GameProperties = GameProperties {
-    gameId' :: GameId
-  , playerW' :: Username
-  , playerB' :: Username
-  , isGameUser' :: Bool } deriving (Show, Eq)
-
-data GameType =
-  Lightning | Blitz | Standard | Wild | Atomic | Crazyhouse | Bughouse | Losers |
-  Suicide | Untimed | ExaminedGame | NonStandardGame  deriving (Show, Eq, Ord)
-
-data Game = Game {
-    gameId :: GameId
-  , isExample :: Bool
-  , isSetup :: Bool
-  , ratingW :: Rating
-  , nameW :: String
-  , ratingB :: Rating
-  , nameB :: String
-  , settings :: GameSettings } deriving (Show, Eq)
-
-data GameSettings = GameSettings {
-    isPrivate :: Bool
-  , gameType :: GameType
-  , isRated :: Bool} deriving (Show, Eq)
-
 
 data Challenge = Challenge GameParams deriving (Show, Eq)
-
-showChallenge :: Challenge -> String
-showChallenge (Challenge p) =
-  _nameW p ++ " (" ++ show (_ratingW p) ++ ") vs. " ++ _nameB p ++ " (" ++ show (_ratingB p) ++ ") "
-  ++ showShortGameParams p
-
-
-data Origin = From | To deriving (Show, Eq)
-
 
 data PendingOffer = PendingOffer {
     origin :: Origin
@@ -73,21 +27,36 @@ data PendingOffer = PendingOffer {
   , offerType :: String
   , gameParams :: GameParams } deriving (Show, Eq)
 
+data Origin = From | To deriving (Show, Eq)
 
 data GameParams = GameParams {
-    _nameW :: String
-  , _ratingW :: Rating
-  , _nameB :: String
-  , _ratingB :: Rating
+    isGameUser' :: Bool
+  , nameW :: String
+  , ratingW :: Rating
+  , nameB :: String
+  , ratingB :: Rating
   , rated :: Bool
   , speed :: String
   , initialTime :: Int
   , incTime :: Int } deriving (Show, Eq)
 
 
+nameOponent :: Username -> GameParams -> Maybe Username
+nameOponent username' gameParams'
+  | username' == nameW gameParams' = Just $ nameB gameParams'
+  | username' == nameB gameParams' = Just $ nameW gameParams'
+  | otherwise = Nothing
+
+
 showShortGameParams :: GameParams -> String
 showShortGameParams p = rated'' ++ " " ++ speed p ++ " " ++ show (initialTime p) ++ " " ++ show (incTime p)
   where rated'' = if rated p then "rated" else "unrated"
+
+
+showChallenge :: Challenge -> String
+showChallenge (Challenge p) =
+  nameW p ++ " (" ++ show (ratingW p) ++ ") vs. " ++ nameB p ++ " (" ++ show (ratingB p) ++ ") "
+  ++ showShortGameParams p
 
 
 isFrom :: PendingOffer -> Bool
@@ -99,15 +68,15 @@ isTo = (== To) . origin
 
 
 isUpdate :: Challenge -> Challenge -> Bool
-isUpdate (Challenge p) (Challenge p') = (_nameW p == _nameW p') && (_nameB p == _nameB p')
+isUpdate (Challenge p) (Challenge p') = (nameW p == nameW p') && (nameB p == nameB p')
 
 
-toTitle :: GameProperties -> String
-toTitle (GameProperties id' pw pb _) =  "[Game " ++ show id' ++ "] " ++ pw ++ " vs. " ++ pb
+toTitle :: GameId -> GameParams -> String
+toTitle (GameId gameId') params' =  "[Game " ++ show gameId' ++ "] " ++ nameW params' ++ " vs. " ++ nameB params'
 
 
-userColor :: GameProperties -> Username -> Maybe PColor
-userColor (GameProperties _ _ _ False) _ = Nothing
-userColor (GameProperties _ playerW _ True) username
-  | playerW == username = Just White
-  | otherwise = Just Black
+userColor :: GameParams -> Username -> Maybe PColor
+userColor gameParams' username'
+  | nameW gameParams' == username' = Just White
+  | nameB gameParams' == username' = Just Black
+  | otherwise = Nothing

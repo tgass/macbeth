@@ -3,9 +3,9 @@
 module ChattingSpec (spec) where
 
 import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Player
-import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Parsers.Chatting
 
 import Test.Hspec

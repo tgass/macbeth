@@ -5,6 +5,7 @@ module FicsConnectionSpec (spec) where
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.FicsConnection
 import Macbeth.Fics.Api.Api
+import qualified Macbeth.Fics.Api.Rating as R
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
 
@@ -30,12 +31,9 @@ spec =
      `shouldBe` [
         RemoveSeeks [97],
         RemoveSeeks [88],
-        TextMessage "Creating: chesspickle (1963) Schoon (1007) rated blitz 5 0",
-        GameCreation GameProperties {gameId' = GameId 70,
-                                      playerW' = "chesspickle",
-                                      playerB' = "Schoon",
-                                      isGameUser' = True},
-        GameMove {Macbeth.Fics.FicsMessage.context = None,
+        NewGameParamsUser (GameParams True "chesspickle" (R.Rating 1963 R.None) "Schoon" (R.Rating 1007 R.None) True "blitz" 5 0),
+        NewGameIdUser (GameId 70),
+        GameMove {Macbeth.Fics.FicsMessage.context = Macbeth.Fics.Api.Move.None,
                   move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------",
                   position = [],
                   turn = White,

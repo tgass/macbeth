@@ -14,8 +14,9 @@ module Macbeth.Fics.FicsConnection (
 
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Move hiding (Observing)
+import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Parsers.FicsMessageParser
+import qualified Macbeth.Fics.Api.Move as Move
 import qualified Macbeth.Fics.Api.Result as R
 
 import Control.Concurrent.Chan
@@ -41,7 +42,8 @@ logger = "Macbeth.Fics.FicsConnection"
 
 
 data HelperState = HelperState { takebackAccptedBy :: Maybe (Maybe String)
-                               , illegalMove :: Maybe String }
+                               , illegalMove :: Maybe String
+                               , newGameUserParams :: Maybe GameParams }
 
 
 ficsConnection :: IO (Handle, Chan FicsMessage)
@@ -65,7 +67,7 @@ chain h chan = flip evalStateT emptyState $ transPipe lift
   copyC chan =$
   logFicsMessageC =$
   sink chan
-  where emptyState = HelperState Nothing Nothing
+  where emptyState = HelperState Nothing Nothing Nothing
 
 
 sink :: Chan FicsMessage -> Sink FicsMessage (StateT HelperState IO) ()
@@ -81,9 +83,12 @@ logFicsMessageC = awaitForever $ \cmd -> case cmd of
 
 copyC :: Chan FicsMessage -> Conduit FicsMessage (StateT HelperState IO) FicsMessage
 copyC chan = awaitForever $ \case
-  m@(GameCreation gameProperties) -> do
+  m@(NewGameUser gameId' gameParams') -> do
     chan' <- liftIO $ dupChan chan
-    sourceList [m, WxNewGame gameProperties chan']
+    sourceList [m, WxOpenBoard gameId' gameParams' chan']
+  m@(Observing gameId' gameParams') -> do
+    chan' <- liftIO $ dupChan chan
+    sourceList [m, WxOpenBoard gameId' gameParams' chan']
   cmd -> yield cmd
 
 
@@ -92,18 +97,26 @@ stateC = awaitForever $ \cmd -> do
   state' <- get
   case cmd of
 
+    NewGameParamsUser params -> put (state' {newGameUserParams = Just params}) >> sourceNull
+
+    NewGameIdUser gameId'
+      | isJust $ newGameUserParams state' -> do
+          put $ state' {newGameUserParams = Nothing}
+          sourceList [ NewGameUser gameId' $ fromJust $ newGameUserParams state']
+      | otherwise -> sourceList [ TextMessage "*** Macbeth ***: Could not find gameParams." ]
+
     TakebackAccepted username -> put (state' {takebackAccptedBy = Just username}) >> sourceNull
 
     IllegalMove m -> put (state' {illegalMove = Just m}) >> sourceNull
 
     m@(GameMove _ move')
-      | isCheckmate move' && isOponentMove move' -> sourceList $ cmd : [convertMoveToResult move']
+      | Move.isCheckmate move' && Move.isOponentMove move' -> sourceList $ cmd : [convertMoveToResult move']
       | isJust $ takebackAccptedBy state' -> do
           put $ state' {takebackAccptedBy = Nothing}
-          sourceList [m{context = Takeback $ fromJust $ takebackAccptedBy state'}]
+          sourceList [m{context = Move.Takeback $ fromJust $ takebackAccptedBy state'}]
       | isJust $ illegalMove state' -> do
           put $ state' {illegalMove = Nothing}
-          sourceList [m{context = Illegal $ fromJust $ illegalMove state'}]
+          sourceList [m{context = Move.Illegal $ fromJust $ illegalMove state'}]
       | otherwise -> sourceList [m]
 
     _ -> yield cmd
@@ -168,11 +181,11 @@ logStreamC = awaitForever $ \block -> do
   yield block
 
 
-convertMoveToResult :: Move -> FicsMessage
-convertMoveToResult move' = GameResult $ R.Result (gameId move') (nameW move') (nameB move') result (turnToGameResult colorTurn)
+convertMoveToResult :: Move.Move -> FicsMessage
+convertMoveToResult move' = GameResult $ R.Result (Move.gameId move') (Move.nameW move') (Move.nameB move') result (turnToGameResult colorTurn)
   where
-    colorTurn = turn move'
-    result = namePlayer colorTurn move' ++ " checkmated"
+    colorTurn = Move.turn move'
+    result = Move.namePlayer colorTurn move' ++ " checkmated"
     turnToGameResult Black = R.WhiteWins
     turnToGameResult White = R.BlackWins
 

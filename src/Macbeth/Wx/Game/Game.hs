@@ -31,18 +31,17 @@ import System.IO
 eventId :: Int
 eventId = wxID_HIGHEST + 1
 
-wxGame :: E.RuntimeEnv -> G.GameProperties  -> Chan FicsMessage -> IO ()
-wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
+wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan FicsMessage -> IO ()
+wxGame env gameId gameParams' chan = do
   let h = E.handle env
   username <- E.username env
-  let nameOponent = if username == playerW then playerB else playerW
   vCmd <- newEmptyMVar
 
-  f <- frame [ text := G.toTitle gameProperties]
+  f <- frame [ text := G.toTitle gameId gameParams']
   p_back <- panel f []
 
   -- board
-  let boardState = Api.initBoardState gameProperties username
+  let boardState = Api.initBoardState gameId gameParams' username
   vBoardState <- newTVarIO boardState
   p_board <- panel p_back [ on paint := Board.draw vBoardState]
 
@@ -62,7 +61,7 @@ wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
   ctxMenu <- menuPane []
   _ <- menuItem ctxMenu [ text := "Turn board", on command :=
     Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
-  when (Api.isGameUser boardState) $ do
+  when (G.isGameUser' gameParams') $ do
      menuLine ctxMenu
      _ <- menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
      _ <- menuItem ctxMenu [ text := "Request takeback 2", on command := hPutStrLn h "4 takeback 2"]
@@ -70,7 +69,8 @@ wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
      _ <- menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
      _ <- menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
      menuLine ctxMenu
-     _ <- menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat nameOponent (Just gameId)]
+     _ <- menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams') (Just gameId)]
+
      windowOnMouse p_board True (\point -> Board.onMouseEvent h vBoardState point >> repaint p_board)
   menuLine ctxMenu
   wxPieceSetsMenu ctxMenu vBoardState p_board
@@ -86,7 +86,7 @@ wxGame env gameProperties@(G.GameProperties gameId playerW playerB _) chan = do
     | Utl.onlyKey evt 'K' -> Api.pickUpPieceFromHolding vBoardState Knight >> repaint p_board
     | Utl.onlyKey evt 'R' -> Api.pickUpPieceFromHolding vBoardState Rook >> repaint p_board
     | Utl.onlyKey evt 'P' -> Api.pickUpPieceFromHolding vBoardState Pawn >> repaint p_board
-    | Utl.onlyKey evt 'T' -> writeChan chan $ Chat $ OpenChat nameOponent (Just gameId)
+    | Utl.onlyKey evt 'T' && G.isGameUser' gameParams' -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams') (Just gameId)
     | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> Api.discardDraggedPiece vBoardState >> repaint p_board
 
     | Utl.onlyKey evt 'N' -> hPutStrLn h "5 decline"

@@ -32,12 +32,13 @@ parseFicsMessage = parseOnly $ choice [
   , GP.gamesList
 
   , gameMove
-  , gameCreation
   , illegalMove
   , gameResult'
   , pieceHolding
 
   , challenge
+  , newGameParamsUser
+  , newGameIdUser
 
   , observing
   , noSuchGame
@@ -90,20 +91,19 @@ illegalMove :: Parser FicsMessage
 illegalMove = IllegalMove <$> ("Illegal move (" *> fmap BS.unpack (takeTill (== ')')) <* ").")
 
 
-gameCreation :: Parser FicsMessage
-gameCreation = GameCreation <$> (GameProperties
+newGameParamsUser :: Parser FicsMessage
+newGameParamsUser = NewGameParamsUser <$> ("Creating: " *> gameParams' True)
+
+
+newGameIdUser :: Parser FicsMessage
+newGameIdUser = NewGameIdUser
   <$> ("{Game " *> Api.gameId)
-  <*> (" (" *> username)
-  <*> (" vs. " *> username <* ") Creating ")
-  <*> pure True)
+  <* " (" <* username
+  <* (" vs. " <* username <* ") Creating ")
 
 
 observing :: Parser FicsMessage
-observing = GameCreation <$> (GameProperties
-  <$> ("Game " *> Api.gameId <* ": ")
-  <*> (username <* " (" <* rating)
-  <*> (") " *> username)
-  <*> pure False)
+observing = Observing <$> ("Game " *> Api.gameId <* ": ") <*> gameParams' False
 
 
 noSuchGame :: Parser FicsMessage
@@ -115,7 +115,7 @@ userNotLoggedIn = UserNotLoggedIn <$> username <* " is not logged in."
 
 
 challenge :: Parser FicsMessage
-challenge = MatchRequested <$> (Challenge <$> ("Challenge: " *> gameParams'))
+challenge = MatchRequested <$> (Challenge <$> ("Challenge: " *> gameParams' True))
 
 
 drawRequest :: Parser FicsMessage
@@ -164,12 +164,13 @@ pending = Pending <$> (PendingOffer
   <*> (" " *> decimal)
   <*> (" w=" *> P.userHandle)
   <*> (" t=" *> manyTill anyChar " ")
-  <*> ("p=" *> gameParams'))
+  <*> ("p=" *> gameParams' True))
 
 
-gameParams' :: Parser GameParams
-gameParams' = GameParams
-  <$> username
+gameParams' :: Bool -> Parser GameParams
+gameParams' isGameUser = GameParams
+  <$> pure isGameUser
+  <*> username
   <*> (" (" *> skipSpace *> rating)
   <*> (") " *> username)
   <*> (" (" *> rating <* ") ")

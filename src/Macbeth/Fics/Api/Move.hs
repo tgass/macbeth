@@ -31,7 +31,7 @@ data Move = Move {
   , doublePawnPush :: Maybe Column
   , castlingAv :: [Castling]
   , ply :: Int
-  , gameId :: G.GameId
+  , gameId :: GameId
   , nameW :: String
   , nameB :: String
   , relation :: Relation
@@ -118,17 +118,17 @@ isCastling :: Move -> Bool
 isCastling = maybe False (elem 'O') . movePretty
 
 
-initMove :: G.GameProperties -> Move
-initMove gameProperties' = Move {
+initMove :: GameId -> G.GameParams -> Move
+initMove gameId' gameParams' = Move {
     positionRaw = ""
   , position = []
   , turn = White
   , doublePawnPush = Nothing
   , castlingAv = []
   , ply = 0
-  , gameId = G.gameId' gameProperties'
-  , nameW = G.playerW' gameProperties'
-  , nameB = G.playerB' gameProperties'
+  , gameId = gameId'
+  , nameW = G.nameW gameParams'
+  , nameB = G.nameB gameParams'
   , relation = MyMove
   , moveNumber = 0
   , moveVerbose = Nothing

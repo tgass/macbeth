@@ -7,7 +7,7 @@ module Macbeth.Fics.Api.Chat (
 ) where
 
 import qualified Macbeth.Fics.Api.Player as P
-import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 
 data ChatMsg =

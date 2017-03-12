@@ -4,7 +4,7 @@ module Macbeth.Fics.Api.Result (
   toString
 ) where
 
-import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Api
 
 data Result = Result {
     gameId :: GameId

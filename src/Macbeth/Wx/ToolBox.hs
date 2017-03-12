@@ -5,7 +5,6 @@ module Macbeth.Wx.ToolBox (
 ) where
 
 import Macbeth.Fics.FicsMessage
-import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Player
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Configuration
@@ -170,9 +169,9 @@ wxToolBox env chan = do
           E.playSound env (C.challenge . C.request)
           dupChan chan >>= wxChallenge h c
 
-        WxNewGame gp chain' -> do
-           when (isGameUser' gp) $ E.playSound env (C.newGame . C.game)
-           wxGame env gp chain'
+        WxOpenBoard gameId' gameParams' chain' -> do
+           E.playSound env (C.newGame . C.game)
+           wxGame env gameId' gameParams' chain'
 
         OponentDecline user MatchReq -> set statusMsg [text := user ++ " declines the match offer."]
 

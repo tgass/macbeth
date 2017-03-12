@@ -260,17 +260,17 @@ movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from'
 movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
 
 
-initBoardState :: GameProperties -> Username -> BoardState
-initBoardState gameProperties' username' = BoardState {
-    lastMove = initMove gameProperties'
-  , isGameUser = isGameUser' gameProperties'
-  , userColor_ = userColor gameProperties' username'
+initBoardState :: GameId -> GameParams -> Username -> BoardState
+initBoardState gameId' gameParams' username' = BoardState {
+    lastMove = initMove gameId' gameParams'
+  , isGameUser = isGameUser' gameParams'
+  , userColor_ = userColor gameParams' username'
   , gameResult = Nothing
   , pieceMove = []
   , history = []
   , virtualPosition = []
   , preMoves = []
-  , perspective = fromMaybe White (userColor gameProperties' username')
+  , perspective = fromMaybe White (userColor gameParams' username')
   , mousePt = Point 0 0
   , promotion = Queen
   , draggedPiece = Nothing

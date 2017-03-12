@@ -10,7 +10,7 @@ module Macbeth.Fics.Parsers.MoveParser (
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move hiding (relation)
-import Macbeth.Fics.FicsMessage hiding (move)
+import Macbeth.Fics.FicsMessage hiding (move, Observing)
 import qualified Macbeth.Fics.Parsers.Api as Api
 import Macbeth.Fics.Parsers.PositionParser
 

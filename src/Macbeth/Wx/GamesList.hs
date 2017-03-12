@@ -2,7 +2,7 @@ module Macbeth.Wx.GamesList (
   wxGamesList
 ) where
 
-import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Wx.Utils
 
@@ -35,7 +35,7 @@ data CtxSortMenu = CtxSortMenu {
 
 wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
 wxGamesList glp h = do
-  games <- newTVarIO ([] :: [Game])
+  games <- newTVarIO ([] :: [OngoingGame])
   gl  <- listCtrl glp [ columns :=
       [ ("#", AlignLeft, -1)
       , ("Player 1", AlignLeft, -1)
@@ -73,7 +73,7 @@ wxGamesList glp h = do
   return (gl, handler gl ctxMenuPopup ctxSortMenu' games)
 
 
-handler :: ListCtrl () -> CtxMenu -> CtxSortMenu -> TVar [Game] -> FicsMessage -> IO ()
+handler :: ListCtrl () -> CtxMenu -> CtxSortMenu -> TVar [OngoingGame] -> FicsMessage -> IO ()
 handler gl ctx sub games cmd = case cmd of
   Games games' -> do
     atomically $ modifyTVar games (const games')
@@ -88,7 +88,7 @@ onGamesListEvent gl h evt = case evt of
   _ -> return ()
 
 
-displayGames :: ListCtrl () -> CtxMenu -> CtxSortMenu -> TVar [Game] -> IO ()
+displayGames :: ListCtrl () -> CtxMenu -> CtxSortMenu -> TVar [OngoingGame] -> IO ()
 displayGames gl opts sub games = do
   sortOrder <- sortFoo sub
   games' <- sortBy sortOrder <$> readTVarIO games
@@ -101,7 +101,7 @@ displayGames gl opts sub games = do
                    , not $ isPrivate $ settings g]]
 
 
-sortFoo :: CtxSortMenu -> IO (Game -> Game -> Ordering)
+sortFoo :: CtxSortMenu -> IO (OngoingGame -> OngoingGame -> Ordering)
 sortFoo ctxMenu' = do
   gameId'' <- foo gameId (sortByGameId ctxMenu')
   nameW' <- foo nameW (sortByNameW ctxMenu')
@@ -114,7 +114,7 @@ sortFoo ctxMenu' = do
            (gameId'' <|> nameW'  <|> ratingW' <|> nameB' <|> ratingB' <|> gameType'')
 
 
-foo :: Ord a => (Game -> a) -> MenuItem () -> IO (Maybe (Game -> Game -> Ordering))
+foo :: Ord a => (OngoingGame -> a) -> MenuItem () -> IO (Maybe (OngoingGame -> OngoingGame -> Ordering))
 foo f mu = flip whenMaybe (comparing f) <$> get mu checked
 
 
@@ -140,6 +140,6 @@ ctxSortMenu menu' = CtxSortMenu
   <*> menuRadioItem menu' [ text := "Game Type"]
 
 
-toList :: Game -> [String]
-toList g = [show $ Macbeth.Fics.Api.Game.gameId g, nameW g, show $ ratingW g, nameB g, show $ ratingB g, show $ gameType $ settings g]
+toList :: OngoingGame -> [String]
+toList g = [show $ Macbeth.Fics.Api.OngoingGame.gameId g, nameW g, show $ ratingW g, nameB g, show $ ratingB g, show $ gameType $ settings g]
 

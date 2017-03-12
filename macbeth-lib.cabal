@@ -33,6 +33,7 @@ library
                      Macbeth.Fics.Api.Move,
                      Macbeth.Fics.Api.Rating,
                      Macbeth.Fics.Api.Seek,
+                     Macbeth.Fics.Api.OngoingGame,
                      Macbeth.Fics.Api.Player,
                      Macbeth.Fics.Api.Result,
                      Macbeth.Fics.Parsers.Api,

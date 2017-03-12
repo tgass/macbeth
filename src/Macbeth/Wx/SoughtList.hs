@@ -3,7 +3,7 @@ module Macbeth.Wx.SoughtList (
 ) where
 
 import Macbeth.Fics.Api.Seek
-import Macbeth.Fics.Api.Game hiding (gameType, isRated)
+import Macbeth.Fics.Api.OngoingGame hiding (gameType, isRated)
 import Macbeth.Fics.FicsMessage
 import Macbeth.Wx.Utils
 import qualified Macbeth.Wx.RuntimeEnv as E

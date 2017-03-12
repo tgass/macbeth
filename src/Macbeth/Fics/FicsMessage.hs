@@ -9,6 +9,7 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Api.Seek
@@ -20,7 +21,11 @@ data FicsMessage =
   | PieceHolding { gameId :: GameId, phWhite :: [PType], phBlack :: [PType] }
   | GameResult Result
 
-  | GameCreation GameProperties
+  | Observing GameId GameParams
+  | NewGameParamsUser GameParams
+  | NewGameIdUser GameId
+  | NewGameUser GameId GameParams -- | Merged
+
   | NoSuchGame -- | If id in 'observe id' does not exist
   | UserNotLoggedIn Username
 
@@ -45,7 +50,7 @@ data FicsMessage =
   | PartnerAccepted UserHandle
   | PartnerDeclined UserHandle
 
-  | Games [Game]
+  | Games [OngoingGame]
   | Players [Player]
   | Finger UserHandle String
   | History UserHandle String
@@ -66,7 +71,7 @@ data FicsMessage =
   | TakebackAccepted (Maybe Username)
   | IllegalMove String
   | WxClose
-  | WxNewGame GameProperties (Chan FicsMessage) deriving (Show, Eq)
+  | WxOpenBoard GameId GameParams (Chan FicsMessage) deriving (Show, Eq)
 
 
 data DeclineSubject = DrawReq | TakebackReq | AbortReq | MatchReq deriving Eq

@@ -5,7 +5,7 @@ module Macbeth.Fics.Api.Seek (
 ) where
 
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Api.Rating
 import Macbeth.Fics.Utils.Bitmask
 

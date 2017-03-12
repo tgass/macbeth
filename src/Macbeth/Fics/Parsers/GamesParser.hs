@@ -5,7 +5,7 @@ module Macbeth.Fics.Parsers.GamesParser (
 ) where
 
 import Macbeth.Fics.FicsMessage
-import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Parsers.RatingParser
 import qualified Macbeth.Fics.Parsers.Api as Api
 
@@ -17,8 +17,8 @@ gamesList :: Parser FicsMessage
 gamesList = Games <$> (Api.commandHead 43 *> many' game)
 
 
-game :: Parser Game
-game = Game
+game :: Parser OngoingGame
+game = OngoingGame
   <$> (takeTill (== '\n') *> "\n" *> many space *> Api.gameId)
   <*> (many1 space *> option False ("(Exam." *> pure True))
   <*> (option False ("(Setup" *> pure True))

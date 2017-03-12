@@ -7,6 +7,7 @@ module Macbeth.Fics.Api.Api (
   Column (..),
   Position,
   MoveDetailed (..),
+  GameId (..),
   pColor,
   hasColor,
   removePiece,
@@ -44,6 +45,14 @@ data Piece = Piece PType PColor deriving (Show, Eq)
 type Position = [(Square, Piece)]
 
 data MoveDetailed = Simple Square Square | Drop Square | CastleLong | CastleShort deriving (Show, Eq)
+
+newtype GameId = GameId Int deriving (Eq)
+
+instance Show GameId where
+  show (GameId i) = show i
+
+instance Ord GameId where
+  compare (GameId gi1) (GameId gi2) = gi1 `compare` gi2
 
 pColor :: Piece -> PColor
 pColor (Piece _ color) = color
