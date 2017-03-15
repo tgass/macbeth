@@ -10,7 +10,7 @@ import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Parsers.MoveParser
-import Macbeth.Fics.Parsers.RatingParser
+import qualified Macbeth.Fics.Parsers.RatingParser as R
 import qualified Macbeth.Fics.Parsers.Api as Api
 import qualified Macbeth.Fics.Parsers.Chatting as Chatting
 import qualified Macbeth.Fics.Parsers.GamesParser as GP
@@ -171,9 +171,9 @@ gameParams' :: Bool -> Parser GameParams
 gameParams' isGameUser = GameParams
   <$> pure isGameUser
   <*> username
-  <*> (" (" *> skipSpace *> rating)
+  <*> (" (" *> skipSpace *> R.rating)
   <*> (") " *> username)
-  <*> (" (" *> rating <* ") ")
+  <*> (" (" *> skipSpace *> R.rating <* ") ")
   <*> (("rated" *> pure True) <|> ("unrated" *> pure False))
   <*> (skipSpace *> manyTill anyChar " ")
   <*> (skipSpace *> decimal)

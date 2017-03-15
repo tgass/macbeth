@@ -36,7 +36,9 @@ spec =
 
     it "illegal move" $ parseFicsMessage "Illegal move (e2d2)." `shouldBe` Right (IllegalMove "e2d2")
 
-    it "observing game" $ parseFicsMessage "Game 289: Erron (1686) Donattello (1731) rated lightning 1 0\n" `shouldBe` Right (Observing (GameId 289) (GameParams False "Erron" (R.Rating 1686 R.None) "Donattello" (R.Rating 1731 R.None) True "lightning" 1 0))
+    it "observing game" $ parseFicsMessage "Game 289: Erron (1686) Donattello (1731) rated lightning 1 0\n" `shouldBe` Right (Observing (GameId 289) $ GameParams False "Erron" (R.Rating 1686 R.None) "Donattello" (R.Rating 1731 R.None) True "lightning" 1 0)
+
+    it "creating game" $ parseFicsMessage "Creating: Schoon (1171) hadamar ( 978) rated blitz 5 0\n " `shouldBe` Right (NewGameParamsUser $ GameParams True "Schoon" (R.Rating 1171 R.None) "hadamar" (R.Rating 978 R.None) True "blitz" 5 0)
 
     it "create game" $ parseFicsMessage "{Game 484 (GuestYLCL vs. GuestBYPB) Creating unrated blitz match.}\n" `shouldBe` Right (NewGameIdUser (GameId 484))
 
