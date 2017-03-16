@@ -29,6 +29,7 @@ module Macbeth.Wx.Game.BoardState (
 
   setPieceSet,
   getPieceHolding,
+  getCapturedPieces,
 
   initBoardState
 ) where
@@ -234,8 +235,13 @@ setPieceSet vState ps = atomically (modifyTVar vState (\s -> s { pieceSet = ps }
 
 
 getPieceHolding :: PColor -> BoardState -> [PType]
-getPieceHolding White bs = phW bs
-getPieceHolding Black bs = phB bs
+getPieceHolding White = phW
+getPieceHolding Black = phB
+
+
+getCapturedPieces :: PColor -> BoardState -> [PType]
+getCapturedPieces Black = capturedW
+getCapturedPieces White = capturedB
 
 
 pointToSquare :: BoardState -> Point -> Maybe Square

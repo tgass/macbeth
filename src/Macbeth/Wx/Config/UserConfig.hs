@@ -19,9 +19,10 @@ module Macbeth.Wx.Config.UserConfig (
 
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Config.Sounds
-import Macbeth.Wx.Config.GameConfig
+import Macbeth.Wx.Config.BoardConfig
 import Paths
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Except
 import Data.Maybe
@@ -36,7 +37,7 @@ data Config = Config {
   , autologin :: Bool
   , fontSize :: Int
   , user :: Maybe User
-  , gameConfig :: Maybe GameConfig
+  , boardConfig :: Maybe BoardConfig
   , sounds :: Maybe Sounds
 } deriving (Show, Generic)
 
@@ -80,7 +81,8 @@ loadConfig = setDefaults <$>
 -- make sure that default values are always set
 -- this is important specially when the configuration is shown to the user
 setDefaults :: Config -> Config
-setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'})}
+setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}),
+                  boardConfig = boardConfig c <|> Just defaultBoardConfig }
   where
     soundsOrDef' = soundsOrDef c
     chatOrDef' = chatOrDef soundsOrDef'
@@ -91,7 +93,7 @@ fromDisk = ExceptT $ getMacbethUserDataDir "macbeth.yaml" >>= decodeFileEither
 
 
 saveConfig :: Config -> IO ()
-saveConfig config = getMacbethUserDataDir    "macbeth.yaml" >>= flip encodeFile config
+saveConfig config = getMacbethUserDataDir "macbeth.yaml" >>= flip encodeFile config
 
 
 saveCredentials :: String -> String -> IO ()
@@ -105,7 +107,7 @@ defaultConfig dir = Config {
     fontSize = 12
   , directory = dir
   , autologin = False
-  , gameConfig = Just (GameConfig $ Just False)
+  , boardConfig = Just defaultBoardConfig
   , user = Nothing
   , sounds = Just defaultSounds
 }

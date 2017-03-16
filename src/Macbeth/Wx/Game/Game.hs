@@ -8,6 +8,7 @@ import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Chat
 import Macbeth.Utils.PGN
+import Macbeth.Wx.Config.UserConfig
 import Macbeth.Wx.Game.PieceSet
 import Macbeth.Wx.Game.StatusPanel
 import Macbeth.Wx.Game.GameSounds
@@ -34,20 +35,22 @@ eventId = wxID_HIGHEST + 1
 wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan FicsMessage -> IO ()
 wxGame env gameId gameParams' chan = do
   let h = E.handle env
-  username <- E.username env
+  let boardConfig' = env `E.getConfig` boardConfig
+  username' <- E.username env
   vCmd <- newEmptyMVar
 
   f <- frame [ text := G.toTitle gameId gameParams']
   p_back <- panel f []
 
   -- board
-  let boardState = Api.initBoardState gameId gameParams' username
+  let boardState = Api.initBoardState gameId gameParams' username'
   vBoardState <- newTVarIO boardState
-  p_board <- panel p_back [ on paint := Board.draw vBoardState]
 
   -- player panels
-  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState env
-  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState env
+  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState gameParams' boardConfig'
+  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState gameParams' boardConfig'
+
+  p_board <- panel p_back [ on paint := \dc r -> repaint p_black >> repaint p_white >> Board.draw vBoardState dc r]
 
   -- layout helper
   let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f
@@ -69,7 +72,7 @@ wxGame env gameId gameParams' chan = do
      _ <- menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
      _ <- menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
      menuLine ctxMenu
-     _ <- menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams') (Just gameId)]
+     _ <- menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username' gameParams') (Just gameId)]
 
      windowOnMouse p_board True (\point -> Board.onMouseEvent h vBoardState point >> repaint p_board)
   menuLine ctxMenu
@@ -86,7 +89,7 @@ wxGame env gameId gameParams' chan = do
     | Utl.onlyKey evt 'K' -> Api.pickUpPieceFromHolding vBoardState Knight >> repaint p_board
     | Utl.onlyKey evt 'R' -> Api.pickUpPieceFromHolding vBoardState Rook >> repaint p_board
     | Utl.onlyKey evt 'P' -> Api.pickUpPieceFromHolding vBoardState Pawn >> repaint p_board
-    | Utl.onlyKey evt 'T' && G.isGameUser' gameParams' -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams') (Just gameId)
+    | Utl.onlyKey evt 'T' && G.isGameUser' gameParams' -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username' gameParams') (Just gameId)
     | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> Api.discardDraggedPiece vBoardState >> repaint p_board
 
     | Utl.onlyKey evt 'N' -> hPutStrLn h "5 decline"
@@ -124,14 +127,14 @@ wxGame env gameId gameParams' chan = do
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
-    DrawRequest user -> set status [text := user ++ " offered a draw. Accept? (y/n)"]
+    DrawRequest user' -> set status [text := user' ++ " offered a draw. Accept? (y/n)"]
 
-    AbortRequest user -> set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
+    AbortRequest user' -> set status [text := user' ++ " would like to abort the game. Accept? (y/n)"]
 
-    TakebackRequest user numTakeback -> set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
+    TakebackRequest user' numTakeback -> set status [text := user' ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
 
-    OponentDecline user sub
-      | sub `elem` [DrawReq, TakebackReq, AbortReq] -> set status [text := user ++ " declines the " ++ show sub ++ " request."]
+    OponentDecline user' sub
+      | sub `elem` [DrawReq, TakebackReq, AbortReq] -> set status [text := user' ++ " declines the " ++ show sub ++ " request."]
       | otherwise -> return ()
 
     PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]

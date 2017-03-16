@@ -7,8 +7,9 @@ module Macbeth.Wx.Game.StatusPanel (
 import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
+import Macbeth.Fics.Api.Game
+import Macbeth.Wx.Config.BoardConfig
 import qualified Macbeth.Fics.Api.Result as R
-import qualified Macbeth.Wx.RuntimeEnv as E
 import Macbeth.Utils.Utils
 import Macbeth.Utils.BoardUtils
 import Macbeth.Wx.Game.BoardState
@@ -19,11 +20,12 @@ import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Graphics.UI.WX hiding (when)
 
 
-createStatusPanel :: Panel () -> PColor -> TVar BoardState -> E.RuntimeEnv -> IO (Panel (), FicsMessage -> IO ())
-createStatusPanel p color' vBoardState env = do
+createStatusPanel :: Panel () -> PColor -> TVar BoardState -> GameParams -> Maybe BoardConfig -> IO (Panel (), FicsMessage -> IO ())
+createStatusPanel p color' vBoardState gameParams' boardConfig' = do
   lastMove' <- lastMove <$> readTVarIO vBoardState
 
   p_status <- panel p []
@@ -35,7 +37,7 @@ createStatusPanel p color' vBoardState env = do
 
   p_color <- panel p_status [bgcolor := toWxColor color']
   st_playerName <- staticTextFormatted p_status (namePlayer color' lastMove')
-  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState env]
+  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState gameParams' boardConfig']
 
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st
@@ -61,11 +63,16 @@ createStatusPanel p color' vBoardState env = do
   return (p_status, handler)
 
 
-paintPieceHolding :: PColor -> TVar BoardState -> E.RuntimeEnv -> DC a -> t -> IO ()
-paintPieceHolding color' state env dc _ = do
-  px <- getPieceHolding color' <$> readTVarIO state
-  zipWithM_ (drawPiece dc color') [A .. H] (frequency px)
+paintPieceHolding :: PColor -> TVar BoardState -> GameParams -> Maybe BoardConfig  -> DC a -> t -> IO ()
+paintPieceHolding color' state gameParams' boardConfig' dc _ = do
+  px <- getPieces <$> readTVarIO state
+  zipWithM_ (drawPiece dc getColor) [A .. H] (frequency px)
   where
+    getPieces
+      | gameType'' gameParams' `elem` ["bughouse", "crazyhouse"] = getPieceHolding color'
+      | not $ fromMaybe False (boardConfig' >>= showCapturedPieces) = const []
+      | otherwise = getCapturedPieces color'
+    getColor = if gameType'' gameParams' `elem` ["bughouse", "crazyhouse"] then color' else invert color'
     frequency :: Ord a => [a] -> [(a, Int)]
     frequency = map (head &&& length) . group . sort
 

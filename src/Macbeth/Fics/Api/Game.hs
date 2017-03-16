@@ -36,7 +36,7 @@ data GameParams = GameParams {
   , nameB :: String
   , ratingB :: Rating
   , rated :: Bool
-  , speed :: String
+  , gameType'' :: String
   , initialTime :: Int
   , incTime :: Int } deriving (Show, Eq)
 
@@ -49,7 +49,7 @@ nameOponent username' gameParams'
 
 
 showShortGameParams :: GameParams -> String
-showShortGameParams p = rated'' ++ " " ++ speed p ++ " " ++ show (initialTime p) ++ " " ++ show (incTime p)
+showShortGameParams p = rated'' ++ " " ++ gameType'' p ++ " " ++ show (initialTime p) ++ " " ++ show (incTime p)
   where rated'' = if rated p then "rated" else "unrated"
 
 
