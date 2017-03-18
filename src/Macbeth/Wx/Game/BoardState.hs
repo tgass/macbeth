@@ -29,7 +29,6 @@ module Macbeth.Wx.Game.BoardState (
 
   setPieceSet,
   getPieceHolding,
-  getCapturedPieces,
 
   initBoardState
 ) where
@@ -38,8 +37,9 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Player
-import Macbeth.Wx.Game.PieceSet
 import Macbeth.Fics.Api.Result
+import Macbeth.Wx.Game.PieceSet
+import qualified Macbeth.Wx.Config.BoardConfig as GC
 
 import Control.Concurrent.STM
 import Control.Monad
@@ -53,7 +53,8 @@ import System.IO
 
 
 data BoardState = BoardState {
-    lastMove :: Move
+    gameParams''' :: GameParams
+  , lastMove :: Move
   , isGameUser :: Bool
   , userColor_ :: Maybe PColor
   , gameResult :: Maybe GameResult
@@ -71,8 +72,8 @@ data BoardState = BoardState {
   , pieceSet :: PieceSet
   , phW :: [PType]
   , phB :: [PType]
-  , capturedW :: [PType]
-  , capturedB :: [PType]  }
+  , showCapturedPieces :: Bool
+  }
 
 
 data DraggedPiece = DraggedPiece Point Piece PieceSource deriving (Show)
@@ -133,7 +134,7 @@ pickUpPieceFromHolding vState p = atomically $ modifyTVar vState
   where
     pickUpPieceFromHolding' :: BoardState -> PColor -> BoardState
     pickUpPieceFromHolding' state color'
-      | p `elem` getPieceHolding color' state = state { draggedPiece = Just $ DraggedPiece (mousePt state) (Piece p color') FromHolding }
+      | Piece p color'  `elem` getPieceHolding color' state = state { draggedPiece = Just $ DraggedPiece (mousePt state) (Piece p color') FromHolding }
       | otherwise = state
 
 
@@ -180,8 +181,6 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
   , lastMove = move
   , virtualPosition = let preMovePos' = foldl (flip movePiece) (position move) (preMoves s)
                       in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)
-  , capturedW = capturedPieces White (position move)
-  , capturedB = capturedPieces Black (position move)
   })
 
 
@@ -234,14 +233,9 @@ setPieceSet :: TVar BoardState -> PieceSet -> IO ()
 setPieceSet vState ps = atomically (modifyTVar vState (\s -> s { pieceSet = ps }))
 
 
-getPieceHolding :: PColor -> BoardState -> [PType]
-getPieceHolding White = phW
-getPieceHolding Black = phB
-
-
-getCapturedPieces :: PColor -> BoardState -> [PType]
-getCapturedPieces Black = capturedW
-getCapturedPieces White = capturedB
+getPieceHolding :: PColor -> BoardState -> [Piece]
+getPieceHolding White st = (`Piece` White) <$> phW st
+getPieceHolding Black st = (`Piece` Black) <$> phW st
 
 
 pointToSquare :: BoardState -> Point -> Maybe Square
@@ -266,9 +260,10 @@ movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from'
 movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
 
 
-initBoardState :: GameId -> GameParams -> Username -> BoardState
-initBoardState gameId' gameParams' username' = BoardState {
-    lastMove = initMove gameId' gameParams'
+initBoardState :: GameId -> GameParams -> Username -> Maybe GC.BoardConfig -> BoardState
+initBoardState gameId' gameParams' username' boardConfig' = BoardState {
+    gameParams''' = gameParams'
+  , lastMove = initMove gameId' gameParams'
   , isGameUser = isGameUser' gameParams'
   , userColor_ = userColor gameParams' username'
   , gameResult = Nothing
@@ -286,7 +281,6 @@ initBoardState gameId' gameParams' username' = BoardState {
   , pieceSet = head pieceSets
   , phW = []
   , phB = []
-  , capturedW = []
-  , capturedB = []
+  , showCapturedPieces = fromMaybe False $ GC.showCapturedPieces <$> boardConfig'
   }
 

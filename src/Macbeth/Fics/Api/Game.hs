@@ -10,7 +10,8 @@ module Macbeth.Fics.Api.Game (
   isTo,
   isUpdate,
   showChallenge,
-  showShortGameParams
+  showShortGameParams,
+  isGameWithPH
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -80,3 +81,7 @@ userColor gameParams' username'
   | nameW gameParams' == username' = Just White
   | nameB gameParams' == username' = Just Black
   | otherwise = Nothing
+
+
+isGameWithPH :: GameParams -> Bool
+isGameWithPH gp = gameType'' gp `elem` ["bughouse", "crazyhouse"]

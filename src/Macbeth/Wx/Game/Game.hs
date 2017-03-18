@@ -43,12 +43,12 @@ wxGame env gameId gameParams' chan = do
   p_back <- panel f []
 
   -- board
-  let boardState = Api.initBoardState gameId gameParams' username'
+  let boardState = Api.initBoardState gameId gameParams' username' boardConfig'
   vBoardState <- newTVarIO boardState
 
   -- player panels
-  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState gameParams' boardConfig'
-  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState gameParams' boardConfig'
+  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState
+  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState
 
   p_board <- panel p_back [ on paint := \dc r -> repaint p_black >> repaint p_white >> Board.draw vBoardState dc r]
 
@@ -62,8 +62,13 @@ wxGame env gameId gameParams' chan = do
 
   -- context menu
   ctxMenu <- menuPane []
+
   _ <- menuItem ctxMenu [ text := "Turn board", on command :=
     Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
+
+  _ <- menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := Api.showCapturedPieces boardState,  on command :=
+    atomically (modifyTVar vBoardState (\s -> s{ Api.showCapturedPieces = not $ Api.showCapturedPieces s})) >> repaint p_board]
+
   when (G.isGameUser' gameParams') $ do
      menuLine ctxMenu
      _ <- menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]

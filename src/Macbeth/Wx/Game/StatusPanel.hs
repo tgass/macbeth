@@ -8,7 +8,6 @@ import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Game
-import Macbeth.Wx.Config.BoardConfig
 import qualified Macbeth.Fics.Api.Result as R
 import Macbeth.Utils.Utils
 import Macbeth.Utils.BoardUtils
@@ -20,12 +19,11 @@ import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad
 import Data.List
-import Data.Maybe
-import Graphics.UI.WX hiding (when)
+import Graphics.UI.WX hiding (when, position)
 
 
-createStatusPanel :: Panel () -> PColor -> TVar BoardState -> GameParams -> Maybe BoardConfig -> IO (Panel (), FicsMessage -> IO ())
-createStatusPanel p color' vBoardState gameParams' boardConfig' = do
+createStatusPanel :: Panel () -> PColor -> TVar BoardState -> IO (Panel (), FicsMessage -> IO ())
+createStatusPanel p color' vBoardState = do
   lastMove' <- lastMove <$> readTVarIO vBoardState
 
   p_status <- panel p []
@@ -37,7 +35,7 @@ createStatusPanel p color' vBoardState gameParams' boardConfig' = do
 
   p_color <- panel p_status [bgcolor := toWxColor color']
   st_playerName <- staticTextFormatted p_status (namePlayer color' lastMove')
-  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState gameParams' boardConfig']
+  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState]
 
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st
@@ -63,22 +61,25 @@ createStatusPanel p color' vBoardState gameParams' boardConfig' = do
   return (p_status, handler)
 
 
-paintPieceHolding :: PColor -> TVar BoardState -> GameParams -> Maybe BoardConfig  -> DC a -> t -> IO ()
-paintPieceHolding color' state gameParams' boardConfig' dc _ = do
-  px <- getPieces <$> readTVarIO state
-  zipWithM_ (drawPiece dc getColor) [A .. H] (frequency px)
+paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()
+paintPieceHolding color' state dc _ = do
+  state' <- readTVarIO state
+  zipWithM_ (drawPiece dc) [A .. H] (assemblePiecesToShow color' state')
+
+
+assemblePiecesToShow :: PColor -> BoardState -> [(Piece, Int)]
+assemblePiecesToShow color' state
+  | isGameWithPH $ gameParams''' state = frequency $ getPieceHolding color' state
+  | not $ showCapturedPieces state = []
+  | otherwise = frequency $ capturedPiecesWithColor (invert color') (position $ lastMove state)
+
   where
-    getPieces
-      | gameType'' gameParams' `elem` ["bughouse", "crazyhouse"] = getPieceHolding color'
-      | not $ fromMaybe False (boardConfig' >>= showCapturedPieces) = const []
-      | otherwise = getCapturedPieces color'
-    getColor = if gameType'' gameParams' `elem` ["bughouse", "crazyhouse"] then color' else invert color'
     frequency :: Ord a => [a] -> [(a, Int)]
     frequency = map (head &&& length) . group . sort
 
 
-drawPiece :: DC a -> PColor -> Column -> (PType, Int) -> IO ()
-drawPiece dc color' col (ptype, freq) = do
+drawPiece :: DC a -> Column -> (Piece, Int) -> IO ()
+drawPiece dc col (Piece ptype color', freq) = do
   drawBitmap dc (pieceToBitmap pieceSize (head pieceSets) (Piece ptype color'))
                 (toPos' fieldSize (Square col Eight) White) True []
   set dc [pen := penColored black 2]
