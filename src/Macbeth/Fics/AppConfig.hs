@@ -15,7 +15,8 @@ import GHC.Generics
 
 
 data AppConfig = AppConfig {
-  stage :: Stage
+    stage :: Stage
+  , version :: String
 } deriving (Show, Generic)
 
 

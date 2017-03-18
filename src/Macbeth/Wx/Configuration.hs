@@ -3,8 +3,9 @@ module Macbeth.Wx.Configuration (
 ) where
 
 import Macbeth.Fics.FicsMessage
-import Macbeth.Wx.Utils
 import Macbeth.Wx.Config.Sounds
+import Macbeth.Wx.RuntimeEnv
+import Macbeth.Wx.Utils
 import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Concurrent.Chan
@@ -16,9 +17,9 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Yaml as Y
 
 
-wxConfiguration :: Chan FicsMessage -> IO ()
-wxConfiguration chan = do
-  f  <- frame [ text := "Macbeth"]
+wxConfiguration :: RuntimeEnv -> Chan FicsMessage -> IO ()
+wxConfiguration env chan = do
+  f  <- frame [ text := "Macbeth (" ++ getVersion env ++ ")"]
   ct <- textCtrlEx f (wxTE_MULTILINE .+. wxTE_RICH) [font := fontFixed]
   showConfig ct
   status <- statusField []

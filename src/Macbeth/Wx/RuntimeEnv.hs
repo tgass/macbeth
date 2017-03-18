@@ -5,6 +5,7 @@ module Macbeth.Wx.RuntimeEnv (
   playSound,
   initRuntime,
   getConfig,
+  getVersion,
   getSoundConfig,
   getIconFilePath
 ) where
@@ -30,6 +31,7 @@ import System.Log.Formatter
 data RuntimeEnv = RuntimeEnv {
     handle :: Handle
   , config :: C.Config
+  , appConfig :: AppConfig
   , sources :: [Source]
   , bufferMap :: M.HashMap String Buffer
   , userHandle :: TVar UserHandle
@@ -38,8 +40,9 @@ data RuntimeEnv = RuntimeEnv {
 initRuntime :: Handle -> IO RuntimeEnv
 initRuntime h = do
   c <- C.initConfig
-  initLogger . stage =<< loadAppConfig
-  RuntimeEnv h <$> return c <*> initSources <*> initBufferMap c <*> newTVarIO emptyUserHandle
+  appConfig' <- loadAppConfig
+  initLogger $ stage appConfig'
+  RuntimeEnv h <$> return c <*> return appConfig' <*> initSources <*> initBufferMap c <*> newTVarIO emptyUserHandle
 
 
 username :: RuntimeEnv -> IO Username
@@ -52,6 +55,10 @@ setUsername env = atomically . writeTVar (userHandle env)
 
 getConfig :: RuntimeEnv -> (C.Config -> a) -> a
 getConfig env f = f $ config env
+
+
+getVersion :: RuntimeEnv -> String
+getVersion = version . appConfig
 
 
 getSoundConfig :: RuntimeEnv -> (C.Sounds -> a) -> a

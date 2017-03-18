@@ -59,7 +59,7 @@ wxToolBox env chan = do
       [ on command := hPutStrLn h "4 history", enabled := False, tooltip := "History"]
 
     tbarItem_settings <- toolItem tbar "Settings" False (E.getIconFilePath "settings")
-      [ on command := dupChan chan >>= wxConfiguration, enabled := False, tooltip := "Settings"]
+      [ on command := dupChan chan >>= wxConfiguration env, enabled := False, tooltip := "Settings"]
 
     statusMsg <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
