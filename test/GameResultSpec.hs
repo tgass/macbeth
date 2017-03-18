@@ -6,7 +6,6 @@ import Test.Hspec
 
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Game
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Parsers.FicsMessageParser
 

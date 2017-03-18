@@ -1,25 +1,20 @@
-<pf> 14 w=CapaBlue t=draw p=#\n
-TextMessage "<pf> 14 w=CapaBlue t=draw p=#\n"
-
-TextMessage "Ambiguous move (nd2).\n"
-
-
 --BUGS:
 check when config init: is directory for saved games there?
-
 ? reset config if autologin fails
 
 CHAT:
 -- statusLine für status chat partner
 
+-- PARSERS
 Game 236: GuestSSNR requests to take back 2 half move(s).
 Game 236: GuestSSNR requests to take back 1 half move(s).
 Game 236: GuestNDJN declines the takeback request.
 Game 84: Paet offers a draw.
+Game 136: White's partner won 1-0\n
+TextMessage "Ambiguous move (nd2).\n"
+
 
 -- Close window/frames with CMD-W
-
-
 
 -- use pending from / to for in-game messages?
 -- ie: Pending (PendingOffer {origin = From, offerId = 3, playerName = UserHandle {name = "GuestFWXZ", handleType = []}, offerType = "abort", params = "#"})
@@ -28,8 +23,6 @@ Game 84: Paet offers a draw.
 
 
 -- FEATURES
--- adjourn game
--- formula (seek)
 -- save game if observing optional
 -- fisher random (0-0, 0-0-0 shortcuts)
 -- bughouse
@@ -40,13 +33,6 @@ Game 84: Paet offers a draw.
 
 -- ARCHITEX
 -- generalize Challenge / PartnerOffer
--- newtype for perspective == view
 -- use wx ListView
 
--- PARSERS
--- while observing: Bughouse: "Game 136: White's partner won 1-0\n"
 
-
-
--- APP
--- alternative icons: crosshair, child, flag, search

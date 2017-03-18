@@ -24,7 +24,9 @@ spec =
 
     it "ping" $ parseFicsMessage ":min/avg/max/mdev = 131.497/132.073/132.718/0.460 ms\n" `shouldBe` Right (Ping 131 132 133)
 
-    it "pending from" $ parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n" `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" $ GameParams True "Schoon" (R.Rating 999 R.None) "GuestNXQS" R.Unrated False "blitz" 5 0)
+    it "pending match from" $ parseFicsMessage "<pf> 28 w=Schoon t=match p=Schoon ( 999) GuestNXQS (----) unrated blitz 5 0\n" `shouldBe ` Right (Pending $ PendingOffer From 28 (P.UserHandle "Schoon" []) "match" $ MatchDetails $ GameParams True "Schoon" (R.Rating 999 R.None) "GuestNXQS" R.Unrated False "blitz" 5 0)
+
+    it "pending draw from" $ parseFicsMessage "<pf> 14 w=CapaBlue t=draw p=#" `shouldBe` Right (Pending $ PendingOffer From 14 (P.UserHandle "CapaBlue" []) "draw" DrawOffer)
 
     it "pending removed" $ parseFicsMessage "<pr> 28\n" `shouldBe` Right (PendingRemoved 28)
 

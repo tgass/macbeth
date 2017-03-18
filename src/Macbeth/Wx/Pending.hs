@@ -69,7 +69,7 @@ wxPending h p' = do
 
 
 toList :: PendingOffer -> [String]
-toList (PendingOffer _ id' userHandle offerType' params) = [show id', name userHandle, offerType', showShortGameParams params]
+toList (PendingOffer _ id' userHandle offerType' details') = [show id', name userHandle, offerType', show details']
 
 
 ctxMenuHandler :: Handle -> ListCtrl () -> Origin -> Graphics.UI.WXCore.ListEvent () -> IO ()

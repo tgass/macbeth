@@ -1,6 +1,7 @@
 module Macbeth.Fics.Api.Game (
   Challenge (..),
   PendingOffer(..),
+  OfferDetails(..),
   GameParams(..),
   Origin(..),
   toTitle,
@@ -26,7 +27,13 @@ data PendingOffer = PendingOffer {
   , offerId :: Int
   , playerName :: UserHandle
   , offerType :: String
-  , gameParams :: GameParams } deriving (Show, Eq)
+  , offerDetails :: OfferDetails } deriving (Show, Eq)
+
+data OfferDetails = MatchDetails GameParams | DrawOffer deriving (Eq)
+
+instance Show OfferDetails where
+  show (MatchDetails gameParams') = show gameParams'
+  show DrawOffer = "#"
 
 data Origin = From | To deriving (Show, Eq)
 

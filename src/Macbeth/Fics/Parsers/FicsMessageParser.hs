@@ -164,7 +164,7 @@ pending = Pending <$> (PendingOffer
   <*> (" " *> decimal)
   <*> (" w=" *> P.userHandle)
   <*> (" t=" *> manyTill anyChar " ")
-  <*> ("p=" *> gameParams' True))
+  <*> ("p=" *> ((MatchDetails <$> gameParams' True) <|> ("#" *> pure DrawOffer))))
 
 
 gameParams' :: Bool -> Parser GameParams
