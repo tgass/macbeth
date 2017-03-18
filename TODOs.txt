@@ -1,3 +1,6 @@
+--
+Get appropriate LICENSE
+
 --BUGS:
 check when config init: is directory for saved games there?
 ? reset config if autologin fails
