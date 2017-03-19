@@ -174,14 +174,15 @@ togglePromotion vState = atomically $ do
 
 
 update :: TVar BoardState -> Move -> MoveModifier -> IO ()
-update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s -> s {
-    isWaiting = isNextMoveUser move
-  , pieceMove = diffPosition (position $ lastMove s) (position move)
-  , history = addtoHistory move ctx (history s)
-  , lastMove = move
-  , virtualPosition = let preMovePos' = foldl (flip movePiece) (position move) (preMoves s)
-                      in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)
-  })
+update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s ->
+  let preMoves' = if ctx == None then preMoves s else [] in
+  s { isWaiting = isNextMoveUser move
+    , pieceMove = diffPosition (position $ lastMove s) (position move)
+    , history = addtoHistory move ctx (history s)
+    , lastMove = move
+    , preMoves = preMoves'
+    , virtualPosition = let preMovePos' = foldl (flip movePiece) (position move) preMoves'
+                        in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)})
 
 
 removeDraggedPiece :: Position -> DraggedPiece -> Position
@@ -197,12 +198,12 @@ diffPosition before after =
 
 
 addtoHistory :: Move -> MoveModifier -> [Move] -> [Move]
-addtoHistory _ (Illegal _) mx = mx
-addtoHistory m (Takeback _) mx = m : tail (dropWhile (not . equal m) mx)
+addtoHistory _ Illegal{} mx = mx
+addtoHistory m Takeback{} mx = m : tail (dropWhile (not . equal m) mx)
   where
     equal :: Move -> Move -> Bool
     equal m1 m2 = (moveNumber m1 == moveNumber m2) && (turn m1 == turn m2)
-addtoHistory m _ mx = m : mx
+addtoHistory m None mx = m : mx
 
 
 resize :: Panel () -> TVar BoardState -> IO ()
