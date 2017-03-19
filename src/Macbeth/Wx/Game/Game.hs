@@ -144,6 +144,11 @@ wxGame env gameId gameParams' chan = do
 
     PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]
 
+    PieceHolding id' phW' phB' -> when (id' == gameId) $ do
+      atomically $ modifyTVar vBoardState (\s -> s{ Api.phW = phW', Api.phB = phB' })
+      repaint p_white
+      repaint p_black
+
     _ -> return ()
 
   windowOnDestroy f $ do

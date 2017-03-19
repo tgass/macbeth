@@ -100,8 +100,8 @@ pieceHolding = "<b1>" *> pieceHoldingOnly
 pieceHoldingOnly :: Parser FicsMessage
 pieceHoldingOnly = PieceHolding
   <$> (" game " *> Api.gameId <* " ")
-  <*> ("white [" *> many' dropablePiece <* "] ")
-  <*> ("black [" *> many' dropablePiece <* "]" <* option "" " <-")
+  <*> ("white [" *> many' ((`Piece` White) <$> dropablePiece) <* "] ")
+  <*> ("black [" *> many' ((`Piece` Black) <$> dropablePiece) <* "]" <* option "" " <-")
 
 
 dropablePiece :: Parser PType

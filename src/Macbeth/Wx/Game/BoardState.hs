@@ -70,8 +70,8 @@ data BoardState = BoardState {
   , psize :: Int
   , scale :: Double
   , pieceSet :: PieceSet
-  , phW :: [PType]
-  , phB :: [PType]
+  , phW :: [Piece]
+  , phB :: [Piece]
   , showCapturedPieces :: Bool
   }
 
@@ -235,8 +235,8 @@ setPieceSet vState ps = atomically (modifyTVar vState (\s -> s { pieceSet = ps }
 
 
 getPieceHolding :: PColor -> BoardState -> [Piece]
-getPieceHolding White st = (`Piece` White) <$> phW st
-getPieceHolding Black st = (`Piece` Black) <$> phW st
+getPieceHolding White = phW
+getPieceHolding Black = phB
 
 
 pointToSquare :: BoardState -> Point -> Maybe Square

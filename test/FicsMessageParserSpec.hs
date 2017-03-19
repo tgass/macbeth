@@ -56,9 +56,9 @@ spec =
 
     it "takeback request" $ parseFicsMessage "GuestTYLF would like to take back 2 half move(s)." `shouldBe` Right (TakebackRequest "GuestTYLF" 2)
 
-    it "parse piece holding" $ parseFicsMessage "<b1> game 455 white [PRN] black [BQ]" `shouldBe` Right (PieceHolding (GameId 455) [Pawn,Rook,Knight] [Bishop,Queen])
+    it "parse piece holding" $ parseFicsMessage "<b1> game 455 white [PRN] black [BQ]" `shouldBe` Right (PieceHolding (GameId 455) [Piece Pawn White, Piece Rook White, Piece Knight White] [Piece Bishop Black, Piece Queen Black])
 
-    it "parse piece holding" $ parseFicsMessage "<b1> game 182 white [PPB] black [PQQ] <- BQ\n" `shouldBe` Right (PieceHolding (GameId 182) [Pawn,Pawn,Bishop] [Pawn,Queen,Queen])
+    it "parse piece holding" $ parseFicsMessage "<b1> game 182 white [PPB] black [PQQ] <- BQ\n" `shouldBe` Right (PieceHolding (GameId 182) [Piece Pawn White, Piece Pawn White, Piece Bishop White] [Piece Pawn Black, Piece Queen Black, Piece Queen Black])
 
     it "parse seek not available" $ parseFicsMessage "That seek is not available.\n" `shouldBe` Right SeekNotAvailable
 

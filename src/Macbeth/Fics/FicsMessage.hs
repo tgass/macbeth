@@ -18,7 +18,7 @@ import Control.Concurrent.Chan
 
 data FicsMessage =
     GameMove { context :: MoveModifier, move :: Move }
-  | PieceHolding { gameId :: GameId, phWhite :: [PType], phBlack :: [PType] }
+  | PieceHolding { gameId :: GameId, phWhite :: [Piece], phBlack :: [Piece] }
   | GameResult Result
 
   | Observing GameId GameParams

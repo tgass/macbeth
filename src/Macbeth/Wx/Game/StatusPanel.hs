@@ -52,10 +52,6 @@ createStatusPanel p color' vBoardState = do
 
         GameResult result -> when (R.gameId result == gameId lastMove') $ set tx [enabled := False]
 
-        PieceHolding id' phW' phB' -> when (id' == gameId lastMove') $ do
-          atomically $ modifyTVar vBoardState (\s -> s{ phW = phW', phB = phB' })
-          repaint p_status
-
         _ -> return ()
 
   return (p_status, handler)
