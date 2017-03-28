@@ -8,6 +8,7 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.FicsMessage hiding (move)
 import Macbeth.Fics.Api.Move hiding (Observing)
 import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Offer
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Parsers.MoveParser
 import qualified Macbeth.Fics.Parsers.RatingParser as R
@@ -164,7 +165,7 @@ pending = Pending <$> (PendingOffer
   <*> (" " *> decimal)
   <*> (" w=" *> P.userHandle)
   <*> (" t=" *> manyTill anyChar " ")
-  <*> ("p=" *> ((MatchDetails <$> gameParams' True) <|> ("#" *> pure DrawOffer))))
+  <*> ("p=" *> many1 anyChar))
 
 
 gameParams' :: Bool -> Parser GameParams

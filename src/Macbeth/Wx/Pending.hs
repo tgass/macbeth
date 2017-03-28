@@ -3,8 +3,8 @@ module Macbeth.Wx.Pending (
 ) where
 
 import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Api.Offer
 import Macbeth.Fics.Api.Player
-import Macbeth.Fics.Api.Game
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.STM

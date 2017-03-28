@@ -7,6 +7,7 @@ module Macbeth.Wx.Game.Game (
 import Macbeth.Fics.FicsMessage hiding (gameId)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Chat
+import Macbeth.Fics.Api.Offer
 import Macbeth.Utils.PGN
 import Macbeth.Wx.Config.UserConfig
 import Macbeth.Wx.Game.PieceSet

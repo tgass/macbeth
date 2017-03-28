@@ -1,7 +1,6 @@
 module Macbeth.Wx.Game.BoardState (
   BoardState(..),
   DraggedPiece(..),
-  Origin(..),
   PieceMove (..),
 
   pickUpPieceFromHolding,

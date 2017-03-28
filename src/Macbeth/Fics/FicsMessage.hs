@@ -1,14 +1,14 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 module Macbeth.Fics.FicsMessage (
-  FicsMessage (..),
-  DeclineSubject (..)
+  FicsMessage (..)
 ) where
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Offer
 import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Result
@@ -36,7 +36,7 @@ data FicsMessage =
   | DrawRequest Username
   | AbortRequest Username
   | TakebackRequest Username Int
-  | OponentDecline Username DeclineSubject
+  | OponentDecline Username OfferSubject
 
   | PromotionPiece PType
 
@@ -72,16 +72,6 @@ data FicsMessage =
   | IllegalMove String
   | WxClose
   | WxOpenBoard GameId GameParams (Chan FicsMessage) deriving (Show, Eq)
-
-
-data DeclineSubject = DrawReq | TakebackReq | AbortReq | MatchReq deriving Eq
-
-
-instance Show DeclineSubject where
-  show DrawReq = "draw"
-  show TakebackReq = "takeback"
-  show AbortReq = "abort"
-  show MatchReq = "match"
 
 
 instance Show (Chan FicsMessage) where

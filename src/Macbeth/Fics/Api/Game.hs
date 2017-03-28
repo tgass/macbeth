@@ -1,14 +1,9 @@
 module Macbeth.Fics.Api.Game (
   Challenge (..),
-  PendingOffer(..),
-  OfferDetails(..),
   GameParams(..),
-  Origin(..),
   toTitle,
   nameOponent,
   userColor,
-  isFrom,
-  isTo,
   isUpdate,
   showChallenge,
   showShortGameParams,
@@ -22,20 +17,6 @@ import Macbeth.Fics.Api.Rating
 
 data Challenge = Challenge GameParams deriving (Show, Eq)
 
-data PendingOffer = PendingOffer {
-    origin :: Origin
-  , offerId :: Int
-  , playerName :: UserHandle
-  , offerType :: String
-  , offerDetails :: OfferDetails } deriving (Show, Eq)
-
-data OfferDetails = MatchDetails GameParams | DrawOffer deriving (Eq)
-
-instance Show OfferDetails where
-  show (MatchDetails gameParams') = show gameParams'
-  show DrawOffer = "#"
-
-data Origin = From | To deriving (Show, Eq)
 
 data GameParams = GameParams {
     isGameUser' :: Bool
@@ -65,14 +46,6 @@ showChallenge :: Challenge -> String
 showChallenge (Challenge p) =
   nameW p ++ " (" ++ show (ratingW p) ++ ") vs. " ++ nameB p ++ " (" ++ show (ratingB p) ++ ") "
   ++ showShortGameParams p
-
-
-isFrom :: PendingOffer -> Bool
-isFrom = (== From) . origin
-
-
-isTo :: PendingOffer -> Bool
-isTo = (== To) . origin
 
 
 isUpdate :: Challenge -> Challenge -> Bool

@@ -5,6 +5,7 @@ module Macbeth.Wx.ToolBox (
 ) where
 
 import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Api.Offer
 import Macbeth.Fics.Api.Player
 import Macbeth.Utils.Utils
 import Macbeth.Wx.Configuration
