@@ -1,6 +1,9 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, MultiWayIf #-}
 
 module Macbeth.Wx.Utils (
+  FrameConfig(..),
+  FrameActions(..),
+  basicFrame,
   eventLoop,
   registerWxCloseEventListener,
   registerWxCloseEventListenerWithThreadId,
@@ -15,9 +18,42 @@ module Macbeth.Wx.Utils (
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.Api
 
+import Control.Monad.Cont
 import Control.Concurrent
-import Graphics.UI.WX
-import Graphics.UI.WXCore
+import Graphics.UI.WX hiding (when)
+import Graphics.UI.WXCore hiding (when)
+
+
+data FrameConfig = FrameConfig {
+    fCreate :: [Prop (Frame ())] -> IO (Frame ())
+  , fTitle :: String
+  , hasStatusField :: Bool
+}
+
+data FrameActions = FrameActions {
+  closeFrame :: IO (),
+  setDefaultButton :: Button () -> IO ()
+}
+
+basicFrame :: FrameConfig -> Chan FicsMessage -> Cont (IO ()) (Panel (), StatusField, FrameActions)
+basicFrame config chan = cont $ \callback -> do
+  f <- fCreate config [text := fTitle config]
+  p <- panel f []
+  status <- statusField []
+
+  _ <- registerWxCloseEventListener f chan
+
+  windowOnKeyDown p (\evt -> if
+    | onlyEsc evt -> close f
+    | keyWithMod evt 'W' justControl -> close f
+    | otherwise -> return ())
+
+  callback (
+    p,
+    status,
+    FrameActions (close f) (\btn -> set f [ defaultButton := btn]))
+  when (hasStatusField config) $ set f [ statusBar := [status] ]
+  set f [ layout := fill $ widget p ]
 
 
 eventLoop :: Int -> Chan FicsMessage -> MVar FicsMessage -> Frame () -> IO ()
@@ -59,6 +95,10 @@ listItemRightClickEvent lc eventHandler
 
 onlyKey :: EventKey -> Char -> Bool
 onlyKey evt c = (keyKey evt == KeyChar c) && isNoneDown (keyModifiers evt)
+
+
+onlyEsc :: EventKey -> Bool
+onlyEsc evt = (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt)
 
 
 keyWithMod :: EventKey -> Char -> Modifiers -> Bool

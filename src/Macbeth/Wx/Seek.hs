@@ -10,6 +10,7 @@ import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.Chan
+import Control.Monad.Cont
 import Data.Map (keys)
 import Graphics.UI.WX hiding (color)
 import Safe
@@ -42,19 +43,28 @@ data SeekInfo = SeekInfo {
   , _ratingTo :: Int
 }
 
-
 wxSeek :: Handle -> Bool -> Chan FicsMessage -> IO ()
-wxSeek h isGuest chan = do
-  f <- frameFixed [ text := "Seek a match" ]
-  p <- panel f []
+wxSeek h isGuest chan = runCont (basicFrame frameConfig chan) $ setupFrame h isGuest
+
+
+frameConfig :: FrameConfig
+frameConfig = FrameConfig {
+  fCreate = frameFixed,
+  fTitle = "Seek a match",
+  hasStatusField = False
+}
+
+
+setupFrame :: Handle -> Bool -> (Panel (), StatusField, FrameActions) -> IO ()
+setupFrame h isGuest (p, _, frame') = do
   match <- matchInputs p isGuest
   set (category match) [on select ::= onSelectGameTypeCategory (board match)]
 
-  b_ok  <- button p [text := "Create", on command := readSeek match >>= hPutStrLn h . ("4 seek " ++) . toString >> close f ]
-  b_can <- button p [text := "Cancel", on command := close f]
+  b_ok  <- button p [text := "Create", on command := readSeek match >>= hPutStrLn h . ("4 seek " ++) . toString >> closeFrame frame' ]
+  b_can <- button p [text := "Cancel", on command := closeFrame frame']
 
-  set f [ defaultButton := b_ok
-        , layout := container p $ margin 10 $ column 15 [
+  frame' `setDefaultButton` b_ok
+  set p [ layout := container p $ margin 10 $ column 15 [
             boxed "Game Type" (grid 15 15 [
               [label "Category: ", hfill $ widget $ category match, label "Board:", hfill $ widget $ board match ]
             ]),
@@ -66,7 +76,6 @@ wxSeek h isGuest chan = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-  registerWxCloseEventListener f chan
 
 
 -- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide]

@@ -8,6 +8,7 @@ import Macbeth.Wx.RuntimeEnv
 import Macbeth.Wx.Utils
 import qualified Macbeth.Wx.Config.UserConfig as C
 
+import Control.Monad.Cont
 import Control.Concurrent.Chan
 import Control.Monad.Except
 import Graphics.UI.WX hiding (fontSize)
@@ -18,25 +19,32 @@ import qualified Data.Yaml as Y
 
 
 wxConfiguration :: RuntimeEnv -> Chan FicsMessage -> IO ()
-wxConfiguration env chan = do
-  f  <- frame [ text := "Macbeth (" ++ getVersion env ++ ")"]
-  ct <- textCtrlEx f (wxTE_MULTILINE .+. wxTE_RICH) [font := fontFixed]
-  showConfig ct
-  status <- statusField []
+wxConfiguration env chan = runCont (basicFrame (frameConfig env) chan) setupFrame
 
-  b_current <- button f [text := "Reset", on command := showConfig ct]
-  b_resetSounds <- button f [text := "Reset Sounds", on command := resetSounds ct]
-  b_save <- button f [ text := "Save",
+
+frameConfig :: RuntimeEnv -> FrameConfig
+frameConfig env = FrameConfig {
+  fCreate = frame,
+  fTitle = "Macbeth (" ++ getVersion env ++ ")",
+  hasStatusField = True
+}
+
+
+setupFrame :: (Panel (), StatusField, FrameActions) -> IO ()
+setupFrame (p, status, _) = do
+  ct <- textCtrlEx p (wxTE_MULTILINE .+. wxTE_RICH) [font := fontFixed]
+  showConfig ct
+
+  b_current <- button p [text := "Reset", on command := showConfig ct]
+  b_resetSounds <- button p [text := "Reset Sounds", on command := resetSounds ct]
+  b_save <- button p [ text := "Save",
                        on command := either (\_ -> set status [text := "Illegal file format."]) return
                                      =<< runExceptT (parseAndSave ct status)]
 
-
-  set f [ statusBar := [status],
-          layout := margin 10 $ column 10 [
-                       boxed "Configuration" $ fill $ minsize (Size 380 220) $ widget ct
+  set p [ layout :=  margin 10 $ column 10 [
+                       boxed "Configuration" $ fill $ minsize (Size 440 480) $ widget ct
                      , hfloatRight $ row 5 [widget b_current, widget b_resetSounds, widget b_save]]
         ]
-  registerWxCloseEventListener f chan
 
 
 showConfig :: TextCtrl() -> IO ()

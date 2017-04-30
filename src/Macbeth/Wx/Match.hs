@@ -7,6 +7,7 @@ import Macbeth.Wx.GameType
 import Macbeth.Wx.Utils
 
 import Control.Concurrent.Chan
+import Control.Monad.Cont
 import Data.Map
 import Data.Char
 import Graphics.UI.WX hiding (color)
@@ -24,17 +25,27 @@ data WxMatch = WxMatch {
 }
 
 wxMatch :: Handle -> Bool -> Chan FicsMessage -> IO ()
-wxMatch h isGuest chan = do
-  f <- frameFixed [ text := "Create a match" ]
-  p <- panel f []
+wxMatch h isGuest chan = runCont (basicFrame frameConfig chan) $ setupFrame h isGuest
+
+
+frameConfig :: FrameConfig
+frameConfig = FrameConfig {
+  fCreate = frameFixed,
+  fTitle = "Create a match",
+  hasStatusField = False
+}
+
+
+setupFrame :: Handle -> Bool -> (Panel (), StatusField, FrameActions) -> IO ()
+setupFrame h isGuest (p, _, frame') = do
   match <- matchInputs p isGuest
   set (category match) [on select ::= onSelectGameTypeCategory (board match)]
 
-  b_ok  <- button p [text := "Match", on command := toString match >>= hPutStrLn h >> close f ]
-  b_can <- button p [text := "Cancel", on command := close f]
+  b_ok  <- button p [text := "Match", on command := toString match >>= hPutStrLn h >> closeFrame frame' ]
+  b_can <- button p [text := "Cancel", on command := closeFrame frame']
 
-  set f [ defaultButton := b_ok
-        , layout := container p $ margin 10 $ column 10 [
+  frame' `setDefaultButton` b_ok
+  set p [ layout := margin 10 $ column 10 [
                boxed "Game Type" (grid 15 15 [
                    [label "Category: ", hfill $ widget $ category match]
                  , [label "Board:" , hfill $ widget $ board match ]])
@@ -47,7 +58,6 @@ wxMatch h isGuest chan = do
               ])
             , floatBottomRight $ row 5 [widget b_can, widget b_ok]]
         ]
-  registerWxCloseEventListener f chan
 
 
 matchInputs :: Panel () -> Bool -> IO WxMatch

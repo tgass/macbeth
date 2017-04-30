@@ -17,8 +17,6 @@ Game 136: White's partner won 1-0\n
 TextMessage "Ambiguous move (nd2).\n"
 
 
--- Close window/frames with CMD-W
-
 -- use pending from / to for in-game messages?
 -- ie: Pending (PendingOffer {origin = From, offerId = 3, playerName = UserHandle {name = "GuestFWXZ", handleType = []}, offerType = "abort", params = "#"})
 
