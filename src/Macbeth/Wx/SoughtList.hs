@@ -54,9 +54,7 @@ wxSoughtList slp h = do
 
             ClearSeek -> itemsDelete sl
 
-            RemoveSeeks gameIds -> do
-              seeks <- get sl items
-              sequence_ $ fmap (deleteSeek sl . findSeekIdx seeks) gameIds
+            RemoveSeeks gameIds -> sequence_ $ fmap (deleteSeek sl) gameIds
 
             _ -> return ()
 
@@ -111,13 +109,12 @@ onSeekListEvent sl h evt = case evt of
   _ -> return ()
 
 
-findSeekIdx :: [[String]] -> Int -> Maybe Int
-findSeekIdx seeks gameId'' = elemIndex gameId'' $ fmap (read . (!! 0)) seeks
-
-
-deleteSeek :: ListCtrl () -> Maybe Int -> IO ()
-deleteSeek sl (Just gameId'') = itemDelete sl gameId''
-deleteSeek _ _ = return ()
+deleteSeek :: ListCtrl () -> Int -> IO ()
+deleteSeek sl gameId'' = do
+  seeks <- get sl items
+  case elemIndex gameId'' $ fmap (read . (!! 0)) seeks of
+    Just idx' -> itemDelete sl idx'
+    Nothing -> return ()
 
 
 getSoughtOpts :: Menu () -> IO SoughtOpts
