@@ -35,5 +35,5 @@ TextMessage "Ambiguous move (nd2).\n"
 -- ARCHITEX
 -- generalize Challenge / PartnerOffer
 -- use wx ListView
-
-
+-- use Lens, especially for Sounds/Config
+-- make BoardChanges not depend on tvar?
