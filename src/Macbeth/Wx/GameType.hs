@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Macbeth.Wx.GameType (
   Category (..),
   Board (..),
