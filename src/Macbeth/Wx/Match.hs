@@ -11,7 +11,6 @@ import Control.Monad.Cont
 import Data.Map
 import Data.Char
 import Graphics.UI.WX hiding (color)
-import Safe
 import System.IO
 
 data WxMatch = WxMatch {
@@ -80,7 +79,7 @@ toString m = (("4 match " ++) . unwords) `fmap` sequence [
      , get (inc m) text
      , get (color m) selection >>= fmap convertColor . get (color m) . item
      , gameTypeSelectionToString <$> read `fmap` getDisplaySelection (category m)
-                                 <*> readMay `fmap` getDisplaySelection (board m)]
+                                 <*> fmap (fmap read) (getMayDisplaySelection (board m))]
     where
       convertIsRated r = if r then "rated" else "unrated"
       convertColor x = if x == "Automatic" then "" else fmap toLower x

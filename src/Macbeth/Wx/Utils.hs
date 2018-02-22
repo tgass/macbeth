@@ -10,6 +10,7 @@ module Macbeth.Wx.Utils (
   listItemRightClickEvent,
   toWxColor,
   getDisplaySelection,
+  getMayDisplaySelection,
   staticTextFormatted,
   onlyKey,
   keyWithMod
@@ -108,6 +109,12 @@ keyWithMod evt c modifier = (keyKey evt == KeyChar c) && (keyModifiers evt == mo
 getDisplaySelection :: Choice () -> IO String
 getDisplaySelection c = get c selection >>= get c . item
 
+getMayDisplaySelection :: Choice () -> IO (Maybe String)
+getMayDisplaySelection c = do
+  selectionIdx <- get c selection
+  case selectionIdx of
+    -1 -> return Nothing
+    _ -> Just <$> get c (item selectionIdx)
 
 toWxColor :: PColor -> Color
 toWxColor White = Graphics.UI.WXCore.white
@@ -119,4 +126,3 @@ staticTextFormatted p s = staticText p [ text := s
                                        , fontFace := "Avenir Next Medium"
                                        , fontSize := 20
                                        , fontWeight := WeightBold]
-

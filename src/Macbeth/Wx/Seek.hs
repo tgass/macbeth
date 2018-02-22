@@ -13,7 +13,6 @@ import Control.Concurrent.Chan
 import Control.Monad.Cont
 import Data.Map (keys)
 import Graphics.UI.WX hiding (color)
-import Safe
 import System.IO
 
 -- seek [time inc] [rated|unrated] [white|black] [crazyhouse] [suicide] [wild #] [auto|manual] [formula] [rating-range]
@@ -100,7 +99,7 @@ toString m = unwords $ filter (/= "") [
 readSeek :: WxSeek -> IO SeekInfo
 readSeek m = SeekInfo
   <$> read <$> getDisplaySelection (category m)
-  <*> readMay `fmap` getDisplaySelection (board m)
+  <*> (fmap read <$> getMayDisplaySelection (board m))
   <*> read `fmap` get (time m) text
   <*> read `fmap` get (inc m) text
   <*> get (rated m) checked
@@ -124,4 +123,3 @@ matchInputs p isGuest = WxSeek
   <*> checkBox p []
   <*> textEntry p [ text := "0"]
   <*> textEntry p [ text := "9999"]
-
