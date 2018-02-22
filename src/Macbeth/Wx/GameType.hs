@@ -26,7 +26,7 @@ gameTypes = fromList [ (Chess, []), (Suicide, []), (Losers, []), (Atomic, []),
                                  , Board "w4" "Random pieces, balanced bishops"
                                  , Board "w5" "Pawns on 7th rank"
                                  , Board "w8" "Pawns on 4th rank"
-                                 , Board "w8a" "Panwns on 5th rank"
+                                 , Board "w8a" "Pawns on 5th rank"
                                  , Board "wild fr" "Fisher Random"])
                      , (Crazyhouse, [])
                      , (Bughouse, [])]
@@ -41,4 +41,3 @@ onSelectGameTypeCategory :: Choice () -> Choice () -> IO ()
 onSelectGameTypeCategory c_boards c_category = do
   category <- fmap read (getDisplaySelection c_category)
   set c_boards [ items := fmap display $ gameTypes ! category]
-
