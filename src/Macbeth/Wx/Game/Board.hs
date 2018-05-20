@@ -47,10 +47,9 @@ drawBoard = do
   lift $ set dc [ pen := penTransparent ]
   lift $ withBrushStyle (BrushStyle BrushSolid (rgb (180::Int) 150 100)) $ \blackBrush ->
     withBrushStyle (BrushStyle BrushSolid white) $ \whiteBrush ->
-      mapM_ (\(c,sq') -> do
+      forM_ (zip bw sq) (\(c,sq') -> do
         dcSetBrush dc $ if c == White then whiteBrush else blackBrush
         paintSquare dc state sq')
-          (zip bw sq)
 
 
 drawHighlightLastMove :: BoardT a
