@@ -2,7 +2,10 @@
 
 module Macbeth.Wx.Config.BoardConfig (
   BoardConfig(..),
-  defaultBoardConfig
+  TileConfig(..),
+  defaultBoardConfig,
+  defaultWhiteTile,
+  defaultBlackTile
 ) where
 
 import           Data.Aeson.Types
@@ -11,31 +14,38 @@ import           Data.Text.Read (hexadecimal)
 import           Numeric
 import           GHC.Generics
 
+
 data BoardConfig = BoardConfig {
     showCapturedPieces :: Bool
   , whiteTileConfig :: Maybe TileConfig
   , blackTileConfig :: Maybe TileConfig 
-} deriving (Show, Generic)
+} deriving (Show, Generic, Eq)
 
 defaultBoardConfig :: BoardConfig
-defaultBoardConfig = BoardConfig False (Just $ TileColor 255 255 255) (Just $ TileColor 180 150 100)
+defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile)
+
+defaultWhiteTile :: TileConfig
+defaultWhiteTile = TileColor 255 255 255
+
+defaultBlackTile :: TileConfig
+defaultBlackTile = TileColor 180 150 100
 
 instance ToJSON BoardConfig
 instance FromJSON BoardConfig
 
-data TileConfig = TileColor Int Int Int | TileFile FilePath deriving Show
+data TileConfig = TileColor Int Int Int | TileFile FilePath deriving (Show, Eq)
 
 instance FromJSON TileConfig where
  parseJSON val'@(String text') 
    | "#" `T.isPrefixOf` text' = 
        if T.length text' == 7 
-           then either (\_ -> typeMismatch "TileColor" val') return $ parseTileColor text'
+           then either (\_ -> typeMismatch "TileColor" val') return $ parseTileColor (T.tail text')
            else typeMismatch "TileColor" val'
    | otherwise = return $ TileFile $ T.unpack text'
  parseJSON v = typeMismatch "TileConfig" v
 
 instance ToJSON TileConfig where
-  toJSON (TileColor c1 c2 c3) = String $ T.pack $ (paddedHex c1 . paddedHex c2 . paddedHex c3) ""
+  toJSON (TileColor c1 c2 c3) = String $ T.pack $ "#" ++ (paddedHex c1 . paddedHex c2 . paddedHex c3) ""
   toJSON (TileFile path) = String $ T.pack path
 
 parseTileColor :: T.Text -> Either String TileConfig

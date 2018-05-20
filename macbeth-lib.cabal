@@ -92,5 +92,5 @@ test-suite macbeth-lib-test
     ghc-options: -W
     hs-source-dirs: test
     main-is: Spec.hs
-    other-modules: FicsMessageParserSpec, GameResultSpec, PlayersSpec, SeekSpec, ChattingSpec, FicsConnectionSpec
-    build-depends: macbeth-lib, base, hspec == 2.*, bytestring, attoparsec, conduit
+    other-modules: GameResultSpec, PlayersSpec, SeekSpec, ChattingSpec, FicsConnectionSpec
+    build-depends: macbeth-lib, base, hspec, bytestring, attoparsec, conduit, aeson
