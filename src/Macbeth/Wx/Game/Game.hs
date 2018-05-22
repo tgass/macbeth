@@ -4,31 +4,31 @@ module Macbeth.Wx.Game.Game (
   wxGame
 ) where
 
-import Macbeth.Fics.FicsMessage hiding (gameId)
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Chat
-import Macbeth.Fics.Api.Offer
-import Macbeth.Utils.PGN
-import Macbeth.Wx.Config.UserConfig
-import Macbeth.Wx.Game.PieceSet
-import Macbeth.Wx.Game.StatusPanel
-import Macbeth.Wx.Game.GameSounds
+import           Macbeth.Fics.FicsMessage hiding (gameId)
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Chat
+import           Macbeth.Fics.Api.Offer
+import           Macbeth.Utils.PGN
+import           Macbeth.Wx.Game.PieceSet
+import           Macbeth.Wx.Game.StatusPanel
+import           Macbeth.Wx.Game.GameSounds
 import qualified Macbeth.Fics.Api.Move as M
 import qualified Macbeth.Fics.Api.Game as G
 import qualified Macbeth.Fics.Api.Result as R
 import qualified Macbeth.Wx.Utils as Utl
 import qualified Macbeth.Wx.RuntimeEnv as E
+import           Macbeth.Wx.Config.BoardConfig
 import qualified Macbeth.Wx.Game.BoardState as Api
 import qualified Macbeth.Wx.Game.Board as Board
 
-import Control.Concurrent
-import Control.Concurrent.STM
-import Control.Exception
-import Control.Monad
-import Data.Maybe
-import Graphics.UI.WX hiding (when, position, play, point, white, black)
-import Graphics.UI.WXCore hiding (when, Timer, black, white, point)
-import System.IO
+import           Control.Concurrent
+import           Control.Concurrent.STM
+import           Control.Exception
+import           Control.Monad
+import           Data.Maybe
+import           Graphics.UI.WX hiding (when, position, play, point, white, black)
+import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
+import           System.IO
 
 eventId :: Int
 eventId = wxID_HIGHEST + 1
@@ -36,20 +36,25 @@ eventId = wxID_HIGHEST + 1
 wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan FicsMessage -> IO ()
 wxGame env gameId gameParams' chan = do
   let h = E.handle env
-  let boardConfig' = env `E.getConfig` boardConfig
   username' <- E.username env
   vCmd <- newEmptyMVar
 
   f <- frame [ text := G.toTitle gameId gameParams']
   p_back <- panel f []
 
+  -- local board config. Not affected by change of config file
+  -- ShowCapturedPieces can be change within Game-Window. 
+  -- Don't want it to be affected from other source than this window
+  vLocalBoardConfig <- readTVarIO (E.boardConfig env) >>= newTVarIO
+  initShowCaputredPieces <- showCapturedPieces <$> readTVarIO (E.boardConfig env)
+
   -- board
-  let boardState = Api.initBoardState gameId gameParams' username' boardConfig'
+  let boardState = Api.initBoardState gameId gameParams' username' (E.boardConfig env)
   vBoardState <- newTVarIO boardState
 
   -- player panels
-  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState
-  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState
+  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState vLocalBoardConfig
+  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState vLocalBoardConfig
 
   p_board <- panel p_back [ on paint := \dc r -> repaint p_black >> repaint p_white >> Board.draw vBoardState dc r]
 
@@ -67,8 +72,8 @@ wxGame env gameId gameParams' chan = do
   _ <- menuItem ctxMenu [ text := "Turn board", on command :=
     Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
 
-  _ <- menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := Api.showCapturedPieces boardState,  on command :=
-    atomically (modifyTVar vBoardState (\s -> s{ Api.showCapturedPieces = not $ Api.showCapturedPieces s})) >> repaint p_board]
+  _ <- menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := initShowCaputredPieces,  on command :=
+    atomically (modifyTVar vLocalBoardConfig (\s -> s{ showCapturedPieces = not $ showCapturedPieces s})) >> repaint p_board]
 
   when (G.isGameUser' gameParams') $ do
      menuLine ctxMenu

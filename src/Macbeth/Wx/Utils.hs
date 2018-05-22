@@ -13,7 +13,8 @@ module Macbeth.Wx.Utils (
   getMayDisplaySelection,
   staticTextFormatted,
   onlyKey,
-  keyWithMod
+  keyWithMod,
+  getUserOrAppFile
 ) where
 
 import Macbeth.Fics.FicsMessage
@@ -23,6 +24,9 @@ import Control.Monad.Cont
 import Control.Concurrent
 import Graphics.UI.WX hiding (when)
 import Graphics.UI.WXCore hiding (when)
+import System.Directory
+import System.FilePath
+import Paths
 
 
 data FrameConfig = FrameConfig {
@@ -126,3 +130,11 @@ staticTextFormatted p s = staticText p [ text := s
                                        , fontFace := "Avenir Next Medium"
                                        , fontSize := 20
                                        , fontWeight := WeightBold]
+
+getUserOrAppFile :: FilePath -> FilePath -> IO FilePath
+getUserOrAppFile userDir' file' = do
+  let fullPath' = userDir' </> file'
+  exists' <- doesFileExist fullPath'
+  if exists'
+    then return fullPath'
+    else getDataFileName file'

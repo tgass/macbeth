@@ -37,7 +37,7 @@ data Config = Config {
   , autologin :: Bool
   , fontSize :: Int
   , user :: Maybe User
-  , boardConfig :: Maybe BoardConfig
+  , boardConfig :: Maybe BoardConfigFormat
   , sounds :: Maybe Sounds
 } deriving (Show, Generic)
 

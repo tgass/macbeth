@@ -4,26 +4,27 @@ module Macbeth.Wx.Game.StatusPanel (
   createStatusPanel
 ) where
 
-import Macbeth.Fics.FicsMessage hiding (gameId, Observing)
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Move
-import Macbeth.Fics.Api.Game
+import           Macbeth.Fics.FicsMessage hiding (gameId, Observing)
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Move
+import           Macbeth.Fics.Api.Game
 import qualified Macbeth.Fics.Api.Result as R
-import Macbeth.Utils.Utils
-import Macbeth.Utils.BoardUtils
-import Macbeth.Wx.Game.BoardState
-import Macbeth.Wx.Game.PieceSet
-import Macbeth.Wx.Utils
+import           Macbeth.Utils.Utils
+import           Macbeth.Utils.BoardUtils
+import           Macbeth.Wx.Config.BoardConfig
+import           Macbeth.Wx.Game.BoardState
+import           Macbeth.Wx.Game.PieceSet
+import           Macbeth.Wx.Utils
 
-import Control.Arrow
-import Control.Concurrent.STM
-import Control.Monad
-import Data.List
-import Graphics.UI.WX hiding (when, position)
+import           Control.Arrow
+import           Control.Concurrent.STM
+import           Control.Monad
+import           Data.List
+import           Graphics.UI.WX hiding (when, position)
 
 
-createStatusPanel :: Panel () -> PColor -> TVar BoardState -> IO (Panel (), FicsMessage -> IO ())
-createStatusPanel p color' vBoardState = do
+createStatusPanel :: Panel () -> PColor -> TVar BoardState -> TVar BoardConfig -> IO (Panel (), FicsMessage -> IO ())
+createStatusPanel p color' vBoardState vBoardConfig = do
   lastMove' <- lastMove <$> readTVarIO vBoardState
 
   p_status <- panel p []
@@ -35,7 +36,7 @@ createStatusPanel p color' vBoardState = do
 
   p_color <- panel p_status [bgcolor := toWxColor color']
   st_playerName <- staticTextFormatted p_status (namePlayer color' lastMove')
-  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState]
+  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState vBoardConfig]
 
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st
@@ -57,16 +58,17 @@ createStatusPanel p color' vBoardState = do
   return (p_status, handler)
 
 
-paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()
-paintPieceHolding color' state dc _ = do
-  state' <- readTVarIO state
-  zipWithM_ (drawPiece dc) [A .. H] (assemblePiecesToShow color' state')
+paintPieceHolding :: PColor -> TVar BoardState -> TVar BoardConfig -> DC a -> t -> IO ()
+paintPieceHolding color' vBoardState vBoardConfig dc _ = do
+  state' <- readTVarIO vBoardState
+  config' <- readTVarIO vBoardConfig
+  zipWithM_ (drawPiece dc) [A .. H] (assemblePiecesToShow color' state' config')
 
 
-assemblePiecesToShow :: PColor -> BoardState -> [(Piece, Int)]
-assemblePiecesToShow color' state
+assemblePiecesToShow :: PColor -> BoardState -> BoardConfig -> [(Piece, Int)]
+assemblePiecesToShow color' state boardConfig'
   | isGameWithPH $ gameParams''' state = frequency $ getPieceHolding color' state
-  | not $ showCapturedPieces state = []
+  | not $ showCapturedPieces boardConfig' = []
   | otherwise = frequency $ capturedPiecesWithColor (invert color') (position $ lastMove state)
 
   where

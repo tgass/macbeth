@@ -9,6 +9,7 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Utils.BoardUtils
 import Macbeth.Wx.Game.BoardState
+import Macbeth.Wx.Config.BoardConfig
 
 import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
@@ -42,14 +43,19 @@ setScale = do
 drawBoard :: BoardT a
 drawBoard = do
   (dc, state) <- ask
+  whiteTile' <- lift $ fmap whiteTile (readTVarIO $ boardConfig state)
+  blackTile' <- lift $ fmap blackTile (readTVarIO $ boardConfig state)
   let bw = let seed = (concat $ replicate 4 [Black, White]) in seed ++ reverse seed ++ bw
   let sq = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
   lift $ set dc [ pen := penTransparent ]
-  lift $ withBrushStyle (BrushStyle BrushSolid (rgb (180::Int) 150 100)) $ \blackBrush ->
-    withBrushStyle (BrushStyle BrushSolid white) $ \whiteBrush ->
-      forM_ (zip bw sq) (\(c,sq') -> do
-        dcSetBrush dc $ if c == White then whiteBrush else blackBrush
-        paintSquare dc state sq')
+  lift $ forM_ (zip bw sq) (\(c,sq') ->
+    if c == White then drawTile dc state whiteTile' sq' else drawTile dc state blackTile' sq')
+
+drawTile :: DC a -> BoardState -> Tile -> Square -> IO ()
+drawTile dc state (BitmapTile b) sq' = do
+  bitmapSetSize b $ Size (psize state) (psize state)
+  drawBitmap dc b (toPos' (psize state) sq' (perspective state)) True []
+drawTile dc state (ColorTile c) sq' = dcWithBrushStyle dc (brushSolid c) $ paintSquare dc state sq'
 
 
 drawHighlightLastMove :: BoardT a

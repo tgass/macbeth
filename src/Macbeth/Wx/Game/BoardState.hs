@@ -32,23 +32,23 @@ module Macbeth.Wx.Game.BoardState (
   initBoardState
 ) where
 
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Game
-import Macbeth.Fics.Api.Move
-import Macbeth.Fics.Api.Player
-import Macbeth.Fics.Api.Result
-import Macbeth.Wx.Game.PieceSet
-import qualified Macbeth.Wx.Config.BoardConfig as GC
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Game
+import           Macbeth.Fics.Api.Move
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Fics.Api.Result
+import           Macbeth.Wx.Game.PieceSet
+import           Macbeth.Wx.Config.BoardConfig
 
-import Control.Concurrent.STM
-import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Maybe
-import Data.Maybe
-import Data.List
-import Graphics.UI.WX hiding (position, update, resize, when)
-import Safe
-import System.IO
+import           Control.Concurrent.STM
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Maybe
+import           Data.Maybe
+import           Data.List
+import           Graphics.UI.WX hiding (position, update, resize, when)
+import           Safe
+import           System.IO
 
 
 data BoardState = BoardState {
@@ -71,7 +71,7 @@ data BoardState = BoardState {
   , pieceSet :: PieceSet
   , phW :: [Piece]
   , phB :: [Piece]
-  , showCapturedPieces :: Bool
+  , boardConfig :: TVar BoardConfig
   }
 
 
@@ -260,7 +260,7 @@ movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from'
 movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
 
 
-initBoardState :: GameId -> GameParams -> Username -> Maybe GC.BoardConfig -> BoardState
+initBoardState :: GameId -> GameParams -> Username -> TVar BoardConfig -> BoardState
 initBoardState gameId' gameParams' username' boardConfig' = BoardState {
     gameParams''' = gameParams'
   , lastMove = initMove gameId' gameParams'
@@ -281,6 +281,6 @@ initBoardState gameId' gameParams' username' boardConfig' = BoardState {
   , pieceSet = head pieceSets
   , phW = []
   , phB = []
-  , showCapturedPieces = fromMaybe False $ GC.showCapturedPieces <$> boardConfig'
+  , boardConfig = boardConfig'
   }
 

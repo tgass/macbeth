@@ -13,26 +13,29 @@ spec = do
   describe "Board Config Encoding" $ do
 
     it "default board config" $ encode defaultBoardConfig
-      `shouldBe` "{\"blackTileConfig\":\"#b49664\",\"showCapturedPieces\":false,\"whiteTileConfig\":\"#ffffff\"}"
+      `shouldBe` "{\"blackTile\":\"hexb49664\",\"showCapturedPieces\":false,\"whiteTile\":\"hexffffff\"}"
 
-    it "padding hex" $ encode defaultBoardConfig{ whiteTileConfig = Just $ TileColor 0 0 0 }
-      `shouldBe` "{\"blackTileConfig\":\"#b49664\",\"showCapturedPieces\":false,\"whiteTileConfig\":\"#000000\"}"
+    it "padding hex" $ encode defaultBoardConfig{ whiteTile = Just $ TileRGB 0 0 0 }
+      `shouldBe` "{\"blackTile\":\"hexb49664\",\"showCapturedPieces\":false,\"whiteTile\":\"hex000000\"}"
 
-    it "tile file" $ encode defaultBoardConfig{ whiteTileConfig = Just $ TileFile "wood_blk.bmp" }
-      `shouldBe` "{\"blackTileConfig\":\"#b49664\",\"showCapturedPieces\":false,\"whiteTileConfig\":\"wood_blk.bmp\"}"
+    it "tile file" $ encode defaultBoardConfig{ whiteTile = Just $ TileFile "wood_blk.bmp" }
+      `shouldBe` "{\"blackTile\":\"hexb49664\",\"showCapturedPieces\":false,\"whiteTile\":\"wood_blk.bmp\"}"
 
-    it "no tile config" $ encode (BoardConfig True Nothing Nothing)
-      `shouldBe` "{\"blackTileConfig\":null,\"showCapturedPieces\":true,\"whiteTileConfig\":null}"
+    it "no tile config" $ encode (BoardConfig True Nothing Nothing :: BoardConfigFormat)
+      `shouldBe` "{\"blackTile\":null,\"showCapturedPieces\":true,\"whiteTile\":null}"
 
 
   describe "Board Config Decoding" $ do
 
-    it "default board config" $ decode "{\"blackTileConfig\":\"#b49664\",\"showCapturedPieces\":false,\"whiteTileConfig\":\"#ffffff\"}"
-      `shouldBe` Just (BoardConfig False (Just $ TileColor 255 255 255) (Just $ TileColor 180 150 100))
+    it "default board config" $ decode "{\"blackTile\":\"hexb49664\",\"showCapturedPieces\":false,\"whiteTile\":\"hexffffff\"}"
+      `shouldBe` Just (BoardConfig False (Just $ TileRGB 255 255 255) (Just $ TileRGB 180 150 100))
 
-    it "board config with tile filepath" $ decode "{\"blackTileConfig\":\"wood_blk.bmp\",\"showCapturedPieces\":false,\"whiteTileConfig\":\"#ffffff\"}"
-      `shouldBe` Just (BoardConfig False (Just $ TileColor 255 255 255) (Just $ TileFile "wood_blk.bmp"))
+    it "board config with tile filepath" $ decode "{\"blackTile\":\"wood_blk.bmp\",\"showCapturedPieces\":false,\"whiteTile\":\"hexffffff\"}"
+      `shouldBe` Just (BoardConfig False (Just $ TileRGB 255 255 255) (Just $ TileFile "wood_blk.bmp"))
+
+    it "invalid color hex value" $ decode "{\"blackTile\":\"wood_blk.bmp\",\"showCapturedPieces\":false,\"whiteTile\":\"hexXXXXXX\"}"
+      `shouldBe` (Nothing :: Maybe BoardConfigFormat)
 
     it "board config with no tile config" $ decode "{\"showCapturedPieces\":false}"
-      `shouldBe` Just (BoardConfig False Nothing Nothing)
+      `shouldBe` Just (BoardConfig False Nothing Nothing :: BoardConfigFormat)
 

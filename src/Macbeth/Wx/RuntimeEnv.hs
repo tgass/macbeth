@@ -1,7 +1,8 @@
 module Macbeth.Wx.RuntimeEnv (
-  RuntimeEnv(handle),
+  RuntimeEnv(handle, boardConfig),
   username,
   setUsername,
+  setBoardConfig,
   playSound,
   initRuntime,
   getConfig,
@@ -11,22 +12,24 @@ module Macbeth.Wx.RuntimeEnv (
 ) where
 
 import qualified Macbeth.Wx.Config.UserConfig as C
-import Macbeth.Fics.Api.Player
-import Macbeth.Fics.AppConfig
+import qualified Macbeth.Wx.Config.BoardConfig as BC
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Fics.AppConfig
 
-import Control.Concurrent.STM
-import Control.Monad
-import Paths
-import Sound.ALUT
-import System.FilePath
-import System.Directory
-import System.IO
-import System.IO.Unsafe
+import           Control.Concurrent.STM
+import           Control.Monad
+import           Data.Maybe (fromMaybe)
+import           Paths
+import           Sound.ALUT
+import           System.FilePath
+import           System.Directory
+import           System.IO
+import           System.IO.Unsafe
 import qualified Data.HashMap.Strict as M
-import System.Log.Logger
-import System.Log.Handler.Simple hiding (priority)
-import System.Log.Handler (setFormatter)
-import System.Log.Formatter
+import           System.Log.Logger
+import           System.Log.Handler.Simple hiding (priority)
+import           System.Log.Handler (setFormatter)
+import           System.Log.Formatter
 
 data RuntimeEnv = RuntimeEnv {
     handle :: Handle
@@ -35,6 +38,7 @@ data RuntimeEnv = RuntimeEnv {
   , sources :: [Source]
   , bufferMap :: M.HashMap String Buffer
   , userHandle :: TVar UserHandle
+  , boardConfig :: TVar BC.BoardConfig
 }
 
 initRuntime :: Handle -> IO RuntimeEnv
@@ -42,7 +46,14 @@ initRuntime h = do
   c <- C.initConfig
   appConfig' <- loadAppConfig
   initLogger $ stage appConfig'
-  RuntimeEnv h <$> return c <*> return appConfig' <*> initSources <*> initBufferMap c <*> newTVarIO emptyUserHandle
+  RuntimeEnv 
+    <$> pure h 
+    <*> return c 
+    <*> return appConfig' 
+    <*> initSources 
+    <*> initBufferMap c 
+    <*> newTVarIO emptyUserHandle 
+    <*> (BC.convert (fromMaybe BC.defaultBoardConfig $ C.boardConfig c) (C.directory c) >>= newTVarIO)
 
 
 username :: RuntimeEnv -> IO Username
@@ -51,6 +62,10 @@ username = fmap name . readTVarIO . userHandle
 
 setUsername :: RuntimeEnv -> UserHandle -> IO ()
 setUsername env = atomically . writeTVar (userHandle env)
+
+
+setBoardConfig :: RuntimeEnv -> BC.BoardConfig -> IO ()
+setBoardConfig env = atomically . writeTVar (boardConfig env)
 
 
 getConfig :: RuntimeEnv -> (C.Config -> a) -> a
