@@ -58,7 +58,7 @@ You can find a compiled and package version ready to play at http://www.macbeth-
 
 ### Copyrights
 
-* The piece sets you find in /resources are taken form [here] (http://ixian.com/chess/jin-piece-sets/). They are the work of Eric De Mund, licensed under a Creative Commons Attribution-Share Alike 3.0 Unported License.
-* The chess board background tiles that I provide are taken from Tim Mann's XBoard/ WinBoard: [http://www.tim-mann.org/xboard.html] (http://www.tim-mann.org/xboard.html)
-* The icons used are taken from [here] (https://icons8.com/). They are beautiful! 
+* The piece sets you find in /resources are taken form http://ixian.com/chess/jin-piece-sets/. They are the work of Eric De Mund, licensed under a Creative Commons Attribution-Share Alike 3.0 Unported License.
+* The chess board background tiles that I provide are taken from Tim Mann's XBoard/ WinBoard: http://www.tim-mann.org/xboard.html
+* The icons used are taken from https://icons8.com/. They are beautiful! 
 
