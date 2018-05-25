@@ -7,6 +7,8 @@ module Macbeth.Wx.Config.BoardConfig (
   Tile(..),
   TileFormat(..),
   defaultBoardConfig,
+  defaultBlackTile,
+  defaultWhiteTile,
   convert
 ) where
 

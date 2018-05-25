@@ -81,11 +81,17 @@ loadConfig = setDefaults <$>
 -- make sure that default values are always set
 -- this is important specially when the configuration is shown to the user
 setDefaults :: Config -> Config
-setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}),
-                  boardConfig = boardConfig c <|> Just defaultBoardConfig }
+setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardConfig = boardConfig''}
   where
     soundsOrDef' = soundsOrDef c
     chatOrDef' = chatOrDef soundsOrDef'
+    -- Building a full board config: 
+    -- first: set boardConfig in case it is missing
+    --TODO: Use some lenses here?
+    boardConfig' = boardConfig c <|> Just defaultBoardConfig
+    -- second: set tiles in case only they are missing
+    boardConfig'' = (\b -> b{ whiteTile = whiteTile b <|> Just defaultWhiteTile
+                            , blackTile = blackTile b <|> Just defaultBlackTile }) <$> boardConfig'
 
 
 fromDisk :: ExceptT ParseException IO Config
