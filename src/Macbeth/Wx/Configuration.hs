@@ -81,7 +81,6 @@ addUser :: C.Config -> Maybe C.User -> C.Config
 addUser c mUser = c { C.user = mUser }
 
 
---TODO: Add path to tiles in github
 comments :: String
 comments = "# Unfortunately, configuration of Macbeth is not beautiful. I hope to change\n\
            \# this in the future! Please read this carefully!\n\
@@ -91,8 +90,9 @@ comments = "# Unfortunately, configuration of Macbeth is not beautiful. I hope t
            \# - You can use your own sounds by putting them in MACBETH_USER_DIR/sounds\n\
            \# - Changes in the boardConfig section take effect without restart.\n\
            \# - Board tiles are configured by providing either: \n\
-           \#   1) filename, ie: dave_dark.bmp: \n\
+           \#   1) a filename, ie: dave_dark.bmp: \n\
            \#      See https://github.com/tgass/macbeth/tree/master/resources/tiles for your options\n\ 
+           \#      You can use your own background tiles by putting them in MACBETH_USER_DIR/tiles\n\
            \#   2) a hex color code, ie: hexFF0011 \n\n"
 
 
