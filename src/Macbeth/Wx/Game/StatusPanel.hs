@@ -23,8 +23,8 @@ import           Data.List
 import           Graphics.UI.WX hiding (when, position)
 
 
-createStatusPanel :: Panel () -> PColor -> TVar BoardState -> TVar BoardConfig -> IO (Panel (), FicsMessage -> IO ())
-createStatusPanel p color' vBoardState vBoardConfig = do
+createStatusPanel :: Panel () -> PColor -> TVar BoardState ->  IO (Panel (), FicsMessage -> IO ())
+createStatusPanel p color' vBoardState = do
   lastMove' <- lastMove <$> readTVarIO vBoardState
 
   p_status <- panel p []
@@ -36,7 +36,7 @@ createStatusPanel p color' vBoardState vBoardConfig = do
 
   p_color <- panel p_status [bgcolor := toWxColor color']
   st_playerName <- staticTextFormatted p_status (namePlayer color' lastMove')
-  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState vBoardConfig]
+  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState ]
 
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st
@@ -58,17 +58,16 @@ createStatusPanel p color' vBoardState vBoardConfig = do
   return (p_status, handler)
 
 
-paintPieceHolding :: PColor -> TVar BoardState -> TVar BoardConfig -> DC a -> t -> IO ()
-paintPieceHolding color' vBoardState vBoardConfig dc _ = do
+paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()
+paintPieceHolding color' vBoardState dc _ = do
   state' <- readTVarIO vBoardState
-  config' <- readTVarIO vBoardConfig
-  zipWithM_ (drawPiece dc) [A .. H] (assemblePiecesToShow color' state' config')
+  zipWithM_ (drawPiece dc) [A .. H] (assemblePiecesToShow color' state')
 
 
-assemblePiecesToShow :: PColor -> BoardState -> BoardConfig -> [(Piece, Int)]
-assemblePiecesToShow color' state boardConfig'
+assemblePiecesToShow :: PColor -> BoardState -> [(Piece, Int)]
+assemblePiecesToShow color' state
   | isGameWithPH $ gameParams''' state = frequency $ getPieceHolding color' state
-  | not $ showCapturedPieces boardConfig' = []
+  | not $ showCapturedPieces $ boardConfig state = []
   | otherwise = frequency $ capturedPiecesWithColor (invert color') (position $ lastMove state)
 
   where

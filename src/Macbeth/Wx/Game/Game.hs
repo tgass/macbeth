@@ -45,16 +45,15 @@ wxGame env gameId gameParams' chan = do
   -- local board config. Not affected by change of config file
   -- ShowCapturedPieces can be change within Game-Window. 
   -- Don't want it to be affected from other source than this window
-  vLocalBoardConfig <- readTVarIO (E.boardConfig env) >>= newTVarIO
-  initShowCaputredPieces <- showCapturedPieces <$> readTVarIO (E.boardConfig env)
+  currentBoardConfig <- readTVarIO $ E.boardConfig env
 
   -- board
-  let boardState = Api.initBoardState gameId gameParams' username' (E.boardConfig env)
+  let boardState = Api.initBoardState gameId gameParams' username' currentBoardConfig
   vBoardState <- newTVarIO boardState
 
   -- player panels
-  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState vLocalBoardConfig
-  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState vLocalBoardConfig
+  (p_white, updateClockW) <- createStatusPanel p_back White vBoardState
+  (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState
 
   p_board <- panel p_back [ on paint := \dc r -> repaint p_black >> repaint p_white >> Board.draw vBoardState dc r]
 
@@ -72,8 +71,8 @@ wxGame env gameId gameParams' chan = do
   _ <- menuItem ctxMenu [ text := "Turn board", on command :=
     Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
 
-  _ <- menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := initShowCaputredPieces,  on command :=
-    atomically (modifyTVar vLocalBoardConfig (\s -> s{ showCapturedPieces = not $ showCapturedPieces s})) >> repaint p_board]
+  _ <- menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := showCapturedPieces currentBoardConfig,  on command :=
+    atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_board]
 
   when (G.isGameUser' gameParams') $ do
      menuLine ctxMenu
@@ -197,3 +196,8 @@ onKeyUpHandler vBoardState h sf evt
         set sf [text := "=" ]
   | otherwise = return ()
 
+flipShowCapturedPieces :: Api.BoardState -> Api.BoardState
+flipShowCapturedPieces boardState = 
+  let boardConfig' = Api.boardConfig boardState
+      flipped = boardConfig' { showCapturedPieces = not $ showCapturedPieces boardConfig' }
+  in boardState { Api.boardConfig = flipped }

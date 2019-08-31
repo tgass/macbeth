@@ -43,8 +43,8 @@ setScale = do
 drawBoard :: BoardT a
 drawBoard = do
   (dc, state) <- ask
-  whiteTile' <- lift $ fmap whiteTile (readTVarIO $ boardConfig state)
-  blackTile' <- lift $ fmap blackTile (readTVarIO $ boardConfig state)
+  let whiteTile' = whiteTile $ boardConfig state
+      blackTile' = blackTile $ boardConfig state
   let bw = let seed = (concat $ replicate 4 [Black, White]) in seed ++ reverse seed ++ bw
   let sq = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
   lift $ set dc [ pen := penTransparent ]

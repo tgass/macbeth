@@ -71,7 +71,7 @@ data BoardState = BoardState {
   , pieceSet :: PieceSet
   , phW :: [Piece]
   , phB :: [Piece]
-  , boardConfig :: TVar BoardConfig
+  , boardConfig :: BoardConfig
   }
 
 
@@ -260,7 +260,7 @@ movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from'
 movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
 
 
-initBoardState :: GameId -> GameParams -> Username -> TVar BoardConfig -> BoardState
+initBoardState :: GameId -> GameParams -> Username -> BoardConfig -> BoardState
 initBoardState gameId' gameParams' username' boardConfig' = BoardState {
     gameParams''' = gameParams'
   , lastMove = initMove gameId' gameParams'
