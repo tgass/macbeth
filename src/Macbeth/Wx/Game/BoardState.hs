@@ -208,8 +208,10 @@ addtoHistory m None mx = m : mx
 resize :: Panel () -> TVar BoardState -> IO ()
 resize p vState = do
   (Size x _) <- get p size
-  let psize' = pieceSetFindSize x
-  atomically $ modifyTVar vState (\s -> s { psize = psize', scale = fromIntegral x / 8 / fromIntegral psize'})
+  let (psize', scale') = pieceSetFindSize x
+  atomically $ modifyTVar vState (\s -> 
+    let boardConfig' = boardConfig s
+    in s { psize = psize', scale = scale', boardConfig = boardConfig' { boardSize = x}})
 
 
 cancelLastPreMove :: TVar BoardState -> IO ()
@@ -276,8 +278,8 @@ initBoardState gameId' gameParams' username' boardConfig' = BoardState {
   , promotion = Queen
   , draggedPiece = Nothing
   , isWaiting = True
-  , psize = 40
-  , scale = 1.0
+  , psize = fst $ pieceSetFindSize $ boardSize boardConfig'
+  , scale = snd $ pieceSetFindSize $ boardSize boardConfig'
   , pieceSet = head pieceSets
   , phW = []
   , phB = []

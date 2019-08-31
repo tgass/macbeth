@@ -9,11 +9,12 @@ module Macbeth.Wx.Config.BoardConfig (
   defaultBoardConfig,
   defaultBlackTile,
   defaultWhiteTile,
+  defaultBoardSize,
   convert
 ) where
 
 import           Data.Aeson.Types
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe
 import qualified Data.Text as T
 import           Data.Text.Read (hexadecimal)
 import           Macbeth.Wx.Utils (getUserOrAppFile)
@@ -22,17 +23,18 @@ import           GHC.Generics
 import           Graphics.UI.WX 
 import           System.FilePath ((</>))
 
-data BoardConfig' a = BoardConfig {
+data BoardConfig' a b = BoardConfig {
     showCapturedPieces :: Bool
   , whiteTile :: a
   , blackTile :: a
+  , boardSize :: b
 } deriving (Show, Generic, Eq)
 
-type BoardConfig = BoardConfig' Tile
+type BoardConfig = BoardConfig' Tile Int
+
+type BoardConfigFormat = BoardConfig' (Maybe TileFormat) (Maybe Int)
 
 data Tile = BitmapTile (Bitmap ()) | ColorTile Color deriving (Show, Eq)
-
-type BoardConfigFormat = BoardConfig' (Maybe TileFormat) 
 
 data TileFormat = TileRGB Int Int Int | TileFile FilePath deriving (Show, Eq)
 
@@ -41,19 +43,23 @@ convert c userDir = BoardConfig
   <$> pure (showCapturedPieces c) 
   <*> convertTile userDir (fromMaybe defaultWhiteTile $ whiteTile c) 
   <*> convertTile userDir (fromMaybe defaultBlackTile $ blackTile c)
+  <*> pure (fromMaybe defaultBoardSize $ boardSize c)
 
 convertTile :: FilePath -> TileFormat -> IO Tile
 convertTile _ (TileRGB c1 c2 c3) = return $ ColorTile $ rgb c1 c2 c3
 convertTile userDir (TileFile filename') = (BitmapTile . bitmap) <$> getUserOrAppFile userDir ("tiles" </> filename')
 
 defaultBoardConfig :: BoardConfigFormat
-defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile)
+defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize)
 
 defaultWhiteTile :: TileFormat
 defaultWhiteTile = TileRGB 255 255 255
 
 defaultBlackTile :: TileFormat
 defaultBlackTile = TileRGB 180 150 100
+
+defaultBoardSize :: Int
+defaultBoardSize = 320
 
 instance ToJSON BoardConfigFormat
 instance FromJSON BoardConfigFormat

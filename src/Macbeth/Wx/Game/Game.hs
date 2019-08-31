@@ -15,9 +15,10 @@ import           Macbeth.Wx.Game.GameSounds
 import qualified Macbeth.Fics.Api.Move as M
 import qualified Macbeth.Fics.Api.Game as G
 import qualified Macbeth.Fics.Api.Result as R
+import           Macbeth.Wx.Config.BoardConfig
+import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import qualified Macbeth.Wx.Utils as Utl
 import qualified Macbeth.Wx.RuntimeEnv as E
-import           Macbeth.Wx.Config.BoardConfig
 import qualified Macbeth.Wx.Game.BoardState as Api
 import qualified Macbeth.Wx.Game.Board as Board
 
@@ -55,12 +56,11 @@ wxGame env gameId gameParams' chan = do
   (p_white, updateClockW) <- createStatusPanel p_back White vBoardState
   (p_black, updateClockB) <- createStatusPanel p_back Black vBoardState
 
-  p_board <- panel p_back [ on paint := \dc r -> repaint p_black >> repaint p_white >> Board.draw vBoardState dc r]
+  p_board <- panel p_back [ on paint := Board.draw vBoardState ]
 
   -- layout helper
-  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f
+  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState
   updateBoardLayoutIO
-
 
   status <- statusField []
   promotion <- statusField [ statusWidth := 30, text := "=Q"]
@@ -68,21 +68,21 @@ wxGame env gameId gameParams' chan = do
   -- context menu
   ctxMenu <- menuPane []
 
-  _ <- menuItem ctxMenu [ text := "Turn board", on command :=
+  void $ menuItem ctxMenu [ text := "Turn board", on command :=
     Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
 
-  _ <- menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := showCapturedPieces currentBoardConfig,  on command :=
+  void $ menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := showCapturedPieces currentBoardConfig,  on command :=
     atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_board]
 
   when (G.isGameUser' gameParams') $ do
      menuLine ctxMenu
-     _ <- menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
-     _ <- menuItem ctxMenu [ text := "Request takeback 2", on command := hPutStrLn h "4 takeback 2"]
-     _ <- menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
-     _ <- menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
-     _ <- menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
+     void $ menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
+     void $ menuItem ctxMenu [ text := "Request takeback 2", on command := hPutStrLn h "4 takeback 2"]
+     void $ menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
+     void $ menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
+     void $ menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
      menuLine ctxMenu
-     _ <- menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username' gameParams') (Just gameId)]
+     void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username' gameParams') (Just gameId)]
 
      windowOnMouse p_board True (\point -> Board.onMouseEvent h vBoardState point >> repaint p_board)
   menuLine ctxMenu
@@ -156,9 +156,20 @@ wxGame env gameId gameParams' chan = do
 
     _ -> return ()
 
+  windowOnCreate f $ do
+    let boardSize' = boardSize currentBoardConfig
+    windowSetClientSize f $ Size boardSize' (boardSize' + 66)
+    resizeFrame f vBoardState p_board
+
   windowOnDestroy f $ do
     sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClose]
     boardState' <- readTVarIO vBoardState
+    let boardSize' = boardSize $ Api.boardConfig boardState'
+
+    config <- UserConfig.loadConfig
+    let boardConfigFormat = UserConfig.boardConfig config
+    UserConfig.saveConfig $ config { UserConfig.boardConfig = (\s -> s { boardSize = Just boardSize' }) <$> boardConfigFormat}
+--    E.setBoardConfig env $ UserConfig.boardConfig updated'
 
     when (isNothing (Api.gameResult boardState') && not (Api.isGameUser boardState)) $
       hPutStrLn h $ "5 unobserve " ++ show gameId
@@ -177,7 +188,7 @@ updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar Api.BoardS
 updateBoardLayout pback board white black vBoardState = do
   state <- readTVarIO vBoardState
   set pback [ layout := column 0 [ hfill $ widget (if Api.perspective state == White then black else white)
-                                 , stretch $ minsize (Size 320 320) $ shaped $ widget board
+                                 , stretch $ shaped $ widget board
                                  , hfill $ widget (if Api.perspective state == White then white else black)]]
 
 
