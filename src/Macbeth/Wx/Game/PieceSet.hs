@@ -19,7 +19,7 @@ http://ixian.com/chess/jin-piece-sets/
 This work by Eric De Mund is licensed under a Creative Commons Attribution-Share Alike 3.0 Unported License
 -}
 
-data PieceSet = Alpha1 | Alpha2 | Merida1 | Merida2 | Uscf1 | Uscf2 deriving (Show, Enum, Generic)
+data PieceSet = Alpha1 | Alpha2 | Merida1 | Merida2 | Uscf1 | Uscf2 deriving (Show, Eq, Enum, Generic)
 
 path :: PieceSet -> String
 path Alpha1 = "alpha.ead-01"
