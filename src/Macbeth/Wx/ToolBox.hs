@@ -104,7 +104,6 @@ wxToolBox env chan = do
                         , tab "Console" $ container cp ( column 5  [ fill $ widget ct
                                                                    , hfill $ widget ce])
                         ]
-          , outerSize := sz 650 600
           ]
 
     -- preselect first tab
