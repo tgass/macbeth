@@ -165,7 +165,11 @@ wxGame env gameId gameParams' chan = do
 
     config <- UserConfig.loadConfig
     let boardConfigFormat = UserConfig.boardConfig config
-    let updated = config { UserConfig.boardConfig = (\s -> s { boardSize = Just boardSize' }) <$> boardConfigFormat}
+    let updated = config { 
+      UserConfig.boardConfig = (\s -> s { 
+        boardSize = Just boardSize' 
+      , showCapturedPieces = showCapturedPieces $ Api.boardConfig boardState'
+      }) <$> boardConfigFormat}
     UserConfig.saveConfig updated
     E.setBoardConfig env updated
 
