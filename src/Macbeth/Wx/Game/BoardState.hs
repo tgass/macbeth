@@ -37,7 +37,8 @@ import           Macbeth.Fics.Api.Game
 import           Macbeth.Fics.Api.Move
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Api.Result
-import           Macbeth.Wx.Game.PieceSet
+import           Macbeth.Wx.Game.PieceSet (PieceSet(..))
+import qualified Macbeth.Wx.Game.PieceSet as PieceSet
 import           Macbeth.Wx.Config.BoardConfig
 
 import           Control.Concurrent.STM
@@ -68,7 +69,6 @@ data BoardState = BoardState {
   , isWaiting :: Bool
   , psize :: Int
   , scale :: Double
-  , pieceSet :: PieceSet
   , phW :: [Piece]
   , phB :: [Piece]
   , boardConfig :: BoardConfig
@@ -208,7 +208,7 @@ addtoHistory m None mx = m : mx
 resize :: Panel () -> TVar BoardState -> IO ()
 resize p vState = do
   (Size x _) <- get p size
-  let (psize', scale') = pieceSetFindSize x
+  let (psize', scale') = PieceSet.findSize x
   atomically $ modifyTVar vState (\s -> 
     let boardConfig' = boardConfig s
     in s { psize = psize', scale = scale', boardConfig = boardConfig' { boardSize = x}})
@@ -278,9 +278,8 @@ initBoardState gameId' gameParams' username' boardConfig' = BoardState {
   , promotion = Queen
   , draggedPiece = Nothing
   , isWaiting = True
-  , psize = fst $ pieceSetFindSize $ boardSize boardConfig'
-  , scale = snd $ pieceSetFindSize $ boardSize boardConfig'
-  , pieceSet = head pieceSets
+  , psize = fst $ PieceSet.findSize $ boardSize boardConfig'
+  , scale = snd $ PieceSet.findSize $ boardSize boardConfig'
   , phW = []
   , phB = []
   , boardConfig = boardConfig'

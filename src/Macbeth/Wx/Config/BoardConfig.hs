@@ -18,21 +18,23 @@ import           Data.Maybe
 import qualified Data.Text as T
 import           Data.Text.Read (hexadecimal)
 import           Macbeth.Wx.Utils (getUserOrAppFile)
+import           Macbeth.Wx.Game.PieceSet
 import           Numeric
 import           GHC.Generics
 import           Graphics.UI.WX 
 import           System.FilePath ((</>))
 
-data BoardConfig' a b = BoardConfig {
+data BoardConfig' a b c = BoardConfig {
     showCapturedPieces :: Bool
   , whiteTile :: a
   , blackTile :: a
   , boardSize :: b
+  , pieceSet :: c
 } deriving (Show, Generic, Eq)
 
-type BoardConfig = BoardConfig' Tile Int
+type BoardConfig = BoardConfig' Tile Int PieceSet
 
-type BoardConfigFormat = BoardConfig' (Maybe TileFormat) (Maybe Int)
+type BoardConfigFormat = BoardConfig' (Maybe TileFormat) (Maybe Int) (Maybe PieceSet)
 
 data Tile = BitmapTile (Bitmap ()) | ColorTile Color deriving (Show, Eq)
 
@@ -44,13 +46,14 @@ convert c userDir = BoardConfig
   <*> convertTile userDir (fromMaybe defaultWhiteTile $ whiteTile c) 
   <*> convertTile userDir (fromMaybe defaultBlackTile $ blackTile c)
   <*> pure (fromMaybe defaultBoardSize $ boardSize c)
+  <*> pure (fromMaybe defaultPieceSet $ pieceSet c)
 
 convertTile :: FilePath -> TileFormat -> IO Tile
 convertTile _ (TileRGB c1 c2 c3) = return $ ColorTile $ rgb c1 c2 c3
 convertTile userDir (TileFile filename') = (BitmapTile . bitmap) <$> getUserOrAppFile userDir ("tiles" </> filename')
 
 defaultBoardConfig :: BoardConfigFormat
-defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize)
+defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize) (Just defaultPieceSet)
 
 defaultWhiteTile :: TileFormat
 defaultWhiteTile = TileRGB 255 255 255
@@ -60,6 +63,9 @@ defaultBlackTile = TileRGB 180 150 100
 
 defaultBoardSize :: Int
 defaultBoardSize = 320
+
+defaultPieceSet :: PieceSet
+defaultPieceSet = Alpha1
 
 instance ToJSON BoardConfigFormat
 instance FromJSON BoardConfigFormat

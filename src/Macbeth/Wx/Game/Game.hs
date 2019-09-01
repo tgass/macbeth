@@ -9,7 +9,8 @@ import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Utils.PGN
-import           Macbeth.Wx.Game.PieceSet
+import           Macbeth.Wx.Game.PieceSet (PieceSet(..))
+import qualified Macbeth.Wx.Game.PieceSet as PieceSet
 import           Macbeth.Wx.Game.StatusPanel
 import           Macbeth.Wx.Game.GameSounds
 import qualified Macbeth.Fics.Api.Move as M
@@ -197,7 +198,7 @@ updateBoardLayout pback board white black vBoardState = do
 wxPieceSetsMenu :: Menu () -> TVar Api.BoardState -> Panel () -> IO ()
 wxPieceSetsMenu ctxMenu vState p = do
   sub <- menuPane [text := "Piece Sets"]
-  mapM_ (\ps -> menuItem sub [ text := display ps, on command := Api.setPieceSet vState ps >> repaint p ]) pieceSets
+  mapM_ (\ps -> menuItem sub [ text := PieceSet.display ps, on command := Api.setPieceSet vState ps >> repaint p ]) $ enumFrom Alpha1
   void $ menuSub ctxMenu sub [ text := "Piece Sets" ]
 
 

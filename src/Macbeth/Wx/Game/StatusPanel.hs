@@ -77,7 +77,7 @@ assemblePiecesToShow color' state
 
 drawPiece :: DC a -> Column -> (Piece, Int) -> IO ()
 drawPiece dc col (Piece ptype color', freq) = do
-  drawBitmap dc (pieceToBitmap pieceSize (head pieceSets) (Piece ptype color'))
+  drawBitmap dc (pieceToBitmap pieceSize Alpha1 (Piece ptype color'))
                 (toPos' fieldSize (Square col Eight) White) True []
   set dc [pen := penColored black 2]
   drawText dc (show freq) (Point (22 + fromEnum col * fieldSize) 15)

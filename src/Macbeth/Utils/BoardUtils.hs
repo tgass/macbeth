@@ -5,13 +5,13 @@ module Macbeth.Utils.BoardUtils (
   pieceToBitmap
 ) where
 
-import Macbeth.Fics.Api.Api
-import Macbeth.Wx.Game.PieceSet
-import Paths
-
-import Graphics.UI.WX
-import System.FilePath
-import System.IO.Unsafe
+import           Graphics.UI.WX
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Wx.Game.PieceSet (PieceSet(..))
+import qualified Macbeth.Wx.Game.PieceSet as PieceSet
+import           Paths
+import           System.FilePath
+import           System.IO.Unsafe
 
 
 rowToInt :: Macbeth.Fics.Api.Api.PColor -> Row -> Int
@@ -69,7 +69,7 @@ rotate d ptx = pt (round $ x * cos rad - y * sin rad) (round $ x * sin rad + y *
 
 
 pieceToBitmap :: Int -> PieceSet -> Piece -> Bitmap ()
-pieceToBitmap size' pieceSet p = bitmap $ unsafePerformIO $ getDataFileName $ path pieceSet </> show size' </> pieceToFile p ++ ".png"
+pieceToBitmap size' pieceSet p = bitmap $ unsafePerformIO $ getDataFileName $ PieceSet.path pieceSet </> show size' </> pieceToFile p ++ ".png"
   where
     pieceToFile :: Piece -> String
     pieceToFile (Piece King Black) = "bk"
