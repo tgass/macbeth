@@ -91,7 +91,10 @@ setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardCon
     boardConfig' = boardConfig c <|> Just defaultBoardConfig
     -- second: set tiles in case only they are missing
     boardConfig'' = (\b -> b{ whiteTile = whiteTile b <|> Just defaultWhiteTile
-                            , blackTile = blackTile b <|> Just defaultBlackTile }) <$> boardConfig'
+                            , blackTile = blackTile b <|> Just defaultBlackTile 
+                            , boardSize = boardSize b <|> Just defaultBoardSize
+                            , pieceSet = pieceSet b <|> Just defaultPieceSet
+                            }) <$> boardConfig'
 
 
 fromDisk :: ExceptT ParseException IO Config

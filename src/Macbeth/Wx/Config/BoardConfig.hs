@@ -10,6 +10,7 @@ module Macbeth.Wx.Config.BoardConfig (
   defaultBlackTile,
   defaultWhiteTile,
   defaultBoardSize,
+  defaultPieceSet,
   convert
 ) where
 
