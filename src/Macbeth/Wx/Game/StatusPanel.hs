@@ -41,7 +41,7 @@ createStatusPanel p color' vBoardState = do
   set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
                                   , widget st
                                   , widget st_playerName
-                                  , marginWidth 5 $ marginTop $ fill $ widget p_pieceHoldings] ]
+                                  , fill $ widget p_pieceHoldings] ]
 
   let handler = \case
 

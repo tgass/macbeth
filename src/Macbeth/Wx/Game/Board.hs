@@ -45,10 +45,10 @@ drawBoard = do
   (dc, state) <- ask
   let whiteTile' = whiteTile $ boardConfig state
       blackTile' = blackTile $ boardConfig state
-  let bw = let seed = (concat $ replicate 4 [Black, White]) in seed ++ reverse seed ++ bw
-  let sq = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
+      bw = let seed = (concat $ replicate 4 [Black, White]) in seed ++ reverse seed ++ bw
+      sq = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
   lift $ set dc [ pen := penTransparent ]
-  lift $ forM_ (zip bw sq) (\(c,sq') ->
+  lift $ forM_ (zip bw sq) (\(c, sq') ->
     if c == White then drawTile dc state whiteTile' sq' else drawTile dc state blackTile' sq')
 
 drawTile :: DC a -> BoardState -> Tile -> Square -> IO ()

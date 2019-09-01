@@ -64,8 +64,10 @@ setUsername :: RuntimeEnv -> UserHandle -> IO ()
 setUsername env = atomically . writeTVar (userHandle env)
 
 
-setBoardConfig :: RuntimeEnv -> BC.BoardConfig -> IO ()
-setBoardConfig env = atomically . writeTVar (boardConfig env)
+setBoardConfig :: RuntimeEnv -> C.Config -> IO ()
+setBoardConfig env config = do
+  bc <- BC.convert (fromMaybe BC.defaultBoardConfig $ C.boardConfig config) (C.directory config)
+  atomically $ writeTVar (boardConfig env) bc
 
 
 getConfig :: RuntimeEnv -> (C.Config -> a) -> a

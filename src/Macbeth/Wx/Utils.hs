@@ -14,7 +14,8 @@ module Macbeth.Wx.Utils (
   staticTextFormatted,
   onlyKey,
   keyWithMod,
-  getUserOrAppFile
+  getUserOrAppFile,
+  setStatus
 ) where
 
 import Macbeth.Fics.FicsMessage
@@ -123,6 +124,10 @@ getMayDisplaySelection c = do
 toWxColor :: PColor -> Color
 toWxColor White = Graphics.UI.WXCore.white
 toWxColor Black = Graphics.UI.WXCore.black
+
+
+setStatus :: StatusField -> String -> IO ()
+setStatus status msg = set status [ text := msg ]
 
 
 staticTextFormatted :: Panel () -> String -> IO (StaticText ())

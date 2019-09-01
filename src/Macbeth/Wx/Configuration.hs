@@ -39,9 +39,7 @@ setupFrame env (p, status, _) = do
 
   b_current <- button p [text := "Reset", on command := showConfig ct]
   b_resetSounds <- button p [text := "Reset Sounds", on command := resetSounds ct]
-  b_save <- button p [ text := "Save",
-                       on command := either (\_ -> set status [text := "Illegal file format."]) return
-                                     =<< runExceptT (parseAndSave env ct status)]
+  b_save <- button p [ text := "Save", on command := save env ct status]
 
   set p [ layout :=  margin 10 $ column 10 [
                        boxed "Configuration" $ fill $ minsize (Size 530 480) $ widget ct
@@ -61,16 +59,18 @@ resetSounds ct = do
   set ct [text := comments ++ BS.unpack (Y.encode $ removeUser c{C.sounds = Just defaultSounds})]
 
 
+save :: RuntimeEnv -> TextCtrl () -> StatusField -> IO ()
+save env ct status = either (const $ setStatus status "Illegal file format.") return =<< runExceptT (parseAndSave env ct status)
+
+
 parseAndSave :: RuntimeEnv -> TextCtrl () -> StatusField -> ExceptT Y.ParseException IO ()
 parseAndSave env ct status = do
   oldConf <- liftIO C.loadConfig
   newConf <- ExceptT $ (Y.decodeEither' . BS.pack) <$> get ct text
   liftIO $ do
     C.saveConfig (addUser newConf (C.user oldConf))
-    set status [text := "Configuration saved."]
-    -- reload
-    boardConfig' <- BC.convert (fromMaybe BC.defaultBoardConfig $ C.boardConfig newConf) (C.directory newConf)
-    setBoardConfig env boardConfig'
+    setStatus status "Configuration saved."
+    setBoardConfig env newConf
 
 
 removeUser :: C.Config -> C.Config

@@ -38,18 +38,15 @@ wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan FicsMessage -> IO ()
 wxGame env gameId gameParams' chan = do
   let h = E.handle env
   username' <- E.username env
+  boardConfig <- readTVarIO $ E.boardConfig env
   vCmd <- newEmptyMVar
 
   f <- frame [ text := G.toTitle gameId gameParams']
   p_back <- panel f []
 
-  -- local board config. Not affected by change of config file
-  -- ShowCapturedPieces can be change within Game-Window. 
-  -- Don't want it to be affected from other source than this window
-  currentBoardConfig <- readTVarIO $ E.boardConfig env
 
   -- board
-  let boardState = Api.initBoardState gameId gameParams' username' currentBoardConfig
+  let boardState = Api.initBoardState gameId gameParams' username' boardConfig
   vBoardState <- newTVarIO boardState
 
   -- player panels
@@ -59,7 +56,7 @@ wxGame env gameId gameParams' chan = do
   p_board <- panel p_back [ on paint := Board.draw vBoardState ]
 
   -- layout helper
-  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState
+  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f
   updateBoardLayoutIO
 
   status <- statusField []
@@ -71,8 +68,8 @@ wxGame env gameId gameParams' chan = do
   void $ menuItem ctxMenu [ text := "Turn board", on command :=
     Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
 
-  void $ menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := showCapturedPieces currentBoardConfig,  on command :=
-    atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_board]
+  void $ menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := showCapturedPieces boardConfig,  on command :=
+    atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back]
 
   when (G.isGameUser' gameParams') $ do
      menuLine ctxMenu
@@ -157,7 +154,7 @@ wxGame env gameId gameParams' chan = do
     _ -> return ()
 
   windowOnCreate f $ do
-    let boardSize' = boardSize currentBoardConfig
+    let boardSize' = boardSize boardConfig
     windowSetClientSize f $ Size boardSize' (boardSize' + 66)
     resizeFrame f vBoardState p_board
 
@@ -168,8 +165,9 @@ wxGame env gameId gameParams' chan = do
 
     config <- UserConfig.loadConfig
     let boardConfigFormat = UserConfig.boardConfig config
-    UserConfig.saveConfig $ config { UserConfig.boardConfig = (\s -> s { boardSize = Just boardSize' }) <$> boardConfigFormat}
---    E.setBoardConfig env $ UserConfig.boardConfig updated'
+    let updated = config { UserConfig.boardConfig = (\s -> s { boardSize = Just boardSize' }) <$> boardConfigFormat}
+    UserConfig.saveConfig updated
+    E.setBoardConfig env updated
 
     when (isNothing (Api.gameResult boardState') && not (Api.isGameUser boardState)) $
       hPutStrLn h $ "5 unobserve " ++ show gameId
@@ -187,9 +185,9 @@ resizeFrame f vBoardState p_board = do
 updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar Api.BoardState -> IO ()
 updateBoardLayout pback board white black vBoardState = do
   state <- readTVarIO vBoardState
-  set pback [ layout := column 0 [ hfill $ widget (if Api.perspective state == White then black else white)
+  set pback [ layout := column 0 [ marginWidth 5 $ marginTop $ hfill $ widget (if Api.perspective state == White then black else white)
                                  , stretch $ shaped $ widget board
-                                 , hfill $ widget (if Api.perspective state == White then white else black)]]
+                                 , marginWidth 5 $ marginTop $ hfill $ widget (if Api.perspective state == White then white else black)]]
 
 
 wxPieceSetsMenu :: Menu () -> TVar Api.BoardState -> Panel () -> IO ()
