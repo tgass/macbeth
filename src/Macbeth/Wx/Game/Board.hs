@@ -81,7 +81,7 @@ drawPieces = do
   where
     drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
     drawPiece dc state (sq, p) = drawBitmap dc
-      (pieceToBitmap (psize state) (pieceSet state) p)
+      (pieceToBitmap (psize state) (pieceSet $ boardConfig state) p)
       (toPos' (psize state) sq (perspective state)) True []
 
 
@@ -106,7 +106,7 @@ drawDraggedPiece = do
 
 
 drawDraggedPiece'' :: BoardState -> DC a -> DraggedPiece -> IO ()
-drawDraggedPiece'' state dc (DraggedPiece pt piece' _) = drawBitmap dc (pieceToBitmap size (pieceSet state) piece') scalePoint True []
+drawDraggedPiece'' state dc (DraggedPiece pt piece' _) = drawBitmap dc (pieceToBitmap size (pieceSet $ boardConfig state) piece') scalePoint True []
   where
     scale' = scale state
     size = psize state

@@ -232,7 +232,8 @@ performPreMoves vBoardState h = do
 
 
 setPieceSet :: TVar BoardState -> PieceSet -> IO ()
-setPieceSet vState ps = atomically (modifyTVar vState (\s -> s { pieceSet = ps }))
+setPieceSet vState ps = atomically (modifyTVar vState (\s -> 
+  let bc = boardConfig s in s { boardConfig = bc { pieceSet = ps }}))
 
 
 getPieceHolding :: PColor -> BoardState -> [Piece]
