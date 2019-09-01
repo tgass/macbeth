@@ -162,16 +162,14 @@ wxGame env gameId gameParams' chan = do
   windowOnDestroy f $ do
     sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClose]
     boardState' <- readTVarIO vBoardState
-    let boardSize' = boardSize $ Api.boardConfig boardState'
-        pieceSet' = pieceSet $ Api.boardConfig boardState'
 
     config <- UserConfig.loadConfig
     let boardConfigFormat = UserConfig.boardConfig config
     let updated = config { 
       UserConfig.boardConfig = (\s -> s { 
-        boardSize = Just boardSize' 
+        boardSize = Just $ boardSize $ Api.boardConfig boardState'
       , showCapturedPieces = showCapturedPieces $ Api.boardConfig boardState'
-      , pieceSet = Just pieceSet'
+      , pieceSet = Just $ pieceSet $ Api.boardConfig boardState'
       }) <$> boardConfigFormat}
     UserConfig.saveConfig updated
     E.setBoardConfig env updated
