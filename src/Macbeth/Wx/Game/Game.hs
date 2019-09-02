@@ -124,7 +124,7 @@ wxGame env gameId gameParams' chan = do
       set status [text := show ctx]
       Api.update vBoardState move' ctx
       when (M.isNextMoveUser move') $ Api.performPreMoves vBoardState h
-      repaint p_board
+      repaint p_back
 
     GameResult result -> when (R.gameId result == gameId) $ do
       set status [text := R.toString result]
