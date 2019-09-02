@@ -1,41 +1,61 @@
-module Macbeth.Wx.GameType (
-  Category (..),
-  Board (..),
-  gameTypes,
-  gameTypeSelectionToString,
-  onSelectGameTypeCategory
-) where
+module Macbeth.Wx.GameType where
 
-import Macbeth.Wx.Utils
+import           Data.Aeson.Types
+import           Data.Char
+import           Data.Map
+import qualified Data.Text as T
+import           Safe
 
-import Data.Char
-import Data.Map
-import Graphics.UI.WX
+data Category = Chess | Suicide | Losers | Atomic | Wild | Crazyhouse | Bughouse deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
-data Category = Chess | Suicide | Losers | Atomic | Wild | Crazyhouse | Bughouse deriving (Eq, Ord, Show, Read)
+data WildBoard = W1 | W2 | W3 | W4 | W5 | W8 | W8a | FisherRandom deriving (Eq, Bounded, Enum, Show, Read)
 
-data Board = Board {_id :: String, display :: String} deriving (Show, Read)
-
-gameTypes :: Map Category [Board]
+gameTypes :: Map Category [WildBoard]
 gameTypes = fromList [ (Chess, []), (Suicide, []), (Losers, []), (Atomic, []),
-                       (Wild, [    Board "w1" "Reversed King and Queen"
-                                 , Board "w2" "Shuffle position"
-                                 , Board "w3" "Shuffle position, mirrored"
-                                 , Board "w4" "Random pieces, balanced bishops"
-                                 , Board "w5" "Pawns on 7th rank"
-                                 , Board "w8" "Pawns on 4th rank"
-                                 , Board "w8a" "Pawns on 5th rank"
-                                 , Board "wild fr" "Fisher Random"])
+                       (Wild, enumFrom (minBound :: WildBoard))
                      , (Crazyhouse, [])
                      , (Bughouse, [])]
 
+displayBoard :: WildBoard -> String
+displayBoard W1 = "Reversed King and Queen"
+displayBoard W2 = "Shuffle position"
+displayBoard W3 = "Shuffle position, mirrored"
+displayBoard W4 = "Random pieces, balanced bishops"
+displayBoard W5 = "Pawns on 7th rank"
+displayBoard W8 = "Pawns on 4th rank"
+displayBoard W8a = "Pawns on 5th rank"
+displayBoard FisherRandom = "Fisher Random"
 
-gameTypeSelectionToString :: Category -> Maybe Board -> String
-gameTypeSelectionToString _ (Just board) = _id board
-gameTypeSelectionToString cat _ = fmap toLower (show cat)
+ficsId :: WildBoard -> String
+ficsId W1 = "w1"
+ficsId W2 = "w2"
+ficsId W3 = "w3"
+ficsId W4 = "w4"
+ficsId W5 = "w5"
+ficsId W8 = "w8"
+ficsId W8a ="w8a"
+ficsId FisherRandom = "wild fr"
+
+gameTypeSelectionToString :: Category -> Maybe WildBoard -> String
+gameTypeSelectionToString _ (Just board) = ficsId board
+gameTypeSelectionToString cat _ = fmap toLower $ show cat
 
 
-onSelectGameTypeCategory :: Choice () -> Choice () -> IO ()
-onSelectGameTypeCategory c_boards c_category = do
-  category <- fmap read (getDisplaySelection c_category)
-  set c_boards [ items := fmap display $ gameTypes ! category]
+instance ToJSON Category where
+  toJSON = String . T.pack . show
+
+instance FromJSON Category where
+  parseJSON val@(String t) = case readMay $ T.unpack t of
+    Just cat -> return cat
+    _ -> typeMismatch "Could not parse Category" val
+  parseJSON invalid = typeMismatch "Could not parse Category" invalid
+
+instance ToJSON WildBoard where
+  toJSON = String . T.pack . show
+
+instance FromJSON WildBoard where
+  parseJSON val@(String t) = case readMay $ T.unpack t of
+    Just wb -> return wb
+    _ -> typeMismatch "Could not parse Board" val
+  parseJSON invalid = typeMismatch "Could not parse Board" invalid
+

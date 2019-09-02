@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RecordWildCards, DeriveGeneric #-}
 
 module Macbeth.Wx.Config.UserConfig (
   Config(..),
@@ -14,22 +14,24 @@ module Macbeth.Wx.Config.UserConfig (
   initConfig,
   loadConfig,
   saveConfig,
-  saveCredentials
+  saveCredentials,
+  getSeekConfig
 ) where
 
-import Macbeth.Utils.Utils
-import Macbeth.Wx.Config.Sounds
-import Macbeth.Wx.Config.BoardConfig
-import Paths
-
-import Control.Applicative
-import Control.Monad
-import Control.Monad.Except
-import Data.Maybe
-import Data.Yaml
-import GHC.Generics
-import System.Directory
-import System.FilePath
+import           Control.Applicative
+import           Control.Monad
+import           Control.Monad.Except
+import           Data.Maybe
+import           Data.Yaml
+import           GHC.Generics
+import           Macbeth.Utils.Utils
+import           Macbeth.Wx.Config.Sounds
+import           Macbeth.Wx.Config.BoardConfig
+import           Macbeth.Wx.Config.SeekConfig (SeekConfig, SeekConfigFormat)
+import qualified Macbeth.Wx.Config.SeekConfig as SeekConfig
+import           Paths
+import           System.Directory
+import           System.FilePath
 
 
 data Config = Config {
@@ -39,6 +41,7 @@ data Config = Config {
   , user :: Maybe User
   , boardConfig :: Maybe BoardConfigFormat
   , sounds :: Maybe Sounds
+  , seekConfig :: Maybe SeekConfigFormat
 } deriving (Show, Generic)
 
 instance FromJSON Config
@@ -81,7 +84,7 @@ loadConfig = setDefaults <$>
 -- make sure that default values are always set
 -- this is important specially when the configuration is shown to the user
 setDefaults :: Config -> Config
-setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardConfig = boardConfig''}
+setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardConfig = boardConfig'', seekConfig = seekConfig' }
   where
     soundsOrDef' = soundsOrDef c
     chatOrDef' = chatOrDef soundsOrDef'
@@ -96,6 +99,7 @@ setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardCon
                             , pieceSet = pieceSet b <|> Just defaultPieceSet
                             }) <$> boardConfig'
 
+    seekConfig' = fmap SeekConfig.setDefault (seekConfig c) <|> Just SeekConfig.defaultFormat
 
 fromDisk :: ExceptT ParseException IO Config
 fromDisk = ExceptT $ getMacbethUserDataDir "macbeth.yaml" >>= decodeFileEither
@@ -119,6 +123,11 @@ defaultConfig dir = Config {
   , boardConfig = Just defaultBoardConfig
   , user = Nothing
   , sounds = Just defaultSounds
+  , seekConfig = Just SeekConfig.defaultFormat
 }
+
+getSeekConfig :: Config -> SeekConfig
+getSeekConfig config = SeekConfig.convert $ fromMaybe SeekConfig.defaultFormat $ seekConfig config
+
 
 

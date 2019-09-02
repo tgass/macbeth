@@ -4,6 +4,13 @@ module Macbeth.Wx.Game.Game (
   wxGame
 ) where
 
+import           Control.Concurrent
+import           Control.Concurrent.STM
+import           Control.Exception
+import           Control.Monad
+import           Data.Maybe
+import           Graphics.UI.WX hiding (when, position, play, point, white, black)
+import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import           Macbeth.Fics.FicsMessage hiding (gameId)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Chat
@@ -22,14 +29,6 @@ import qualified Macbeth.Wx.Utils as Utl
 import qualified Macbeth.Wx.RuntimeEnv as E
 import qualified Macbeth.Wx.Game.BoardState as Api
 import qualified Macbeth.Wx.Game.Board as Board
-
-import           Control.Concurrent
-import           Control.Concurrent.STM
-import           Control.Exception
-import           Control.Monad
-import           Data.Maybe
-import           Graphics.UI.WX hiding (when, position, play, point, white, black)
-import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import           System.IO
 
 eventId :: Int
@@ -39,7 +38,7 @@ wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan FicsMessage -> IO ()
 wxGame env gameId gameParams' chan = do
   let h = E.handle env
   username' <- E.username env
-  boardConfig <- readTVarIO $ E.boardConfig env
+  boardConfig <- readTVarIO $ E.rtBoardConfig env
   vCmd <- newEmptyMVar
 
   f <- frame [ text := G.toTitle gameId gameParams']
@@ -172,7 +171,8 @@ wxGame env gameId gameParams' chan = do
       , pieceSet = Just $ pieceSet $ Api.boardConfig boardState'
       }) <$> boardConfigFormat}
     UserConfig.saveConfig updated
-    E.setBoardConfig env updated
+    u <- convert (fromMaybe defaultBoardConfig $ UserConfig.boardConfig updated) (UserConfig.directory config)
+    E.setBoardConfig env u
 
     when (isNothing (Api.gameResult boardState') && not (Api.isGameUser boardState)) $
       hPutStrLn h $ "5 unobserve " ++ show gameId

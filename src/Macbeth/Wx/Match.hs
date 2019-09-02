@@ -83,3 +83,9 @@ toString m = (("4 match " ++) . unwords) `fmap` sequence [
     where
       convertIsRated r = if r then "rated" else "unrated"
       convertColor x = if x == "Automatic" then "" else fmap toLower x
+
+onSelectGameTypeCategory :: Choice () -> Choice () -> IO ()
+onSelectGameTypeCategory c_boards c_category = do
+  category' <- fmap read (getDisplaySelection c_category)
+  set c_boards [ items := fmap displayBoard $ gameTypes ! category']
+

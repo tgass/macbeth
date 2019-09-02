@@ -1,8 +1,11 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Macbeth.Wx.RuntimeEnv (
-  RuntimeEnv(handle, boardConfig),
+  RuntimeEnv(handle, rtBoardConfig, rtSeekConfig),
   username,
   setUsername,
   setBoardConfig,
+  setSeekConfig,
   playSound,
   initRuntime,
   getConfig,
@@ -11,21 +14,24 @@ module Macbeth.Wx.RuntimeEnv (
   getIconFilePath
 ) where
 
-import qualified Macbeth.Wx.Config.UserConfig as C
-import qualified Macbeth.Wx.Config.BoardConfig as BC
-import           Macbeth.Fics.Api.Player
-import           Macbeth.Fics.AppConfig
 
 import           Control.Concurrent.STM
 import           Control.Monad
 import           Data.Maybe (fromMaybe)
+import qualified Data.HashMap.Strict as M
+import           Macbeth.Wx.Config.UserConfig (Config (..))
+import qualified Macbeth.Wx.Config.UserConfig as UserConfig
+import           Macbeth.Wx.Config.BoardConfig (BoardConfig)
+import qualified Macbeth.Wx.Config.BoardConfig as BC
+import           Macbeth.Wx.Config.SeekConfig (SeekConfig)
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Fics.AppConfig
 import           Paths
 import           Sound.ALUT
 import           System.FilePath
 import           System.Directory
 import           System.IO
 import           System.IO.Unsafe
-import qualified Data.HashMap.Strict as M
 import           System.Log.Logger
 import           System.Log.Handler.Simple hiding (priority)
 import           System.Log.Handler (setFormatter)
@@ -33,27 +39,29 @@ import           System.Log.Formatter
 
 data RuntimeEnv = RuntimeEnv {
     handle :: Handle
-  , config :: C.Config
+  , config :: Config
   , appConfig :: AppConfig
   , sources :: [Source]
   , bufferMap :: M.HashMap String Buffer
   , userHandle :: TVar UserHandle
-  , boardConfig :: TVar BC.BoardConfig
+  , rtBoardConfig :: TVar BoardConfig
+  , rtSeekConfig :: TVar SeekConfig
 }
 
 initRuntime :: Handle -> IO RuntimeEnv
 initRuntime h = do
-  c <- C.initConfig
+  config <- UserConfig.initConfig
   appConfig' <- loadAppConfig
   initLogger $ stage appConfig'
   RuntimeEnv 
     <$> pure h 
-    <*> return c 
+    <*> return config
     <*> return appConfig' 
     <*> initSources 
-    <*> initBufferMap c 
+    <*> initBufferMap config 
     <*> newTVarIO emptyUserHandle 
-    <*> (BC.convert (fromMaybe BC.defaultBoardConfig $ C.boardConfig c) (C.directory c) >>= newTVarIO)
+    <*> (BC.convert (fromMaybe BC.defaultBoardConfig $ UserConfig.boardConfig config) (UserConfig.directory config) >>= newTVarIO)
+    <*> (newTVarIO $ UserConfig.getSeekConfig config)
 
 
 username :: RuntimeEnv -> IO Username
@@ -64,13 +72,15 @@ setUsername :: RuntimeEnv -> UserHandle -> IO ()
 setUsername env = atomically . writeTVar (userHandle env)
 
 
-setBoardConfig :: RuntimeEnv -> C.Config -> IO ()
-setBoardConfig env config = do
-  bc <- BC.convert (fromMaybe BC.defaultBoardConfig $ C.boardConfig config) (C.directory config)
-  atomically $ writeTVar (boardConfig env) bc
+setBoardConfig :: RuntimeEnv -> BoardConfig -> IO ()
+setBoardConfig env = atomically . writeTVar (rtBoardConfig env) 
 
 
-getConfig :: RuntimeEnv -> (C.Config -> a) -> a
+setSeekConfig :: RuntimeEnv -> SeekConfig -> IO ()
+setSeekConfig env = atomically . writeTVar (rtSeekConfig env)
+
+
+getConfig :: RuntimeEnv -> (Config -> a) -> a
 getConfig env f = f $ config env
 
 
@@ -78,15 +88,15 @@ getVersion :: RuntimeEnv -> String
 getVersion = version . appConfig
 
 
-getSoundConfig :: RuntimeEnv -> (C.Sounds -> a) -> a
-getSoundConfig env f = f $ C.soundsOrDef $ config env
+getSoundConfig :: RuntimeEnv -> (UserConfig.Sounds -> a) -> a
+getSoundConfig env f = f $ UserConfig.soundsOrDef $ config env
 
 
-playSound :: RuntimeEnv -> (C.Sounds -> Maybe String) -> IO ()
+playSound :: RuntimeEnv -> (UserConfig.Sounds -> Maybe String) -> IO ()
 playSound env f
-  | C.enabled soundConfig = play' (sources env) mBuffer
+  | UserConfig.enabled soundConfig = play' (sources env) mBuffer
   | otherwise = return ()
-  where soundConfig = C.soundsOrDef $ config env
+  where soundConfig = UserConfig.soundsOrDef $ config env
         mBuffer = f soundConfig >>= (`M.lookup` bufferMap env)
 
 
@@ -119,11 +129,11 @@ initSources = do
   genObjectNames 20
 
 
-initBufferMap :: C.Config -> IO (M.HashMap String Buffer)
+initBufferMap :: Config -> IO (M.HashMap String Buffer)
 initBufferMap c = do
   dir <- getDataFileName "sounds"
   appSounds <- loadSounds dir
-  userSounds <- loadSounds $ C.directory c
+  userSounds <- loadSounds $ UserConfig.directory c
   return $ userSounds `M.union` appSounds
 
 

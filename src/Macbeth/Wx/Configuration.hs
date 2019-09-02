@@ -2,13 +2,6 @@ module Macbeth.Wx.Configuration (
   wxConfiguration
 ) where
 
-import           Macbeth.Fics.FicsMessage
-import           Macbeth.Wx.Config.Sounds
-import           Macbeth.Wx.RuntimeEnv
-import           Macbeth.Wx.Utils
-import qualified Macbeth.Wx.Config.UserConfig as C
-import qualified Macbeth.Wx.Config.BoardConfig as BC
-
 import           Control.Monad.Cont
 import           Control.Concurrent.Chan
 import           Control.Monad.Except
@@ -17,7 +10,12 @@ import           Data.Maybe (fromMaybe)
 import qualified Data.Yaml as Y
 import           Graphics.UI.WX hiding (fontSize)
 import           Graphics.UI.WXCore
-
+import           Macbeth.Fics.FicsMessage
+import           Macbeth.Wx.Config.Sounds
+import           Macbeth.Wx.RuntimeEnv
+import           Macbeth.Wx.Utils
+import qualified Macbeth.Wx.Config.UserConfig as C
+import qualified Macbeth.Wx.Config.BoardConfig as BC
 
 
 wxConfiguration :: RuntimeEnv -> Chan FicsMessage -> IO ()
@@ -70,7 +68,9 @@ parseAndSave env ct status = do
   liftIO $ do
     C.saveConfig (addUser newConf (C.user oldConf))
     setStatus status "Configuration saved."
-    setBoardConfig env newConf
+    boardConfig <- BC.convert (fromMaybe BC.defaultBoardConfig $ C.boardConfig newConf) (C.directory newConf)
+    setBoardConfig env boardConfig
+    setSeekConfig env $ C.getSeekConfig newConf
 
 
 removeUser :: C.Config -> C.Config

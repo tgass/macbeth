@@ -4,38 +4,37 @@ module Macbeth.Wx.ToolBox (
   wxToolBox
 ) where
 
-import Macbeth.Fics.FicsMessage
-import Macbeth.Fics.Api.Offer
-import Macbeth.Fics.Api.Player
-import Macbeth.Utils.Utils
-import Macbeth.Wx.Configuration
-import Macbeth.Wx.ChatRegistry
-import Macbeth.Wx.Finger
-import Macbeth.Wx.GamesList
-import Macbeth.Wx.Login
-import Macbeth.Wx.Match
-import Macbeth.Wx.Seek
-import Macbeth.Wx.Utils
-import Macbeth.Wx.PlayersList
-import Macbeth.Wx.SoughtList
-import Macbeth.Wx.Game.Game
-import Macbeth.Wx.Challenge
-import Macbeth.Wx.PartnerOffer
-import Macbeth.Wx.Pending
+import           Control.Concurrent
+import           Control.Concurrent.Chan ()
+import           Control.Monad
+import           Foreign.Marshal.Alloc
+import           Foreign.Storable
+import           Foreign.Ptr
+import           Foreign.C.Types
+import           Graphics.UI.WX hiding (when, play)
+import           Graphics.UI.WXCore hiding (when)
+import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Api.Offer
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Utils.Utils
+import           Macbeth.Wx.Configuration
+import           Macbeth.Wx.ChatRegistry
+import           Macbeth.Wx.Finger
+import           Macbeth.Wx.GamesList
+import           Macbeth.Wx.Login
+import           Macbeth.Wx.Match
+import           Macbeth.Wx.Seek
+import           Macbeth.Wx.Utils
+import           Macbeth.Wx.PlayersList
+import           Macbeth.Wx.SoughtList
+import           Macbeth.Wx.Game.Game
+import           Macbeth.Wx.Challenge
+import           Macbeth.Wx.PartnerOffer
+import           Macbeth.Wx.Pending
 import qualified Macbeth.Wx.Config.UserConfig as C
 import qualified Macbeth.Wx.RuntimeEnv as E
-
-import Control.Concurrent
-import Control.Concurrent.Chan ()
-import Control.Monad
-import Foreign.Marshal.Alloc
-import Foreign.Storable
-import Foreign.Ptr
-import Foreign.C.Types
-import Graphics.UI.WX hiding (when, play)
-import Graphics.UI.WXCore hiding (when)
-import System.IO
-import System.IO.Unsafe
+import           System.IO
+import           System.IO.Unsafe
 
 
 eventId :: Int
@@ -48,7 +47,7 @@ wxToolBox env chan = do
 
     tbar   <- toolBarEx f True False []
     tbarItem_seek <- toolItem tbar "Seek" False (E.getIconFilePath "bullhorn")
-      [ on command := dupChan chan >>= wxSeek h False, enabled := False, tooltip := "Seek" ]
+      [ on command := dupChan chan >>= seekFrame env False, enabled := False, tooltip := "Seek" ]
 
     tbarItem_match <- toolItem tbar "Match" False (E.getIconFilePath "match")
       [ on command := dupChan chan >>= wxMatch h False, enabled := False, tooltip := "Match" ]
@@ -149,7 +148,7 @@ wxToolBox env chan = do
 
         GuestLogin _ -> do
           when (env `E.getConfig` C.autologin) $ hPutStrLn h ""
-          set tbarItem_seek  [on command := dupChan chan >>= wxSeek h True ]
+          set tbarItem_seek  [on command := dupChan chan >>= seekFrame env True ]
           set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
 
         LoggedIn userHandle -> do

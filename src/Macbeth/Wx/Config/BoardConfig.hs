@@ -84,7 +84,7 @@ instance FromJSON TileFormat where
 
 instance ToJSON TileFormat where
   toJSON (TileRGB c1 c2 c3) = String $ T.pack $ "hex" ++ (paddedHex c1 . paddedHex c2 . paddedHex c3) ""
-  toJSON (TileFile path) = String $ T.pack path
+  toJSON (TileFile p) = String $ T.pack p
 
 parseTileRGB :: T.Text -> Either String TileFormat
 parseTileRGB t = TileRGB
