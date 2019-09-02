@@ -1,14 +1,15 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Macbeth.Wx.GameType where
 
 import           Data.Aeson.Types
 import           Data.Char
 import           Data.Map
-import qualified Data.Text as T
-import           Safe
+import           GHC.Generics
 
-data Category = Chess | Suicide | Losers | Atomic | Wild | Crazyhouse | Bughouse deriving (Eq, Ord, Show, Read, Enum, Bounded)
+data Category = Chess | Suicide | Losers | Atomic | Wild | Crazyhouse | Bughouse deriving (Eq, Ord, Show, Read, Enum, Bounded, Generic)
 
-data WildBoard = W1 | W2 | W3 | W4 | W5 | W8 | W8a | FisherRandom deriving (Eq, Bounded, Enum, Show, Read)
+data WildBoard = W1 | W2 | W3 | W4 | W5 | W8 | W8a | FisherRandom deriving (Eq, Bounded, Enum, Show, Read, Generic)
 
 gameTypes :: Map Category [WildBoard]
 gameTypes = fromList [ (Chess, []), (Suicide, []), (Losers, []), (Atomic, []),
@@ -41,21 +42,9 @@ gameTypeSelectionToString _ (Just board) = ficsId board
 gameTypeSelectionToString cat _ = fmap toLower $ show cat
 
 
-instance ToJSON Category where
-  toJSON = String . T.pack . show
+instance ToJSON Category
+instance FromJSON Category
 
-instance FromJSON Category where
-  parseJSON val@(String t) = case readMay $ T.unpack t of
-    Just cat -> return cat
-    _ -> typeMismatch "Could not parse Category" val
-  parseJSON invalid = typeMismatch "Could not parse Category" invalid
-
-instance ToJSON WildBoard where
-  toJSON = String . T.pack . show
-
-instance FromJSON WildBoard where
-  parseJSON val@(String t) = case readMay $ T.unpack t of
-    Just wb -> return wb
-    _ -> typeMismatch "Could not parse Board" val
-  parseJSON invalid = typeMismatch "Could not parse Board" invalid
+instance ToJSON WildBoard
+instance FromJSON WildBoard
 
