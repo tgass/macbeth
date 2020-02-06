@@ -52,6 +52,28 @@ stack build # this will take a while!
 stack exec Macbeth
 ```
 
+### Building and running on Linux (Ubuntu)
+
+```
+sudo apt-get install haskell-stack libalut-dev libopengl-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libwxgtk3.0-dev lib32z1-dev libwxgtk-media3.0-dev
+
+git clone https://github.com/tgass/macbeth.git
+cd macbeth
+
+stack build
+./env.sh stack build
+```
+
+There is a known problem linking to wxc.so, see https://github.com/commercialhaskell/stack/issues/2299
+Calling env.sh fixes it.
+
+Put this in your "global" config.yaml (See https://docs.haskellstack.org/en/stable/yaml_configuration/)
+```
+extra-lib-dirs: 
+- /usr/lib/x86_64-linux-gnu/
+```
+
+
 ### Download
 
 You can find a compiled and package version ready to play at http://www.macbeth-ficsclient.com 

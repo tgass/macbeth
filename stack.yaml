@@ -18,5 +18,3 @@ extra-deps:
 - hspec-expectations-0.8.2
 - quickcheck-io-0.2.0
  
-extra-lib-dirs: 
-- /usr/local/Cellar/freealut/1.1.0/lib/
