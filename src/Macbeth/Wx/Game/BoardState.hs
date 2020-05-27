@@ -207,7 +207,8 @@ addtoHistory m None mx = m : mx
 
 resize :: Panel () -> TVar BoardState -> IO ()
 resize p vState = do
-  (Size x _) <- get p size
+  (Size w h) <- get p size
+  let x = min w h
   let (psize', scale') = PieceSet.findSize x
   atomically $ modifyTVar vState (\s -> 
     let boardConfig' = boardConfig s

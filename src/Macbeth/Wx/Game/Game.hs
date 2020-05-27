@@ -109,8 +109,8 @@ wxGame env gameId gameParams' chan = do
   windowOnKeyUp p_board $ onKeyUpHandler vBoardState h promotion
 
   --set layout
-  set f [ statusBar := [status] ++ [promotion | Api.isGameUser boardState]
-        , layout := fill $ widget p_back
+  set f [ -- statusBar := [status] ++ [promotion | Api.isGameUser boardState]
+          layout := fill $ widget p_back
         , on resize := resizeFrame f vBoardState p_board]
 
   -- necessary: after GameResult no more events are handled
@@ -180,19 +180,20 @@ wxGame env gameId gameParams' chan = do
 
 resizeFrame :: Frame () -> TVar Api.BoardState -> Panel() -> IO ()
 resizeFrame f vBoardState p_board = do
-  (Size w h) <- windowGetClientSize f
+ -- (Size w h) <- windowGetClientSize f
   Api.resize p_board vBoardState
-  let x = max w (h-66)
-  windowSetClientSize f $ Size x (x+66)
+--  let x = max w (h-66)
+--  windowSetClientSize f $ Size x (x+66)
   void $ windowLayout f
 
 
 updateBoardLayout :: Panel() -> Panel() -> Panel() -> Panel() -> TVar Api.BoardState -> IO ()
 updateBoardLayout pback board white black vBoardState = do
   state <- readTVarIO vBoardState
-  set pback [ layout := column 0 [ marginWidth 5 $ marginTop $ hfill $ widget (if Api.perspective state == White then black else white)
-                                 , stretch $ shaped $ widget board
-                                 , marginWidth 5 $ marginTop $ hfill $ widget (if Api.perspective state == White then white else black)]]
+  set pback [ layout := column 0 [ --marginWidth 5 $ marginTop $ hfill $ widget (if Api.perspective state == White then black else white)
+                                   fill $ widget board
+                                 --, marginWidth 5 $ marginTop $ hfill $ widget (if Api.perspective state == White then white else black)
+                                 ]]
 
 
 wxPieceSetsMenu :: Menu () -> TVar Api.BoardState -> Panel () -> IO ()

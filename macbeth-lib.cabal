@@ -83,7 +83,7 @@ library
   ghc-options: -Wall
 
 executable Macbeth
-  main-is: src/Macbeth.hs
+  main-is: src/DebugRunner.hs
   build-depends: base  >= 4.2, wx, wxcore, macbeth-lib, stm, ALUT
   ghc-options: -O3 -threaded -W
   extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
