@@ -37,6 +37,7 @@ draw vState dc _ = do
 setScale :: BoardT a
 setScale = do
   (dc, state) <- ask
+  -- this seems to not work on Linux (Ubuntu)
   liftIO $ dcSetUserScale dc (scale state) (scale state)
 
 
