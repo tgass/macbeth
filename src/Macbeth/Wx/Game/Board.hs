@@ -73,7 +73,7 @@ drawPieces = do
   where
     drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
     drawPiece dc state (sq, p) = drawBitmap dc
-      (pieceToBitmap (squareSizePx state) (pieceSet $ boardConfig state) p)
+      (pieceToBitmap (pieceImgSize state) (pieceSet $ boardConfig state) p)
       (toPos' (squareSizePx state) sq (perspective state)) True []
 
 
