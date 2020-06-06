@@ -67,8 +67,9 @@ data BoardState = BoardState {
   , promotion :: PType
   , draggedPiece :: Maybe DraggedPiece
   , isWaiting :: Bool
-  , psize :: Int
-  , scale :: Double
+  , squareSizePx :: Int
+  , pieceImgSize :: Int
+  , pieceScale :: Double
   , phW :: [Piece]
   , phB :: [Piece]
   , boardConfig :: BoardConfig
@@ -211,7 +212,8 @@ resize p vState = do
   let (psize', scale') = PieceSet.findSize x
   atomically $ modifyTVar vState (\s -> 
     let boardConfig' = boardConfig s
-    in s { psize = psize', scale = scale', boardConfig = boardConfig' { boardSize = x}})
+        squareSizePx' = round $ fromIntegral psize' * scale'
+    in s { squareSizePx = squareSizePx', pieceImgSize = psize', boardConfig = boardConfig' { boardSize = x}})
 
 
 cancelLastPreMove :: TVar BoardState -> IO ()
@@ -243,8 +245,8 @@ getPieceHolding Black = phB
 
 pointToSquare :: BoardState -> Point -> Maybe Square
 pointToSquare state (Point x y) = Square
-  <$> intToCol (perspective state) (floor $ fromIntegral x / fieldSize state)
-  <*> intToRow (perspective state) (floor $ fromIntegral y / fieldSize state)
+  <$> intToCol (perspective state) (floor $ fromIntegral x / fromIntegral (squareSizePx state))
+  <*> intToRow (perspective state) (floor $ fromIntegral y / fromIntegral (squareSizePx state))
   where
     intToRow :: PColor -> Int -> Maybe Row
     intToRow White = toEnumMay . (7-)
@@ -253,10 +255,6 @@ pointToSquare state (Point x y) = Square
     intToCol :: PColor -> Int -> Maybe Column
     intToCol White = toEnumMay
     intToCol Black = toEnumMay . (7-)
-
-    fieldSize :: BoardState -> Double
-    fieldSize bs = scale bs * fromIntegral (psize bs)
-
 
 movePiece :: PieceMove -> Position -> Position
 movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from' && s /= to') position' ++ [(to', piece')]
@@ -279,10 +277,15 @@ initBoardState gameId' gameParams' username' boardConfig' = BoardState {
   , promotion = Queen
   , draggedPiece = Nothing
   , isWaiting = True
-  , psize = fst $ PieceSet.findSize $ boardSize boardConfig'
-  , scale = snd $ PieceSet.findSize $ boardSize boardConfig'
+  , squareSizePx = squareSizePx'
+  , pieceImgSize = pieceImgSize'
+  , pieceScale = pieceScale'
   , phW = []
   , phB = []
   , boardConfig = boardConfig'
   }
+  where
+    (pieceImgSize', pieceScale') = PieceSet.findSize $ boardSize boardConfig'
+    squareSizePx' = round $ fromIntegral pieceImgSize' * pieceScale'
+    
 

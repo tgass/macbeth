@@ -25,21 +25,12 @@ draw :: TVar BoardState -> DC a -> t -> IO ()
 draw vState dc _ = do
   state <- readTVarIO vState
   flip runReaderT (dc, state) $ do
-    setScale
     drawBoard
     drawHighlightLastMove
     drawHighlightPreMove
     drawPieces
     drawSelectedSquare
     drawDraggedPiece
-
-
-setScale :: BoardT a
-setScale = do
-  (dc, state) <- ask
-  -- this seems to not work on Linux (Ubuntu)
-  liftIO $ dcSetUserScale dc (scale state) (scale state)
-
 
 drawBoard :: BoardT a
 drawBoard = do
@@ -54,8 +45,8 @@ drawBoard = do
 
 drawTile :: DC a -> BoardState -> Tile -> Square -> IO ()
 drawTile dc state (BitmapTile b) sq' = do
-  bitmapSetSize b $ Size (psize state) (psize state)
-  drawBitmap dc b (toPos' (psize state) sq' (perspective state)) True []
+  bitmapSetSize b $ Size (squareSizePx state) (squareSizePx state)
+  drawBitmap dc b (toPos' (squareSizePx state) sq' (perspective state)) True []
 drawTile dc state (ColorTile c) sq' = dcWithBrushStyle dc (brushSolid c) $ paintSquare dc state sq'
 
 
@@ -82,8 +73,8 @@ drawPieces = do
   where
     drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
     drawPiece dc state (sq, p) = drawBitmap dc
-      (pieceToBitmap (psize state) (pieceSet $ boardConfig state) p)
-      (toPos' (psize state) sq (perspective state)) True []
+      (pieceToBitmap (squareSizePx state) (pieceSet $ boardConfig state) p)
+      (toPos' (squareSizePx state) sq (perspective state)) True []
 
 
 drawSelectedSquare :: BoardT a
@@ -109,8 +100,8 @@ drawDraggedPiece = do
 drawDraggedPiece'' :: BoardState -> DC a -> DraggedPiece -> IO ()
 drawDraggedPiece'' state dc (DraggedPiece pt piece' _) = drawBitmap dc (pieceToBitmap size (pieceSet $ boardConfig state) piece') scalePoint True []
   where
-    scale' = scale state
-    size = psize state
+    scale' = pieceScale state
+    size = pieceImgSize state
     scalePoint = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
     scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale') / scale'
 
@@ -123,7 +114,7 @@ paintHighlight dc state color (PieceMove _ s1 s2) = do
     mapM_ (paintSquare dc state) [s1, s2]
   withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
-    drawArrow dc (psize state) s1 s2 (perspective state)
+    drawArrow dc (squareSizePx state) s1 s2 (perspective state)
 paintHighlight dc state color (DropMove _ s1) = do
   set dc [pen := penColored color 1]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
@@ -132,7 +123,7 @@ paintHighlight dc state color (DropMove _ s1) = do
 
 
 paintSquare :: DC a -> BoardState -> Square -> IO ()
-paintSquare dc state sq = drawRect dc (squareToRect' (psize state) sq (perspective state)) []
+paintSquare dc state sq = drawRect dc (squareToRect' (squareSizePx state) sq (perspective state)) []
 
 
 onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
