@@ -29,19 +29,19 @@ createStatusPanel p color' vBoardState = do
 
   p_status <- panel p []
   t <- newTVarIO $ remainingTime color' lastMove'
-  st <- staticTextFormatted p_status (formatTime $ remainingTime color' lastMove')
+  st <- staticText  p_status [ text := formatTime $ remainingTime color' lastMove', fontSize := 20 ]
   tx <- timer p_status [ interval := 1000
                 , on command := updateTime t st
                 , enabled := isActive lastMove' color']
 
   p_color <- panel p_status [bgcolor := toWxColor color']
-  st_playerName <- staticTextFormatted p_status (namePlayer color' lastMove')
+  st_playerName <- staticText p_status [ text := namePlayer color' lastMove', fontSize := 20 ]
   p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState ]
 
-  set p_status [ layout := row 10 [ valignCenter $ minsize (Size 18 18) $ widget p_color
+  set p_status [ layout := row 10 [ margin 1 $ minsize (Size 18 18) $ widget p_color
                                   , widget st
                                   , widget st_playerName
-                                  , fill $ widget p_pieceHoldings] ]
+                                  , minsize (Size 30 30) $ fill $ widget p_pieceHoldings] ]
 
   let handler = \case
 
@@ -56,7 +56,6 @@ createStatusPanel p color' vBoardState = do
         _ -> return ()
 
   return (p_status, handler)
-
 
 paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()
 paintPieceHolding color' vBoardState dc _ = do
@@ -83,7 +82,8 @@ drawPiece dc col (Piece ptype color', freq) = do
   drawText dc (show freq) (Point (22 + fromEnum col * fieldSize) 15)
     [ fontFace := "Avenir Next Medium"
     , fontSize := 10
-    , fontWeight := WeightBold]
+    , fontWeight := WeightBold
+    ]
   where fieldSize = 35
         pieceSize = 24
 

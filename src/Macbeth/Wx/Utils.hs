@@ -11,7 +11,6 @@ module Macbeth.Wx.Utils (
   toWxColor,
   getDisplaySelection,
   getMayDisplaySelection,
-  staticTextFormatted,
   onlyKey,
   keyWithMod,
   getUserOrAppFile,
@@ -128,13 +127,6 @@ toWxColor Black = Graphics.UI.WXCore.black
 
 setStatus :: StatusField -> String -> IO ()
 setStatus status msg = set status [ text := msg ]
-
-
-staticTextFormatted :: Panel () -> String -> IO (StaticText ())
-staticTextFormatted p s = staticText p [ text := s
-                                       , fontFace := "Avenir Next Medium"
-                                       , fontSize := 20
-                                       , fontWeight := WeightBold]
 
 getUserOrAppFile :: FilePath -> FilePath -> IO FilePath
 getUserOrAppFile userDir' file' = do
