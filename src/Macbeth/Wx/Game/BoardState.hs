@@ -206,14 +206,13 @@ addtoHistory m Takeback{} mx = m : tail (dropWhile (not . equal m) mx)
 addtoHistory m None mx = m : mx
 
 
-resize :: Panel () -> TVar BoardState -> IO ()
-resize p vState = do
-  (Size x _) <- get p size
-  let (psize', scale') = PieceSet.findSize x
+resize :: TVar BoardState -> Int -> IO ()
+resize vState boardSize' = do
+  let (psize', scale') = PieceSet.findSize boardSize'
   atomically $ modifyTVar vState (\s -> 
     let boardConfig' = boardConfig s
         squareSizePx' = round $ fromIntegral psize' * scale'
-    in s { squareSizePx = squareSizePx', pieceImgSize = psize', boardConfig = boardConfig' { boardSize = x}})
+    in s { squareSizePx = squareSizePx', pieceImgSize = psize', boardConfig = boardConfig' { boardSize = boardSize'}})
 
 
 cancelLastPreMove :: TVar BoardState -> IO ()

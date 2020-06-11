@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, ScopedTypeVariables, MultiWayIf #-}
+{-# LANGUAGE CPP, LambdaCase, ScopedTypeVariables, MultiWayIf #-}
 
 module Macbeth.Wx.Game.Game (
   wxGame
@@ -34,6 +34,21 @@ import           System.IO
 eventId :: Int
 eventId = wxID_HIGHEST + 1
 
+-- some nasty layout fixes
+windowResizeMargin :: Int
+windowResizeMargin = 75
+
+#ifdef darwin_HOST_OS
+windowInitMargin :: Int
+windowInitMargin = 115
+#endif
+
+#ifdef linux_HOST_OS
+windowInitMargin :: Int
+windowInitMargin = 125
+#endif
+
+
 wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan FicsMessage -> IO ()
 wxGame env gameId gameParams' chan = do
   let h = E.handle env
@@ -66,7 +81,7 @@ wxGame env gameId gameParams' chan = do
   ctxMenu <- menuPane []
 
   void $ menuItem ctxMenu [ text := "Turn board", on command :=
-    Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState p_board]
+    Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState ]
 
   void $ menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := showCapturedPieces boardConfig,  on command :=
     atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back]
@@ -111,7 +126,8 @@ wxGame env gameId gameParams' chan = do
   --set layout
   set f [ statusBar := [status] ++ [promotion | Api.isGameUser boardState]
         , layout := fill $ widget p_back
-        , on resize := resizeFrame f vBoardState p_board]
+        , size := Size (boardSize boardConfig) (boardSize boardConfig + windowInitMargin)
+        , on resize := resizeFrame f vBoardState ]
 
   -- necessary: after GameResult no more events are handled
   tiClose <- dupChan chan >>= Utl.registerWxCloseEventListenerWithThreadId f
@@ -153,11 +169,6 @@ wxGame env gameId gameParams' chan = do
 
     _ -> return ()
 
-  windowOnCreate f $ do
-    let boardSize' = boardSize boardConfig
-    windowSetClientSize f $ Size boardSize' (boardSize' + 66)
-    resizeFrame f vBoardState p_board
-
   windowOnDestroy f $ do
     sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClose]
     boardState' <- readTVarIO vBoardState
@@ -178,12 +189,14 @@ wxGame env gameId gameParams' chan = do
       hPutStrLn h $ "5 unobserve " ++ show gameId
 
 
-resizeFrame :: Frame () -> TVar Api.BoardState -> Panel() -> IO ()
-resizeFrame f vBoardState p_board = do
+resizeFrame :: Frame () -> TVar Api.BoardState -> IO ()
+resizeFrame f vBoardState = do
   (Size w h) <- windowGetClientSize f
-  Api.resize p_board vBoardState
-  let x = max w (h-66)
-  windowSetClientSize f $ Size x (x+66)
+  let newBoardSize = min w (h - windowResizeMargin)
+  Api.resize vBoardState newBoardSize
+#ifdef darwin_HOST_OS
+  windowSetClientSize f $ Size newBoardSize (newBoardSize+windowResizeMargin)
+#endif
   void $ windowLayout f
 
 
