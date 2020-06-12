@@ -44,7 +44,7 @@ see: http://www.freechess.org/Help/HelpFiles/category.html
 | <kbd>B</kbd> | Bishop 
 | <kbd>P</kbd> | Pawn 
 
-### Building Macbeth and running Macbeth
+### Building and Running Macbeth
 
 * macos
 ```
