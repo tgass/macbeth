@@ -1,6 +1,12 @@
-## Macbeth - A beautiful FICS client for OSX
+## Macbeth - A beautiful FICS client
 
 ![Screenshot](/Macbeth_screenshot.jpg)
+
+### Supported Platforms
+* macos
+* Linux
+* Windows, potentially in the future
+
 
 ### Supported FICS categories
 * Chess
@@ -38,45 +44,35 @@ see: http://www.freechess.org/Help/HelpFiles/category.html
 | <kbd>B</kbd> | Bishop 
 | <kbd>P</kbd> | Pawn 
 
-### Building Macbeth
+### Building Macbeth and running Macbeth
+
+* macos
 ```
-brew install haskell-stack  # if necesarry
-brew install wxmac
-brew install freealut
+brew install haskell-stack wxmac freealut
 
 git clone https://github.com/tgass/macbeth.git
 cd macbeth
 
-stack setup # if necesarry
-stack build # this will take a while!
+stack setup 
+stack build 
 stack exec Macbeth
 ```
 
-### Building and running on Linux (Ubuntu)
-
+* Linuxx (Ubuntu)
 ```
-sudo apt-get install haskell-stack libalut-dev libopengl-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libwxgtk3.0-dev lib32z1-dev libwxgtk-media3.0-dev
+sudo apt-get install git haskell-stack libalut-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libwxgtk3.0-dev lib32z1-dev libwxgtk-media3.0-dev
 
 git clone https://github.com/tgass/macbeth.git
 cd macbeth
 
-stack build
-./env.sh stack build
+stack setup
+./env.sh stack build --extra-lib-dirs=/usr/lib/x86_64-linux-gnu/
+stack exec Macbeth
 ```
-
-There is a known problem linking to wxc.so, see https://github.com/commercialhaskell/stack/issues/2299
-Calling env.sh fixes it.
-
-Put this in your "global" config.yaml (See https://docs.haskellstack.org/en/stable/yaml_configuration/)
-```
-extra-lib-dirs: 
-- /usr/lib/x86_64-linux-gnu/
-```
-
 
 ### Download
 
-You can find a compiled and package version ready to play at http://www.macbeth-ficsclient.com 
+From time to time I upload a binary for a recent macos here: http://www.macbeth-ficsclient.com 
 
 ### Copyrights
 
