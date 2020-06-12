@@ -58,7 +58,7 @@ stack build
 stack exec Macbeth
 ```
 
-* Linuxx (Ubuntu)
+* Linux (Ubuntu)
 ```
 sudo apt-get install git haskell-stack libalut-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libwxgtk3.0-dev lib32z1-dev libwxgtk-media3.0-dev
 
