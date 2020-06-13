@@ -1,4 +1,4 @@
-resolver: lts-6.35
+resolver: lts-9.21
 
 packages:
 - '.'
@@ -17,4 +17,5 @@ extra-deps:
 - hspec-discover-2.5.1
 - hspec-expectations-0.8.2
 - quickcheck-io-0.2.0
- 
+- FindBin-0.0.5 
+
