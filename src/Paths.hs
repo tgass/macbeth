@@ -1,10 +1,7 @@
-module Paths (
-    getDataFileName
-  , getMacbethUserDataDir
-) where
+module Paths where
 
 import Data.List
-import qualified Paths_Macbeth as PM
+import qualified Paths_macbeth_lib as PM
 import System.Directory
 import System.Environment.FindBin
 import System.FilePath

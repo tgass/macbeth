@@ -1,13 +1,10 @@
-module Paths_Macbeth (
-    getDataFileName
-  , getMacbethUserDataDir
-) where
+module Paths_macbeth_lib where
 
 import System.FilePath
 
 
 getDataFileName :: FilePath -> IO FilePath
-getDataFileName f = return $ "resources" </> f
+getDataFileName f = return $ "foo" </> f
 
 
 getMacbethUserDataDir :: FilePath -> IO FilePath

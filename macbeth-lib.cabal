@@ -12,6 +12,8 @@ build-type: Simple
 license: GPL
 license-file: LICENSE
 data-dir: resources
+data-files:
+  appConfig.yaml
 extra-source-files: test/*.hs
 source-repository head
   type: git
@@ -79,7 +81,7 @@ library
                      Macbeth.Wx.Config.Sounds,
                      Macbeth.Wx.Config.BoardConfig
                      Macbeth.Wx.Config.SeekConfig
-  other-modules: Paths_Macbeth
+  other-modules: Paths_macbeth_lib
   ghc-options: -Wall
 
 executable Macbeth
