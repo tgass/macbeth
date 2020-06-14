@@ -5,18 +5,19 @@ module Macbeth.Wx.Game.Board (
   onMouseEvent
 ) where
 
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Move
-import Macbeth.Utils.BoardUtils
-import Macbeth.Wx.Game.BoardState
-import Macbeth.Wx.Config.BoardConfig
 
 import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
-import Data.Maybe
 import Control.Concurrent.STM
+import Data.Maybe
 import Graphics.UI.WX hiding (position, update, resize, when, pt, size, value, color)
 import Graphics.UI.WXCore hiding (Row, Column, when, pt)
+import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Move
+import Macbeth.Utils.BoardUtils
+import Macbeth.Wx.Config.BoardConfig
+import Macbeth.Wx.Game.BoardState
+import Macbeth.Wx.RuntimeEnv
 import System.IO
 
 type BoardT a = ReaderT (DC a, BoardState) IO ()
@@ -72,8 +73,8 @@ drawPieces = do
   liftIO $ sequence_ $ drawPiece dc state <$> virtualPosition state
   where
     drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
-    drawPiece dc state (sq, p) = drawBitmap dc
-      (pieceToBitmap (pieceImgSize state) (pieceSet $ boardConfig state) p)
+    drawPiece dc state (sq, piece) = drawBitmap dc
+      (pieceToBitmap (runtimeEnv state) (pieceSet $ boardConfig state) piece (pieceImgSize state))
       (toPos' (squareSizePx state) sq (perspective state)) True []
 
 
@@ -98,7 +99,7 @@ drawDraggedPiece = do
 
 
 drawDraggedPiece'' :: BoardState -> DC a -> DraggedPiece -> IO ()
-drawDraggedPiece'' state dc (DraggedPiece pt piece' _) = drawBitmap dc (pieceToBitmap size (pieceSet $ boardConfig state) piece') scalePoint True []
+drawDraggedPiece'' state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBitmap (runtimeEnv state) (pieceSet $ boardConfig state) piece size) scalePoint True []
   where
     scale' = pieceScale state
     size = pieceImgSize state

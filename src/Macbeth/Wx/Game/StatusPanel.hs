@@ -15,12 +15,13 @@ import           Macbeth.Wx.Config.BoardConfig
 import           Macbeth.Wx.Game.BoardState
 import           Macbeth.Wx.Game.PieceSet
 import           Macbeth.Wx.Utils
+import           Macbeth.Wx.RuntimeEnv
 
 import           Control.Arrow
 import           Control.Concurrent.STM
 import           Control.Monad
 import           Data.List
-import           Graphics.UI.WX hiding (when, position)
+import           Graphics.UI.WX hiding (when, position, color)
 
 
 createStatusPanel :: Panel () -> PColor -> TVar BoardState ->  IO (Panel (), FicsMessage -> IO ())
@@ -58,9 +59,9 @@ createStatusPanel p color' vBoardState = do
   return (p_status, handler)
 
 paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()
-paintPieceHolding color' vBoardState dc _ = do
-  state' <- readTVarIO vBoardState
-  zipWithM_ (drawPiece dc) [A .. H] (assemblePiecesToShow color' state')
+paintPieceHolding color vBoardState dc _ = do
+  boardState <- readTVarIO vBoardState
+  zipWithM_ (drawPiece (runtimeEnv boardState) dc) [A .. H] (assemblePiecesToShow color boardState)
 
 
 assemblePiecesToShow :: PColor -> BoardState -> [(Piece, Int)]
@@ -74,9 +75,9 @@ assemblePiecesToShow color' state
     frequency = map (head &&& length) . group . sort
 
 
-drawPiece :: DC a -> Column -> (Piece, Int) -> IO ()
-drawPiece dc col (Piece ptype color', freq) = do
-  drawBitmap dc (pieceToBitmap pieceSize Alpha1 (Piece ptype color'))
+drawPiece :: RuntimeEnv -> DC a -> Column -> (Piece, Int) -> IO ()
+drawPiece runtimeEnv dc col (Piece ptype color, freq) = do
+  drawBitmap dc (pieceToBitmap runtimeEnv Alpha1 (Piece ptype color) pieceSize)
                 (toPos' fieldSize (Square col Eight) White) True []
   set dc [pen := penColored black 2]
   drawText dc (show freq) (Point (22 + fromEnum col * fieldSize) 15)

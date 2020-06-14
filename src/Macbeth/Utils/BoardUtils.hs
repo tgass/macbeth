@@ -1,18 +1,11 @@
 module Macbeth.Utils.BoardUtils (
   drawArrow,
   squareToRect',
-  toPos',
-  pieceToBitmap
+  toPos'
 ) where
 
 import           Graphics.UI.WX
 import           Macbeth.Fics.Api.Api
-import           Macbeth.Wx.Game.PieceSet (PieceSet(..))
-import qualified Macbeth.Wx.Game.PieceSet as PieceSet
-import           Paths
-import           System.FilePath
-import           System.IO.Unsafe
-
 
 rowToInt :: Macbeth.Fics.Api.Api.PColor -> Row -> Int
 rowToInt White = abs . (7-) . fromEnum
@@ -68,19 +61,3 @@ rotate d ptx = pt (round $ x * cos rad - y * sin rad) (round $ x * sin rad + y *
         rad = d/180*pi
 
 
-pieceToBitmap :: Int -> PieceSet -> Piece -> Bitmap ()
-pieceToBitmap size' pieceSet p = bitmap $ unsafePerformIO $ getDataFileName $ PieceSet.path pieceSet </> show size' </> pieceToFile p ++ ".png"
-  where
-    pieceToFile :: Piece -> String
-    pieceToFile (Piece King Black) = "bk"
-    pieceToFile (Piece Queen Black) = "bq"
-    pieceToFile (Piece Rook Black) = "br"
-    pieceToFile (Piece Knight Black) = "bn"
-    pieceToFile (Piece Bishop Black) = "bb"
-    pieceToFile (Piece Pawn Black) = "bp"
-    pieceToFile (Piece King White) = "wk"
-    pieceToFile (Piece Queen White) = "wq"
-    pieceToFile (Piece Rook White) = "wr"
-    pieceToFile (Piece Knight White) = "wn"
-    pieceToFile (Piece Bishop White) = "wb"
-    pieceToFile (Piece Pawn White) = "wp"

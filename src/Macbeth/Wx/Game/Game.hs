@@ -61,7 +61,7 @@ wxGame env gameId gameParams' chan = do
 
 
   -- board
-  let boardState = Api.initBoardState gameId gameParams' username' boardConfig
+  let boardState = Api.initBoardState gameId gameParams' username' boardConfig env
   vBoardState <- newTVarIO boardState
 
   -- player panels

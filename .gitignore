@@ -7,3 +7,4 @@ src/wx/EnableGUI.*
 Sodium.hs
 .stack-work
 .temp
+*.lock

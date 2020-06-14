@@ -1,33 +1,77 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Macbeth.Wx.Game.PieceSet (
   PieceSet(..),
-  path,
   display,
-  findSize
+  findSize,
+  initPieceBitmaps
 ) where
 
-import           Data.Aeson.Types
+import           Control.Monad.List
+import           Control.Applicative
+import           Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import           Data.Aeson.Types hiding (Parser)
+import           Data.Attoparsec.ByteString.Char8
+import           Data.ByteString.Char8 hiding (dropWhile)
 import           Data.Maybe
 import           GHC.Generics
+import           Graphics.UI.WX hiding (size)
+import           Macbeth.Fics.Api.Api
+import qualified Paths as Paths
 import           Safe
-
-
+import           System.Directory
+import           System.FilePath
 
 {-
 http://ixian.com/chess/jin-piece-sets/
 This work by Eric De Mund is licensed under a Creative Commons Attribution-Share Alike 3.0 Unported License
 -}
 
-data PieceSet = Alpha1 | Alpha2 | Merida1 | Merida2 | Uscf1 | Uscf2 deriving (Show, Eq, Enum, Generic)
+data PieceSet = Alpha1 | Alpha2 | Merida1 | Merida2 | Uscf1 | Uscf2 deriving (Show, Eq, Ord, Enum, Generic)
 
-path :: PieceSet -> String
-path Alpha1 = "alpha.ead-01"
-path Alpha2 = "alpha.ead-02"
-path Merida1 = "merida.ead-01"
-path Merida2 = "merida.ead-02"
-path Uscf1 = "uscf.ead-01"
-path Uscf2 = "uscf.ead-02"
+initPieceBitmaps :: IO (Map (PieceSet, Piece, Int) (Bitmap ()))
+initPieceBitmaps = fmap Map.fromList $ runListT loadImages
+
+loadImages :: ListT IO ((PieceSet, Piece, Int), Bitmap ())
+loadImages = do
+  piecesDir <- ListT $ fmap pure $ Paths.getPiecesDir
+  file <- ListT $ listDirectory piecesDir
+  case parseOnly filenameParser (pack file) of
+    Left _ -> mzero
+    Right description -> return (description, bitmap $ piecesDir </> file)
+
+filenameParser :: Parser (PieceSet, Piece, Int)
+filenameParser = do
+  pieceSet <- pieceSetParser <* "_"
+  size <- decimal <* "_"
+  piece <- pieceParser <* "."
+  return (pieceSet, piece, size)
+
+pieceSetParser :: Parser PieceSet
+pieceSetParser = do
+      "alpha-ead-01" *> pure Alpha1
+  <|> "alpha-ead-02" *> pure Alpha2
+  <|> "merida-ead-01" *> pure Merida1
+  <|> "merida-ead-02" *> pure Merida2
+  <|> "uscf-ead-01" *> pure Uscf1
+  <|> "uscf-ead-02" *> pure Uscf2
+
+pieceParser :: Parser Piece
+pieceParser = 
+      "bk" *> pure (Piece King Black)
+  <|> "bq" *> pure (Piece Queen Black)
+  <|> "br" *> pure (Piece Rook Black)
+  <|> "bn" *> pure (Piece Knight Black)
+  <|> "bb" *> pure (Piece Bishop Black)
+  <|> "bp" *> pure (Piece Pawn Black)
+  <|> "wk" *> pure (Piece King White)
+  <|> "wq" *> pure (Piece Queen White)
+  <|> "wr" *> pure (Piece Rook White)
+  <|> "wn" *> pure (Piece Knight White)
+  <|> "wb" *> pure (Piece Bishop White)
+  <|> "wp" *> pure (Piece Pawn White)
 
 
 display :: PieceSet -> String

@@ -32,6 +32,13 @@ module Macbeth.Wx.Game.BoardState (
   initBoardState
 ) where
 
+import           Control.Concurrent.STM
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Maybe
+import           Data.Maybe
+import           Data.List
+import           Graphics.UI.WX hiding (position, update, resize, when)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Game
 import           Macbeth.Fics.Api.Move
@@ -40,14 +47,7 @@ import           Macbeth.Fics.Api.Result
 import           Macbeth.Wx.Game.PieceSet (PieceSet(..))
 import qualified Macbeth.Wx.Game.PieceSet as PieceSet
 import           Macbeth.Wx.Config.BoardConfig
-
-import           Control.Concurrent.STM
-import           Control.Monad
-import           Control.Monad.IO.Class
-import           Control.Monad.Trans.Maybe
-import           Data.Maybe
-import           Data.List
-import           Graphics.UI.WX hiding (position, update, resize, when)
+import           Macbeth.Wx.RuntimeEnv
 import           Safe
 import           System.IO
 
@@ -73,6 +73,7 @@ data BoardState = BoardState {
   , phW :: [Piece]
   , phB :: [Piece]
   , boardConfig :: BoardConfig
+  , runtimeEnv :: RuntimeEnv
   }
 
 
@@ -260,8 +261,8 @@ movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from'
 movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
 
 
-initBoardState :: GameId -> GameParams -> Username -> BoardConfig -> BoardState
-initBoardState gameId' gameParams' username' boardConfig' = BoardState {
+initBoardState :: GameId -> GameParams -> Username -> BoardConfig -> RuntimeEnv -> BoardState
+initBoardState gameId' gameParams' username' boardConfig' runtimeEnv' = BoardState {
     gameParams''' = gameParams'
   , lastMove = initMove gameId' gameParams'
   , isGameUser = isGameUser' gameParams'
@@ -282,6 +283,7 @@ initBoardState gameId' gameParams' username' boardConfig' = BoardState {
   , phW = []
   , phB = []
   , boardConfig = boardConfig'
+  , runtimeEnv = runtimeEnv'
   }
   where
     (pieceImgSize', pieceScale') = PieceSet.findSize $ boardSize boardConfig'

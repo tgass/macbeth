@@ -11,21 +11,26 @@ module Macbeth.Wx.RuntimeEnv (
   getConfig,
   getVersion,
   getSoundConfig,
-  getIconFilePath
+  getIconFilePath,
+  pieceToBitmap
 ) where
 
 
 import           Control.Concurrent.STM
 import           Control.Monad
 import           Data.Maybe (fromMaybe)
-import qualified Data.HashMap.Strict as M
+import           Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import           Graphics.UI.WX hiding (play, get, when)
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Fics.AppConfig
 import           Macbeth.Wx.Config.UserConfig (Config (..))
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import           Macbeth.Wx.Config.BoardConfig (BoardConfig)
 import qualified Macbeth.Wx.Config.BoardConfig as BC
 import           Macbeth.Wx.Config.SeekConfig (SeekConfig)
-import           Macbeth.Fics.Api.Player
-import           Macbeth.Fics.AppConfig
+import           Macbeth.Wx.Game.PieceSet
 import           Paths
 import           Sound.ALUT
 import           System.FilePath
@@ -42,7 +47,8 @@ data RuntimeEnv = RuntimeEnv {
   , config :: Config
   , appConfig :: AppConfig
   , sources :: [Source]
-  , bufferMap :: M.HashMap String Buffer
+  , pieceBitmapMap :: Map (PieceSet, Piece, Int) (Bitmap ())
+  , bufferMap :: Map String Buffer
   , userHandle :: TVar UserHandle
   , rtBoardConfig :: TVar BoardConfig
   , rtSeekConfig :: TVar SeekConfig
@@ -55,9 +61,10 @@ initRuntime h = do
   initLogger $ stage appConfig'
   RuntimeEnv 
     <$> pure h 
-    <*> return config
-    <*> return appConfig' 
+    <*> pure config
+    <*> pure appConfig' 
     <*> initSources 
+    <*> initPieceBitmaps
     <*> initBufferMap config 
     <*> newTVarIO emptyUserHandle 
     <*> (BC.convert (fromMaybe BC.defaultBoardConfig $ UserConfig.boardConfig config) (UserConfig.directory config) >>= newTVarIO)
@@ -88,6 +95,10 @@ getVersion :: RuntimeEnv -> String
 getVersion = version . appConfig
 
 
+pieceToBitmap :: RuntimeEnv -> PieceSet -> Piece -> Int -> Bitmap ()
+pieceToBitmap env pieceSet piece size = pieceBitmapMap env Map.! (pieceSet, piece, size)
+
+
 getSoundConfig :: RuntimeEnv -> (UserConfig.Sounds -> a) -> a
 getSoundConfig env f = f $ UserConfig.soundsOrDef $ config env
 
@@ -97,7 +108,7 @@ playSound env f
   | UserConfig.enabled soundConfig = play' (sources env) mBuffer
   | otherwise = return ()
   where soundConfig = UserConfig.soundsOrDef $ config env
-        mBuffer = f soundConfig >>= (`M.lookup` bufferMap env)
+        mBuffer = f soundConfig >>= (`Map.lookup` bufferMap env)
 
 
 getIconFilePath :: String -> FilePath
@@ -129,19 +140,19 @@ initSources = do
   genObjectNames 20
 
 
-initBufferMap :: Config -> IO (M.HashMap String Buffer)
+initBufferMap :: Config -> IO (Map String Buffer)
 initBufferMap c = do
   dir <- getDataFileName "sounds"
   appSounds <- loadSounds dir
   userSounds <- loadSounds $ UserConfig.directory c
-  return $ userSounds `M.union` appSounds
+  return $ userSounds `Map.union` appSounds
 
 
-loadSounds :: FilePath -> IO (M.HashMap String Buffer)
+loadSounds :: FilePath -> IO (Map String Buffer)
 loadSounds dir = do
   files <- filter ((== ".wav") . takeExtension) <$> getDirectoryContents dir
   bufferTuples <- bar $ fmap (\f -> dir </> f) files
-  return $ M.fromList bufferTuples
+  return $ Map.fromList bufferTuples
   where
 
     bar :: [FilePath] -> IO [(String, Buffer)]

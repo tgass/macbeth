@@ -14,6 +14,10 @@ license-file: LICENSE
 data-dir: resources
 data-files:
   appConfig.yaml
+  sounds/*.wav
+  icons/*.gif
+  tiles/*.png
+  pieces/*.png
 extra-source-files: test/*.hs
 source-repository head
   type: git
