@@ -103,6 +103,8 @@ getSoundConfig :: RuntimeEnv -> (UserConfig.Sounds -> a) -> a
 getSoundConfig env f = f $ UserConfig.soundsOrDef $ config env
 
 
+-- Please remember, this is why I use ALUT. Switching to wx controlled sounds didn't work
+-- https://forums.wxwidgets.org/viewtopic.php?t=43049
 playSound :: RuntimeEnv -> (UserConfig.Sounds -> Maybe String) -> IO ()
 playSound env f
   | UserConfig.enabled soundConfig = play' (sources env) mBuffer
