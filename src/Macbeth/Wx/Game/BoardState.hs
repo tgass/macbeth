@@ -100,7 +100,7 @@ dropDraggedPiece vState h click_pt = do
   state <- readTVarIO vState
   void $ runMaybeT $ do
       dp <- MaybeT $ return $ draggedPiece state
-      case toPieceMove dp <$> pointToSquare state click_pt  of
+      case pointToSquare state click_pt >>= toPieceMove dp of
         Just pieceMove' -> do
           let newPosition = movePiece pieceMove' (virtualPosition state)
           liftIO $ do
@@ -111,9 +111,11 @@ dropDraggedPiece vState h click_pt = do
         Nothing -> liftIO $ discardDraggedPiece vState
 
   where
-    toPieceMove :: DraggedPiece -> Square -> PieceMove
-    toPieceMove (DraggedPiece _ piece' (FromBoard fromSq)) toSq = PieceMove piece' fromSq toSq
-    toPieceMove (DraggedPiece _ piece' FromHolding) toSq = DropMove piece' toSq
+    toPieceMove :: DraggedPiece -> Square -> Maybe PieceMove
+    toPieceMove (DraggedPiece _ piece' FromHolding) toSq = Just $ DropMove piece' toSq
+    toPieceMove (DraggedPiece _ piece' (FromBoard fromSq)) toSq 
+      | fromSq /= toSq = Just $ PieceMove piece' fromSq toSq
+      | otherwise = Nothing
 
     addPreMove :: PieceMove -> IO ()
     addPreMove pm = atomically $ modifyTVar vState (\s -> s {preMoves = preMoves s ++ [pm]})
