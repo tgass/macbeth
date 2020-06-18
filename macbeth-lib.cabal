@@ -8,7 +8,7 @@ bug-reports: https://github.com/tgass/macbeth/issues
 category: game
 version: 0.0.31
 cabal-version: >= 1.8
-build-type: Simple
+Build-Type: Custom
 license: GPL
 license-file: LICENSE
 data-dir: resources
@@ -22,6 +22,8 @@ extra-source-files: test/*.hs
 source-repository head
   type: git
   location: https://github.com/tgass/macbeth
+
+
 
 library
     build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
@@ -90,7 +92,7 @@ library
 
 executable Macbeth
   main-is: src/Macbeth.hs
-  build-depends: base  >= 4.2, wx, wxcore, macbeth-lib, stm, ALUT
+  build-depends: base, wx, wxcore, macbeth-lib, stm, ALUT, cabal-macosx
   ghc-options: -O3 -threaded -W
   extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
 

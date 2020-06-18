@@ -3,6 +3,9 @@ resolver: lts-9.21
 packages:
 - '.'
 
+explicit-setup-deps:
+    "*": true
+
 extra-deps: 
 - wx-0.92.2.0
 - wxcore-0.92.2.0
@@ -18,4 +21,4 @@ extra-deps:
 - hspec-expectations-0.8.2
 - quickcheck-io-0.2.0
 - FindBin-0.0.5 
-
+- cabal-macosx-0.2.4.2
