@@ -153,15 +153,12 @@ initBufferMap c = do
 loadSounds :: FilePath -> IO (Map String Buffer)
 loadSounds dir = do
   files <- filter ((== ".wav") . takeExtension) <$> getDirectoryContents dir
-  bufferTuples <- bar $ fmap (\f -> dir </> f) files
-  return $ Map.fromList bufferTuples
+  fmap Map.fromList $ sequence $ fmap mkPair files
   where
-
-    bar :: [FilePath] -> IO [(String, Buffer)]
-    bar fx = sequence $ fmap foo fx
-
-    foo :: FilePath -> IO (String, Buffer)
-    foo f = (,) (takeFileName f) <$> createBuffer (File f)
+    mkPair :: FilePath -> IO (String, Buffer)
+    mkPair f = do
+      buffer <- createBuffer (File $ dir </> f)
+      return (f, buffer)
 
 
 initLogger :: Stage -> IO ()
