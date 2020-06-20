@@ -1,4 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Macbeth.Wx.RuntimeEnv (
   RuntimeEnv(handle, rtBoardConfig, rtSeekConfig),
@@ -17,14 +19,13 @@ module Macbeth.Wx.RuntimeEnv (
 
 
 import           Control.Concurrent.STM
-import           Control.Monad
 import           Data.Maybe (fromMaybe)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import           Development.GitRev
 import           Graphics.UI.WX hiding (play, get, when)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
-import           Macbeth.Fics.AppConfig
 import           Macbeth.Wx.Config.UserConfig (Config (..))
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import           Macbeth.Wx.Config.BoardConfig (BoardConfig)
@@ -41,11 +42,12 @@ import           System.Log.Logger
 import           System.Log.Handler.Simple hiding (priority)
 import           System.Log.Handler (setFormatter)
 import           System.Log.Formatter
+import           System.Log.Handler.Syslog
+
 
 data RuntimeEnv = RuntimeEnv {
     handle :: Handle
   , config :: Config
-  , appConfig :: AppConfig
   , sources :: [Source]
   , pieceBitmapMap :: Map (PieceSet, Piece, Int) (Bitmap ())
   , bufferMap :: Map String Buffer
@@ -56,13 +58,11 @@ data RuntimeEnv = RuntimeEnv {
 
 initRuntime :: Handle -> IO RuntimeEnv
 initRuntime h = do
+  initLogger
   config <- UserConfig.initConfig
-  appConfig' <- loadAppConfig
-  initLogger $ stage appConfig'
   RuntimeEnv 
     <$> pure h 
     <*> pure config
-    <*> pure appConfig' 
     <*> initSources 
     <*> initPieceBitmaps
     <*> initBufferMap config 
@@ -91,8 +91,8 @@ getConfig :: RuntimeEnv -> (Config -> a) -> a
 getConfig env f = f $ config env
 
 
-getVersion :: RuntimeEnv -> String
-getVersion = version . appConfig
+getVersion :: String
+getVersion = take 7 $ $(gitHash)
 
 
 pieceToBitmap :: RuntimeEnv -> PieceSet -> Piece -> Int -> Bitmap ()
@@ -161,17 +161,15 @@ loadSounds dir = do
       return (f, buffer)
 
 
-initLogger :: Stage -> IO ()
-initLogger stage' = do
+#ifdef CONSOLE_LOG
+initLogger :: IO ()
+initLogger = updateGlobalLogger rootLoggerName $ setLevel INFO
+#else
+initLogger :: IO ()
+initLogger = do
   updateGlobalLogger rootLoggerName removeHandler
-  updateGlobalLogger rootLoggerName $ setLevel DEBUG
-
-  fileH <- fileHandler "/tmp/macbeth.log" INFO >>= \lh -> return $
-       setFormatter lh (simpleLogFormatter "$time $msg")
-
-  stdOutH <- streamHandler stdout INFO >>= \lh -> return $
-       setFormatter lh (simpleLogFormatter "$time $msg")
-
-  updateGlobalLogger rootLoggerName (addHandler fileH)
-  when (stage' == Dev) $ updateGlobalLogger "console" (addHandler stdOutH)
+  syslogH <- openlog "macbeth" [PID] USER ERROR >>= \lh -> return $ 
+      setFormatter lh (simpleLogFormatter "$time $msg")
+  updateGlobalLogger rootLoggerName $ addHandler syslogH
+#endif
 

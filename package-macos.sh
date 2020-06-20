@@ -27,7 +27,6 @@ stack build
 # copy resources (icons, pieces, sounds) from macbeth-lib
 cp -r resources/* $BUNDLE_DIR/Contents/Resources/
 
-
 # prepare dmg contents
 cp -r $BUNDLE_DIR $WORK_DIR
 

@@ -1,4 +1,6 @@
-{-# LANGUAGE RecordWildCards, DeriveGeneric #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Macbeth.Wx.Config.UserConfig (
   Config(..),
@@ -20,7 +22,6 @@ module Macbeth.Wx.Config.UserConfig (
 
 import           Control.Applicative
 import           Control.Monad
-import           Control.Monad.Except
 import           Data.Maybe
 import           Data.Yaml
 import           GHC.Generics
@@ -32,7 +33,10 @@ import qualified Macbeth.Wx.Config.SeekConfig as SeekConfig
 import           Paths
 import           System.Directory
 import           System.FilePath
+import           System.Log.Logger
 
+logger :: String
+logger = "Macbeth.Wx.Config.UserConfig"
 
 data Config = Config {
     directory :: FilePath
@@ -77,9 +81,15 @@ initConfig = do
 
 
 loadConfig :: IO Config
-loadConfig = setDefaults <$>
-  (either (error . prettyPrintParseException) return =<< runExceptT fromDisk)
-
+loadConfig = do
+  file <- getMacbethUserDataDir "macbeth.yaml" 
+  infoM logger $ "Loading user config from " ++ file
+  decodeFileEither file >>= \case
+    Left err -> do
+      errorM logger $ prettyPrintParseException err
+      error "parse error"
+    Right config -> return $ setDefaults config
+  
 
 -- make sure that default values are always set
 -- this is important specially when the configuration is shown to the user
@@ -100,10 +110,6 @@ setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardCon
                             }) <$> boardConfig'
 
     seekConfig' = fmap SeekConfig.setDefault (seekConfig c) <|> Just SeekConfig.defaultFormat
-
-fromDisk :: ExceptT ParseException IO Config
-fromDisk = ExceptT $ getMacbethUserDataDir "macbeth.yaml" >>= decodeFileEither
-
 
 saveConfig :: Config -> IO ()
 saveConfig config = getMacbethUserDataDir "macbeth.yaml" >>= flip encodeFile config

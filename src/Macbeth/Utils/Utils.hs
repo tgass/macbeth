@@ -6,7 +6,6 @@ module Macbeth.Utils.Utils (
 
 import Macbeth.Utils.Salt
 
-import Control.Monad
 import Control.Monad.State
 import Crypto.Cipher
 import qualified Data.ByteString.Char8 as B
