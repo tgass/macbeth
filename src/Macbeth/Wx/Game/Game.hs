@@ -71,7 +71,7 @@ wxGame env gameId gameParams' chan = do
   p_board <- panel p_back [ on paint := Board.draw vBoardState ]
 
   -- layout helper
-  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState >> refit f
+  let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState
   updateBoardLayoutIO
 
   status <- statusField []
@@ -80,8 +80,7 @@ wxGame env gameId gameParams' chan = do
   -- context menu
   ctxMenu <- menuPane []
 
-  void $ menuItem ctxMenu [ text := "Turn board", on command :=
-    Api.invertPerspective vBoardState >> updateBoardLayoutIO >> repaint p_board >> resizeFrame f vBoardState ]
+  void $ menuItem ctxMenu [ text := "Turn board", on command := Api.invertPerspective vBoardState >> updateBoardLayoutIO >> void (windowLayout f)]
 
   void $ menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := showCapturedPieces boardConfig,  on command :=
     atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back]
