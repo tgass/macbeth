@@ -73,9 +73,10 @@ drawPieces = do
   liftIO $ sequence_ $ drawPiece dc state <$> virtualPosition state
   where
     drawPiece :: DC a -> BoardState -> (Square, Piece) -> IO ()
-    drawPiece dc state (sq, piece) = drawBitmap dc
-      (pieceToBitmap (runtimeEnv state) (pieceSet $ boardConfig state) piece (pieceImgSize state))
-      (toPos' (squareSizePx state) sq (perspective state)) True []
+    drawPiece dc state (sq, piece) = do
+      let b = pieceToBitmap (runtimeEnv state) (pieceSet $ boardConfig state) piece (pieceImgSize state)
+      bitmapSetSize b $ Size (squareSizePx state) (squareSizePx state)
+      drawBitmap dc b (toPos' (squareSizePx state) sq (perspective state)) True []
 
 
 drawSelectedSquare :: BoardT a
