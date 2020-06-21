@@ -13,7 +13,6 @@ license: GPL
 license-file: LICENSE
 data-dir: resources
 data-files:
-  appConfig.yaml
   sounds/*.wav
   icons/*.gif
   tiles/*.png
