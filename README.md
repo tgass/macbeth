@@ -48,14 +48,17 @@ see: http://www.freechess.org/Help/HelpFiles/category.html
 
 * macos
 ```
-brew install haskell-stack wxmac freealut
+brew install git haskell-stack wxmac freealut
 
 git clone https://github.com/tgass/macbeth.git
 cd macbeth
 
 stack setup 
 stack build 
-stack exec Macbeth
+
+./package-macos.sh
+open Macbeth.dmg
+
 ```
 
 * Linux (Ubuntu)
