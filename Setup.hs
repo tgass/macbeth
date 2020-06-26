@@ -14,7 +14,7 @@ guiApps =
     , appPlist = Nothing -- Build a default Info.plist for the icon.
     , resources = [] -- No other resources.
     , otherBins = [] -- No other binaries.
-    , appDeps = DoNotChase -- Try changing to ChaseWithDefaults
+    , appDeps = ChaseWithDefaults
     }
   ]
 
