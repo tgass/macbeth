@@ -96,15 +96,19 @@ withdrawId :: Handle -> Int -> IO ()
 withdrawId h offerId = hPutStrLn h $ "6 withdraw " ++ show offerId
 
 
+convertIsRated :: Bool -> String
 convertIsRated True = "r"
 convertIsRated False = "u"
 
+convertColor :: SC.SeekColor -> String
 convertColor SC.White = "w"
 convertColor SC.Black = "b"
 convertColor SC.Automatic = ""
 
+convertRatingRange :: Int -> Int -> String
 convertRatingRange from to = show from ++ "-" ++ show to
 
+convertIsManual :: Bool -> String
 convertIsManual True = "m"
 convertIsManual False = "a"
 

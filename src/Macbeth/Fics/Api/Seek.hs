@@ -1,8 +1,4 @@
-module Macbeth.Fics.Api.Seek (
-  Seek (..),
-  StartMode,
-  Title (..)
-) where
+module Macbeth.Fics.Api.Seek where
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.OngoingGame

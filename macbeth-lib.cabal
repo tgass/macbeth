@@ -37,6 +37,9 @@ library
   ghc-options: -Wall
   if flag(console_log)
     cpp-options: -DCONSOLE_LOG
+  default-extensions: 
+    LambdaCase
+    OverloadedStrings
   exposed-modules: Paths,
                    Macbeth.Fics.FicsConnection
                    Macbeth.Fics.FicsMessage,

@@ -1,10 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
-
-module Macbeth.Fics.Api.Chat (
-    ChatMsg(..)
-  , Status'(..)
-  , belongsTo
-) where
+module Macbeth.Fics.Api.Chat where
 
 import qualified Macbeth.Fics.Api.Player as P
 import Macbeth.Fics.Api.Api

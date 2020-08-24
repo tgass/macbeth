@@ -1,20 +1,4 @@
-module Macbeth.Fics.Api.Api (
-  PColor (..),
-  Piece (..),
-  PType (..),
-  Square (..),
-  Row (..),
-  Column (..),
-  Position,
-  MoveDetailed (..),
-  GameId (..),
-  pColor,
-  hasColor,
-  removePiece,
-  getPiece,
-  capturedPiecesWithColor,
-  invert
-) where
+module Macbeth.Fics.Api.Api where
 
 import Data.Char
 import Data.List
