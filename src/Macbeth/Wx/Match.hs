@@ -2,16 +2,15 @@ module Macbeth.Wx.Match (
   wxMatch
 ) where
 
-import Macbeth.Fics.FicsMessage
-import Macbeth.Wx.GameType
-import Macbeth.Wx.Utils
-
-import Control.Concurrent.Chan
-import Control.Monad.Cont
-import Data.Map
-import Data.Char
-import Graphics.UI.WX hiding (color)
-import System.IO
+import           Control.Concurrent.Chan
+import           Control.Monad.Cont
+import           Data.Map
+import           Graphics.UI.WX hiding (color)
+import           Macbeth.Fics.FicsMessage
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Wx.GameType
+import           Macbeth.Wx.Utils
+import           System.IO
 
 data WxMatch = WxMatch {
   category :: Choice (),
@@ -40,7 +39,7 @@ setupFrame h isGuest (p, _, frame') = do
   match <- matchInputs p isGuest
   set (category match) [on select ::= onSelectGameTypeCategory (board match)]
 
-  b_ok  <- button p [text := "Match", on command := toString match >>= hPutStrLn h >> closeFrame frame' ]
+  b_ok  <- button p [text := "Match", on command := startMatch h match >> closeFrame frame' ]
   b_can <- button p [text := "Cancel", on command := closeFrame frame']
 
   frame' `setDefaultButton` b_ok
@@ -71,18 +70,15 @@ matchInputs p isGuest = WxMatch
 
 
 -- 4 match GuestXYZZ rated 5 0 white
-toString:: WxMatch -> IO String
-toString m = (("4 match " ++) . unwords) `fmap` sequence [
-       get (name m) text
-     , convertIsRated `fmap` get (rated m) enabled
-     , get (time m) text
-     , get (inc m) text
-     , get (color m) selection >>= fmap convertColor . get (color m) . item
-     , gameTypeSelectionToString <$> read `fmap` getDisplaySelection (category m)
-                                 <*> fmap (fmap read) (getMayDisplaySelection (board m))]
-    where
-      convertIsRated r = if r then "rated" else "unrated"
-      convertColor x = if x == "Automatic" then "" else fmap toLower x
+startMatch :: Handle -> WxMatch -> IO ()
+startMatch  h m = join $ Cmds.match2 h
+     <$> get (name m) text
+     <*> get (rated m) enabled
+     <*> read `fmap` get (time m) text
+     <*> read `fmap` get (inc m) text
+     <*> read `fmap` getDisplaySelection (color m)
+     <*> read `fmap` getDisplaySelection (category m)
+     <*> fmap (fmap read) (getMayDisplaySelection (board m))
 
 onSelectGameTypeCategory :: Choice () -> Choice () -> IO ()
 onSelectGameTypeCategory c_boards c_category = do

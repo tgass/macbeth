@@ -2,19 +2,20 @@ module Macbeth.Wx.GamesList (
   wxGamesList
 ) where
 
-import Macbeth.Fics.Api.OngoingGame
-import Macbeth.Fics.FicsMessage hiding (gameId)
-import Macbeth.Wx.Utils
 
-import Control.Applicative
-import Control.Concurrent.STM
-import Control.Monad
-import Data.List
-import Data.Maybe
-import Data.Ord
-import Graphics.UI.WX hiding (refresh)
-import Graphics.UI.WXCore
-import System.IO
+import           Control.Applicative
+import           Control.Concurrent.STM
+import           Control.Monad
+import           Data.List
+import           Data.Maybe
+import           Data.Ord
+import           Graphics.UI.WX hiding (refresh)
+import           Graphics.UI.WXCore
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Fics.Api.OngoingGame
+import           Macbeth.Fics.FicsMessage hiding (gameId)
+import           Macbeth.Wx.Utils
+import           System.IO
 
 data CtxMenu = CtxMenu {
     refresh :: MenuItem ()
@@ -57,7 +58,7 @@ wxGamesList glp h = do
     pt' <- listEventGetPoint evt
     menuPopup glCtxMenu pt' gl
 
-  set (refresh ctxMenuPopup) [on command := hPutStrLn h "4 games"]
+  set (refresh ctxMenuPopup) [on command := Cmds.games h]
 
 
   set (showRated ctxMenuPopup) [on command := displayGames gl ctxMenuPopup ctxSortMenu' games]
@@ -84,7 +85,7 @@ handler gl ctx sub games cmd = case cmd of
 
 onGamesListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
 onGamesListEvent gl h evt = case evt of
-  ListItemActivated idx -> listCtrlGetItemText gl idx >>= hPutStrLn h . ("4 observe " ++)
+  ListItemActivated idx -> listCtrlGetItemText gl idx >>= Cmds.observeGame h . read
   _ -> return ()
 
 

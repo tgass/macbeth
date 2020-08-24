@@ -13,6 +13,7 @@ import           Foreign.Ptr
 import           Foreign.C.Types
 import           Graphics.UI.WX hiding (when, play)
 import           Graphics.UI.WXCore hiding (when)
+import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.FicsMessage
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Api.Player
@@ -53,17 +54,17 @@ wxToolBox env chan = do
       [ on command := dupChan chan >>= wxMatch h False, enabled := False, tooltip := "Match" ]
 
     tbarItem_finger <- toolItem tbar "Finger" False (E.getIconFilePath "fa-question")
-      [ on command := hPutStrLn h "4 finger", enabled := False, tooltip := "Finger"]
+      [ on command := Cmds.finger h Nothing, enabled := False, tooltip := "Finger"]
 
     tbarItem_history <- toolItem tbar "History" False (E.getIconFilePath "history")
-      [ on command := hPutStrLn h "4 history", enabled := False, tooltip := "History"]
+      [ on command := Cmds.history h Nothing, enabled := False, tooltip := "History"]
 
     tbarItem_settings <- toolItem tbar "Settings" False (E.getIconFilePath "settings")
       [ on command := dupChan chan >>= wxConfiguration env, enabled := False, tooltip := "Settings"]
 
     statusMsg <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
-    pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := hPutStrLn h "4 ping", enabled := False]
+    pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := Cmds.ping h, enabled := False]
     statusLoggedIn <- statusField [ statusWidth := 100]
 
 
@@ -122,7 +123,7 @@ wxToolBox env chan = do
 
         NoSuchGame -> do
           set statusMsg [text := "No such game. Updating games..."]
-          hPutStrLn h "4 games"
+          Cmds.games h 
 
         UserNotLoggedIn username -> set statusMsg [text := username ++ " is not logged in."]
 
@@ -154,7 +155,7 @@ wxToolBox env chan = do
         LoggedIn userHandle -> do
           E.playSound env (C.logonToServer . C.other)
           E.setUsername env userHandle
-          unless (isGuest userHandle) $ hPutStrLn h "4 ping" >> set pingTimer [enabled := True]
+          unless (isGuest userHandle) $ Cmds.ping h >> set pingTimer [enabled := True]
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
           hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name userHandle]
@@ -190,8 +191,8 @@ onMouse nb p = propagateEvent >> notebookHitTest nb p flag
 
 clickHandler :: Handle -> Notebook () -> Int -> IO ()
 clickHandler h nb idx = notebookGetPageText nb idx >>= \case
-  "Games" -> hPutStrLn h "5 games"
-  "Players" -> hPutStrLn h "5 who"
+  "Games" -> Cmds.games h
+  "Players" -> Cmds.who h
   _ -> return ()
 
 

@@ -11,18 +11,19 @@ import           Control.Monad
 import           Data.Maybe
 import           Graphics.UI.WX hiding (when, position, play, point, white, black)
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
+import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.FicsMessage hiding (gameId)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Offer
+import qualified Macbeth.Fics.Api.Move as M
+import qualified Macbeth.Fics.Api.Game as G
+import qualified Macbeth.Fics.Api.Result as R
 import           Macbeth.Utils.PGN
 import           Macbeth.Wx.Game.PieceSet (PieceSet(..))
 import qualified Macbeth.Wx.Game.PieceSet as PieceSet
 import           Macbeth.Wx.Game.StatusPanel
 import           Macbeth.Wx.Game.GameSounds
-import qualified Macbeth.Fics.Api.Move as M
-import qualified Macbeth.Fics.Api.Game as G
-import qualified Macbeth.Fics.Api.Result as R
 import           Macbeth.Wx.Config.BoardConfig
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import qualified Macbeth.Wx.Utils as Utl
@@ -87,11 +88,11 @@ wxGame env gameId gameParams' chan = do
 
   when (G.isGameUser' gameParams') $ do
      menuLine ctxMenu
-     void $ menuItem ctxMenu [ text := "Request takeback 1", on command := hPutStrLn h "4 takeback 1"]
-     void $ menuItem ctxMenu [ text := "Request takeback 2", on command := hPutStrLn h "4 takeback 2"]
-     void $ menuItem ctxMenu [ text := "Request abort", on command := hPutStrLn h "4 abort"]
-     void $ menuItem ctxMenu [ text := "Offer draw", on command := hPutStrLn h "4 draw" ]
-     void $ menuItem ctxMenu [ text := "Resign", on command := hPutStrLn h "4 resign" ]
+     void $ menuItem ctxMenu [ text := "Request takeback 1", on command := Cmds.takeback h 1 ]
+     void $ menuItem ctxMenu [ text := "Request takeback 2", on command := Cmds.takeback h 2 ]
+     void $ menuItem ctxMenu [ text := "Request abort", on command := Cmds.abort h ]
+     void $ menuItem ctxMenu [ text := "Offer draw", on command := Cmds.draw h ]
+     void $ menuItem ctxMenu [ text := "Resign", on command := Cmds.resign h ]
      menuLine ctxMenu
      void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username' gameParams') (Just gameId)]
 
@@ -113,8 +114,8 @@ wxGame env gameId gameParams' chan = do
     | Utl.onlyKey evt 'T' && G.isGameUser' gameParams' -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username' gameParams') (Just gameId)
     | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> Api.discardDraggedPiece vBoardState >> repaint p_board
 
-    | Utl.onlyKey evt 'N' -> hPutStrLn h "5 decline"
-    | Utl.onlyKey evt 'Y' -> hPutStrLn h "5 accept"
+    | Utl.onlyKey evt 'N' -> Cmds.decline h
+    | Utl.onlyKey evt 'Y' -> Cmds.accept h
 
     | Utl.keyWithMod evt 'W' justControl -> close f
     | Utl.keyWithMod evt 'O' justControl -> Api.togglePromotion vBoardState >>= \p -> set promotion [text := "=" ++ show p]
@@ -184,8 +185,7 @@ wxGame env gameId gameParams' chan = do
     u <- convert (fromMaybe defaultBoardConfig $ UserConfig.boardConfig updated) (UserConfig.directory config)
     E.setBoardConfig env u
 
-    when (isNothing (Api.gameResult boardState') && not (Api.isGameUser boardState)) $
-      hPutStrLn h $ "5 unobserve " ++ show gameId
+    when (isNothing (Api.gameResult boardState') && not (Api.isGameUser boardState)) $ Cmds.unobserve h gameId
 
 
 resizeFrame :: Frame () -> TVar Api.BoardState -> IO ()
@@ -218,7 +218,7 @@ onKeyUpHandler :: TVar Api.BoardState -> Handle -> StatusField -> EventKey -> IO
 onKeyUpHandler vBoardState h sf evt
   | (keyKey evt == KeyControl) && isNoneDown (keyModifiers evt) =
       Api.promotion `fmap` readTVarIO vBoardState >>= \p -> do
-        hPutStrLn h $ "5 promote " ++ show p
+        Cmds.promote h p
         set sf [text := "=" ]
   | otherwise = return ()
 

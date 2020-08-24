@@ -40,6 +40,7 @@ library
   exposed-modules: Paths,
                    Macbeth.Fics.FicsConnection
                    Macbeth.Fics.FicsMessage,
+                   Macbeth.Fics.Commands
                    Macbeth.Fics.Api.Api,
                    Macbeth.Fics.Api.Chat,
                    Macbeth.Fics.Api.Game,

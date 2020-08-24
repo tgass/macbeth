@@ -2,15 +2,15 @@ module Macbeth.Wx.Pending (
   wxPending
 ) where
 
-import Macbeth.Fics.FicsMessage
-import Macbeth.Fics.Api.Offer
-import Macbeth.Fics.Api.Player
-import Macbeth.Wx.Utils
-
-import Control.Concurrent.STM
-import Graphics.UI.WX
-import Graphics.UI.WXCore
-import System.IO
+import           Control.Concurrent.STM
+import           Graphics.UI.WX
+import           Graphics.UI.WXCore
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Api.Offer
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Wx.Utils
+import           System.IO
 
 
 data PendingActions =
@@ -76,18 +76,18 @@ ctxMenuHandler :: Handle -> ListCtrl () -> Origin -> Graphics.UI.WXCore.ListEven
 ctxMenuHandler h listCtrl' origin' evt = do
   ctxMenu <- menuPane []
   idx <- listEventGetIndex evt
-  offerId' <- (head . (!! idx)) <$> get listCtrl' items
-  _ <- (if origin' == To then menuPendingTo else menuPendingFrom) ctxMenu h offerId'
+  offerid <- (read . head . (!! idx)) <$> get listCtrl' items
+  _ <- (if origin' == To then menuPendingTo else menuPendingFrom) ctxMenu h offerid
   when (idx >= 0) $ listEventGetPoint evt >>= flip (menuPopup ctxMenu) listCtrl'
 
 
-menuPendingFrom :: Menu () -> Handle -> String -> IO PendingActions
-menuPendingFrom ctxMenu h offerId' = PendingTo
-  <$> menuItem ctxMenu [ text := "Accept", on command := hPutStrLn h ("4 accept " ++ offerId')]
-  <*> menuItem ctxMenu [ text := "Decline", on command := hPutStrLn h ("4 decline " ++ offerId')]
+menuPendingFrom :: Menu () -> Handle -> Int -> IO PendingActions
+menuPendingFrom ctxMenu h offerid = PendingTo
+  <$> menuItem ctxMenu [ text := "Accept", on command := Cmds.acceptId h offerid]
+  <*> menuItem ctxMenu [ text := "Decline", on command := Cmds.declineId h offerid]
 
 
-menuPendingTo :: Menu () -> Handle -> String -> IO PendingActions
-menuPendingTo ctxMenu h offerId' = PendingFrom
-  <$> menuItem ctxMenu [ text := "Withdraw", on command := hPutStrLn h ("4 withdraw " ++ offerId')]
+menuPendingTo :: Menu () -> Handle -> Int -> IO PendingActions
+menuPendingTo ctxMenu h offerid = PendingFrom
+  <$> menuItem ctxMenu [ text := "Withdraw", on command := Cmds.withdrawId h offerid]
 

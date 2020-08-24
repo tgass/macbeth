@@ -2,18 +2,19 @@ module Macbeth.Wx.SoughtList (
   wxSoughtList
 ) where
 
-import Macbeth.Fics.Api.Seek
-import Macbeth.Fics.Api.OngoingGame hiding (gameType, isRated)
-import Macbeth.Fics.FicsMessage
-import Macbeth.Wx.Utils
-import qualified Macbeth.Wx.RuntimeEnv as E
 
-import Control.Concurrent.STM
-import Control.Monad
-import Graphics.UI.WX hiding (when)
-import Graphics.UI.WXCore hiding (when)
-import System.IO
-import Data.List (elemIndex)
+import           Control.Concurrent.STM
+import           Control.Monad
+import           Data.List (elemIndex)
+import           Graphics.UI.WX hiding (when)
+import           Graphics.UI.WXCore hiding (when)
+import           Macbeth.Fics.Api.Seek
+import           Macbeth.Fics.Api.OngoingGame hiding (gameType, isRated)
+import           Macbeth.Fics.FicsMessage
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Wx.Utils
+import qualified Macbeth.Wx.RuntimeEnv as E
+import           System.IO
 
 data SoughtOpts = SoughtOpts { computerOffers :: MenuItem ()
                              , unregisteredPlayers :: MenuItem ()
@@ -105,7 +106,7 @@ filterSoughtList sl opts vSoughtList = do
 
 onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
 onSeekListEvent sl h evt = case evt of
-  ListItemActivated idx -> listCtrlGetItemText sl idx >>= hPutStrLn h . ("4 play " ++)
+  ListItemActivated idx -> listCtrlGetItemText sl idx >>= Cmds.play h
   _ -> return ()
 
 

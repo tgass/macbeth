@@ -4,19 +4,19 @@ module Macbeth.Wx.Chat (
   wxChat
 ) where
 
-import Macbeth.Fics.FicsMessage hiding (gameId)
-import Macbeth.Fics.Api.Chat
-import Macbeth.Fics.Api.Player hiding (handle)
-import Macbeth.Wx.Utils
+import           Control.Concurrent
+import           Control.Monad
+import           Control.Exception
+import           Graphics.UI.WX hiding (when)
+import           Graphics.UI.WXCore hiding (when)
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Fics.FicsMessage hiding (gameId)
+import           Macbeth.Fics.Api.Chat
+import           Macbeth.Fics.Api.Player hiding (handle)
+import           Macbeth.Wx.Utils
 import qualified Macbeth.Wx.RuntimeEnv as E
 import qualified Macbeth.Wx.Config.UserConfig as C
-
-import Control.Concurrent
-import Control.Monad
-import Control.Exception
-import Graphics.UI.WX hiding (when)
-import Graphics.UI.WXCore hiding (when)
-import System.IO
+import           System.IO
 
 eventId :: Int
 eventId = wxID_HIGHEST + 1
@@ -65,7 +65,7 @@ prefill ct (m:mx) = showMsg ct m >> prefill ct mx
 tell :: TextCtrl () -> Username -> Handle -> Chan FicsMessage -> IO ()
 tell ce chatPartner h chan = do
   msg <- get ce text
-  hPutStrLn h $ "7 tell " ++ chatPartner ++ " " ++ msg
+  Cmds.tell h chatPartner msg
   set ce [text := ""]
   writeChan chan $ Chat $ UserMessage chatPartner msg
 

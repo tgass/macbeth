@@ -4,14 +4,14 @@ module Macbeth.Wx.Challenge (
   wxChallenge
 ) where
 
-import Macbeth.Fics.FicsMessage
-import Macbeth.Fics.Api.Game
-import Macbeth.Wx.Utils
-
-import Control.Concurrent
-import Graphics.UI.WX
-import Graphics.UI.WXCore
-import System.IO
+import           Control.Concurrent
+import           Graphics.UI.WX
+import           Graphics.UI.WXCore
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Api.Game
+import           Macbeth.Wx.Utils
+import           System.IO
 
 
 wxChallenge :: Handle -> Challenge -> Chan FicsMessage  -> IO ()
@@ -21,8 +21,8 @@ wxChallenge h c chan = do
   f <- frame []
   p <- panel f []
 
-  b_accept  <- button p [text := "Accept", on command := hPutStrLn h "5 accept" >> close f]
-  b_decline <- button p [text := "Decline", on command := hPutStrLn h "5 decline" >> close f]
+  b_accept  <- button p [text := "Accept", on command := Cmds.accept h >> close f]
+  b_decline <- button p [text := "Decline", on command := Cmds.decline h >> close f]
   st_params <- staticText p [ text := showChallenge c
                             , fontFace := "Avenir Next Medium"
                             , fontSize := 16
