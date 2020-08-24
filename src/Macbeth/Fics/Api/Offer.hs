@@ -1,10 +1,4 @@
-module Macbeth.Fics.Api.Offer (
-  PendingOffer(..),
-  Origin(..),
-  OfferSubject(..),
-  isFrom,
-  isTo
-) where
+module Macbeth.Fics.Api.Offer where
 
 import Macbeth.Fics.Api.Player
 

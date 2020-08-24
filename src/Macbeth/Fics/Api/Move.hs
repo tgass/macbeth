@@ -1,23 +1,4 @@
-module Macbeth.Fics.Api.Move (
-  Move(..),
-  Relation(..),
-  Castling(..),
-  MoveModifier(..),
-  remainingTime,
-  decreaseRemainingTime,
-  colorUser,
-  namePlayer,
-  isNextMoveUser,
-  isOponentMove,
-  wasOponentMove,
-  playerColor,
-  isCheck,
-  isCheckmate,
-  isDrop,
-  isCapture,
-  isCastling,
-  initMove
-) where
+module Macbeth.Fics.Api.Move where
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player

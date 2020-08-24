@@ -1,7 +1,4 @@
-module Macbeth.Fics.Api.Rating (
-  Rating (..),
-  ProvShow (..)
-) where
+module Macbeth.Fics.Api.Rating where
 
 data Rating = Unrated | Guest | Rating {r :: Int, provShow :: ProvShow} deriving (Eq, Ord)
 

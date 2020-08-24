@@ -1,5 +1,6 @@
--- remove SeekColor 
 -- remove all error statements
+-- visualize if check
+
 
 
 --

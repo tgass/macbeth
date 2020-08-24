@@ -1,14 +1,4 @@
-module Macbeth.Fics.Api.Game (
-  Challenge (..),
-  GameParams(..),
-  toTitle,
-  nameOponent,
-  userColor,
-  isUpdate,
-  showChallenge,
-  showShortGameParams,
-  isGameWithPH
-) where
+module Macbeth.Fics.Api.Game where
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player

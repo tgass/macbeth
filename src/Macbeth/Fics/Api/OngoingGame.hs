@@ -1,8 +1,4 @@
-module Macbeth.Fics.Api.OngoingGame (
-  OngoingGame (..),
-  GameType (..),
-  GameSettings (..)
-) where
+module Macbeth.Fics.Api.OngoingGame where
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Rating
