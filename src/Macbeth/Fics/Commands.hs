@@ -2,6 +2,8 @@ module Macbeth.Fics.Commands where
 
 import           Data.Maybe
 import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Seek (SeekColor)
+import qualified Macbeth.Fics.Api.Seek as Seek
 import qualified Macbeth.Wx.Config.SeekConfig as SC
 import           Macbeth.Wx.GameType
 import           System.IO
@@ -60,7 +62,7 @@ unobserve h gameId = hPutStrLn h $ "5 unobserve " ++ show gameId
 match :: Handle -> String -> IO ()
 match h user = hPutStrLn h $ "6 match " ++ user
 
-match2 :: Handle -> String -> Bool -> Int -> Int -> SC.SeekColor -> Category -> Maybe WildBoard -> IO ()
+match2 :: Handle -> String -> Bool -> Int -> Int -> SeekColor -> Category -> Maybe WildBoard -> IO ()
 match2  h user rated time inc color cat mWild = hPutStrLn h $ ("4 match " ++) $ unwords $ filter (/="") [
        user
      , convertIsRated rated
@@ -72,7 +74,7 @@ match2  h user rated time inc color cat mWild = hPutStrLn h $ ("4 match " ++) $ 
 
 -- seek [scTime scInc] [scRated|unscRated] [white|black] [crazyhouse] [suicide]
 --      [wild #] [auto|scManual] [formula] [rating-range]
-seek :: Handle -> Int -> Int -> Bool -> SC.SeekColor -> Category -> Maybe WildBoard -> Bool -> Int -> Int -> IO ()
+seek :: Handle -> Int -> Int -> Bool -> SeekColor -> Category -> Maybe WildBoard -> Bool -> Int -> Int -> IO ()
 seek h time inc rated color cat mWild manual ratingFrom ratingTo = hPutStrLn h $ ("4 seek " ++) $ unwords $ filter (/= "") [
     show time
   , show inc
@@ -100,10 +102,10 @@ convertIsRated :: Bool -> String
 convertIsRated True = "r"
 convertIsRated False = "u"
 
-convertColor :: SC.SeekColor -> String
-convertColor SC.White = "w"
-convertColor SC.Black = "b"
-convertColor SC.Automatic = ""
+convertColor :: SeekColor -> String
+convertColor Seek.White = "w"
+convertColor Seek.Black = "b"
+convertColor Seek.Automatic = ""
 
 convertRatingRange :: Int -> Int -> String
 convertRatingRange from to = show from ++ "-" ++ show to

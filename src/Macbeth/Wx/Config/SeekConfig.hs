@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -15,10 +14,9 @@ import           Control.Lens
 import           Data.Aeson.Types
 import           Data.Char
 import           Data.Maybe
+import           Macbeth.Fics.Api.Seek
 import           Macbeth.Wx.GameType 
 import           GHC.Generics
-
-data SeekColor = Automatic | White | Black deriving (Show, Read, Generic, Enum, Bounded)
 
 data SeekConfig' a b c d e = SeekConfig {
     _scCategory :: a
@@ -113,9 +111,6 @@ defaultFormat = SeekConfig
   (Just defaultRatingFrom) 
   (Just defaultRatingTo)
 
-
-instance ToJSON SeekColor
-instance FromJSON SeekColor
 
 instance ToJSON SeekConfigFormat where
   toJSON = genericToJSON customOptions

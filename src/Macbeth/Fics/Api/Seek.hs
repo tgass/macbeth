@@ -1,9 +1,14 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Macbeth.Fics.Api.Seek where
 
-import Macbeth.Fics.Api.Api
+import Data.Aeson
 import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Api.Rating
 import Macbeth.Fics.Utils.Bitmask
+import GHC.Generics
+
+data SeekColor = Automatic | White | Black deriving (Show, Read, Eq, Generic, Enum, Bounded)
 
 data Seek = Seek {
     id :: Int
@@ -14,7 +19,7 @@ data Seek = Seek {
   , timeIncPerMove :: Int
   , isRated :: Bool
   , gameType :: GameType
-  , color :: Maybe PColor
+  , color :: SeekColor
   , ratingRange :: (Int, Int)
 --                 , startMode :: StartMode
 --                 , checkFormula :: Bool
@@ -32,3 +37,7 @@ data Title =   Unregistered
              | WomenFideMaster deriving (Bounded, Enum, Eq, Show)
 
 instance ToBitMask Title
+
+instance ToJSON SeekColor
+instance FromJSON SeekColor
+

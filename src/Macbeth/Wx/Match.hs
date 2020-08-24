@@ -6,6 +6,7 @@ import           Control.Concurrent.Chan
 import           Control.Monad.Cont
 import           Data.Map
 import           Graphics.UI.WX hiding (color)
+import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.FicsMessage
 import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Wx.GameType
@@ -66,7 +67,8 @@ matchInputs p isGuest = WxMatch
   <*> textEntry p [ text := "5" ]
   <*> textEntry p [ text := "0" ]
   <*> checkBox p [ enabled := not isGuest ]
-  <*> choice p [ tooltip := "color", sorted := False, items := ["Automatic", "White", "Black"]]
+  <*> choice p [ tooltip := "color", sorted := False
+               , items := fmap show $ enumFrom (minBound :: SeekColor)]
 
 
 -- 4 match GuestXYZZ rated 5 0 white

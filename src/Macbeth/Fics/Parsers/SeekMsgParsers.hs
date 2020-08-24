@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Macbeth.Fics.Parsers.SeekMsgParsers (
   clearSeek,
   newSeek,
@@ -7,7 +5,7 @@ module Macbeth.Fics.Parsers.SeekMsgParsers (
   seekNotAvailable
 ) where
 
-import Macbeth.Fics.Api.Api
+import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Api.Rating
@@ -40,9 +38,9 @@ seek' = Seek
   <*> (space *> "i=" *> decimal)
   <*> (space *> "r=" *> ("r" *> pure True <|> "u" *> pure False))
   <*> (space *> "tp=" *> gameType')
-  <*> (space *> "c=" *> ("W" *> pure (Just White) <|>
-                         "B" *> pure (Just Black) <|>
-                         "?" *> pure Nothing))
+  <*> (space *> "c=" *> ("W" *> pure White <|>
+                         "B" *> pure Black <|>
+                         "?" *> pure Automatic))
   <*> (space *> "rr=" *> ((,) <$> decimal <*> ("-" *> decimal)))
 
 gameType' :: Parser GameType
