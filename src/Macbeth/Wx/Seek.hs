@@ -15,19 +15,16 @@ import qualified Data.Map.Strict as Map
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import           Macbeth.Fics.Api.Seek
+import           Macbeth.Fics.Api.GameType
 import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.FicsMessage hiding (gameId)
 import           Macbeth.Wx.Config.SeekConfig
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
-import           Macbeth.Wx.GameType
 import qualified Macbeth.Wx.RuntimeEnv as E
 import qualified Macbeth.Wx.Utils as Utl
-import           System.IO
-
 
 -- seek [scTime scInc] [scRated|unscRated] [white|black] [crazyhouse] [suicide] [wild #] [auto|scManual] [formula] [rating-range]
 type WxSeekConfig = SeekConfig' (Choice ()) (Choice ()) (Choice ()) (TextCtrl ()) (CheckBox ())
-
 
 seekFrame :: E.RuntimeEnv -> Bool -> Chan FicsMessage -> IO ()
 seekFrame env isGuest chan = do
@@ -44,7 +41,7 @@ seekFrame env isGuest chan = do
     set (wxSeek ^. scBoard) [ items := fmap displayBoard $ gameTypes Map.! (seekConfig ^. scCategory)
                             , selection := fromEnum $ fromJust $ seekConfig ^. scBoard ]
 
-  b_ok  <- button p [text := "Create", on command := readSeek wxSeek >>= runSeek h >> saveSeekConfig env wxSeek >> close f ]
+  b_ok  <- button p [text := "Create", on command := readSeek wxSeek >>= Cmds.seek h >> saveSeekConfig env wxSeek >> close f ]
   b_can <- button p [text := "Cancel", on command := close f ]
 
   set f [ defaultButton := b_ok, layout := fill $ container p $ margin 10 $ column 15 [
@@ -74,9 +71,6 @@ saveSeekConfig env wxSeek = do
   UserConfig.saveConfig updated
   E.setSeekConfig env currentSeekConfig
 
-
-runSeek :: Handle -> SeekConfig -> IO ()
-runSeek h s = Cmds.seek h (s ^. scTime) (s ^. scInc) (s ^. scRated) (s ^. scColor) (s ^. scCategory) (s ^. scBoard) (s ^. scManual) (s ^. scRatingFrom) (s ^. scRatingTo)
 
 readSeek :: WxSeekConfig -> IO SeekConfig
 readSeek s = SeekConfig

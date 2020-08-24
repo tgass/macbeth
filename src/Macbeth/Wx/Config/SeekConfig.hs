@@ -3,9 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StandaloneDeriving  #-}
-{-# LANGUAGE TemplateHaskell  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Macbeth.Wx.Config.SeekConfig where
 
@@ -15,25 +13,8 @@ import           Data.Aeson.Types
 import           Data.Char
 import           Data.Maybe
 import           Macbeth.Fics.Api.Seek
-import           Macbeth.Wx.GameType 
-import           GHC.Generics
+import           Macbeth.Fics.Api.GameType 
 
-data SeekConfig' a b c d e = SeekConfig {
-    _scCategory :: a
-  , _scBoard :: b
-  , _scColor :: c
-  , _scTime :: d
-  , _scInc :: d
-  , _scRated :: e
-  , _scManual :: e
-  , _scRatingFrom :: d
-  , _scRatingTo :: d
-} deriving (Show, Generic)
-
-makeLenses ''SeekConfig'
-
-
-type SeekConfig = SeekConfig' Category (Maybe WildBoard) SeekColor Int Bool
 type SeekConfigFormat = SeekConfig' (Maybe Category) (Maybe WildBoard) (Maybe SeekColor) (Maybe Int) (Maybe Bool)
 
 convert :: SeekConfigFormat -> SeekConfig

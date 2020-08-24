@@ -26,9 +26,10 @@ import           Data.Maybe
 import           Data.Yaml
 import           GHC.Generics
 import           Macbeth.Utils.Utils
+import           Macbeth.Fics.Api.Seek (SeekConfig)
 import           Macbeth.Wx.Config.Sounds
 import           Macbeth.Wx.Config.BoardConfig
-import           Macbeth.Wx.Config.SeekConfig (SeekConfig, SeekConfigFormat)
+import           Macbeth.Wx.Config.SeekConfig (SeekConfigFormat)
 import qualified Macbeth.Wx.Config.SeekConfig as SeekConfig
 import           Paths
 import           System.Directory

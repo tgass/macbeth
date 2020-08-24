@@ -4,8 +4,7 @@ import           Data.Maybe
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Seek (SeekColor)
 import qualified Macbeth.Fics.Api.Seek as Seek
-import qualified Macbeth.Wx.Config.SeekConfig as SC
-import           Macbeth.Wx.GameType
+import           Macbeth.Fics.Api.GameType
 import           System.IO
 
 abort :: Handle -> IO ()
@@ -65,25 +64,17 @@ match h user = hPutStrLn h $ "6 match " ++ user
 match2 :: Handle -> String -> Bool -> Int -> Int -> SeekColor -> Category -> Maybe WildBoard -> IO ()
 match2  h user rated time inc color cat mWild = hPutStrLn h $ ("4 match " ++) $ unwords $ filter (/="") [
        user
-     , convertIsRated rated
+     , Seek.convertIsRated rated
      , show time
      , show inc
-     , convertColor color
+     , Seek.convertColor color
      , gameTypeSelectionToString cat mWild
      ]
 
 -- seek [scTime scInc] [scRated|unscRated] [white|black] [crazyhouse] [suicide]
 --      [wild #] [auto|scManual] [formula] [rating-range]
-seek :: Handle -> Int -> Int -> Bool -> SeekColor -> Category -> Maybe WildBoard -> Bool -> Int -> Int -> IO ()
-seek h time inc rated color cat mWild manual ratingFrom ratingTo = hPutStrLn h $ ("4 seek " ++) $ unwords $ filter (/= "") [
-    show time
-  , show inc
-  , convertIsRated rated
-  , convertColor color
-  , gameTypeSelectionToString cat mWild
-  , convertIsManual manual
-  , convertRatingRange ratingFrom ratingTo
-  ]
+seek :: Handle -> Seek.SeekConfig -> IO ()
+seek h = hPutStrLn h . ("4 " ++) . Seek.mkSeekString 
 
 ping :: Handle -> IO ()
 ping h = hPutStrLn h "5 ping"
@@ -96,22 +87,5 @@ who h = hPutStrLn h "5 who"
 
 withdrawId :: Handle -> Int -> IO ()
 withdrawId h offerId = hPutStrLn h $ "6 withdraw " ++ show offerId
-
-
-convertIsRated :: Bool -> String
-convertIsRated True = "r"
-convertIsRated False = "u"
-
-convertColor :: SeekColor -> String
-convertColor Seek.White = "w"
-convertColor Seek.Black = "b"
-convertColor Seek.Automatic = ""
-
-convertRatingRange :: Int -> Int -> String
-convertRatingRange from to = show from ++ "-" ++ show to
-
-convertIsManual :: Bool -> String
-convertIsManual True = "m"
-convertIsManual False = "a"
 
 

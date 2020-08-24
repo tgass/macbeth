@@ -6,10 +6,10 @@ import           Control.Concurrent.Chan
 import           Control.Monad.Cont
 import           Data.Map
 import           Graphics.UI.WX hiding (color)
-import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Api.Seek (SeekColor)
+import           Macbeth.Fics.Api.GameType
 import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Wx.GameType
 import           Macbeth.Wx.Utils
 import           System.IO
 

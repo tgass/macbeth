@@ -26,11 +26,11 @@ import           Development.GitRev
 import           Graphics.UI.WX hiding (play, get, when)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
+import           Macbeth.Fics.Api.Seek (SeekConfig)
 import           Macbeth.Wx.Config.UserConfig (Config (..))
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import           Macbeth.Wx.Config.BoardConfig (BoardConfig)
 import qualified Macbeth.Wx.Config.BoardConfig as BC
-import           Macbeth.Wx.Config.SeekConfig (SeekConfig)
 import           Macbeth.Wx.Game.PieceSet
 import           Paths
 import           Sound.ALUT

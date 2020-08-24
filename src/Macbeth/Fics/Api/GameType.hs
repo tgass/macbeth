@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Macbeth.Wx.GameType where
+module Macbeth.Fics.Api.GameType where
 
 import           Data.Aeson.Types
 import           Data.Char

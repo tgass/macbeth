@@ -5,7 +5,6 @@ module Macbeth.Fics.Parsers.SeekMsgParsers (
   seekNotAvailable
 ) where
 
-import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.FicsMessage
 import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Api.Rating
