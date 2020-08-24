@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings, LambdaCase #-}
-
 module Macbeth.Wx.ToolBox (
   wxToolBox
 ) where
@@ -190,10 +188,12 @@ onMouse :: Notebook() -> Point -> IO Int
 onMouse nb p = propagateEvent >> notebookHitTest nb p flag
 
 clickHandler :: Handle -> Notebook () -> Int -> IO ()
-clickHandler h nb idx = notebookGetPageText nb idx >>= \case
-  "Games" -> Cmds.games h
-  "Players" -> Cmds.who h
-  _ -> return ()
+clickHandler h nb idx 
+  | idx == -1 = return () -- click didn't happen on a notebook tab
+  | otherwise = notebookGetPageText nb idx >>= \case
+      "Games" -> Cmds.games h
+      "Players" -> Cmds.who h
+      _ -> return ()
 
 
 {-# NOINLINE flag #-}
