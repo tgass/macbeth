@@ -40,6 +40,8 @@ library
   default-extensions: 
     LambdaCase
     OverloadedStrings
+    RecordWildCards
+    DeriveGeneric
   exposed-modules: Paths,
                    Macbeth.Fics.FicsConnection
                    Macbeth.Fics.FicsMessage,

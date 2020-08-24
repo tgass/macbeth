@@ -140,7 +140,7 @@ wxToolBox env chan = do
         LoginTimeout -> set statusMsg [ text := "Login Timeout." ]
 
         LoginPrompt | (env `E.getConfig` C.autologin) -> hPutStrLn h (maybe (error "autologin: username not set") C.username (env `E.getConfig` C.user))
-                    | otherwise -> dupChan chan >>= showLogin h
+                    | otherwise -> dupChan chan >>= wxLogin h
 
         Password -> when (env `E.getConfig` C.autologin) $
           hPutStrLn h (maybe (error "autologin: password not set") (decrypt . C.password) (env `E.getConfig` C.user))

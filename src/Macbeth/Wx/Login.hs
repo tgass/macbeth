@@ -1,36 +1,30 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Macbeth.Wx.Login (
-  showLogin
+  wxLogin
 ) where
 
-import Macbeth.Fics.FicsMessage
-import Macbeth.Wx.Utils
+import           Control.Concurrent.Chan
+import           Control.Monad
+import           Control.Monad.Reader
+import           Graphics.UI.WX hiding (when)
+import           Graphics.UI.WXCore hiding (when)
+import           Macbeth.Fics.FicsMessage
+import           Macbeth.Wx.Utils
 import qualified Macbeth.Wx.Config.UserConfig as Config
+import           System.IO
 
-import Control.Concurrent.Chan
-import Control.Monad
-import Control.Monad.Reader
-import Graphics.UI.WX hiding (when)
-import Graphics.UI.WXCore hiding (when)
-import System.IO
-
-data WxLogin = WxLogin {
-    username :: TextCtrl ()
-  , password :: TextCtrl ()
-  , guestLogin :: CheckBox ()
-  , saveCredentials :: CheckBox ()
+data Login' a b = Login {
+    username :: a
+  , password :: a
+  , guestLogin :: b
+  , saveCredentials :: b
 }
 
-data LoginData = LoginData {
-    username' :: String
-  , password' :: String
-  , guestLogin' :: Bool
-  , saveCredentials' :: Bool
-}
+type WxLogin = Login' (TextCtrl ()) (CheckBox ())
+type LoginData = Login' String Bool
 
-showLogin :: Handle -> Chan FicsMessage -> IO ()
-showLogin h chan = do
+
+wxLogin :: Handle -> Chan FicsMessage -> IO ()
+wxLogin h chan = do
   f <- frameFixed [ text := "Macbeth" ]
   p <- panel f []
   wxInputs <- loginInputs p
@@ -42,10 +36,10 @@ showLogin h chan = do
   set f [ defaultButton := b_ok
         , layout := container p $ margin 10 $ column 25 [
               boxed "Login @ freechess.org" (grid 15 15 [
-                [ label "Username:", hfill $ widget $ username wxInputs]
-               ,[ label "Password:", hfill $ widget $ password wxInputs]
-               ,[ label "Login as Guest:", hfill $ widget $ guestLogin wxInputs]
-               ,[ label "Auto-Login:", hfill $ widget $ saveCredentials wxInputs]])
+                 [ label "Username:", hfill $ widget $ username wxInputs]
+               , [ label "Password:", hfill $ widget $ password wxInputs]
+               , [ label "Login as Guest:", hfill $ widget $ guestLogin wxInputs]
+               , [ label "Auto-Login:", hfill $ widget $ saveCredentials wxInputs]])
             , floatBottomRight $ row 5 [widget b_ok, widget b_can]]
         ]
   dupChan chan >>= registerWxCloseEventListener f
@@ -53,37 +47,42 @@ showLogin h chan = do
 
 okBtnHandler :: WxLogin -> Frame () -> Handle -> Chan FicsMessage -> IO ()
 okBtnHandler wxInputs f h chan = do
-  loginData' <- loginData wxInputs
-  runReaderT (putUsername >> putPassword >> lift (close f)) loginData'
+  loginData <- extract wxInputs
+  flip runReaderT loginData $ do
+    putUsername 
+    putPassword 
+    lift $ close f
   where
     putUsername :: ReaderT LoginData IO ()
-    putUsername = usernameOrGuest <$> ask >>= liftIO . hPutStrLn h
+    putUsername = asks usernameOrGuest >>= liftIO . hPutStrLn h
 
     -- TODO: do this with `fix`
     putPassword :: ReaderT LoginData IO ()
     putPassword = lift (readChan chan) >>= \case
-      Password -> password' <$> ask >>= lift . hPutStrLn h >> putPassword
+      Password -> asks password >>= lift . hPutStrLn h >> putPassword
       GuestLogin {} -> lift (hPutStrLn h "") >> putPassword
       LoginPrompt -> return () -- close this frame, new one is opened in Toolbox
       LoggedIn {} -> ask >>= \login -> lift $
-        when (saveCredentials' login) $ Config.saveCredentials (usernameOrGuest login) (password' login)
+        when (saveCredentials login) $ Config.saveCredentials (usernameOrGuest login) (password login)
       _ -> putPassword
 
 
 usernameOrGuest :: LoginData -> String
-usernameOrGuest login = if guestLogin' login then "guest" else username' login
+usernameOrGuest login 
+  | guestLogin login = "guest"
+  | otherwise = username login
 
 
-loginData :: WxLogin -> IO LoginData
-loginData wxlogin = LoginData
-  <$> get (username wxlogin) text
-  <*> get (password wxlogin) text
-  <*> get (guestLogin wxlogin) checked
-  <*> get (saveCredentials wxlogin) checked
+extract :: WxLogin -> IO LoginData
+extract w = Login
+  <$> get (username w) text
+  <*> get (password w) text
+  <*> get (guestLogin w) checked
+  <*> get (saveCredentials w) checked
 
 
 loginInputs :: Panel () -> IO WxLogin
-loginInputs p = WxLogin
+loginInputs p = Login
   <$> textEntry p [alignment := AlignRight]
   <*> textCtrlEx p wxTE_PASSWORD [alignment := AlignRight]
   <*> checkBox p []
@@ -91,7 +90,8 @@ loginInputs p = WxLogin
 
 
 toggleLoginFields :: WxLogin -> IO ()
-toggleLoginFields wxLogin = do
-  isChecked <- get (guestLogin wxLogin) checked
-  set (username wxLogin) [enabled := not isChecked]
-  set (password wxLogin) [enabled := not isChecked]
+toggleLoginFields w = do
+  isChecked <- get (guestLogin w) checked
+  set (username w) [enabled := not isChecked]
+  set (password w) [enabled := not isChecked]
+

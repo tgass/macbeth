@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings, LambdaCase #-}
-
 module Macbeth.Fics.FicsConnection (
   ficsConnection,
   linesC,
