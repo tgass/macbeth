@@ -1,3 +1,7 @@
+-- remove SeekColor 
+-- remove all error statements
+
+
 --
 Get appropriate LICENSE
 
