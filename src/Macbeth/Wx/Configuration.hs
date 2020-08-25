@@ -2,6 +2,7 @@ module Macbeth.Wx.Configuration (
   wxConfiguration
 ) where
 
+import           Control.Lens hiding (set)
 import           Control.Monad.Cont
 import           Control.Concurrent.Chan
 import           Control.Monad.Except
@@ -15,6 +16,7 @@ import           Macbeth.Wx.Config.Sounds
 import           Macbeth.Wx.RuntimeEnv
 import           Macbeth.Wx.Utils
 import qualified Macbeth.Wx.Config.UserConfig as C
+import           Macbeth.Wx.Config.UserConfig (cUser)
 import qualified Macbeth.Wx.Config.BoardConfig as BC
 
 
@@ -66,7 +68,7 @@ parseAndSave env ct status = do
   oldConf <- liftIO C.loadConfig
   newConf <- ExceptT $ (Y.decodeEither' . BS.pack) <$> get ct text
   liftIO $ do
-    C.saveConfig (addUser newConf (C.user oldConf))
+    C.saveConfig $ newConf & cUser .~ (oldConf ^. cUser)
     setStatus status "Configuration saved."
     boardConfig <- BC.convert (fromMaybe BC.defaultBoardConfig $ C.boardConfig newConf) (C.directory newConf)
     setBoardConfig env boardConfig
@@ -74,11 +76,7 @@ parseAndSave env ct status = do
 
 
 removeUser :: C.Config -> C.Config
-removeUser c = c { C.user = Nothing }
-
-
-addUser :: C.Config -> Maybe C.User -> C.Config
-addUser c mUser = c { C.user = mUser }
+removeUser c = c & cUser .~ Nothing
 
 
 comments :: String

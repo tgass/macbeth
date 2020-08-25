@@ -4,6 +4,7 @@
 
 module Macbeth.Wx.RuntimeEnv (
   RuntimeEnv(handle, rtBoardConfig, rtSeekConfig),
+  reConfig, reIsAutoLogin,
   username,
   setUsername,
   setBoardConfig,
@@ -14,12 +15,16 @@ module Macbeth.Wx.RuntimeEnv (
   getVersion,
   getSoundConfig,
   getIconFilePath,
-  pieceToBitmap
+  pieceToBitmap,
+  getLoginUsername,
+  getLoginPassword
 ) where
 
 
+import           Control.Lens
 import           Control.Concurrent.STM
-import           Data.Maybe (fromMaybe)
+import           Data.Char
+import           Data.Maybe
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Development.GitRev
@@ -27,7 +32,8 @@ import           Graphics.UI.WX hiding (play, get, when)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Api.Seek (SeekConfig)
-import           Macbeth.Wx.Config.UserConfig (Config (..))
+import           Macbeth.Utils.Utils
+import           Macbeth.Wx.Config.UserConfig (Config (..), uUsername, uPassword, cUser, cAutologin)
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import           Macbeth.Wx.Config.BoardConfig (BoardConfig)
 import qualified Macbeth.Wx.Config.BoardConfig as BC
@@ -47,14 +53,17 @@ import           System.Log.Handler.Syslog
 
 data RuntimeEnv = RuntimeEnv {
     handle :: Handle
-  , config :: Config
+  , _reConfig :: Config
   , sources :: [Source]
   , pieceBitmapMap :: Map (PieceSet, Piece, Int) (Bitmap ())
   , bufferMap :: Map String Buffer
   , userHandle :: TVar UserHandle
   , rtBoardConfig :: TVar BoardConfig
   , rtSeekConfig :: TVar SeekConfig
+  , _reIsAutoLogin :: TVar Bool
 }
+
+makeLenses ''RuntimeEnv
 
 initRuntime :: Handle -> IO RuntimeEnv
 initRuntime h = do
@@ -69,6 +78,7 @@ initRuntime h = do
     <*> newTVarIO emptyUserHandle 
     <*> (BC.convert (fromMaybe BC.defaultBoardConfig $ UserConfig.boardConfig config) (UserConfig.directory config) >>= newTVarIO)
     <*> (newTVarIO $ UserConfig.getSeekConfig config)
+    <*> newTVarIO (config ^. cAutologin)
 
 
 username :: RuntimeEnv -> IO Username
@@ -88,7 +98,7 @@ setSeekConfig env = atomically . writeTVar (rtSeekConfig env)
 
 
 getConfig :: RuntimeEnv -> (Config -> a) -> a
-getConfig env f = f $ config env
+getConfig env f = f $ env ^. reConfig
 
 
 getVersion :: String
@@ -100,7 +110,7 @@ pieceToBitmap env pieceSet piece size = pieceBitmapMap env Map.! (pieceSet, piec
 
 
 getSoundConfig :: RuntimeEnv -> (UserConfig.Sounds -> a) -> a
-getSoundConfig env f = f $ UserConfig.soundsOrDef $ config env
+getSoundConfig env f = f $ UserConfig.soundsOrDef $ env ^. reConfig
 
 
 -- Please remember, this is why I use ALUT. Switching to wx controlled sounds didn't work
@@ -109,7 +119,7 @@ playSound :: RuntimeEnv -> (UserConfig.Sounds -> Maybe String) -> IO ()
 playSound env f
   | UserConfig.enabled soundConfig = play' (sources env) mBuffer
   | otherwise = return ()
-  where soundConfig = UserConfig.soundsOrDef $ config env
+  where soundConfig = UserConfig.soundsOrDef $ env ^. reConfig
         mBuffer = f soundConfig >>= (`Map.lookup` bufferMap env)
 
 
@@ -172,4 +182,18 @@ initLogger = do
       setFormatter lh (simpleLogFormatter "$time $msg")
   updateGlobalLogger rootLoggerName $ addHandler syslogH
 #endif
+
+
+getLoginUsername :: RuntimeEnv -> String
+getLoginUsername env = fromMaybe "guest" $ env ^. reConfig ^? cUser . _Just . uUsername
+
+getLoginPassword :: RuntimeEnv -> String
+getLoginPassword env = 
+  let mPassword = decrypt <$> env ^. reConfig ^? cUser . _Just . uPassword
+  in case mPassword of
+    Just pw   
+      -- check that in case password was corrupted, there is at least one printable character send to fics server
+      | any isPrint pw -> pw
+      | otherwise -> ""
+    Nothing -> ""
 

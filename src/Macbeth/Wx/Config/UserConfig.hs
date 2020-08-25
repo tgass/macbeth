@@ -1,12 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Macbeth.Wx.Config.UserConfig (
   Config(..),
+  cAutologin, cUser,
   chatOrDef,
   soundsOrDef,
-  User(..),
+  User(..), uUsername, uPassword,
   Sounds(..),
   GameS(..),
   MoveS(..),
@@ -20,8 +20,10 @@ module Macbeth.Wx.Config.UserConfig (
   getSeekConfig
 ) where
 
+import           Control.Lens
 import           Control.Applicative
 import           Control.Monad
+import           Data.Aeson
 import           Data.Maybe
 import           Data.Yaml
 import           GHC.Generics
@@ -41,25 +43,33 @@ logger = "Macbeth.Wx.Config.UserConfig"
 
 data Config = Config {
     directory :: FilePath
-  , autologin :: Bool
+  , _cAutologin :: Bool
   , fontSize :: Int
-  , user :: Maybe User
+  , _cUser :: Maybe User
   , boardConfig :: Maybe BoardConfigFormat
   , sounds :: Maybe Sounds
   , seekConfig :: Maybe SeekConfigFormat
 } deriving (Show, Generic)
 
-instance FromJSON Config
-instance ToJSON Config
+instance ToJSON Config where
+  toJSON = genericToJSON (customOptions "_c")
 
+instance FromJSON Config where
+  parseJSON = genericParseJSON (customOptions "_c")
 
 data User = User {
-    username :: String
-  , password :: String
-} deriving (Show, Generic)
+    _uUsername :: String
+  , _uPassword :: String
+  } deriving (Show, Generic)
 
-instance FromJSON User
-instance ToJSON User
+instance ToJSON User where
+  toJSON = genericToJSON (customOptions "_u")
+
+instance FromJSON User where
+  parseJSON = genericParseJSON (customOptions "_u")
+
+makeLenses ''Config
+makeLenses ''User
 
 
 chatOrDef :: Sounds -> ChatS
@@ -117,24 +127,22 @@ saveConfig config = getMacbethUserDataDir "macbeth.yaml" >>= flip encodeFile con
 
 
 saveCredentials :: String -> String -> IO ()
-saveCredentials username' password' = do
+saveCredentials username password = do
   config <- loadConfig
-  saveConfig $ config {user = Just $ User username' (encrypt password'), autologin = True}
+  saveConfig $ config {_cUser = Just $ User username (encrypt password), _cAutologin = True}
 
 
 defaultConfig :: String -> Config
 defaultConfig dir = Config {
     fontSize = 12
   , directory = dir
-  , autologin = False
+  , _cAutologin = False
   , boardConfig = Just defaultBoardConfig
-  , user = Nothing
+  , _cUser = Nothing
   , sounds = Just defaultSounds
   , seekConfig = Just SeekConfig.defaultFormat
 }
 
 getSeekConfig :: Config -> SeekConfig
 getSeekConfig config = SeekConfig.convert $ fromMaybe SeekConfig.defaultFormat $ seekConfig config
-
-
 

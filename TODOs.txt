@@ -1,7 +1,4 @@
--- remove all error statements
 -- visualize if check
-
-
 
 --
 Get appropriate LICENSE

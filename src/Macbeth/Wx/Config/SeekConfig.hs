@@ -12,6 +12,7 @@ import           Control.Lens
 import           Data.Aeson.Types
 import           Data.Char
 import           Data.Maybe
+import           Macbeth.Utils.Utils
 import           Macbeth.Fics.Api.Seek
 import           Macbeth.Fics.Api.GameType 
 
@@ -94,17 +95,8 @@ defaultFormat = SeekConfig
 
 
 instance ToJSON SeekConfigFormat where
-  toJSON = genericToJSON customOptions
+  toJSON = genericToJSON (customOptions "_sc")
 
 instance FromJSON SeekConfigFormat where
-  parseJSON = genericParseJSON customOptions
-
-
-customOptions :: Options
-customOptions = defaultOptions { fieldLabelModifier = lowerFirst . drop 3 }
-
-
-lowerFirst :: String -> String
-lowerFirst [] = []
-lowerFirst (x:xs) = toLower x : xs
+  parseJSON = genericParseJSON (customOptions "_sc")
 

@@ -4,7 +4,10 @@ module Macbeth.Wx.ToolBox (
 
 import           Control.Concurrent
 import           Control.Concurrent.Chan ()
+import           Control.Concurrent.STM.TVar
+import           Control.Lens hiding (set)
 import           Control.Monad
+import           Control.Monad.STM
 import           Foreign.Marshal.Alloc
 import           Foreign.Storable
 import           Foreign.Ptr
@@ -15,7 +18,6 @@ import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.FicsMessage
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Api.Player
-import           Macbeth.Utils.Utils
 import           Macbeth.Wx.Configuration
 import           Macbeth.Wx.ChatRegistry
 import           Macbeth.Wx.Finger
@@ -32,6 +34,7 @@ import           Macbeth.Wx.PartnerOffer
 import           Macbeth.Wx.Pending
 import qualified Macbeth.Wx.Config.UserConfig as C
 import qualified Macbeth.Wx.RuntimeEnv as E
+import           Macbeth.Wx.RuntimeEnv (reIsAutoLogin)
 import           System.IO
 import           System.IO.Unsafe
 
@@ -135,20 +138,23 @@ wxToolBox env chan = do
 
         SeekNotAvailable -> set statusMsg [text := "That seek is not available."]
 
-        InvalidPassword  -> void $ set statusMsg [text := "Invalid password."]
+        InvalidPassword -> readTVarIO (env ^. reIsAutoLogin) >>= \case
+          True -> do
+             atomically $ writeTVar (env ^. reIsAutoLogin) False
+             dupChan chan >>= wxLogin h
+          False -> void $ set statusMsg [text := "Invalid password."]
 
-        LoginTimeout -> set statusMsg [ text := "Login Timeout." ]
+        LoginPrompt -> readTVarIO (env ^. reIsAutoLogin) >>= \case 
+          True -> hPutStrLn h $ E.getLoginUsername env
+          False -> dupChan chan >>= wxLogin h
 
-        LoginPrompt | (env `E.getConfig` C.autologin) -> hPutStrLn h (maybe (error "autologin: username not set") C.username (env `E.getConfig` C.user))
-                    | otherwise -> dupChan chan >>= wxLogin h
+        Password -> readTVarIO (env ^. reIsAutoLogin) >>= \case 
+          True -> hPutStrLn h $ E.getLoginPassword env
+          False -> return ()
 
-        Password -> when (env `E.getConfig` C.autologin) $
-          hPutStrLn h (maybe (error "autologin: password not set") (decrypt . C.password) (env `E.getConfig` C.user))
-
-        GuestLogin _ -> do
-          when (env `E.getConfig` C.autologin) $ hPutStrLn h ""
-          set tbarItem_seek  [on command := dupChan chan >>= seekFrame env True ]
-          set tbarItem_match  [on command := dupChan chan >>= wxMatch h True ]
+        GuestLogin _ -> readTVarIO (env ^. reIsAutoLogin) >>= \case 
+          True -> hPutStrLn h ""
+          False -> return ()
 
         LoggedIn userHandle -> do
           E.playSound env (C.logonToServer . C.other)
@@ -158,6 +164,8 @@ wxToolBox env chan = do
           hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name userHandle]
           mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger, tbarItem_history, tbarItem_settings]
+
+        LoginTimeout -> set statusMsg [ text := "Login Timeout." ]
 
         msg@Finger {} -> dupChan chan >>= wxInfo msg
 
@@ -203,3 +211,4 @@ flag  =  unsafePerformIO flag'
              work <- malloc :: IO (Ptr CInt)
              poke work (fromIntegral wxBK_HITTEST_ONPAGE)
              return work
+
