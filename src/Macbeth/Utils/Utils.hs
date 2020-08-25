@@ -4,11 +4,11 @@ module Macbeth.Utils.Utils (
   , decrypt
 ) where
 
-import Macbeth.Utils.Salt
 
-import Control.Monad.State
-import Crypto.Cipher
+import           Control.Monad.State
+import           Crypto.Cipher
 import qualified Data.ByteString.Char8 as B
+import           Macbeth.Utils.Salt
 
 
 formatTime :: Int -> String
