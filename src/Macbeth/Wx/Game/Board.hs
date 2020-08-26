@@ -54,11 +54,17 @@ drawTile dc state (ColorTile c) sq' = dcWithBrushStyle dc (brushSolid c) $ paint
 drawHighlightLastMove :: BoardT a
 drawHighlightLastMove = do
   (dc, state) <- ask
-  liftIO $ when (isHighlightMove $ lastMove state) $
+  liftIO $ when (showHighlightMove state) $ do
     sequence_ $ paintHighlight dc state blue <$> pieceMove state
+    when (showHighlightCheck state) $ paintHighlightCheck dc state (rgb 255 69 00) $ kingSq (lastMove state)
   where
-    isHighlightMove :: Move -> Bool
-    isHighlightMove m = (isJust . moveVerbose) m && (wasOponentMove m || relation m == Observing)
+    showHighlightMove :: BoardState -> Bool
+    showHighlightMove state = 
+      let move = lastMove state 
+      in (isJust $ moveVerbose move) && ((wasOponentMove move && isWaiting state) || relation move == Observing)
+
+    showHighlightCheck :: BoardState -> Bool
+    showHighlightCheck state = (isCheck $ lastMove state) && maybe True (not . isDraggedKing) (draggedPiece state)
 
 
 drawHighlightPreMove :: BoardT a
@@ -123,10 +129,19 @@ paintHighlight dc state color (DropMove _ s1) = do
     dcSetBrush dc brushBg
     paintSquare dc state s1
 
+paintHighlightCheck :: DC a -> BoardState -> Color -> Square -> IO ()
+paintHighlightCheck dc state color square = do
+  set dc [pen := penColored color 1]
+  withBrushStyle (BrushStyle BrushTransparent color) $ \brush -> do
+    dcSetBrush dc brush
+    mapM_ (paintCircle dc state square) [0.97 - x * 0.1 | x <- [0..5]]
 
 paintSquare :: DC a -> BoardState -> Square -> IO ()
 paintSquare dc state sq = drawRect dc (squareToRect' (squareSizePx state) sq (perspective state)) []
 
+paintCircle :: DC a -> BoardState -> Square -> Double -> IO ()
+paintCircle dc state sq scale = circle dc pt (floor $ scale * fromIntegral (squareSizePx state) / (2 :: Double)) []
+  where pt = squareToPoint (squareSizePx state) sq (perspective state)
 
 onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
 onMouseEvent h vState = \case

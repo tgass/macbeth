@@ -1,6 +1,7 @@
 module Macbeth.Utils.BoardUtils (
   drawArrow,
   squareToRect',
+  squareToPoint,
   toPos'
 ) where
 
@@ -20,6 +21,8 @@ colToInt Black = abs . (7-) . fromEnum
 toPos' :: Int -> Square -> PColor -> Point
 toPos' size' (Square c r) color' = point (colToInt color' c * size') (rowToInt color' r * size')
 
+squareToPoint :: Int -> Square -> PColor -> Point
+squareToPoint size sq color = rectCentralPoint $ squareToRect' size sq color
 
 squareToRect' :: Int -> Square -> PColor -> Rect
 squareToRect' size' sq color' = Rect pointX' pointY' size' size'

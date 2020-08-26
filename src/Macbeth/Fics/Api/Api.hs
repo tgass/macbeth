@@ -55,6 +55,10 @@ getPiece :: Position -> Square -> Maybe Piece
 getPiece p sq = sq `lookup` p
 
 
+getSquare :: Position -> Piece -> Maybe Square
+getSquare pos p = fst <$> find ((== p) . snd) pos
+
+
 capturedPiecesWithColor :: PColor -> Position -> [Piece]
 capturedPiecesWithColor color' pos =
   fmap (`Piece` color') allPieces' \\ filter (hasColor color') (fmap snd pos)

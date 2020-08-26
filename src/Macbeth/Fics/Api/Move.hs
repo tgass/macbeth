@@ -1,7 +1,8 @@
 module Macbeth.Fics.Api.Move where
 
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Player
+import           Data.Maybe
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Player
 import qualified Macbeth.Fics.Api.Game as G
 
 
@@ -81,6 +82,10 @@ playerColor name' move = if nameW move == name' then White else Black
 
 isCheck :: Move -> Bool
 isCheck = maybe False ((== '+') . last) . movePretty
+
+
+kingSq :: Move -> Square
+kingSq move = fromJust $ getSquare (position move) (Piece King $ turn move)
 
 
 isCheckmate :: Move -> Bool

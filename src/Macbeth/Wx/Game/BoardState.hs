@@ -29,6 +29,8 @@ module Macbeth.Wx.Game.BoardState (
   setPieceSet,
   getPieceHolding,
 
+  isDraggedKing,
+
   initBoardState
 ) where
 
@@ -66,7 +68,7 @@ data BoardState = BoardState {
   , mousePt :: Point
   , promotion :: PType
   , draggedPiece :: Maybe DraggedPiece
-  , isWaiting :: Bool
+  , isWaiting :: Bool -- macbeth waiting for the user to make a move
   , squareSizePx :: Int
   , pieceImgSize :: Int
   , pieceScale :: Double
@@ -104,9 +106,11 @@ dropDraggedPiece vState h click_pt = do
         Just pieceMove' -> do
           let newPosition = movePiece pieceMove' (virtualPosition state)
           liftIO $ do
-              varSet vState state { virtualPosition = newPosition, draggedPiece = Nothing}
+              atomically $ modifyTVar vState $ \s -> s{ virtualPosition = newPosition, draggedPiece = Nothing}
               if isWaiting state
-                then hPutStrLn h $ "6 " ++ show pieceMove'
+                then do
+                   atomically $ modifyTVar vState $ \s -> s { isWaiting = False }
+                   hPutStrLn h $ "6 " ++ show pieceMove'
                 else addPreMove pieceMove'
         Nothing -> liftIO $ discardDraggedPiece vState
 
@@ -261,6 +265,11 @@ pointToSquare state (Point x y) = Square
 movePiece :: PieceMove -> Position -> Position
 movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from' && s /= to') position' ++ [(to', piece')]
 movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
+
+
+isDraggedKing :: DraggedPiece -> Bool
+isDraggedKing (DraggedPiece _ (Piece King _) _) = True
+isDraggedKing _ = False
 
 
 initBoardState :: GameId -> GameParams -> Username -> BoardConfig -> RuntimeEnv -> BoardState
