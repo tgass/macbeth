@@ -10,7 +10,7 @@ import           Control.Exception
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
 import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Fics.FicsMessage hiding (gameId)
+import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Player hiding (handle)
 import           Macbeth.Wx.Utils
@@ -22,7 +22,7 @@ eventId :: Int
 eventId = wxID_HIGHEST + 1
 
 
-wxChat :: E.RuntimeEnv -> String -> a -> [ChatMsg] -> Chan FicsMessage -> IO ()
+wxChat :: E.RuntimeEnv -> String -> a -> [ChatMsg] -> Chan Message -> IO ()
 wxChat env chatPartner _ chatMsgs chan = do
   vCmd <- newEmptyMVar
 
@@ -62,7 +62,7 @@ prefill _ [] = return ()
 prefill ct (m:mx) = showMsg ct m >> prefill ct mx
 
 
-tell :: TextCtrl () -> Username -> Handle -> Chan FicsMessage -> IO ()
+tell :: TextCtrl () -> Username -> Handle -> Chan Message -> IO ()
 tell ce chatPartner h chan = do
   msg <- get ce text
   Cmds.tell h chatPartner msg

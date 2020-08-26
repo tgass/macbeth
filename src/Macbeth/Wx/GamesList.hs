@@ -13,7 +13,7 @@ import           Graphics.UI.WX hiding (refresh)
 import           Graphics.UI.WXCore
 import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Api.OngoingGame
-import           Macbeth.Fics.FicsMessage hiding (gameId)
+import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Wx.Utils
 import           System.IO
 
@@ -34,7 +34,7 @@ data CtxSortMenu = CtxSortMenu {
 }
 
 
-wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
+wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), Message -> IO ())
 wxGamesList glp h = do
   games <- newTVarIO ([] :: [OngoingGame])
   gl  <- listCtrl glp [ columns :=
@@ -74,7 +74,7 @@ wxGamesList glp h = do
   return (gl, handler gl ctxMenuPopup ctxSortMenu' games)
 
 
-handler :: ListCtrl () -> CtxMenu -> CtxSortMenu -> TVar [OngoingGame] -> FicsMessage -> IO ()
+handler :: ListCtrl () -> CtxMenu -> CtxSortMenu -> TVar [OngoingGame] -> Message -> IO ()
 handler gl ctx sub games cmd = case cmd of
   Games games' -> do
     atomically $ modifyTVar games (const games')

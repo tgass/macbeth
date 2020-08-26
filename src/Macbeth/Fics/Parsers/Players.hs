@@ -13,7 +13,7 @@ module Macbeth.Fics.Parsers.Players (
   player'
 ) where
 
-import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Message
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Parsers.Api
 import qualified Macbeth.Fics.Parsers.RatingParser as RP
@@ -22,38 +22,38 @@ import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
 
 
-players :: Parser FicsMessage
+players :: Parser Message
 players = Players <$> (commandHead 146 *> players')
 
-partnerNotOpen :: Parser FicsMessage
+partnerNotOpen :: Parser Message
 partnerNotOpen = PartnerNotOpen <$> (commandHead 84 *> userHandle <* " is not open for bughouse.")
 
-partnerOffer :: Parser FicsMessage
+partnerOffer :: Parser Message
 partnerOffer = PartnerOffer <$> (userHandle <* " offers to be your bughouse partner")
 
-partnerDeclined :: Parser FicsMessage
+partnerDeclined :: Parser Message
 partnerDeclined = PartnerDeclined <$> (userHandle <* " declines the partnership request.")
 
-partnerAccepted :: Parser FicsMessage
+partnerAccepted :: Parser Message
 partnerAccepted = PartnerAccepted <$> (userHandle <* " agrees to be your partner.")
 
-finger :: Parser FicsMessage
+finger :: Parser Message
 finger = Finger
   <$> (commandHead 37 *> "Finger of " *> userHandle <* ":")
   <*> manyTill anyChar "\ETB"
 
 
-history :: Parser FicsMessage
+history :: Parser Message
 history = history' <|> emptyHistory
 
 
-history' :: Parser FicsMessage
+history' :: Parser Message
 history' = History
   <$> (commandHead 51 *> "\nHistory for " *> userHandle <* ":")
   <*> manyTill anyChar "\ETB"
 
 
-emptyHistory :: Parser FicsMessage
+emptyHistory :: Parser Message
 emptyHistory = do
   userHandle' <- commandHead 51 *> userHandle <* " has no history games."
   return $ History userHandle' (name userHandle' ++ " has no history games.\n")

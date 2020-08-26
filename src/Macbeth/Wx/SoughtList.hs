@@ -10,7 +10,7 @@ import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Api.Seek
 import           Macbeth.Fics.Api.OngoingGame hiding (gameType, isRated)
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Wx.Utils
 import qualified Macbeth.Wx.RuntimeEnv as E
@@ -21,7 +21,7 @@ data SoughtOpts = SoughtOpts { computerOffers :: MenuItem ()
                              , unratedOffers :: MenuItem ()
                              , ratedOffers :: MenuItem () }
 
-wxSoughtList :: Panel () -> Handle -> IO (ListCtrl (), FicsMessage -> IO ())
+wxSoughtList :: Panel () -> Handle -> IO (ListCtrl (), Message -> IO ())
 wxSoughtList slp h = do
     sl  <- listCtrlEx slp (wxLC_REPORT .+. wxLC_SORT_ASCENDING)
                                     [columns := [ ("#", AlignLeft, 100)

@@ -12,7 +12,7 @@ import           Data.Maybe
 import           Graphics.UI.WX hiding (when, position, play, point, white, black)
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Fics.FicsMessage hiding (gameId)
+import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Offer
@@ -50,7 +50,7 @@ windowInitMargin = 125
 #endif
 
 
-wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan FicsMessage -> IO ()
+wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan Message -> IO ()
 wxGame env gameId gameParams' chan = do
   let h = E.handle env
   username' <- E.username env

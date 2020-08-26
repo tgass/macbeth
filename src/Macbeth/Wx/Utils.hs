@@ -17,7 +17,7 @@ module Macbeth.Wx.Utils (
   setStatus
 ) where
 
-import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Message
 import Macbeth.Fics.Api.Api
 
 import Control.Monad.Cont
@@ -40,7 +40,7 @@ data FrameActions = FrameActions {
   setDefaultButton :: Button () -> IO ()
 }
 
-basicFrame :: FrameConfig -> Chan FicsMessage -> Cont (IO ()) (Panel (), StatusField, FrameActions)
+basicFrame :: FrameConfig -> Chan Message -> Cont (IO ()) (Panel (), StatusField, FrameActions)
 basicFrame config chan = cont $ \callback -> do
   f <- fCreate config [text := fTitle config]
   p <- panel f []
@@ -61,13 +61,13 @@ basicFrame config chan = cont $ \callback -> do
   set f [ layout := fill $ widget p ]
 
 
-eventLoop :: Int -> Chan FicsMessage -> MVar FicsMessage -> Frame () -> IO ()
+eventLoop :: Int -> Chan Message -> MVar Message -> Frame () -> IO ()
 eventLoop eventId chan vCmd f = readChan chan >>= putMVar vCmd >>
   commandEventCreate wxEVT_COMMAND_MENU_SELECTED eventId >>= evtHandlerAddPendingEvent f >>
   eventLoop eventId chan vCmd f
 
 
-registerWxCloseEventListener :: Frame () -> Chan FicsMessage -> IO ()
+registerWxCloseEventListener :: Frame () -> Chan Message -> IO ()
 registerWxCloseEventListener f chan = do
   vCmd <- newEmptyMVar
   threadId <- forkIO $ eventLoop (wxID_HIGHEST + 13) chan vCmd f
@@ -78,7 +78,7 @@ registerWxCloseEventListener f chan = do
     _ -> return ()
 
 
-registerWxCloseEventListenerWithThreadId :: Frame () -> Chan FicsMessage -> IO ThreadId
+registerWxCloseEventListenerWithThreadId :: Frame () -> Chan Message -> IO ThreadId
 registerWxCloseEventListenerWithThreadId f chan = do
   vCmd <- newEmptyMVar
   threadId <- forkIO $ eventLoop (wxID_HIGHEST + 13) chan vCmd f

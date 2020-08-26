@@ -6,7 +6,7 @@ import           Control.Concurrent.STM
 import           Graphics.UI.WX
 import           Graphics.UI.WXCore
 import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Wx.Utils
@@ -18,7 +18,7 @@ data PendingActions =
   | PendingFrom { _withdraw :: MenuItem () }
 
 
-wxPending :: Handle -> Panel () -> IO (Panel (), FicsMessage -> IO ())
+wxPending :: Handle -> Panel () -> IO (Panel (), Message -> IO ())
 wxPending h p' = do
   p <- panel p' []
   stFrom <- staticText p [ text := "Offers from other players:", fontSize := 12]

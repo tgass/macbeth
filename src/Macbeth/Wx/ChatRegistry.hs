@@ -4,7 +4,7 @@ module Macbeth.Wx.ChatRegistry (
   wxChatRegistry
 ) where
 
-import qualified Macbeth.Fics.FicsMessage as F
+import qualified Macbeth.Fics.Message as F
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Player
 import Macbeth.Wx.Chat
@@ -23,7 +23,7 @@ data ChatState = Open | Closed deriving (Eq, Show)
 data Chat = Chat { _state :: ChatState, _messages :: [ChatMsg] }
 makeLenses ''Chat
 
-wxChatRegistry :: RuntimeEnv -> Chan F.FicsMessage -> IO (F.FicsMessage -> IO ())
+wxChatRegistry :: RuntimeEnv -> Chan F.Message -> IO (F.Message -> IO ())
 wxChatRegistry env chan = do
   chatMap <- newTVarIO $ fromList [("ROBOadmin", Chat Open [])]
 

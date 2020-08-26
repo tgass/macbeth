@@ -10,7 +10,6 @@ module Macbeth.Wx.Config.SeekConfig where
 import           Control.Applicative
 import           Control.Lens
 import           Data.Aeson.Types
-import           Data.Char
 import           Data.Maybe
 import           Macbeth.Utils.Utils
 import           Macbeth.Fics.Api.Seek

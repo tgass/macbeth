@@ -17,7 +17,7 @@ import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import           Macbeth.Fics.Api.Seek
 import           Macbeth.Fics.Api.GameType
 import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Fics.FicsMessage hiding (gameId)
+import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Wx.Config.SeekConfig
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import qualified Macbeth.Wx.RuntimeEnv as E
@@ -26,7 +26,7 @@ import qualified Macbeth.Wx.Utils as Utl
 -- seek [scTime scInc] [scRated|unscRated] [white|black] [crazyhouse] [suicide] [wild #] [auto|scManual] [formula] [rating-range]
 type WxSeekConfig = SeekConfig' (Choice ()) (Choice ()) (Choice ()) (TextCtrl ()) (CheckBox ())
 
-seekFrame :: E.RuntimeEnv -> Bool -> Chan FicsMessage -> IO ()
+seekFrame :: E.RuntimeEnv -> Bool -> Chan Message -> IO ()
 seekFrame env isGuest chan = do
   let h = E.handle env
 

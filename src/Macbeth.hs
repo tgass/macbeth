@@ -1,6 +1,6 @@
 module Main where
 
-import Macbeth.Fics.FicsConnection
+import Macbeth.Fics.Connection
 import Macbeth.Wx.ToolBox
 import Macbeth.Wx.RuntimeEnv
 

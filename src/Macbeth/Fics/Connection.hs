@@ -1,4 +1,4 @@
-module Macbeth.Fics.FicsConnection (
+module Macbeth.Fics.Connection (
   ficsConnection,
   linesC,
   parseC,
@@ -10,10 +10,10 @@ module Macbeth.Fics.FicsConnection (
 ) where
 
 
-import Macbeth.Fics.FicsMessage hiding (gameId)
+import Macbeth.Fics.Message hiding (gameId)
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Game
-import Macbeth.Fics.Parsers.FicsMessageParser
+import Macbeth.Fics.Parsers.MessageParser
 import qualified Macbeth.Fics.Api.Move as Move
 import qualified Macbeth.Fics.Api.Result as R
 
@@ -36,7 +36,7 @@ import qualified Data.ByteString.Char8 as BS
 
 
 logger :: String
-logger = "Macbeth.Fics.FicsConnection"
+logger = "Macbeth.Fics.Connection"
 
 
 data HelperState = HelperState { takebackAccptedBy :: Maybe (Maybe String)
@@ -44,7 +44,7 @@ data HelperState = HelperState { takebackAccptedBy :: Maybe (Maybe String)
                                , newGameUserParams :: Maybe GameParams }
 
 
-ficsConnection :: IO (Handle, Chan FicsMessage)
+ficsConnection :: IO (Handle, Chan Message)
 ficsConnection = runResourceT $ do
   (_, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
   liftIO $ hSetBuffering hsock LineBuffering
@@ -53,7 +53,7 @@ ficsConnection = runResourceT $ do
   return (hsock, chan)
 
 
-chain :: Handle -> Chan FicsMessage -> IO ()
+chain :: Handle -> Chan Message -> IO ()
 chain h chan = flip evalStateT emptyState $ transPipe lift
   (sourceHandle h) $$
   linesC =$
@@ -63,23 +63,23 @@ chain h chan = flip evalStateT emptyState $ transPipe lift
   parseC =$
   stateC =$
   copyC chan =$
-  logFicsMessageC =$
+  logMessageC =$
   sink chan
   where emptyState = HelperState Nothing Nothing Nothing
 
 
-sink :: Chan FicsMessage -> Sink FicsMessage (StateT HelperState IO) ()
+sink :: Chan Message -> Sink Message (StateT HelperState IO) ()
 sink chan = awaitForever $ liftIO . writeChan chan
 
 
-logFicsMessageC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
-logFicsMessageC = awaitForever $ \cmd -> case cmd of
+logMessageC :: Conduit Message (StateT HelperState IO) Message
+logMessageC = awaitForever $ \cmd -> case cmd of
   NewSeek{} -> yield cmd
   RemoveSeeks{} -> yield cmd
   _ -> liftIO (infoM logger $ show cmd) >> yield cmd
 
 
-copyC :: Chan FicsMessage -> Conduit FicsMessage (StateT HelperState IO) FicsMessage
+copyC :: Chan Message -> Conduit Message (StateT HelperState IO) Message
 copyC chan = awaitForever $ \case
   m@(NewGameUser gameId' gameParams') -> do
     chan' <- liftIO $ dupChan chan
@@ -90,7 +90,7 @@ copyC chan = awaitForever $ \case
   cmd -> yield cmd
 
 
-stateC :: Conduit FicsMessage (StateT HelperState IO) FicsMessage
+stateC :: Conduit Message (StateT HelperState IO) Message
 stateC = awaitForever $ \cmd -> do
   state' <- get
   case cmd of
@@ -120,8 +120,8 @@ stateC = awaitForever $ \cmd -> do
     _ -> yield cmd
 
 
-parseC :: Monad m => Conduit BS.ByteString m FicsMessage
-parseC = awaitForever $ \str -> case parseFicsMessage str of
+parseC :: Monad m => Conduit BS.ByteString m Message
+parseC = awaitForever $ \str -> case parseMessage str of
   Left _    -> yield $ TextMessage $ BS.unpack str
   Right cmd -> yield cmd
 
@@ -179,7 +179,7 @@ logStreamC = awaitForever $ \block -> do
   yield block
 
 
-convertMoveToResult :: Move.Move -> FicsMessage
+convertMoveToResult :: Move.Move -> Message
 convertMoveToResult move' = GameResult $ R.Result (Move.gameId move') (Move.nameW move') (Move.nameB move') result (turnToGameResult colorTurn)
   where
     colorTurn = Move.turn move'

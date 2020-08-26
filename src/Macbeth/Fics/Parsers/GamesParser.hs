@@ -4,7 +4,7 @@ module Macbeth.Fics.Parsers.GamesParser (
   gamesList
 ) where
 
-import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Message
 import Macbeth.Fics.Api.OngoingGame
 import Macbeth.Fics.Parsers.RatingParser
 import qualified Macbeth.Fics.Parsers.Api as Api
@@ -13,7 +13,7 @@ import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
 
 
-gamesList :: Parser FicsMessage
+gamesList :: Parser Message
 gamesList = Games <$> (Api.commandHead 43 *> many' game)
 
 

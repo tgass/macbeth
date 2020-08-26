@@ -7,7 +7,7 @@ import           Control.Monad
 import           Control.Monad.Reader
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Wx.Utils
 import qualified Macbeth.Wx.Config.UserConfig as Config
 import           System.IO
@@ -23,7 +23,7 @@ type WxLogin = Login' (TextCtrl ()) (CheckBox ())
 type LoginData = Login' String Bool
 
 
-wxLogin :: Handle -> Chan FicsMessage -> IO ()
+wxLogin :: Handle -> Chan Message -> IO ()
 wxLogin h chan = do
   f <- frameFixed [ text := "Macbeth" ]
   p <- panel f []
@@ -45,7 +45,7 @@ wxLogin h chan = do
   dupChan chan >>= registerWxCloseEventListener f
 
 
-okBtnHandler :: WxLogin -> Frame () -> Handle -> Chan FicsMessage -> IO ()
+okBtnHandler :: WxLogin -> Frame () -> Handle -> Chan Message -> IO ()
 okBtnHandler wxInputs f h chan = do
   loginData <- extract wxInputs
   flip runReaderT loginData $ do

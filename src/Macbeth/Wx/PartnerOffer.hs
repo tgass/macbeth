@@ -5,13 +5,13 @@ module Macbeth.Wx.PartnerOffer (
 import           Control.Concurrent
 import           Graphics.UI.WX
 import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Wx.Utils
 import           System.IO
 
 
-wxPartnerOffer :: Handle -> UserHandle -> Chan FicsMessage  -> IO ()
+wxPartnerOffer :: Handle -> UserHandle -> Chan Message  -> IO ()
 wxPartnerOffer h userHandle chan = do
   f <- frame []
   p <- panel f []

@@ -15,7 +15,7 @@ import           Foreign.C.Types
 import           Graphics.UI.WX hiding (when, play)
 import           Graphics.UI.WXCore hiding (when)
 import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Wx.Configuration
@@ -42,7 +42,7 @@ import           System.IO.Unsafe
 eventId :: Int
 eventId = wxID_HIGHEST + 1
 
-wxToolBox :: E.RuntimeEnv -> Chan FicsMessage -> IO ()
+wxToolBox :: E.RuntimeEnv -> Chan Message -> IO ()
 wxToolBox env chan = do
     let h = E.handle env
     f  <- frame [ text := "Macbeth"]

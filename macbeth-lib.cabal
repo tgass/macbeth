@@ -43,8 +43,8 @@ library
     RecordWildCards
     DeriveGeneric
   exposed-modules: Paths,
-                   Macbeth.Fics.FicsConnection
-                   Macbeth.Fics.FicsMessage,
+                   Macbeth.Fics.Connection
+                   Macbeth.Fics.Message,
                    Macbeth.Fics.Commands
                    Macbeth.Fics.Api.Api,
                    Macbeth.Fics.Api.Chat,
@@ -59,7 +59,7 @@ library
                    Macbeth.Fics.Api.Result,
                    Macbeth.Fics.Parsers.Api,
                    Macbeth.Fics.Parsers.Chatting,
-                   Macbeth.Fics.Parsers.FicsMessageParser,
+                   Macbeth.Fics.Parsers.MessageParser,
                    Macbeth.Fics.Parsers.GamesParser,
                    Macbeth.Fics.Parsers.MoveParser,
                    Macbeth.Fics.Parsers.Players,

@@ -10,7 +10,7 @@ module Macbeth.Fics.Parsers.MoveParser (
 
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move hiding (relation)
-import Macbeth.Fics.FicsMessage hiding (move, Observing)
+import Macbeth.Fics.Message hiding (move, Observing)
 import qualified Macbeth.Fics.Parsers.Api as Api
 import Macbeth.Fics.Parsers.PositionParser
 
@@ -93,11 +93,11 @@ column =
   "4" *> pure E <|> "5" *> pure F <|> "6" *> pure G <|> "7" *> pure H
 
 
-pieceHolding :: Parser FicsMessage
+pieceHolding :: Parser Message
 pieceHolding = "<b1>" *> pieceHoldingOnly
 
 
-pieceHoldingOnly :: Parser FicsMessage
+pieceHoldingOnly :: Parser Message
 pieceHoldingOnly = PieceHolding
   <$> (" game " *> Api.gameId <* " ")
   <*> ("white [" *> many' ((`Piece` White) <$> dropablePiece) <* "] ")

@@ -8,13 +8,13 @@ import           Control.Concurrent
 import           Graphics.UI.WX
 import           Graphics.UI.WXCore
 import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Game
 import           Macbeth.Wx.Utils
 import           System.IO
 
 
-wxChallenge :: Handle -> Challenge -> Chan FicsMessage  -> IO ()
+wxChallenge :: Handle -> Challenge -> Chan Message  -> IO ()
 wxChallenge h c chan = do
   vCmd <- newEmptyMVar
 

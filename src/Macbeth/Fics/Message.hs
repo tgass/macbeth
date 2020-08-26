@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Macbeth.Fics.FicsMessage (
-  FicsMessage (..)
+module Macbeth.Fics.Message (
+  Message (..)
 ) where
 
 import Macbeth.Fics.Api.Api
@@ -16,7 +16,7 @@ import Macbeth.Fics.Api.Seek
 
 import Control.Concurrent.Chan
 
-data FicsMessage =
+data Message =
     GameMove { context :: MoveModifier, move :: Move }
   | PieceHolding { gameId :: GameId, phWhite :: [Piece], phBlack :: [Piece] }
   | GameResult Result
@@ -71,9 +71,9 @@ data FicsMessage =
   | TakebackAccepted (Maybe Username)
   | IllegalMove String
   | WxClose
-  | WxOpenBoard GameId GameParams (Chan FicsMessage) deriving (Show, Eq)
+  | WxOpenBoard GameId GameParams (Chan Message) deriving (Show, Eq)
 
 
-instance Show (Chan FicsMessage) where
+instance Show (Chan Message) where
   show _ = "Chan"
 

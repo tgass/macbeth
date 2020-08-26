@@ -2,7 +2,7 @@ module Main where
 
 import           Control.Concurrent.Chan
 import           Graphics.UI.WX
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Player
 import qualified Macbeth.Fics.Api.Game as G
 import qualified Macbeth.Fics.Api.Move as M
@@ -24,7 +24,7 @@ main = withProgNameAndArgs runALUTUsingCurrentContext $ \_ _ -> do
 defaultGameParams :: G.GameParams
 defaultGameParams = G.GameParams True "foo" Unrated "bar" Unrated True "hmm" 60 1
 
-message :: FicsMessage
+message :: Message
 message = GameMove M.None $ initMove' (GameId 1) defaultGameParams
 
 initMove' :: GameId -> G.GameParams -> M.Move

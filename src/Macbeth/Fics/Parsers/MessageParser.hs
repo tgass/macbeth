@@ -1,16 +1,17 @@
-{-# LANGUAGE OverloadedStrings #-}
-
-module Macbeth.Fics.Parsers.FicsMessageParser (
- parseFicsMessage
+module Macbeth.Fics.Parsers.MessageParser (
+ parseMessage
 ) where
 
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.FicsMessage hiding (move)
-import Macbeth.Fics.Api.Move hiding (Observing)
-import Macbeth.Fics.Api.Game
-import Macbeth.Fics.Api.Offer
-import Macbeth.Fics.Api.Result
-import Macbeth.Fics.Parsers.MoveParser
+import           Control.Applicative
+import           Data.Attoparsec.ByteString.Char8
+import qualified Data.ByteString.Char8 as BS
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Message hiding (move)
+import           Macbeth.Fics.Api.Move hiding (Observing)
+import           Macbeth.Fics.Api.Game
+import           Macbeth.Fics.Api.Offer
+import           Macbeth.Fics.Api.Result
+import           Macbeth.Fics.Parsers.MoveParser
 import qualified Macbeth.Fics.Parsers.RatingParser as R
 import qualified Macbeth.Fics.Parsers.Api as Api
 import qualified Macbeth.Fics.Parsers.Chatting as Chatting
@@ -18,13 +19,8 @@ import qualified Macbeth.Fics.Parsers.GamesParser as GP
 import qualified Macbeth.Fics.Parsers.Players as P
 import qualified Macbeth.Fics.Parsers.SeekMsgParsers as SP
 
-import Control.Applicative
-import Data.Attoparsec.ByteString.Char8
-import qualified Data.ByteString.Char8 as BS
-
-
-parseFicsMessage :: BS.ByteString -> Either String FicsMessage
-parseFicsMessage = parseOnly $ choice [
+parseMessage :: BS.ByteString -> Either String Message
+parseMessage = parseOnly $ choice [
     SP.clearSeek
   , SP.newSeek
   , SP.removeSeeks
@@ -84,68 +80,68 @@ username :: Parser String
 username = many1 letter_ascii
 
 
-gameMove :: Parser FicsMessage
+gameMove :: Parser Message
 gameMove = GameMove <$> pure None <*> move
 
 
-illegalMove :: Parser FicsMessage
+illegalMove :: Parser Message
 illegalMove = IllegalMove <$> ("Illegal move (" *> fmap BS.unpack (takeTill (== ')')) <* ").")
 
 
-newGameParamsUser :: Parser FicsMessage
+newGameParamsUser :: Parser Message
 newGameParamsUser = NewGameParamsUser <$> ("Creating: " *> gameParams' True)
 
 
-newGameIdUser :: Parser FicsMessage
+newGameIdUser :: Parser Message
 newGameIdUser = NewGameIdUser
   <$> ("{Game " *> Api.gameId)
   <* " (" <* username
   <* (" vs. " <* username <* ") Creating ")
 
 
-observing :: Parser FicsMessage
+observing :: Parser Message
 observing = Observing <$> ("Game " *> Api.gameId <* ": ") <*> gameParams' False
 
 
-noSuchGame :: Parser FicsMessage
+noSuchGame :: Parser Message
 noSuchGame = "There is no such game." *> pure NoSuchGame
 
 
-userNotLoggedIn :: Parser FicsMessage
+userNotLoggedIn :: Parser Message
 userNotLoggedIn = UserNotLoggedIn <$> username <* " is not logged in."
 
 
-challenge :: Parser FicsMessage
+challenge :: Parser Message
 challenge = MatchRequested <$> (Challenge <$> ("Challenge: " *> gameParams' True))
 
 
-drawRequest :: Parser FicsMessage
+drawRequest :: Parser Message
 drawRequest = DrawRequest <$> username <* " offers you a draw."
 
 
-abortRequest :: Parser FicsMessage
+abortRequest :: Parser Message
 abortRequest = AbortRequest <$> username <* " would like to abort the game;"
 
 
-takebackRequest :: Parser FicsMessage
+takebackRequest :: Parser Message
 takebackRequest = TakebackRequest <$> username <* " would like to take back " <*> decimal <* " half move(s)."
 
 
-takebackAccepted :: Parser FicsMessage
+takebackAccepted :: Parser Message
 takebackAccepted = (TakebackAccepted . Just <$> username) <* " accepts the takeback request."
 
 
-takebackAccepted' :: Parser FicsMessage
+takebackAccepted' :: Parser Message
 takebackAccepted' = TakebackAccepted <$> pure Nothing <* "You accept the takeback request"
 
 
-oponentDecline :: Parser FicsMessage
+oponentDecline :: Parser Message
 oponentDecline = OponentDecline
   <$> (username <* " declines the ")
   <*> ("draw" *> pure DrawReq <|> "takeback" *> pure TakebackReq <|> "abort" *> pure AbortReq <|> "match" *> pure MatchReq)
 
 
-gameResult' :: Parser FicsMessage
+gameResult' :: Parser Message
 gameResult' = GameResult <$> (Result
   <$> (takeTill (== '{') *> "{Game " *> Api.gameId)
   <*> (takeTill (== '(') *> "(" *> manyTill anyChar " vs. ")
@@ -154,12 +150,12 @@ gameResult' = GameResult <$> (Result
   <*> ("1-0" *> pure WhiteWins <|> "0-1" *> pure BlackWins <|> "1/2-1/2" *> pure Draw <|> "*" *> pure Aborted))
 
 
-promotionPiece :: Parser FicsMessage
+promotionPiece :: Parser Message
 promotionPiece = PromotionPiece <$> ("Promotion piece set to " *> ("QUEEN" *> pure Queen <|>
   "BISHOP" *> pure Bishop <|> "KNIGHT" *> pure Knight <|> "ROOK" *> pure Rook <|> "KING" *> pure King))
 
 
-pending :: Parser FicsMessage
+pending :: Parser Message
 pending = Pending <$> (PendingOffer
   <$> (("<pf>" *> pure From) <|> ("<pt>" *> pure To))
   <*> (" " *> decimal)
@@ -181,39 +177,39 @@ gameParams' isGameUser = GameParams
   <*> (skipSpace *> decimal)
 
 
-pendingRemoved :: Parser FicsMessage
+pendingRemoved :: Parser Message
 pendingRemoved = PendingRemoved <$> ("<pr> " *> decimal)
 
 
-login :: Parser FicsMessage
+login :: Parser Message
 login = "login: " *> pure LoginPrompt
 
 
-loginTimeout :: Parser FicsMessage
+loginTimeout :: Parser Message
 loginTimeout = "**** LOGIN TIMEOUT ****" *> pure LoginTimeout
 
 
-password :: Parser FicsMessage
+password :: Parser Message
 password = "password: " *> pure Password
 
 
-guestLogin :: Parser FicsMessage
+guestLogin :: Parser Message
 guestLogin = GuestLogin <$> ("Press return to enter the server as \"" *> username <* "\":")
 
 
-unknownUsername :: Parser FicsMessage
+unknownUsername :: Parser Message
 unknownUsername = UnkownUsername <$> ("\"" *> username <* "\" is not a registered name.")
 
 
-loggedIn :: Parser FicsMessage
+loggedIn :: Parser Message
 loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> P.userHandle <* " ****")
 
 
-invalidPassword :: Parser FicsMessage
+invalidPassword :: Parser Message
 invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword
 
 
-ping :: Parser FicsMessage
+ping :: Parser Message
 ping = Ping
   <$> (":min/avg/max/mdev = " *> round `fmap` double)
   <*> ("/" *> round `fmap` double)

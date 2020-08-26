@@ -17,7 +17,7 @@ import           Graphics.UI.WXCore hiding (when)
 import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Api.Chat
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Wx.Utils
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           System.IO
@@ -40,7 +40,7 @@ data CtxSortMenu = CtxSortMenu {
 }
 
 
-wxPlayersList :: Panel () -> Handle -> Chan FicsMessage -> IO (ListCtrl (), FicsMessage -> IO ())
+wxPlayersList :: Panel () -> Handle -> Chan Message -> IO (ListCtrl (), Message -> IO ())
 wxPlayersList slp h chan = do
     players <-newTVarIO ([] :: [Player])
     sl <- listCtrl slp [columns := [
@@ -75,7 +75,7 @@ wxPlayersList slp h chan = do
     return (sl, handler sl ctxSortMenu' players)
 
 
-handler :: ListCtrl () -> CtxSortMenu -> TVar [Player] -> FicsMessage -> IO ()
+handler :: ListCtrl () -> CtxSortMenu -> TVar [Player] -> Message -> IO ()
 handler sl sortMenu players = \case
   Players players' -> do
     atomically $ modifyTVar players (const players')

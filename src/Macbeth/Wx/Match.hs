@@ -6,7 +6,7 @@ import           Control.Concurrent.Chan
 import           Control.Monad.Cont
 import           Data.Map
 import           Graphics.UI.WX hiding (color)
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.Api.GameType
 import qualified Macbeth.Fics.Commands as Cmds
@@ -23,7 +23,7 @@ data WxMatch = WxMatch {
   color :: Choice ()
 }
 
-wxMatch :: Handle -> Bool -> Chan FicsMessage -> IO ()
+wxMatch :: Handle -> Bool -> Chan Message -> IO ()
 wxMatch h isGuest chan = runCont (basicFrame frameConfig chan) $ setupFrame h isGuest
 
 

@@ -11,7 +11,7 @@ import           Data.Maybe (fromMaybe)
 import qualified Data.Yaml as Y
 import           Graphics.UI.WX hiding (fontSize)
 import           Graphics.UI.WXCore
-import           Macbeth.Fics.FicsMessage
+import           Macbeth.Fics.Message
 import           Macbeth.Wx.Config.Sounds
 import           Macbeth.Wx.RuntimeEnv
 import           Macbeth.Wx.Utils
@@ -20,7 +20,7 @@ import           Macbeth.Wx.Config.UserConfig (cUser)
 import qualified Macbeth.Wx.Config.BoardConfig as BC
 
 
-wxConfiguration :: RuntimeEnv -> Chan FicsMessage -> IO ()
+wxConfiguration :: RuntimeEnv -> Chan Message -> IO ()
 wxConfiguration env chan = runCont (basicFrame (frameConfig env) chan) (setupFrame env)
 
 

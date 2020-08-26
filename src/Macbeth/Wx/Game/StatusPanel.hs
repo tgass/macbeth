@@ -4,7 +4,7 @@ module Macbeth.Wx.Game.StatusPanel (
   createStatusPanel
 ) where
 
-import           Macbeth.Fics.FicsMessage hiding (gameId, Observing)
+import           Macbeth.Fics.Message hiding (gameId, Observing)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Move
 import           Macbeth.Fics.Api.Game
@@ -24,7 +24,7 @@ import           Data.List
 import           Graphics.UI.WX hiding (when, position, color)
 
 
-createStatusPanel :: Panel () -> PColor -> TVar BoardState ->  IO (Panel (), FicsMessage -> IO ())
+createStatusPanel :: Panel () -> PColor -> TVar BoardState ->  IO (Panel (), Message -> IO ())
 createStatusPanel p color' vBoardState = do
   lastMove' <- lastMove <$> readTVarIO vBoardState
 

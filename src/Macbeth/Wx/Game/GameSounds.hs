@@ -7,20 +7,20 @@ module Macbeth.Wx.Game.GameSounds (
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Result
-import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Message
 import Macbeth.Wx.RuntimeEnv
 import Macbeth.Wx.Game.BoardState
 import qualified Macbeth.Wx.Config.UserConfig as C
 
 import Control.Applicative
 
-gameSounds :: RuntimeEnv -> BoardState -> FicsMessage -> IO ()
+gameSounds :: RuntimeEnv -> BoardState -> Message -> IO ()
 gameSounds env boardState msg
   | not (isGameUser boardState) && not (env `getSoundConfig` C.enabledObservedGames) = return ()
   | otherwise = playSound env $ findSound boardState msg
 
 
-findSound :: BoardState -> FicsMessage -> (C.Sounds -> Maybe String)
+findSound :: BoardState -> Message -> (C.Sounds -> Maybe String)
 findSound boardState = \case
   GameMove Illegal {} _ -> C.illegal . C.move . C.game
 
