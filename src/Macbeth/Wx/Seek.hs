@@ -1,10 +1,6 @@
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Macbeth.Wx.Seek (
     seekFrame
 ) where
-
 
 import           Control.Lens hiding (Choice, set)
 import           Control.Concurrent
