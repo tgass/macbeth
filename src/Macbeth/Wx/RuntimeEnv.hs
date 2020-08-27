@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Macbeth.Wx.RuntimeEnv (
@@ -28,7 +27,7 @@ import           Data.Maybe
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Development.GitRev
-import           Graphics.UI.WX hiding (play, get, when)
+import           Graphics.UI.WX hiding (play, get, when, size)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Commands.Seek (SeekConfig)
@@ -167,8 +166,8 @@ loadSounds dir = do
   where
     mkPair :: FilePath -> IO (String, Buffer)
     mkPair f = do
-      buffer <- createBuffer (File $ dir </> f)
-      return (f, buffer)
+      buf <- createBuffer (File $ dir </> f)
+      return (f, buf)
 
 
 #ifdef CONSOLE_LOG

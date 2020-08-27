@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Macbeth.Wx.Config.Sounds (
   Sounds(..),
   GameS(..),

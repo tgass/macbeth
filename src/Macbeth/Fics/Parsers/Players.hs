@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Macbeth.Fics.Parsers.Players (
   finger,
   players,

@@ -25,7 +25,7 @@ wxConfiguration env chan = runCont (basicFrame (frameConfig env) chan) (setupFra
 
 
 frameConfig :: RuntimeEnv -> FrameConfig
-frameConfig env = FrameConfig {
+frameConfig _ = FrameConfig {
   fCreate = frame,
   fTitle = "Macbeth (version: " ++ getVersion ++ ")",
   hasStatusField = True

@@ -251,8 +251,8 @@ getPieceHolding Black = phB
 
 pointToSquare :: BoardState -> Point -> Maybe Square
 pointToSquare state (Point x y) = Square
-  <$> intToCol (perspective state) (floor $ fromIntegral x / fromIntegral (squareSizePx state))
-  <*> intToRow (perspective state) (floor $ fromIntegral y / fromIntegral (squareSizePx state))
+  <$> intToCol (perspective state) (floor $ fromIntegral x / (fromIntegral $ squareSizePx state :: Double))
+  <*> intToRow (perspective state) (floor $ fromIntegral y / (fromIntegral $ squareSizePx state :: Double))
   where
     intToRow :: PColor -> Int -> Maybe Row
     intToRow White = toEnumMay . (7-)

@@ -1,10 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE StandaloneDeriving  #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-
 module Macbeth.Wx.Config.SeekConfig where
 
 import           Control.Applicative

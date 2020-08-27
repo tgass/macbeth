@@ -2,10 +2,10 @@
 
 module Macbeth.Fics.Commands.Seek where
 
-import Control.Lens
+import Control.Lens hiding (from, to)
 import Macbeth.Fics.Api.Seek
 import Macbeth.Fics.Api.GameType
-import GHC.Generics
+import GHC.Generics hiding (from, to)
 
 data SeekConfig' a b c d e = SeekConfig {
     _scCategory :: a

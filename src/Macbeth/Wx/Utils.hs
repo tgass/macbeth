@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase, MultiWayIf #-}
-
 module Macbeth.Wx.Utils (
   FrameConfig(..),
   FrameActions(..),

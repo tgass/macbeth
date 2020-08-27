@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase, ScopedTypeVariables, MultiWayIf #-}
-
 module Macbeth.Wx.Chat (
   wxChat
 ) where

@@ -5,7 +5,7 @@ module Macbeth.Utils.BoardUtils (
   toPos'
 ) where
 
-import           Graphics.UI.WX
+import           Graphics.UI.WX hiding (size, color)
 import           Macbeth.Fics.Api.Api
 
 rowToInt :: Macbeth.Fics.Api.Api.PColor -> Row -> Int

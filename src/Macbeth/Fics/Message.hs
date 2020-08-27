@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-
 module Macbeth.Fics.Message (
   Message (..)
 ) where

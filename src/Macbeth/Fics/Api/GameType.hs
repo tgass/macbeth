@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Macbeth.Fics.Api.GameType where
 
 import           Data.Aeson.Types

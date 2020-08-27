@@ -38,9 +38,9 @@ data Command =
 instance Show Command where
   show Abort                 = "abort"
   show Accept                = "accept"
-  show (AcceptId id)         = "accept " <> show id
+  show (AcceptId reqid)      = "accept " <> show reqid
   show Decline               = "decline"
-  show (DeclineId id)        = "decline " <> show id
+  show (DeclineId reqid)     = "decline " <> show reqid
   show Draw                  = "draw"
   show (Finger (Just user))  = "finger " <> user
   show (Finger Nothing)      = "finger"
@@ -61,7 +61,7 @@ instance Show Command where
   show Ping                  = "ping"
   show (Promote ptype)       = "promote " <> show ptype
   show Who                   = "who"
-  show (Withdraw id)         =" withdraw " <> show id
+  show (Withdraw reqid)      =" withdraw " <> show reqid
 
 abort :: Handle -> IO ()
 abort h = command h Abort

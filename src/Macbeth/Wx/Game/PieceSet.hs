@@ -1,6 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Macbeth.Wx.Game.PieceSet (
   PieceSet(..),
   display,

@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Macbeth.Wx.ChatRegistry (
   wxChatRegistry

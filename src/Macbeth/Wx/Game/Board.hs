@@ -56,7 +56,7 @@ drawHighlightLastMove = do
   (dc, state) <- ask
   liftIO $ when (showHighlightMove state) $ do
     sequence_ $ paintHighlight dc state blue <$> pieceMove state
-    when (showHighlightCheck state) $ paintHighlightCheck dc state (rgb 255 69 00) $ kingSq (lastMove state)
+    when (showHighlightCheck state) $ paintHighlightCheck dc state (rgb (255 :: Int) 69 00) $ kingSq (lastMove state)
   where
     showHighlightMove :: BoardState -> Bool
     showHighlightMove state = 

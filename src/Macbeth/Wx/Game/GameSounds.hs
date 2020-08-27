@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Macbeth.Wx.Game.GameSounds (
   gameSounds
 ) where

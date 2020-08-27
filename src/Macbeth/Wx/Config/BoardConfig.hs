@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric, TypeSynonymInstances, FlexibleInstances #-}
-
 module Macbeth.Wx.Config.BoardConfig (
   BoardConfig'(..),
   BoardConfigFormat,

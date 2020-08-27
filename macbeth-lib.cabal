@@ -39,11 +39,15 @@ library
     cpp-options: -DCONSOLE_LOG
   default-extensions: 
     DeriveGeneric
+    FlexibleContexts
+    FlexibleInstances
     LambdaCase
     MultiWayIf 
     OverloadedStrings
     RecordWildCards
     ScopedTypeVariables
+    StandaloneDeriving 
+    TypeSynonymInstances
   exposed-modules: Paths,
                    Macbeth.Fics.Api.Api,
                    Macbeth.Fics.Api.Chat,
