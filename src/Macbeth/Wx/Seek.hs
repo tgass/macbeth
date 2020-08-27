@@ -14,8 +14,9 @@ import           Data.Maybe
 import qualified Data.Map.Strict as Map
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
-import           Macbeth.Fics.Api.Seek
+import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.Api.GameType
+import           Macbeth.Fics.Commands.Seek
 import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Wx.Config.SeekConfig

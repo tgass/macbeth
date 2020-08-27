@@ -45,9 +45,6 @@ library
     RecordWildCards
     ScopedTypeVariables
   exposed-modules: Paths,
-                   Macbeth.Fics.Connection
-                   Macbeth.Fics.Message,
-                   Macbeth.Fics.Commands
                    Macbeth.Fics.Api.Api,
                    Macbeth.Fics.Api.Chat,
                    Macbeth.Fics.Api.Game,
@@ -59,6 +56,10 @@ library
                    Macbeth.Fics.Api.OngoingGame,
                    Macbeth.Fics.Api.Player,
                    Macbeth.Fics.Api.Result,
+                   Macbeth.Fics.Connection
+                   Macbeth.Fics.Commands
+                   Macbeth.Fics.Commands.Seek
+                   Macbeth.Fics.Message,
                    Macbeth.Fics.Parsers.Api,
                    Macbeth.Fics.Parsers.Chatting,
                    Macbeth.Fics.Parsers.MessageParser,

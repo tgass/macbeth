@@ -3,8 +3,8 @@ module Macbeth.Fics.Commands where
 import           Data.Monoid
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Seek (SeekColor)
-import qualified Macbeth.Fics.Api.Seek as Seek
 import           Macbeth.Fics.Api.GameType
+import           Macbeth.Fics.Commands.Seek
 import           System.IO
 
 type Username = String
@@ -29,7 +29,7 @@ data Command =
   | Unobserve GameId
   | Match Username
   | Match2 String Bool Int Int SeekColor Category (Maybe WildBoard)
-  | Seek Seek.SeekConfig
+  | Seek SeekConfig
   | Ping
   | Promote PType
   | Who 
@@ -57,7 +57,7 @@ instance Show Command where
   show (Unobserve gameId)    = "unobserve " <> show gameId
   show (Match user)          = "match " <> user
   show (Match2 user rated time inc color cat mWild) = mkMatch user rated time inc color cat mWild
-  show (Seek config)         = Seek.mkSeekString config
+  show (Seek config)         = mkSeekString config
   show Ping                  = "ping"
   show (Promote ptype)       = "promote " <> show ptype
   show Who                   = "who"
@@ -120,7 +120,7 @@ match h user = command h $ Match user
 match2 :: Handle -> String -> Bool -> Int -> Int -> SeekColor -> Category -> Maybe WildBoard -> IO ()
 match2 h user rated time inc color cat mWild = command h $ Match2 user rated time inc color cat mWild
 
-seek :: Handle -> Seek.SeekConfig -> IO ()
+seek :: Handle -> SeekConfig -> IO ()
 seek h config = command h $ Seek config
 
 ping :: Handle -> IO ()
@@ -139,10 +139,10 @@ withdrawId h offerId = command h $ Withdraw offerId
 mkMatch :: String -> Bool -> Int -> Int -> SeekColor -> Category -> Maybe WildBoard -> String
 mkMatch user rated time inc color cat mWild = ("match " <>) $ unwords $ filter (/="") [
     user
-  , Seek.convertIsRated rated
+  , convertIsRated rated
   , show time
   , show inc
-  , Seek.convertColor color
+  , convertColor color
   , gameTypeSelectionToString cat mWild
   ]
 

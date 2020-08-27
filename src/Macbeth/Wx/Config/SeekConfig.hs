@@ -12,6 +12,7 @@ import           Control.Lens
 import           Data.Aeson.Types
 import           Data.Maybe
 import           Macbeth.Utils.Utils
+import           Macbeth.Fics.Commands.Seek
 import           Macbeth.Fics.Api.Seek
 import           Macbeth.Fics.Api.GameType 
 

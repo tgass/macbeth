@@ -31,7 +31,7 @@ import           Development.GitRev
 import           Graphics.UI.WX hiding (play, get, when)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
-import           Macbeth.Fics.Api.Seek (SeekConfig)
+import           Macbeth.Fics.Commands.Seek (SeekConfig)
 import           Macbeth.Utils.Utils
 import           Macbeth.Wx.Config.UserConfig (Config (..), uUsername, uPassword, cUser, cAutologin)
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig

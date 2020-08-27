@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Macbeth.Wx.Config.UserConfig (
@@ -28,7 +27,7 @@ import           Data.Maybe
 import           Data.Yaml
 import           GHC.Generics
 import           Macbeth.Utils.Utils
-import           Macbeth.Fics.Api.Seek (SeekConfig)
+import           Macbeth.Fics.Commands.Seek (SeekConfig)
 import           Macbeth.Wx.Config.Sounds
 import           Macbeth.Wx.Config.BoardConfig
 import           Macbeth.Wx.Config.SeekConfig (SeekConfigFormat)
