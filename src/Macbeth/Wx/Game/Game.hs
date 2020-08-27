@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, LambdaCase, ScopedTypeVariables, MultiWayIf #-}
+{-# LANGUAGE CPP #-}
 
 module Macbeth.Wx.Game.Game (
   wxGame

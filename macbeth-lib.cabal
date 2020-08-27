@@ -38,10 +38,12 @@ library
   if flag(console_log)
     cpp-options: -DCONSOLE_LOG
   default-extensions: 
+    DeriveGeneric
     LambdaCase
+    MultiWayIf 
     OverloadedStrings
     RecordWildCards
-    DeriveGeneric
+    ScopedTypeVariables
   exposed-modules: Paths,
                    Macbeth.Fics.Connection
                    Macbeth.Fics.Message,

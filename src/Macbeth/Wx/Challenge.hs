@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Macbeth.Wx.Challenge (
   wxChallenge
 ) where
