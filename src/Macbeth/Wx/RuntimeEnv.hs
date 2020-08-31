@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Macbeth.Wx.RuntimeEnv (
   RuntimeEnv(handle, rtBoardConfig, rtSeekConfig),
@@ -54,8 +55,8 @@ data RuntimeEnv = RuntimeEnv {
     handle :: Handle
   , _reConfig :: Config
   , sources :: [Source]
-  , pieceBitmapMap :: Map (PieceSet, Piece, Int) (Bitmap ())
-  , bufferMap :: Map String Buffer
+  , pieceBitmapMap :: !(Map (PieceSet, Piece, Int) (Bitmap ()))
+  , bufferMap :: !(Map String Buffer)
   , userHandle :: TVar UserHandle
   , rtBoardConfig :: TVar BoardConfig
   , rtSeekConfig :: TVar SeekConfig
