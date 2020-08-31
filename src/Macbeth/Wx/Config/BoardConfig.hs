@@ -1,43 +1,63 @@
-module Macbeth.Wx.Config.BoardConfig (
-  BoardConfig'(..),
-  BoardConfigFormat,
-  BoardConfig, 
-  Tile(..),
-  TileFormat(..),
-  defaultBoardConfig,
-  defaultBlackTile,
-  defaultWhiteTile,
-  defaultBoardSize,
-  defaultPieceSet,
-  convert
-) where
+module Macbeth.Wx.Config.BoardConfig where
 
+import           Data.Aeson
 import           Data.Aeson.Types
+import           Data.Char
 import           Data.Maybe
+import           Data.Monoid
+import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Text.Read (hexadecimal)
+import           Macbeth.Fics.Api.Api
 import           Macbeth.Wx.Utils (getUserOrAppFile)
 import           Macbeth.Wx.Game.PieceSet
 import           Numeric
 import           GHC.Generics
-import           Graphics.UI.WX 
+import           Graphics.UI.WX hiding (style)
 import           System.FilePath ((</>))
 
-data BoardConfig' a b c = BoardConfig {
+data BoardConfig' a b c d = BoardConfig {
     showCapturedPieces :: Bool
   , whiteTile :: a
   , blackTile :: a
   , boardSize :: b
   , pieceSet :: c
-} deriving (Show, Generic, Eq)
+  , highlightConfig :: d
+} deriving (Show, Eq, Generic)
 
-type BoardConfig = BoardConfig' Tile Int PieceSet
+type BoardConfig = BoardConfig' Tile Int PieceSet HighlightConfig
 
-type BoardConfigFormat = BoardConfig' (Maybe TileFormat) (Maybe Int) (Maybe PieceSet)
+type BoardConfigFormat = BoardConfig' (Maybe TileFormat) (Maybe Int) (Maybe PieceSet) (Maybe HighlightConfig)
 
 data Tile = BitmapTile (Bitmap ()) | ColorTile Color deriving (Show, Eq)
 
-data TileFormat = TileRGB Int Int Int | TileFile FilePath deriving (Show, Eq)
+data TileFormat = TileRGB ColorRGB | TileFile FilePath deriving (Show, Eq)
+
+data HighlightConfig = HighlightConfig {
+    style :: HighlightStyle
+  , moveColor :: ColorRGB
+  , preMoveColor :: ColorRGB
+  , checkColor :: ColorRGB
+  , mouseColor :: Maybe ColorRGB
+  } deriving (Show, Eq, Generic)
+
+data HighlightStyle = Hatched | Solid deriving (Show, Generic, Eq)
+
+data ColorRGB = ColorRGB Int Int Int deriving (Show, Eq)
+
+isSolidStyle :: HighlightConfig -> Bool
+isSolidStyle conf = style conf == Solid
+
+toSolidColor :: Square -> ColorRGB -> Color
+toSolidColor square color 
+  | squareColor square == White = convertColorRGB color
+  | otherwise = convertColorRGB $ darkenColor color
+
+convertColorRGB :: ColorRGB -> Color
+convertColorRGB (ColorRGB r g b) = rgb r g b
+
+darkenColor :: ColorRGB -> ColorRGB
+darkenColor (ColorRGB r g b) = let (f :: Double) = 0.8 in ColorRGB (round $ f * fromIntegral r) (round $ f * fromIntegral g) (round $ f * fromIntegral b)
 
 convert :: BoardConfigFormat -> FilePath -> IO BoardConfig
 convert c userDir = BoardConfig 
@@ -46,19 +66,20 @@ convert c userDir = BoardConfig
   <*> convertTile userDir (fromMaybe defaultBlackTile $ blackTile c)
   <*> pure (fromMaybe defaultBoardSize $ boardSize c)
   <*> pure (fromMaybe defaultPieceSet $ pieceSet c)
+  <*> pure (fromMaybe defaultHighlightConfig $ highlightConfig c)
 
 convertTile :: FilePath -> TileFormat -> IO Tile
-convertTile _ (TileRGB c1 c2 c3) = return $ ColorTile $ rgb c1 c2 c3
+convertTile _ (TileRGB (ColorRGB r g b)) = return $ ColorTile $ rgb r g b
 convertTile userDir (TileFile filename') = (BitmapTile . bitmap) <$> getUserOrAppFile userDir ("tiles" </> filename')
 
 defaultBoardConfig :: BoardConfigFormat
-defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize) (Just defaultPieceSet)
+defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize) (Just defaultPieceSet) (Just defaultHighlightConfig)
 
 defaultWhiteTile :: TileFormat
-defaultWhiteTile = TileRGB 255 255 255
+defaultWhiteTile = TileRGB $ ColorRGB 255 255 255
 
 defaultBlackTile :: TileFormat
-defaultBlackTile = TileRGB 180 150 100
+defaultBlackTile = TileRGB $ ColorRGB 180 150 100
 
 defaultBoardSize :: Int
 defaultBoardSize = 320
@@ -66,31 +87,55 @@ defaultBoardSize = 320
 defaultPieceSet :: PieceSet
 defaultPieceSet = Alpha1
 
-instance ToJSON BoardConfigFormat
-instance FromJSON BoardConfigFormat
+defaultHighlightConfig :: HighlightConfig
+defaultHighlightConfig = HighlightConfig Hatched (ColorRGB 0 0 255) (ColorRGB 0 255 0) (ColorRGB 255 0 0) (Just $ ColorRGB 255 0 0)
 
-instance FromJSON TileFormat where
- parseJSON val'@(String text') 
-   | "hex" `T.isPrefixOf` text' = 
-       if T.length text' == 9 
-           then either (\_ -> typeMismatch "TileRGB" val') return $ parseTileRGB (T.drop 3 text')
-           else typeMismatch "TileRGB" val'
--- TODO:  Check that file type is allowed: .ico, .bmp, .xpm, .png, .gif
---        isSuffixOf :: Eq a => [a] -> [a] -> Bool
-   | otherwise = return $ TileFile $ T.unpack text'
- parseJSON v = typeMismatch "TileFormat" v
-
-instance ToJSON TileFormat where
-  toJSON (TileRGB c1 c2 c3) = String $ T.pack $ "hex" ++ (paddedHex c1 . paddedHex c2 . paddedHex c3) ""
-  toJSON (TileFile p) = String $ T.pack p
-
-parseTileRGB :: T.Text -> Either String TileFormat
-parseTileRGB t = TileRGB
+parseRGB :: Text -> Either String ColorRGB
+parseRGB (T.stripPrefix "hex" -> Just t) = ColorRGB
   <$> (fst <$> hexadecimal (T.take 2 t))
   <*> (fst <$> hexadecimal (T.take 2 $ T.drop 2 t))
   <*> (fst <$> hexadecimal (T.take 2 $ T.drop 4 t))
+parseRGB _ = Left "Wrong format. hex prefix missing."
 
-paddedHex :: Int -> ShowS
-paddedHex x
-  | x < 16 = showChar '0' . showHex x
-  | otherwise = showHex x
+toTextRGB :: ColorRGB -> Text
+toTextRGB (ColorRGB r g b) = T.pack $ "hex" <> (paddedHex r . paddedHex g . paddedHex b) ""
+  where
+    paddedHex :: Int -> ShowS
+    paddedHex x
+      | x < 16 = showChar '0' . showHex x
+      | otherwise = showHex x
+
+instance ToJSON BoardConfigFormat
+instance FromJSON BoardConfigFormat
+
+instance ToJSON HighlightConfig
+instance FromJSON HighlightConfig
+
+instance ToJSON HighlightStyle where
+  toJSON = genericToJSON $ defaultOptions { constructorTagModifier = fmap toLower }
+
+instance FromJSON HighlightStyle where
+  parseJSON = genericParseJSON $ defaultOptions { constructorTagModifier = fmap toLower }
+
+instance FromJSON TileFormat where
+ parseJSON val@(String tile) 
+   | ("hex" `T.isPrefixOf` tile) = either (const $ typeMismatch "TileRGB: wrong format" val) (return . TileRGB) $ parseRGB tile
+-- TODO:  Check that file type is allowed: .ico, .bmp, .xpm, .png, .gif
+--        isSuffixOf :: Eq a => [a] -> [a] -> Bool
+   | otherwise = return $ TileFile $ T.unpack tile
+ parseJSON val = typeMismatch "TileFormat" val
+
+instance ToJSON TileFormat where
+  toJSON (TileRGB colorRGB) = toJSON colorRGB
+  toJSON (TileFile p) = String $ T.pack p
+
+instance ToJSON ColorRGB where
+  toJSON = String . toTextRGB
+
+instance FromJSON ColorRGB where
+ parseJSON val@(String colorString) 
+   | ("hex" `T.isPrefixOf` colorString) && (T.length colorString == 9) 
+       = either (const $ typeMismatch "ColorRGB: wrong format" val) return $ parseRGB colorString
+   | otherwise = typeMismatch "ColorRGB: wrong format" val
+ parseJSON val = typeMismatch "ColorRGB: wrong format" val
+

@@ -24,6 +24,12 @@ instance Show PType where
 
 data PColor = Black | White deriving (Show, Eq, Read, Ord)
 
+squareColor :: Square -> PColor
+squareColor (Square col row)
+  | (even $ fromEnum col) && (even $ fromEnum row) = Black
+  | (odd $ fromEnum col) && (odd $ fromEnum row) = Black
+  | otherwise = White
+
 data Piece = Piece PType PColor deriving (Show, Eq, Ord)
 
 type Position = [(Square, Piece)]

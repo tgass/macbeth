@@ -30,7 +30,7 @@ flag console_log
 library
   build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
                    bytestring, split, attoparsec, filepath, containers, split, mtl, stm, directory, filepath,
-                   time, MissingH, old-locale, safe, FindBin, yaml, either-unwrap, cryptocipher, crypto-cipher-types,
+                   time, MissingH, old-locale, safe, FindBin, yaml, either, either-unwrap, cryptocipher, crypto-cipher-types,
                    hslogger, aeson, process, OpenAL, ALUT, lens, unordered-containers, gitrev
   hs-source-dirs: src
   other-modules: Paths_macbeth_lib
@@ -38,6 +38,7 @@ library
   if flag(console_log)
     cpp-options: -DCONSOLE_LOG
   default-extensions: 
+    BangPatterns
     DeriveGeneric
     FlexibleContexts
     FlexibleInstances
@@ -48,6 +49,7 @@ library
     ScopedTypeVariables
     StandaloneDeriving 
     TypeSynonymInstances
+    ViewPatterns
   exposed-modules: Paths,
                    Macbeth.Fics.Api.Api,
                    Macbeth.Fics.Api.Chat,
@@ -113,9 +115,16 @@ executable Macbeth
   extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
 
 test-suite macbeth-lib-test
-    type: exitcode-stdio-1.0
-    ghc-options: -W
-    hs-source-dirs: test
-    main-is: Spec.hs
-    other-modules: GameResultSpec, PlayersSpec, SeekSpec, ChattingSpec, FicsConnectionSpec, BoardConfigSpec
-    build-depends: macbeth-lib, base, hspec, bytestring, attoparsec, conduit, aeson
+  type: exitcode-stdio-1.0
+  ghc-options: -W
+  hs-source-dirs: test
+  main-is: Spec.hs
+  other-modules: GameResultSpec, PlayersSpec, SeekSpec, ChattingSpec, FicsConnectionSpec, BoardConfigSpec
+  build-depends: macbeth-lib, base, hspec, bytestring, attoparsec, conduit, aeson
+  default-extensions: 
+    FlexibleContexts
+    FlexibleInstances
+    LambdaCase
+    MultiWayIf 
+    OverloadedStrings
+    RecordWildCards

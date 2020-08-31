@@ -1,38 +1,4 @@
-module Macbeth.Wx.Game.BoardState (
-  BoardState(..),
-  DraggedPiece(..),
-  PieceMove (..),
-
-  pickUpPieceFromHolding,
-  discardDraggedPiece,
-
-  setPromotion,
-  togglePromotion,
-
-  pickUpPieceFromBoard,
-
-  pointToSquare,
-  movePiece,
-  getPiece,
-
-  update,
-  setResult,
-  resize,
-  invertPerspective,
-
-  performPreMoves,
-  cancelLastPreMove,
-
-  updateMousePosition,
-  dropDraggedPiece,
-
-  setPieceSet,
-  getPieceHolding,
-
-  isDraggedKing,
-
-  initBoardState
-) where
+module Macbeth.Wx.Game.BoardState where
 
 import           Control.Concurrent.STM
 import           Control.Monad
@@ -82,6 +48,10 @@ data BoardState = BoardState {
 data DraggedPiece = DraggedPiece Point Piece PieceSource deriving (Show)
 
 data PieceSource = FromHolding | FromBoard Square deriving (Show)
+
+sourceSquare :: PieceSource -> Maybe Square
+sourceSquare FromHolding = Nothing
+sourceSquare (FromBoard sq) = Just sq
 
 data PieceMove = PieceMove { piece :: Piece, from :: Square, to :: Square } | DropMove Piece Square
 

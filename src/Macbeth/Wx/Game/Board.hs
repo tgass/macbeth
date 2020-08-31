@@ -1,24 +1,22 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Macbeth.Wx.Game.Board (
   draw,
   onMouseEvent
 ) where
 
 
-import Control.Monad.Reader
-import Control.Monad.Trans.Maybe
-import Control.Concurrent.STM
-import Data.Maybe
-import Graphics.UI.WX hiding (position, update, resize, when, pt, size, value, color)
-import Graphics.UI.WXCore hiding (Row, Column, when, pt)
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Move
-import Macbeth.Utils.BoardUtils
-import Macbeth.Wx.Config.BoardConfig
-import Macbeth.Wx.Game.BoardState
-import Macbeth.Wx.RuntimeEnv
-import System.IO
+import           Control.Monad.Reader
+import           Control.Monad.Trans.Maybe
+import           Control.Concurrent.STM
+import           Data.Maybe
+import           Graphics.UI.WX hiding (position, update, resize, when, pt, size, value, style, color)
+import           Graphics.UI.WXCore hiding (Row, Column, when, pt)
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Move
+import           Macbeth.Utils.BoardUtils
+import           Macbeth.Wx.Config.BoardConfig
+import           Macbeth.Wx.Game.BoardState
+import           Macbeth.Wx.RuntimeEnv
+import           System.IO
 
 type BoardT a = ReaderT (DC a, BoardState) IO ()
 
@@ -36,27 +34,26 @@ draw vState dc _ = do
 drawBoard :: BoardT a
 drawBoard = do
   (dc, state) <- ask
-  let whiteTile' = whiteTile $ boardConfig state
-      blackTile' = blackTile $ boardConfig state
-      bw = let seed = (concat $ replicate 4 [Black, White]) in seed ++ reverse seed ++ bw
-      sq = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
-  lift $ set dc [ pen := penTransparent ]
-  lift $ forM_ (zip bw sq) (\(c, sq') ->
-    if c == White then drawTile dc state whiteTile' sq' else drawTile dc state blackTile' sq')
-
-drawTile :: DC a -> BoardState -> Tile -> Square -> IO ()
-drawTile dc state (BitmapTile b) sq' = do
-  bitmapSetSize b $ Size (squareSizePx state) (squareSizePx state)
-  drawBitmap dc b (toPos' (squareSizePx state) sq' (perspective state)) True []
-drawTile dc state (ColorTile c) sq' = dcWithBrushStyle dc (brushSolid c) $ paintSquare dc state sq'
+  let squares = [Square c r  | c <- [A .. H], r <- [One .. Eight]]
+  lift $ do
+    set dc [ pen := penTransparent ]
+    forM_ squares $ \square -> case squareColor square of
+      White -> drawTile dc state (whiteTile $ boardConfig state) square
+      Black -> drawTile dc state (blackTile $ boardConfig state) square
+  where
+    drawTile :: DC a -> BoardState -> Tile -> Square -> IO ()
+    drawTile dc state (BitmapTile b) square = do
+      bitmapSetSize b $ Size (squareSizePx state) (squareSizePx state)
+      drawBitmap dc b (toPos' (squareSizePx state) square (perspective state)) True []
+    drawTile dc state (ColorTile c) square = dcWithBrushStyle dc (brushSolid c) $ paintSquare dc state square
 
 
 drawHighlightLastMove :: BoardT a
 drawHighlightLastMove = do
   (dc, state) <- ask
   liftIO $ when (showHighlightMove state) $ do
-    sequence_ $ paintHighlight dc state blue <$> pieceMove state
-    when (showHighlightCheck state) $ paintHighlightCheck dc state (rgb (255 :: Int) 69 00) $ kingSq (lastMove state)
+    sequence_ $ paintHighlight dc state moveColor <$> pieceMove state
+    when (showHighlightCheck state) $ paintHighlightCheck dc state $ kingSq (lastMove state)
   where
     showHighlightMove :: BoardState -> Bool
     showHighlightMove state = 
@@ -70,7 +67,7 @@ drawHighlightLastMove = do
 drawHighlightPreMove :: BoardT a
 drawHighlightPreMove = do
   (dc, state) <- ask
-  liftIO $ sequence_ $ paintHighlight dc state yellow <$> preMoves state
+  liftIO $ sequence_ $ paintHighlight dc state preMoveColor <$> preMoves state
 
 
 drawPieces :: BoardT a
@@ -88,10 +85,11 @@ drawPieces = do
 drawSelectedSquare :: BoardT a
 drawSelectedSquare = do
   (dc, state) <- ask
-  liftIO $ when (isGameUser state && isNothing (gameResult state)) $
+  let color = mouseColor $ highlightConfig $ boardConfig state
+  liftIO $ when (isGameUser state && isNothing (gameResult state) && isJust color)  $
     withBrushStyle brushTransparent $ \transparent -> do
       dcSetBrush dc transparent
-      set dc [pen := penColored red 1]
+      set dc [pen := penColored (convertColorRGB $ fromJust color) 1]
       void $ runMaybeT $ do
         square <- MaybeT $ return $ pointToSquare state $ mousePt state
         liftIO $ paintSquare dc state square
@@ -101,7 +99,10 @@ drawDraggedPiece :: BoardT a
 drawDraggedPiece = do
   (dc, state) <- ask
   case draggedPiece state of
-    Just dp -> liftIO $ drawDraggedPiece'' state dc dp
+    Just dp@(DraggedPiece pt _ source) -> liftIO $ do
+      when (isSolidStyle $ highlightConfig $ boardConfig state) $ 
+        mapM_ (paintHighlightSolid dc state $ if isWaiting state then moveColor else preMoveColor) $ fromMaybe [] $ sequence [pointToSquare state pt, sourceSquare source]
+      drawDraggedPiece'' state dc dp
     _ -> return ()
 
 
@@ -114,8 +115,23 @@ drawDraggedPiece'' state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBi
     scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale') / scale'
 
 
-paintHighlight :: DC a -> BoardState -> Color -> PieceMove -> IO ()
-paintHighlight dc state color (PieceMove _ s1 s2) = do
+paintHighlight :: DC a -> BoardState -> (HighlightConfig -> ColorRGB) -> PieceMove -> IO ()
+paintHighlight dc state highlightType move = case style $ highlightConfig $ boardConfig state of
+  Hatched -> paintHighlightHatched dc state highlightType move 
+  Solid -> mapM_ (paintHighlightSolid dc state highlightType) (squares move)
+    where 
+      squares (PieceMove _ s1 s2) = [s1, s2]
+      squares (DropMove _ s1) = [s1]
+
+paintHighlightCheck :: DC a -> BoardState -> Square -> IO ()
+paintHighlightCheck dc state square = case style $ highlightConfig $ boardConfig state of
+  Hatched -> paintHighlightCheckHatched dc state square  
+  Solid -> paintHighlightSolid dc state checkColor square
+
+
+paintHighlightHatched :: DC a -> BoardState -> (HighlightConfig -> ColorRGB) -> PieceMove -> IO ()
+paintHighlightHatched dc state highlightType (PieceMove _ s1 s2) = do
+  let color = convertColorRGB $ highlightType $ highlightConfig $ boardConfig state
   set dc [pen := penColored color 1]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
     dcSetBrush dc brushBg
@@ -123,17 +139,27 @@ paintHighlight dc state color (PieceMove _ s1 s2) = do
   withBrushStyle (BrushStyle BrushSolid color) $ \brushArrow -> do
     dcSetBrush dc brushArrow
     drawArrow dc (squareSizePx state) s1 s2 (perspective state)
-paintHighlight dc state color (DropMove _ s1) = do
+paintHighlightHatched dc state highlightType (DropMove _ s1) = do
+  let color = convertColorRGB $ highlightType $ highlightConfig $ boardConfig state
   set dc [pen := penColored color 1]
   withBrushStyle (BrushStyle (BrushHatch HatchBDiagonal) color) $ \brushBg -> do
     dcSetBrush dc brushBg
     paintSquare dc state s1
 
-paintHighlightCheck :: DC a -> BoardState -> Color -> Square -> IO ()
-paintHighlightCheck dc state color square = do
+paintHighlightSolid :: DC a -> BoardState -> (HighlightConfig -> ColorRGB) -> Square -> IO ()
+paintHighlightSolid dc state highlightType square = do
+  let color = toSolidColor square $ highlightType $ highlightConfig $ boardConfig state
+  set dc [ pen := penTransparent ]
+  withBrushStyle (BrushStyle BrushSolid color) $ \brushHL -> do
+    dcSetBrush dc brushHL
+    paintSquare dc state square
+
+paintHighlightCheckHatched :: DC a -> BoardState -> Square -> IO ()
+paintHighlightCheckHatched dc state square = do
+  let color = convertColorRGB $ checkColor $ highlightConfig $ boardConfig state
   set dc [pen := penColored color 1]
-  withBrushStyle (BrushStyle BrushTransparent color) $ \brush -> do
-    dcSetBrush dc brush
+  withBrushStyle (BrushStyle BrushTransparent color) $ \checkBrush -> do
+    dcSetBrush dc checkBrush
     mapM_ (paintCircle dc state square) [0.97 - x * 0.1 | x <- [0..5]]
 
 paintSquare :: DC a -> BoardState -> Square -> IO ()

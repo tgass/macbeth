@@ -10,11 +10,11 @@ import           Macbeth.Fics.Api.Move
 import           Macbeth.Fics.Api.Game
 import qualified Macbeth.Fics.Api.Result as R
 import           Macbeth.Utils.Utils
-import           Macbeth.Utils.BoardUtils
+import           Macbeth.Utils.BoardUtils hiding (toWxColor)
 import           Macbeth.Wx.Config.BoardConfig
 import           Macbeth.Wx.Game.BoardState
 import           Macbeth.Wx.Game.PieceSet
-import           Macbeth.Wx.Utils
+import           Macbeth.Wx.Utils 
 import           Macbeth.Wx.RuntimeEnv
 
 import           Control.Arrow

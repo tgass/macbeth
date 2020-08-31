@@ -1,7 +1,6 @@
-module Macbeth.Fics.Message (
-  Message (..)
-) where
+module Macbeth.Fics.Message where
 
+import Control.Concurrent.Chan
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Chat
@@ -12,22 +11,20 @@ import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Api.Seek
 
-import Control.Concurrent.Chan
-
 data Message =
-    GameMove { context :: MoveModifier, move :: Move }
-  | PieceHolding { gameId :: GameId, phWhite :: [Piece], phBlack :: [Piece] }
-  | GameResult Result
+    GameMove { context :: !MoveModifier, move :: !Move }
+  | PieceHolding { gameId :: !GameId, phWhite :: ![Piece], phBlack :: ![Piece] }
+  | GameResult !Result
 
-  | Observing GameId GameParams
-  | NewGameParamsUser GameParams
-  | NewGameIdUser GameId
-  | NewGameUser GameId GameParams -- | Merged
+  | Observing GameId !GameParams
+  | NewGameParamsUser !GameParams
+  | NewGameIdUser !GameId
+  | NewGameUser !GameId !GameParams -- | Merged
 
   | NoSuchGame -- | If id in 'observe id' does not exist
   | UserNotLoggedIn Username
 
-  | MatchRequested Challenge
+  | MatchRequested !Challenge
   | Pending PendingOffer
   | PendingRemoved Int
 
