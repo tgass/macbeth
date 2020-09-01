@@ -1,4 +1,13 @@
--- visualize if check
+Macbeth: <socket: 14>: hGetBufSome: resource vanished (Connection reset by peer)
+Macbeth: <socket: 14>: hPutStr: illegal operation (handle is closed)
+ESC -> 1. cancel dragged piece 2. cancel premoves
+board beschriften
+WxConfiguration: Make button to switch to Default-Solid/Default-Hatched Highlight style
+performance analyse: ALUT Device open anschauen
+
+capturedPieces: show difference
+
+
 
 --
 Get appropriate LICENSE
