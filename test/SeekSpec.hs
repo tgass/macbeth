@@ -1,9 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module SeekSpec (spec) where
 
 import Macbeth.Fics.Api.GameType
 import Macbeth.Fics.Api.Seek
+import Macbeth.Fics.Commands.Seek
 
 import Test.Hspec
 

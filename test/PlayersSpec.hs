@@ -3,7 +3,7 @@
 module PlayersSpec (spec) where
 
 import qualified Macbeth.Fics.Api.Rating as R
-import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Message
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Parsers.Players
 

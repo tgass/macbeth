@@ -1,9 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module FicsConnectionSpec (spec) where
 
-import Macbeth.Fics.FicsMessage
-import Macbeth.Fics.FicsConnection
+import Macbeth.Fics.Message
+import Macbeth.Fics.Connection
 import Macbeth.Fics.Api.Api
 import qualified Macbeth.Fics.Api.Rating as R
 import Macbeth.Fics.Api.Game
@@ -18,7 +16,7 @@ import qualified Data.ByteString.Char8 as BS
 
 spec :: Spec
 spec =
-  describe "FicsConnection" $ do
+  describe "Connection" $ do
 
     it "test readId" $ readId "\NAK4\SYN158\SYNThat seek is not available.\n\r\ETB" `shouldBe` 158
 
@@ -33,7 +31,7 @@ spec =
         RemoveSeeks [88],
         NewGameParamsUser (GameParams True "chesspickle" (R.Rating 1963 R.None) "Schoon" (R.Rating 1007 R.None) True "blitz" 5 0),
         NewGameIdUser (GameId 70),
-        GameMove {Macbeth.Fics.FicsMessage.context = Macbeth.Fics.Api.Move.None,
+        GameMove {Macbeth.Fics.Message.context = Macbeth.Fics.Api.Move.None,
                   move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------",
                   position = [],
                   turn = White,
@@ -47,6 +45,6 @@ spec =
                   movePretty = Nothing}},
         TextMessage "Game 70: A disconnection will be considered a forfeit."]
 
-runFicsConduit :: BS.ByteString -> [FicsMessage]
+runFicsConduit :: BS.ByteString -> [Message]
 runFicsConduit input = join $ yield input $$ linesC =$ blockC BS.empty =$ unblockC =$ parseC =$ CL.consume
 

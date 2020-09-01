@@ -1,8 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module ChattingSpec (spec) where
 
-import Macbeth.Fics.FicsMessage
+import Macbeth.Fics.Message
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Player
