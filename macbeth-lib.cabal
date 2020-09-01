@@ -111,7 +111,7 @@ library
 executable Macbeth
   main-is: src/Macbeth.hs
   build-depends: base, wx, wxcore, macbeth-lib, stm, ALUT, cabal-macosx
-  ghc-options: -O3 -threaded -W
+  ghc-options: -O2 -threaded -W
   extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
 
 test-suite macbeth-lib-test
