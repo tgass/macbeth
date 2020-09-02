@@ -35,6 +35,10 @@ see: http://www.freechess.org/Help/HelpFiles/category.html
 | <kbd>&#8984;</kbd> + <kbd>W</kbd>   | Close Window
 | <kbd>&#8984;</kbd> + <kbd>O</kbd>   | Toggle promotion piece
 | <kbd>Esc</kbd> | Drop dragged piece
+| <kbd>Y</kbd> | Accept offer
+| <kbd>N</kbd> | Decline offer
+| <kbd>X</kbd> | Cancel last premove
+
 
 | Bughouse / Crazyhouse | &nbsp;
 |--------------|-------------
