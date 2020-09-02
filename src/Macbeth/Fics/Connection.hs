@@ -68,18 +68,18 @@ chain h chan = flip evalStateT emptyState $ transPipe lift
   where emptyState = HelperState Nothing Nothing Nothing
 
 
-sink :: Chan Message -> Sink Message (StateT HelperState IO) ()
+sink :: MonadIO m => Chan Message -> Sink Message m ()
 sink chan = awaitForever $ liftIO . writeChan chan
 
 
-logMessageC :: Conduit Message (StateT HelperState IO) Message
+logMessageC :: MonadIO m => Conduit Message m Message
 logMessageC = awaitForever $ \cmd -> case cmd of
   NewSeek{} -> yield cmd
   RemoveSeeks{} -> yield cmd
   _ -> liftIO (infoM logger $ show cmd) >> yield cmd
 
 
-copyC :: Chan Message -> Conduit Message (StateT HelperState IO) Message
+copyC :: MonadIO m => Chan Message -> Conduit Message m Message
 copyC chan = awaitForever $ \case
   m@(NewGameUser gameId' gameParams') -> do
     chan' <- liftIO $ dupChan chan
@@ -173,7 +173,7 @@ dropPrompt line
         promptSz = BS.length prompt
 
 
-logStreamC :: Conduit BS.ByteString (StateT HelperState IO) BS.ByteString
+logStreamC :: MonadIO m => Conduit BS.ByteString m BS.ByteString
 logStreamC = awaitForever $ \block -> do
   liftIO $ debugM logger $ showLitString (BS.unpack block) ""
   yield block
