@@ -16,18 +16,19 @@ import           GHC.Generics
 import           Graphics.UI.WX hiding (style)
 import           System.FilePath ((</>))
 
-data BoardConfig' a b c d = BoardConfig {
+data BoardConfig' a b c d e = BoardConfig {
     showCapturedPieces :: Bool
   , whiteTile :: a
   , blackTile :: a
   , boardSize :: b
   , pieceSet :: c
   , highlightConfig :: d
+  , showLabels :: e
 } deriving (Show, Eq, Generic)
 
-type BoardConfig = BoardConfig' Tile Int PieceSet HighlightConfig
+type BoardConfig = BoardConfig' Tile Int PieceSet HighlightConfig Bool
 
-type BoardConfigFormat = BoardConfig' (Maybe TileFormat) (Maybe Int) (Maybe PieceSet) (Maybe HighlightConfig)
+type BoardConfigFormat = BoardConfig' (Maybe TileFormat) (Maybe Int) (Maybe PieceSet) (Maybe HighlightConfig) (Maybe Bool)
 
 data Tile = BitmapTile (Bitmap ()) | ColorTile Color deriving (Show, Eq)
 
@@ -53,6 +54,11 @@ toSolidColor square color
   | squareColor square == White = convertColorRGB color
   | otherwise = convertColorRGB $ darkenColor color
 
+toSolidColorReverse :: Square -> ColorRGB -> Color
+toSolidColorReverse square color 
+  | squareColor square == Black = convertColorRGB color
+  | otherwise = convertColorRGB $ darkenColor color
+
 convertColorRGB :: ColorRGB -> Color
 convertColorRGB (ColorRGB r g b) = rgb r g b
 
@@ -67,13 +73,14 @@ convert c userDir = BoardConfig
   <*> pure (fromMaybe defaultBoardSize $ boardSize c)
   <*> pure (fromMaybe defaultPieceSet $ pieceSet c)
   <*> pure (fromMaybe defaultHighlightConfig $ highlightConfig c)
+  <*> pure (fromMaybe defaultShowLabels $ showLabels c)
 
 convertTile :: FilePath -> TileFormat -> IO Tile
 convertTile _ (TileRGB (ColorRGB r g b)) = return $ ColorTile $ rgb r g b
 convertTile userDir (TileFile filename') = (BitmapTile . bitmap) <$> getUserOrAppFile userDir ("tiles" </> filename')
 
 defaultBoardConfig :: BoardConfigFormat
-defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize) (Just defaultPieceSet) (Just defaultHighlightConfig)
+defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize) (Just defaultPieceSet) (Just defaultHighlightConfig) (Just defaultShowLabels)
 
 defaultWhiteTile :: TileFormat
 defaultWhiteTile = TileRGB $ ColorRGB 255 255 255
@@ -89,6 +96,9 @@ defaultPieceSet = Alpha1
 
 defaultHighlightConfig :: HighlightConfig
 defaultHighlightConfig = HighlightConfig Hatched (ColorRGB 0 0 255) (ColorRGB 0 255 0) (ColorRGB 255 0 0) (Just $ ColorRGB 255 0 0)
+
+defaultShowLabels :: Bool
+defaultShowLabels = False
 
 parseRGB :: Text -> Either String ColorRGB
 parseRGB (T.stripPrefix "hex" -> Just t) = ColorRGB

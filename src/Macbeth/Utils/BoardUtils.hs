@@ -2,7 +2,9 @@ module Macbeth.Utils.BoardUtils (
   drawArrow,
   squareToRect',
   squareToPoint,
-  toPos'
+  toPos',
+  toPosLabelRow,
+  toPosLabelCol
 ) where
 
 import           Graphics.UI.WX hiding (size, color)
@@ -20,6 +22,16 @@ colToInt Black = abs . (7-) . fromEnum
 
 toPos' :: Int -> Square -> PColor -> Point
 toPos' size' (Square c r) color' = point (colToInt color' c * size') (rowToInt color' r * size')
+
+toPosLabelRow :: Int -> Square -> PColor -> Point
+toPosLabelRow size (Square col row) color = point x y
+  where x = (colToInt color col * size) + size - 8
+        y = (rowToInt color row * size) + 2
+
+toPosLabelCol :: Int -> Square -> PColor -> Point
+toPosLabelCol size (Square col row) color = point x y
+  where x = (colToInt color col * size) + 2
+        y = (rowToInt color row * size) + size - 8 - 3
 
 squareToPoint :: Int -> Square -> PColor -> Point
 squareToPoint size sq color = rectCentralPoint $ squareToRect' size sq color

@@ -29,6 +29,7 @@ draw vState dc _ = do
     drawHighlightPreMove
     drawPieces
     drawSelectedSquare
+    drawLabels
     drawDraggedPiece
 
 drawBoard :: BoardT a
@@ -114,6 +115,13 @@ drawDraggedPiece'' state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBi
     scalePoint = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
     scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale') / scale'
 
+drawLabels :: BoardT a
+drawLabels = do
+  (dc, state) <- ask
+  when (showLabels $ boardConfig $ state) $ liftIO $ do
+    mapM_ (paintLabelsRow dc state) [One .. Eight]
+    mapM_ (paintLabelsCol dc state) [A .. H]
+
 
 paintHighlight :: DC a -> BoardState -> (HighlightConfig -> ColorRGB) -> PieceMove -> IO ()
 paintHighlight dc state highlightType move = case style $ highlightConfig $ boardConfig state of
@@ -168,6 +176,27 @@ paintSquare dc state sq = drawRect dc (squareToRect' (squareSizePx state) sq (pe
 paintCircle :: DC a -> BoardState -> Square -> Double -> IO ()
 paintCircle dc state sq scale = circle dc pt (floor $ scale * fromIntegral (squareSizePx state) / (2 :: Double)) []
   where pt = squareToPoint (squareSizePx state) sq (perspective state)
+
+paintLabelsRow :: DC a -> BoardState -> Row -> IO ()
+paintLabelsRow dc state row = 
+  dcWithFontStyle dc fontSmall $ do
+    let square = Square H row
+        color = toSolidColorReverse square $ moveColor $ highlightConfig $ boardConfig state
+        pt = toPosLabelRow (squareSizePx state) square (perspective state)
+        text = show $ succ $ fromEnum row
+    dcSetTextForeground dc color
+    drawText dc text pt []
+
+paintLabelsCol :: DC a -> BoardState -> Column -> IO ()
+paintLabelsCol dc state col = 
+  dcWithFontStyle dc fontSmall $ do
+    let square = Square col One
+        color = toSolidColorReverse square $ moveColor $ highlightConfig $ boardConfig state
+        pt = toPosLabelCol (squareSizePx state) square (perspective state)
+        text = show col
+    dcSetTextForeground dc color
+    drawText dc text pt []
+
 
 onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
 onMouseEvent h vState = \case
