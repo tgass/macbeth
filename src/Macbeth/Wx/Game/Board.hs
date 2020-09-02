@@ -61,7 +61,7 @@ drawHighlightLastMove = do
       in (isJust $ moveVerbose move) && ((wasOponentMove move && isWaiting state) || relation move == Observing)
 
     showHighlightCheck :: BoardState -> Bool
-    showHighlightCheck state = (isCheck $ lastMove state) && maybe True (not . isDraggedKing) (draggedPiece state)
+    showHighlightCheck state = ((isCheck $ lastMove state) || (isCheckmate $ lastMove state)) && maybe True (not . isDraggedKing) (draggedPiece state)
 
 
 drawHighlightPreMove :: BoardT a
