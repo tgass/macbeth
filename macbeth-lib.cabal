@@ -17,6 +17,7 @@ data-files:
   icons/*.gif
   tiles/*.png
   pieces/*.png
+  zseal
 extra-source-files: test/*.hs
 source-repository head
   type: git
@@ -28,10 +29,22 @@ flag console_log
 
 
 library
-  build-depends: base >=4.2 && <5, wxcore, wx, network, conduit, conduit-extra, text, transformers, resourcet,
-                   bytestring, split, attoparsec, filepath, containers, split, mtl, stm, directory, filepath,
-                   time, MissingH, old-locale, safe, FindBin, yaml, either, either-unwrap, cryptocipher, crypto-cipher-types,
-                   hslogger, aeson, process, OpenAL, ALUT, lens, unordered-containers, gitrev
+  build-depends: 
+      async
+    , base >=4.2 && <5
+    , wxcore
+    , wx
+    , network
+    , conduit
+    , conduit-extra
+    , text
+    , transformers
+    , resourcet
+    , bytestring
+    , streaming-commons
+    , split, attoparsec, filepath, containers, split, mtl, stm, directory, filepath
+    , time, MissingH, old-locale, safe, FindBin, yaml, either, either-unwrap, cryptocipher, crypto-cipher-types
+    , hslogger, aeson, process, OpenAL, ALUT, lens, unordered-containers, gitrev
   hs-source-dirs: src
   other-modules: Paths_macbeth_lib
   ghc-options: -Wall
@@ -50,67 +63,68 @@ library
     StandaloneDeriving 
     TypeSynonymInstances
     ViewPatterns
-  exposed-modules: Paths,
-                   Macbeth.Fics.Api.Api,
-                   Macbeth.Fics.Api.Chat,
-                   Macbeth.Fics.Api.Game,
-                   Macbeth.Fics.Api.GameType,
-                   Macbeth.Fics.Api.Move,
-                   Macbeth.Fics.Api.Rating,
-                   Macbeth.Fics.Api.Seek,
-                   Macbeth.Fics.Api.Offer,
-                   Macbeth.Fics.Api.OngoingGame,
-                   Macbeth.Fics.Api.Player,
-                   Macbeth.Fics.Api.Result,
-                   Macbeth.Fics.Connection
-                   Macbeth.Fics.Commands
-                   Macbeth.Fics.Commands.Seek
-                   Macbeth.Fics.Message,
-                   Macbeth.Fics.Parsers.Api,
-                   Macbeth.Fics.Parsers.Chatting,
-                   Macbeth.Fics.Parsers.MessageParser,
-                   Macbeth.Fics.Parsers.GamesParser,
-                   Macbeth.Fics.Parsers.MoveParser,
-                   Macbeth.Fics.Parsers.Players,
-                   Macbeth.Fics.Parsers.PositionParser,
-                   Macbeth.Fics.Parsers.RatingParser,
-                   Macbeth.Fics.Parsers.SeekMsgParsers,
-                   Macbeth.Fics.Utils.Bitmask,
-                   Macbeth.Utils.BoardUtils,
-                   Macbeth.Utils.PGN,
-                   Macbeth.Utils.FEN,
-                   Macbeth.Utils.Utils,
-                   Macbeth.Utils.Salt,
-                   Macbeth.Wx.Challenge,
-                   Macbeth.Wx.Chat,
-                   Macbeth.Wx.ChatRegistry,
-                   Macbeth.Wx.Configuration,
-                   Macbeth.Wx.Finger,
-                   Macbeth.Wx.GamesList,
-                   Macbeth.Wx.Login,
-                   Macbeth.Wx.Match,
-                   Macbeth.Wx.Pending,
-                   Macbeth.Wx.PartnerOffer,
-                   Macbeth.Wx.PlayersList,
-                   Macbeth.Wx.RuntimeEnv,
-                   Macbeth.Wx.Seek,
-                   Macbeth.Wx.SoughtList,
-                   Macbeth.Wx.ToolBox,
-                   Macbeth.Wx.Utils,
-                   Macbeth.Wx.Game.BoardState,
-                   Macbeth.Wx.Game.Board,
-                   Macbeth.Wx.Game.Game,
-                   Macbeth.Wx.Game.PieceSet,
-                   Macbeth.Wx.Game.StatusPanel,
-                   Macbeth.Wx.Game.GameSounds,
-                   Macbeth.Wx.Config.UserConfig,
-                   Macbeth.Wx.Config.Sounds,
-                   Macbeth.Wx.Config.BoardConfig
-                   Macbeth.Wx.Config.SeekConfig
+  exposed-modules: 
+    Paths,
+    Macbeth.Fics.Api.Api,
+    Macbeth.Fics.Api.Chat,
+    Macbeth.Fics.Api.Game,
+    Macbeth.Fics.Api.GameType,
+    Macbeth.Fics.Api.Move,
+    Macbeth.Fics.Api.Rating,
+    Macbeth.Fics.Api.Seek,
+    Macbeth.Fics.Api.Offer,
+    Macbeth.Fics.Api.OngoingGame,
+    Macbeth.Fics.Api.Player,
+    Macbeth.Fics.Api.Result,
+    Macbeth.Fics.Connection
+    Macbeth.Fics.Commands
+    Macbeth.Fics.Commands.Seek
+    Macbeth.Fics.Message,
+    Macbeth.Fics.Parsers.Api,
+    Macbeth.Fics.Parsers.Chatting,
+    Macbeth.Fics.Parsers.MessageParser,
+    Macbeth.Fics.Parsers.GamesParser,
+    Macbeth.Fics.Parsers.MoveParser,
+    Macbeth.Fics.Parsers.Players,
+    Macbeth.Fics.Parsers.PositionParser,
+    Macbeth.Fics.Parsers.RatingParser,
+    Macbeth.Fics.Parsers.SeekMsgParsers,
+    Macbeth.Fics.Utils.Bitmask,
+    Macbeth.Utils.BoardUtils,
+    Macbeth.Utils.PGN,
+    Macbeth.Utils.FEN,
+    Macbeth.Utils.Utils,
+    Macbeth.Utils.Salt,
+    Macbeth.Wx.Challenge,
+    Macbeth.Wx.Chat,
+    Macbeth.Wx.ChatRegistry,
+    Macbeth.Wx.Configuration,
+    Macbeth.Wx.Finger,
+    Macbeth.Wx.GamesList,
+    Macbeth.Wx.Login,
+    Macbeth.Wx.Match,
+    Macbeth.Wx.Pending,
+    Macbeth.Wx.PartnerOffer,
+    Macbeth.Wx.PlayersList,
+    Macbeth.Wx.RuntimeEnv,
+    Macbeth.Wx.Seek,
+    Macbeth.Wx.SoughtList,
+    Macbeth.Wx.ToolBox,
+    Macbeth.Wx.Utils,
+    Macbeth.Wx.Game.BoardState,
+    Macbeth.Wx.Game.Board,
+    Macbeth.Wx.Game.Game,
+    Macbeth.Wx.Game.PieceSet,
+    Macbeth.Wx.Game.StatusPanel,
+    Macbeth.Wx.Game.GameSounds,
+    Macbeth.Wx.Config.UserConfig,
+    Macbeth.Wx.Config.Sounds,
+    Macbeth.Wx.Config.BoardConfig
+    Macbeth.Wx.Config.SeekConfig
 
 executable Macbeth
   main-is: src/Macbeth.hs
-  build-depends: base, wx, wxcore, macbeth-lib, stm, ALUT, cabal-macosx
+  build-depends: base, Cabal, wx, wxcore, macbeth-lib, stm, ALUT, cabal-macosx
   ghc-options: -O2 -threaded -W
   extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
 

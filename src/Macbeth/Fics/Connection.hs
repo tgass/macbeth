@@ -10,29 +10,31 @@ module Macbeth.Fics.Connection (
 ) where
 
 
-import Macbeth.Fics.Message hiding (gameId)
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Game
-import Macbeth.Fics.Parsers.MessageParser
+import           Control.Concurrent.Async
+import           Control.Concurrent.Chan
+import           Control.Monad
+import           Control.Monad.State
+import           Control.Monad.Trans.Resource
+import qualified Data.ByteString.Char8 as BS
+import           Data.Char
+import           Data.Conduit
+import           Data.Conduit.Binary
+import           Data.Conduit.List hiding (filter)
+import           Data.Conduit.Process
+import           Data.Maybe
+import           Data.Streaming.Process
+import           GHC.Show (showLitString)
+import           Macbeth.Fics.Message hiding (gameId)
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Game
+import           Macbeth.Fics.Parsers.MessageParser
 import qualified Macbeth.Fics.Api.Move as Move
 import qualified Macbeth.Fics.Api.Result as R
-
-import Control.Concurrent.Chan
-import Control.Monad
-import Control.Monad.State
-import Control.Monad.Trans.Resource
-import Data.Char
-import Data.Conduit
-import Data.Conduit.Binary
-import Data.Conduit.List hiding (filter)
-import Data.Maybe
-import GHC.Show (showLitString)
-import System.Log.Logger
-import Network
-import Prelude hiding (log)
-import System.IO
-
-import qualified Data.ByteString.Char8 as BS
+import           System.Log.Logger
+import           Network
+import qualified Paths as Paths
+import           Prelude hiding (log)
+import           System.IO
 
 
 logger :: String
@@ -45,17 +47,42 @@ data HelperState = HelperState { takebackAccptedBy :: Maybe (Maybe String)
 
 
 ficsConnection :: IO (Handle, Chan Message)
-ficsConnection = runResourceT $ do
-  (_, hsock) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
+--ficsConnection = connection
+ficsConnection = timesealConnection
+
+
+connection :: IO (Handle, Chan Message)
+connection = runResourceT $ do
+   (_, h) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
+   liftIO $ hSetBuffering h LineBuffering
+   chan <- liftIO newChan
+   void $ resourceForkIO $ liftIO $ chain (sourceHandle h) chan
+   return (h, chan)
+
+
+timesealConnection :: IO (Handle, Chan Message)
+timesealConnection = runResourceT $ do
+  zsealExec <- liftIO Paths.zsealExec
+  (hsock, fromProcess, ClosedStream, cph) <- liftIO $ streamingProcess (proc zsealExec [])
   liftIO $ hSetBuffering hsock LineBuffering
   chan <- liftIO newChan
-  _ <- resourceForkIO $ liftIO $ chain hsock chan
+  void $ resourceForkIO $ liftIO $ procChain fromProcess cph chan
   return (hsock, chan)
 
 
-chain :: Handle -> Chan Message -> IO ()
-chain h chan = flip evalStateT emptyState $ transPipe lift
-  (sourceHandle h) $$
+procChain :: Source IO BS.ByteString -> StreamingProcessHandle -> Chan Message -> IO ()
+procChain src cph chan = do
+  ec <- runConcurrently $
+      Concurrently (chain src chan) *>
+      Concurrently (waitForStreamingProcess cph)
+
+  putStrLn $ "Process exit code: " ++ show ec
+  return ()
+  
+
+chain :: Source IO BS.ByteString -> Chan Message -> IO ()
+chain src chan = flip evalStateT emptyState $ transPipe lift 
+  src $$ 
   linesC =$
   blockC BS.empty =$
   logStreamC =$
@@ -65,7 +92,10 @@ chain h chan = flip evalStateT emptyState $ transPipe lift
   copyC chan =$
   logMessageC =$
   sink chan
-  where emptyState = HelperState Nothing Nothing Nothing
+
+
+emptyState :: HelperState
+emptyState = HelperState Nothing Nothing Nothing
 
 
 sink :: MonadIO m => Chan Message -> Sink Message m ()
