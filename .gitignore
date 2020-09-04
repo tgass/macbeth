@@ -8,3 +8,5 @@ Sodium.hs
 .stack-work
 .temp
 *.lock
+macbeth-dist
+

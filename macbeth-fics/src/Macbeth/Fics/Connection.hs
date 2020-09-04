@@ -1,5 +1,6 @@
 module Macbeth.Fics.Connection (
-  ficsConnection,
+  connection,
+  timesealConnection,
   linesC,
   parseC,
   blockC,
@@ -22,7 +23,6 @@ import           Data.Conduit.Binary
 import           Data.Conduit.List hiding (filter)
 import           Data.Conduit.Process
 import           Data.Maybe
-import           Data.Streaming.Process
 import           GHC.Show (showLitString)
 import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Fics.Api.Api
@@ -30,9 +30,9 @@ import           Macbeth.Fics.Api.Game
 import           Macbeth.Fics.Parsers.MessageParser
 import qualified Macbeth.Fics.Api.Move as Move
 import qualified Macbeth.Fics.Api.Result as R
+import           Macbeth.Fics.Timeseal
 import           System.Log.Logger
 import           Network
-import qualified Paths as Paths
 import           Prelude hiding (log)
 import           System.IO
 
@@ -46,11 +46,6 @@ data HelperState = HelperState { takebackAccptedBy :: Maybe (Maybe String)
                                , newGameUserParams :: Maybe GameParams }
 
 
-ficsConnection :: IO (Handle, Chan Message)
---ficsConnection = connection
-ficsConnection = timesealConnection
-
-
 connection :: IO (Handle, Chan Message)
 connection = runResourceT $ do
    (_, h) <- allocate (connectTo "freechess.org" $ PortNumber 5000) hClose
@@ -60,9 +55,9 @@ connection = runResourceT $ do
    return (h, chan)
 
 
-timesealConnection :: IO (Handle, Chan Message)
-timesealConnection = runResourceT $ do
-  zsealExec <- liftIO Paths.zsealExec
+timesealConnection :: TimesealEnv a => a -> IO (Handle, Chan Message)
+timesealConnection timesealEnv = runResourceT $ do
+  zsealExec <- liftIO $ getTimesealExec timesealEnv
   (hsock, fromProcess, ClosedStream, cph) <- liftIO $ streamingProcess (proc zsealExec [])
   liftIO $ hSetBuffering hsock LineBuffering
   chan <- liftIO newChan

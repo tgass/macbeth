@@ -1,0 +1,26 @@
+name: macbeth-macos
+synopsis: Macbeth - A beautiful and minimalistic FICS client
+description: A FICS client written with OSX in mind.
+author: Tilmann Gass
+maintainer: tilmann@macbeth-ficsclient.com
+homepage: http://www.macbeth-ficsclient.com
+bug-reports: https://github.com/tgass/macbeth/issues
+category: game
+version: 0.0.32
+cabal-version: >= 1.8
+Build-Type: Custom
+license: GPL
+license-file: LICENSE
+data-dir: resources
+data-files: zseal
+source-repository head
+  type: git
+  location: https://github.com/tgass/macbeth
+
+executable MacbethApp
+  main-is: src/Macbeth.hs
+  other-modules: Paths_macbeth_macos
+  build-depends: base, Cabal, wx, wxcore, macbeth-fics, macbeth-wx, stm, ALUT, cabal-macosx, FindBin, filepath, directory
+  ghc-options: -O2 -threaded -W
+  extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
+

@@ -1,7 +1,10 @@
 resolver: lts-9.21
 
 packages:
-- '.'
+- './macbeth-fics'
+- './macbeth-wx'
+- './macbeth-bin'
+- './macbeth-macos'
 
 explicit-setup-deps:
     "*": true

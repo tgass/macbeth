@@ -6,6 +6,10 @@ performance analyse: ALUT Device open anschauen
 
 capturedPieces: show difference
 
+license: 
+- flat-color-icons
+- zseal
+
 
 
 --
