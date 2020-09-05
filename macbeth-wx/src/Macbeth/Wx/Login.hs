@@ -59,6 +59,7 @@ okBtnHandler wxInputs f h chan = do
     -- TODO: do this with `fix`
     putPassword :: ReaderT LoginData IO ()
     putPassword = lift (readChan chan) >>= \case
+      AbusiveBehavior -> return ()
       Password -> asks password >>= lift . hPutStrLn h >> putPassword
       GuestLogin {} -> lift (hPutStrLn h "") >> putPassword
       LoginPrompt -> return () -- close this frame, new one is opened in Toolbox

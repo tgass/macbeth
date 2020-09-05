@@ -73,6 +73,7 @@ parseMessage = parseOnly $ choice [
   , unknownUsername
   , loggedIn
   , logOut
+  , abusiveBehavior
   , invalidPassword
   , ping]
 
@@ -209,6 +210,8 @@ loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> P.userHandle <* " *
 logOut :: Parser Message
 logOut = "Logging you out." *> pure LogOut
 
+abusiveBehavior :: Parser Message
+abusiveBehavior = "Due to abusive behavior, no registered users may use this server from your site." *> pure AbusiveBehavior
 
 invalidPassword :: Parser Message
 invalidPassword = "**** Invalid password! ****" *> pure InvalidPassword

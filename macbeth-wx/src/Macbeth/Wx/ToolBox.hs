@@ -184,7 +184,9 @@ wxToolBox env chan = do
 
         Ping _ avg _ -> set statusLag [ text := "Lag: " ++ show avg ++ "ms"]
 
-        ConnectionClosed _ -> errorDialog f "FICS Connection Error" "Macbeth could not maintain the connection to FICS. It could be that FICS is down or that the connection was closed for other reasons. Please restart Macbeth."
+        ConnectionClosed _ -> errorDialog f "FICS Connection Error" connectionClosedMessage
+
+        AbusiveBehavior -> errorDialog f "Abusive Behavior" abusiveBehaviorMessage
 
         TextMessage text' -> appendText ct text'
 
@@ -214,4 +216,10 @@ flag  =  unsafePerformIO flag'
              work <- malloc :: IO (Ptr CInt)
              poke work (fromIntegral wxBK_HITTEST_ONPAGE)
              return work
+
+abusiveBehaviorMessage :: String
+abusiveBehaviorMessage = "To be able to log in, please email: abuse@freechess.org\nWe are sorry about this and apologize for the inconvenience." 
+
+connectionClosedMessage :: String
+connectionClosedMessage = "Macbeth could not maintain the connection to FICS. It could be that FICS is down or that the connection was closed for other reasons. Please restart Macbeth."
 
