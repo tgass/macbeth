@@ -58,9 +58,9 @@ git clone https://github.com/tgass/macbeth.git
 cd macbeth
 
 stack setup 
-stack build 
+stack build --stack-yaml=stack-bundle-macos.yaml
 
-./package-macos.sh
+./bundle-macos.sh
 open Macbeth.dmg
 
 ```

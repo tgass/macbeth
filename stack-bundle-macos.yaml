@@ -3,7 +3,7 @@ resolver: lts-9.21
 packages:
 - './macbeth-fics'
 - './macbeth-wx'
-- './macbeth-bin'
+- './macbeth-macos'
 
 explicit-setup-deps:
     "*": true
@@ -22,3 +22,5 @@ extra-deps:
 - hspec-discover-2.5.1
 - hspec-expectations-0.8.2
 - quickcheck-io-0.2.0
+- FindBin-0.0.5 
+- cabal-macosx-0.2.4.2

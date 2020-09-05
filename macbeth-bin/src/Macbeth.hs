@@ -1,6 +1,5 @@
 module Main where
 
-import           Data.List
 import           Graphics.UI.WX
 import           Macbeth.Fics.Connection
 import           Macbeth.Fics.Timeseal
@@ -8,7 +7,6 @@ import           Macbeth.Wx.ToolBox
 import           Macbeth.Wx.RuntimeEnv
 import           Sound.ALUT
 import qualified Paths_macbeth_bin as Paths
-import           System.Environment.FindBin
 import           System.FilePath
 
 
@@ -29,8 +27,4 @@ zsealExec :: IO FilePath
 zsealExec = do
   dir <- Paths.getLibexecDir
   return $ dir </> "zseal"
-
-
-resources :: FilePath -> IO FilePath
-resources path = ((</> "Resources" </> path) . joinPath . init . splitPath) <$> getProgPath
 

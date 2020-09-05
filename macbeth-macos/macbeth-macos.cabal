@@ -17,10 +17,19 @@ source-repository head
   type: git
   location: https://github.com/tgass/macbeth
 
-executable MacbethApp
+custom-setup
+  setup-depends: 
+      base
+   , Cabal 
+   , cabal-macosx 
+   , FindBin
+   , filepath
+   , directory
+
+executable Macbeth
   main-is: src/Macbeth.hs
   other-modules: Paths_macbeth_macos
-  build-depends: base, Cabal, wx, wxcore, macbeth-fics, macbeth-wx, stm, ALUT, cabal-macosx, FindBin, filepath, directory
+  build-depends: base, wx, wxcore, macbeth-fics, macbeth-wx, stm, ALUT, FindBin, filepath, directory
   ghc-options: -O2 -threaded -W
   extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
 

@@ -9,18 +9,10 @@ import System.FilePath.Posix
 main :: IO ()
 main = defaultMainWithHooks $ simpleUserHooks { postBuild = appBundleBuildHook guiApps }
 
---myPostCopy :: Args -> CopyFlags -> PackageDescription -> LocalBuildInfo -> IO ()
---myPostCopy _ _ pdesc lbi = do
---  putStrLn "macbeth-setup> Copying zseal..."
---  let zsealBinary = "zseal"
---      installDirs = absoluteInstallDirs pdesc lbi NoCopyDest :: InstallDirs FilePath
---  createDirectoryIfMissing False $ libexecdir installDirs
---  copyFile (dataDir pdesc </> zsealBinary)  $ libexecdir installDirs </> zsealBinary
-
 guiApps :: [MacApp]
 guiApps =
   [ MacApp
-    { appName = "MacbethApp"
+    { appName = "Macbeth"
     , appIcon = Just "resources/Macbeth.icns"
     , appPlist = Nothing -- Build a default Info.plist for the icon.
     , resources = [] -- No other resources.

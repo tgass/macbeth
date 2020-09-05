@@ -17,10 +17,17 @@ source-repository head
   type: git
   location: https://github.com/tgass/macbeth
 
+custom-setup
+  setup-depends:
+      base
+   , Cabal
+   , filepath
+   , directory
+
 executable Macbeth
   main-is: src/Macbeth.hs
   other-modules: Paths_macbeth_bin
-  build-depends: base, macbeth-fics, macbeth-wx, ALUT, FindBin, filepath, directory, wx
+  build-depends: ALUT, base, macbeth-fics, macbeth-wx, filepath, wx
   ghc-options: -O2 -threaded -W
   extra-lib-dirs: /usr/local/Cellar/freealut/1.1.0/lib
 
