@@ -1,21 +1,13 @@
-Macbeth: <socket: 14>: hGetBufSome: resource vanished (Connection reset by peer)
-Macbeth: <socket: 14>: hPutStr: illegal operation (handle is closed)
-board beschriften
 WxConfiguration: Make button to switch to Default-Solid/Default-Hatched Highlight style
 performance analyse: ALUT Device open anschauen
 
 capturedPieces: show difference
 
 use Bye/Quit command to logout properly
-TextMessage "\ETB"
-TextMessage "Logging you out."
-TextMessage "\ETB"
 
 license: 
 - flat-color-icons
 - zseal
-
-
 
 --
 Get appropriate LICENSE

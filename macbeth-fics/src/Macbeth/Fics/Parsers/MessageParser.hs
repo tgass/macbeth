@@ -72,6 +72,7 @@ parseMessage = parseOnly $ choice [
   , guestLogin
   , unknownUsername
   , loggedIn
+  , logOut
   , invalidPassword
   , ping]
 
@@ -203,6 +204,10 @@ unknownUsername = UnkownUsername <$> ("\"" *> username <* "\" is not a registere
 
 loggedIn :: Parser Message
 loggedIn = LoggedIn <$> ("**** Starting FICS session as " *> P.userHandle <* " ****")
+
+
+logOut :: Parser Message
+logOut = "Logging you out." *> pure LogOut
 
 
 invalidPassword :: Parser Message

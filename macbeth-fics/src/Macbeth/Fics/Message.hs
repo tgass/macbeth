@@ -58,6 +58,7 @@ data Message =
   | Password
   | GuestLogin Username
   | LoggedIn UserHandle
+  | LogOut
   | InvalidPassword
   | UnkownUsername Username
   | TextMessage String
