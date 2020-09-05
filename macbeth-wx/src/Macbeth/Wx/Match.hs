@@ -9,8 +9,8 @@ import           Graphics.UI.WX hiding (color)
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.Api.GameType
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Wx.Utils
+import qualified Macbeth.Wx.Commands as Cmds
 import           System.IO
 
 data WxMatch = WxMatch {

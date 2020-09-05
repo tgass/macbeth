@@ -8,7 +8,6 @@ import           Macbeth.Wx.ToolBox
 import           Macbeth.Wx.RuntimeEnv
 import           Sound.ALUT
 import qualified Paths_macbeth_bin as Paths
-import           System.Directory
 import           System.Environment.FindBin
 import           System.FilePath
 
@@ -27,12 +26,11 @@ instance TimesealEnv TimesealProvider where
 
 
 zsealExec :: IO FilePath
-zsealExec
-  | "app" `isInfixOf` __Bin__ = resources "zseal"
-  | otherwise = do
-      dir <- Paths.getLibexecDir
-      return $ dir </> "zseal"
+zsealExec = do
+  dir <- Paths.getLibexecDir
+  return $ dir </> "zseal"
 
 
 resources :: FilePath -> IO FilePath
 resources path = ((</> "Resources" </> path) . joinPath . init . splitPath) <$> getProgPath
+

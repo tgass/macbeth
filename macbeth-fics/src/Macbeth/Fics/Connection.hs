@@ -11,8 +11,7 @@ module Macbeth.Fics.Connection (
 ) where
 
 
-import           Control.Concurrent (forkIO)
-import           Control.Concurrent.Async
+import           Control.Concurrent (forkFinally)
 import           Control.Concurrent.Chan
 import           Control.Concurrent.MVar
 import           Control.Monad
@@ -59,18 +58,16 @@ connection = runResourceT $ do
 
 timesealConnection :: TimesealEnv a => a -> IO (Handle, Chan Message)
 timesealConnection timesealEnv = do
-  zsealExec <- liftIO $ getTimesealExec timesealEnv
+  zsealExec <- getTimesealExec timesealEnv
   chan <- newChan
   handleVar <- newEmptyMVar
-
-  void $ forkIO $ withCheckedProcessCleanup (proc zsealExec []) $ \hsock fromProcess ClosedStream -> do
-    hSetBuffering hsock LineBuffering
-    putMVar handleVar hsock
-    chain fromProcess chan
-    infoM logger $ "Exiting zseal process..."
+  void $ flip forkFinally (\e -> writeChan chan (ConnectionClosed $ show e) >> infoM logger "Exiting zseal process ...") $ 
+    withCheckedProcessCleanup (proc zsealExec []) $ \hsock fromProcess ClosedStream -> do
+      hSetBuffering hsock LineBuffering
+      putMVar handleVar hsock
+      chain fromProcess chan
   h <- readMVar handleVar
   return (h, chan)
-  
 
 chain :: Source IO BS.ByteString -> Chan Message -> IO ()
 chain src chan = flip evalStateT emptyState $ transPipe lift 

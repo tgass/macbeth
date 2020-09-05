@@ -79,6 +79,7 @@ library
     Macbeth.Wx.Challenge,
     Macbeth.Wx.Chat,
     Macbeth.Wx.ChatRegistry,
+    Macbeth.Wx.Commands,
     Macbeth.Wx.Configuration,
     Macbeth.Wx.Finger,
     Macbeth.Wx.GamesList,

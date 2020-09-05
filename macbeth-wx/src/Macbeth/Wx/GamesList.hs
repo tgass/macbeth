@@ -11,9 +11,9 @@ import           Data.Maybe
 import           Data.Ord
 import           Graphics.UI.WX hiding (refresh)
 import           Graphics.UI.WXCore
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Api.OngoingGame
 import           Macbeth.Fics.Message hiding (gameId)
+import qualified Macbeth.Wx.Commands as Cmds
 import           Macbeth.Wx.Utils
 import           System.IO
 

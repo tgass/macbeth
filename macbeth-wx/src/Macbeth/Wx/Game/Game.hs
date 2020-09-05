@@ -11,7 +11,6 @@ import           Control.Monad
 import           Data.Maybe
 import           Graphics.UI.WX hiding (when, position, play, point, white, black)
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Chat
@@ -20,6 +19,7 @@ import qualified Macbeth.Fics.Api.Move as M
 import qualified Macbeth.Fics.Api.Game as G
 import qualified Macbeth.Fics.Api.Result as R
 import           Macbeth.Utils.PGN
+import qualified Macbeth.Wx.Commands as Cmds
 import           Macbeth.Wx.Game.PieceSet (PieceSet(..))
 import qualified Macbeth.Wx.Game.PieceSet as PieceSet
 import           Macbeth.Wx.Game.StatusPanel

@@ -7,13 +7,13 @@ import           Control.Monad
 import           Control.Exception
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Player hiding (handle)
+import qualified Macbeth.Wx.Commands as Cmds
+import qualified Macbeth.Wx.Config.UserConfig as C
 import           Macbeth.Wx.Utils
 import qualified Macbeth.Wx.RuntimeEnv as E
-import qualified Macbeth.Wx.Config.UserConfig as C
 import           System.IO
 
 eventId :: Int

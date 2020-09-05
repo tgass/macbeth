@@ -4,10 +4,10 @@ module Macbeth.Wx.PartnerOffer (
 
 import           Control.Concurrent
 import           Graphics.UI.WX
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Wx.Utils
+import qualified Macbeth.Wx.Commands as Cmds
 import           System.IO
 
 

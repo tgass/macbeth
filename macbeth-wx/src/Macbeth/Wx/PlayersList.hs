@@ -12,12 +12,12 @@ import           Data.Maybe
 import           Data.Ord
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Message
-import           Macbeth.Wx.Utils
+import qualified Macbeth.Wx.Commands as Cmds
 import qualified Macbeth.Wx.RuntimeEnv as E
+import           Macbeth.Wx.Utils
 import           System.IO
 
 

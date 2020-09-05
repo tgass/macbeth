@@ -13,13 +13,14 @@ import           Foreign.Storable
 import           Foreign.Ptr
 import           Foreign.C.Types
 import           Graphics.UI.WX hiding (when, play)
+import           Graphics.UI.WX.Dialogs (errorDialog)
 import           Graphics.UI.WXCore hiding (when)
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Wx.Configuration
 import           Macbeth.Wx.ChatRegistry
+import qualified Macbeth.Wx.Commands as Cmds
 import           Macbeth.Wx.Finger
 import           Macbeth.Wx.GamesList
 import           Macbeth.Wx.Login
@@ -182,6 +183,8 @@ wxToolBox env chan = do
         OponentDecline user MatchReq -> set statusMsg [text := user ++ " declines the match offer."]
 
         Ping _ avg _ -> set statusLag [ text := "Lag: " ++ show avg ++ "ms"]
+
+        ConnectionClosed _ -> errorDialog f "FICS Connection Error" "Macbeth could not maintain the connection to FICS. It could be that FICS is down or that the connection was closed for other reasons. Please restart Macbeth."
 
         TextMessage text' -> appendText ct text'
 

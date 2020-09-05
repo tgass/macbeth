@@ -5,10 +5,10 @@ module Macbeth.Wx.Challenge (
 import           Control.Concurrent
 import           Graphics.UI.WX
 import           Graphics.UI.WXCore
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Game
 import           Macbeth.Wx.Utils
+import qualified Macbeth.Wx.Commands as Cmds
 import           System.IO
 
 

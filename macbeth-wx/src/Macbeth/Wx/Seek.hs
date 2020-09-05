@@ -13,8 +13,8 @@ import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.Api.GameType
 import           Macbeth.Fics.Commands.Seek
-import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Fics.Message hiding (gameId)
+import qualified Macbeth.Wx.Commands as Cmds
 import           Macbeth.Wx.Config.SeekConfig
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import qualified Macbeth.Wx.RuntimeEnv as E

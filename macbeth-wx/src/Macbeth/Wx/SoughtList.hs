@@ -11,9 +11,9 @@ import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Api.Seek
 import           Macbeth.Fics.Api.OngoingGame hiding (gameType, isRated)
 import           Macbeth.Fics.Message
-import qualified Macbeth.Fics.Commands as Cmds
-import           Macbeth.Wx.Utils
+import qualified Macbeth.Wx.Commands as Cmds
 import qualified Macbeth.Wx.RuntimeEnv as E
+import           Macbeth.Wx.Utils
 import           System.IO
 
 data SoughtOpts = SoughtOpts { computerOffers :: MenuItem ()

@@ -65,6 +65,7 @@ data Message =
   {- Internal -}
   | TakebackAccepted (Maybe Username)
   | IllegalMove String
+  | ConnectionClosed String
   | WxClose
   | WxOpenBoard GameId GameParams (Chan Message) deriving (Show, Eq)
 
