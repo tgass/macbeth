@@ -6,6 +6,11 @@ performance analyse: ALUT Device open anschauen
 
 capturedPieces: show difference
 
+use Bye/Quit command to logout properly
+TextMessage "\ETB"
+TextMessage "Logging you out."
+TextMessage "\ETB"
+
 license: 
 - flat-color-icons
 - zseal
