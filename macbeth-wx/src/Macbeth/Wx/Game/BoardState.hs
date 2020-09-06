@@ -237,6 +237,14 @@ movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from'
 movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
 
 
+showHighlightMove :: BoardState -> Bool
+showHighlightMove state =
+  let move = lastMove state
+  in (isJust $ moveVerbose move) && ((wasOponentMove move && isWaiting state) || relation move == Observing)
+
+showHighlightCheck :: BoardState -> Bool
+showHighlightCheck state = ((isCheck $ lastMove state) || (isCheckmate $ lastMove state)) && maybe True (not . isDraggedKing) (draggedPiece state)
+
 isDraggedKing :: DraggedPiece -> Bool
 isDraggedKing (DraggedPiece _ (Piece King _) _) = True
 isDraggedKing _ = False
