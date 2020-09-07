@@ -73,7 +73,6 @@ parseMessage = parseOnly $ choice [
   , unknownUsername
   , loggedIn
   , logOut
-  , abusiveBehavior
   , invalidPassword
   , ping]
 

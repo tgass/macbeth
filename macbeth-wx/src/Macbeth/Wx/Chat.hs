@@ -22,8 +22,6 @@ eventId = wxID_HIGHEST + 1
 
 wxChat :: E.RuntimeEnv -> String -> a -> [ChatMsg] -> Chan Message -> IO ()
 wxChat env chatPartner _ chatMsgs chan = do
-  vCmd <- newEmptyMVar
-
   f <- frame [ text := "Chat with " ++ chatPartner]
   windowSetFocus f
   p <- panel f []
@@ -41,7 +39,7 @@ wxChat env chatPartner _ chatMsgs chan = do
     | keyWithMod evt 'W' justControl -> close f
     | otherwise -> return ())
 
-  threadId <- forkIO $ eventLoop eventId chan vCmd f
+  (vCmd, threadId) <- eventLoop f eventId chan
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case
 
     Chat msg -> when (msg `belongsTo` chatPartner) $ showMsg ct msg
@@ -52,7 +50,7 @@ wxChat env chatPartner _ chatMsgs chan = do
 
   windowOnDestroy f $ do
     writeChan chan $ Chat $ CloseChat chatPartner
-    sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId]
+    killThread threadId
 
 
 prefill :: TextCtrl () -> [ChatMsg] -> IO ()

@@ -111,8 +111,7 @@ wxToolBox env chan = do
     -- preselect first tab
     _ <- notebookSetSelection nb 0
 
-    vCmd <- newEmptyMVar
-    threadId <- forkIO $ eventLoop eventId chan vCmd f
+    (vCmd, threadId) <- eventLoop f eventId chan
     windowOnDestroy f $ writeChan chan WxClose >> killThread threadId
 
     evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->

@@ -59,16 +59,20 @@ basicFrame config chan = cont $ \callback -> do
   set f [ layout := fill $ widget p ]
 
 
-eventLoop :: Int -> Chan Message -> MVar Message -> Frame () -> IO ()
-eventLoop eventId chan vCmd f = readChan chan >>= putMVar vCmd >>
-  commandEventCreate wxEVT_COMMAND_MENU_SELECTED eventId >>= evtHandlerAddPendingEvent f >>
-  eventLoop eventId chan vCmd f
+eventLoop :: Frame () -> Int -> Chan Message -> IO (MVar Message, ThreadId)
+eventLoop f eventId chan = do
+  vCmd <- newEmptyMVar
+  threadId <- forkIO $ forever $ do
+    msg <- readChan chan 
+    putMVar vCmd msg
+    evt <- commandEventCreate wxEVT_COMMAND_MENU_SELECTED eventId 
+    evtHandlerAddPendingEvent f evt
+  return (vCmd, threadId)
 
 
 registerWxCloseEventListener :: Frame () -> Chan Message -> IO ()
 registerWxCloseEventListener f chan = do
-  vCmd <- newEmptyMVar
-  threadId <- forkIO $ eventLoop (wxID_HIGHEST + 13) chan vCmd f
+  (vCmd, threadId) <- eventLoop f (wxID_HIGHEST + 13) chan
   windowOnDestroy f $ killThread threadId
 
   evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \case
@@ -78,8 +82,7 @@ registerWxCloseEventListener f chan = do
 
 registerWxCloseEventListenerWithThreadId :: Frame () -> Chan Message -> IO ThreadId
 registerWxCloseEventListenerWithThreadId f chan = do
-  vCmd <- newEmptyMVar
-  threadId <- forkIO $ eventLoop (wxID_HIGHEST + 13) chan vCmd f
+  (vCmd, threadId) <- eventLoop f (wxID_HIGHEST + 13) chan
 
   evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \case
     WxClose -> close f

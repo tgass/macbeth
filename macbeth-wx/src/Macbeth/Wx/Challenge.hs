@@ -14,8 +14,6 @@ import           System.IO
 
 wxChallenge :: Handle -> Challenge -> Chan Message  -> IO ()
 wxChallenge h c chan = do
-  vCmd <- newEmptyMVar
-
   f <- frame []
   p <- panel f []
 
@@ -35,6 +33,7 @@ wxChallenge h c chan = do
             , floatBottomRight $ row 5 [widget b_accept, widget b_decline]]
         ]
 
+  (vCmd, threadId) <- eventLoop f eventId chan
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case
 
       MatchRequested c' -> when (isUpdate c c') $ close f
@@ -43,7 +42,6 @@ wxChallenge h c chan = do
 
       _ -> return ()
 
-  threadId <- forkIO $ eventLoop eventId chan vCmd f
   windowOnDestroy f $ killThread threadId
 
 

@@ -55,7 +55,6 @@ wxGame env gameId gameParams' chan = do
   let h = E.handle env
   username' <- E.username env
   boardConfig <- readTVarIO $ E.rtBoardConfig env
-  vCmd <- newEmptyMVar
 
   f <- frame [ text := G.toTitle gameId gameParams']
   p_back <- panel f []
@@ -132,7 +131,7 @@ wxGame env gameId gameParams' chan = do
   -- necessary: after GameResult no more events are handled
   tiClose <- dupChan chan >>= Utl.registerWxCloseEventListenerWithThreadId f
 
-  threadId <- forkIO $ Utl.eventLoop eventId chan vCmd f
+  (vCmd, threadId) <- Utl.eventLoop f eventId chan
   evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
     updateClockW cmd >> updateClockB cmd >> gameSounds env boardState cmd >> case cmd of
 
