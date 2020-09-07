@@ -21,7 +21,7 @@ import           System.IO
 
 
 data BoardState = BoardState {
-    gameParams''' :: GameParams
+    gameParams :: GameParams
   , lastMove :: Move
   , isGameUser :: Bool
   , userColor_ :: Maybe PColor
@@ -48,10 +48,6 @@ data BoardState = BoardState {
 data DraggedPiece = DraggedPiece Point Piece PieceSource deriving (Show)
 
 data PieceSource = FromHolding | FromBoard Square deriving (Show)
-
-sourceSquare :: PieceSource -> Maybe Square
-sourceSquare FromHolding = Nothing
-sourceSquare (FromBoard sq) = Just sq
 
 data PieceMove = PieceMove { piece :: Piece, from :: Square, to :: Square } | DropMove Piece Square
 
@@ -162,27 +158,6 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s ->
                         in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)})
 
 
-removeDraggedPiece :: Position -> DraggedPiece -> Position
-removeDraggedPiece position' (DraggedPiece _ _ (FromBoard sq')) = removePiece position' sq'
-removeDraggedPiece position' _ = position'
-
-
-diffPosition :: Position -> Position -> [PieceMove]
-diffPosition before after =
-  let from' = before \\ after
-      to' = after \\ before
-  in [PieceMove piece1 s1 s2 | (s1, piece1) <- from', (s2, piece2) <- to', piece1 == piece2, s1 /= s2 ]
-
-
-addtoHistory :: Move -> MoveModifier -> [Move] -> [Move]
-addtoHistory _ Illegal{} mx = mx
-addtoHistory m Takeback{} mx = m : tail (dropWhile (not . equal m) mx)
-  where
-    equal :: Move -> Move -> Bool
-    equal m1 m2 = (moveNumber m1 == moveNumber m2) && (turn m1 == turn m2)
-addtoHistory m None mx = m : mx
-
-
 resize :: TVar BoardState -> Int -> IO ()
 resize vState boardSize' = do
   let (psize', scale') = PieceSet.findSize boardSize'
@@ -209,6 +184,27 @@ performPreMoves vBoardState h = do
     hPutStrLn h $ "6 " ++ show (head preMoves' )
 
 
+removeDraggedPiece :: Position -> DraggedPiece -> Position
+removeDraggedPiece position' (DraggedPiece _ _ (FromBoard sq')) = removePiece position' sq'
+removeDraggedPiece position' _ = position'
+
+
+diffPosition :: Position -> Position -> [PieceMove]
+diffPosition before after =
+  let from' = before \\ after
+      to' = after \\ before
+  in [PieceMove piece1 s1 s2 | (s1, piece1) <- from', (s2, piece2) <- to', piece1 == piece2, s1 /= s2 ]
+
+
+addtoHistory :: Move -> MoveModifier -> [Move] -> [Move]
+addtoHistory _ Illegal{} mx = mx
+addtoHistory m Takeback{} mx = m : tail (dropWhile (not . equal m) mx)
+  where
+    equal :: Move -> Move -> Bool
+    equal m1 m2 = (moveNumber m1 == moveNumber m2) && (turn m1 == turn m2)
+addtoHistory m None mx = m : mx
+
+
 setPieceSet :: TVar BoardState -> PieceSet -> IO ()
 setPieceSet vState ps = atomically (modifyTVar vState (\s -> 
   let bc = boardConfig s in s { boardConfig = bc { pieceSet = ps }}))
@@ -232,6 +228,7 @@ pointToSquare state (Point x y) = Square
     intToCol White = toEnumMay
     intToCol Black = toEnumMay . (7-)
 
+
 movePiece :: PieceMove -> Position -> Position
 movePiece (PieceMove piece' from' to') position' = filter (\(s, _) -> s /= from' && s /= to') position' ++ [(to', piece')]
 movePiece (DropMove piece' sq) pos = filter (\(s, _) -> s /= sq) pos ++ [(sq, piece')]
@@ -242,17 +239,24 @@ showHighlightMove state =
   let move = lastMove state
   in (isJust $ moveVerbose move) && ((wasOponentMove move && isWaiting state) || relation move == Observing)
 
+
 showHighlightCheck :: BoardState -> Bool
 showHighlightCheck state = ((isCheck $ lastMove state) || (isCheckmate $ lastMove state)) && maybe True (not . isDraggedKing) (draggedPiece state)
+
 
 isDraggedKing :: DraggedPiece -> Bool
 isDraggedKing (DraggedPiece _ (Piece King _) _) = True
 isDraggedKing _ = False
 
 
+sourceSquare :: PieceSource -> Maybe Square
+sourceSquare FromHolding = Nothing
+sourceSquare (FromBoard sq) = Just sq
+
+
 initBoardState :: GameId -> GameParams -> Username -> BoardConfig -> RuntimeEnv -> BoardState
 initBoardState gameId' gameParams' username' boardConfig' runtimeEnv' = BoardState {
-    gameParams''' = gameParams'
+    gameParams = gameParams'
   , lastMove = initMove gameId' gameParams'
   , isGameUser = isGameUser' gameParams'
   , userColor_ = userColor gameParams' username'

@@ -1,9 +1,14 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Macbeth.Wx.Game.StatusPanel (
-  createStatusPanel
+  wxStatusPanel
 ) where
 
+import           Control.Arrow
+import           Control.Concurrent.STM
+import           Control.Monad
+import           Data.List
+import           Graphics.UI.WX hiding (when, position, color)
 import           Macbeth.Fics.Message hiding (gameId, Observing)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Move
@@ -17,27 +22,21 @@ import           Macbeth.Wx.Game.PieceSet
 import           Macbeth.Wx.Utils 
 import           Macbeth.Wx.RuntimeEnv
 
-import           Control.Arrow
-import           Control.Concurrent.STM
-import           Control.Monad
-import           Data.List
-import           Graphics.UI.WX hiding (when, position, color)
 
-
-createStatusPanel :: Panel () -> PColor -> TVar BoardState ->  IO (Panel (), Message -> IO ())
-createStatusPanel p color' vBoardState = do
-  lastMove' <- lastMove <$> readTVarIO vBoardState
-
+wxStatusPanel :: Panel () -> PColor -> TVar BoardState ->  IO (Panel (), Message -> IO ())
+wxStatusPanel p color vBoardState = do
+  initMove <- lastMove <$> readTVarIO vBoardState
   p_status <- panel p []
-  t <- newTVarIO $ remainingTime color' lastMove'
-  st <- staticText  p_status [ text := formatTime $ remainingTime color' lastMove', fontSize := 20 ]
-  tx <- timer p_status [ interval := 1000
-                , on command := updateTime t st
-                , enabled := isActive lastMove' color']
+  timeVar <- newTVarIO $ remainingTime color initMove
 
-  p_color <- panel p_status [bgcolor := toWxColor color']
-  st_playerName <- staticText p_status [ text := namePlayer color' lastMove', fontSize := 20 ]
-  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color' vBoardState ]
+  st <- staticText  p_status [ text := formatTime $ remainingTime color initMove, fontSize := 20 ]
+  tx <- timer p_status [ interval := 1000
+                       , on command := updateTime timeVar st
+                       , enabled := isActive initMove color]
+
+  p_color <- panel p_status [bgcolor := toWxColor color]
+  st_playerName <- staticText p_status [ text := namePlayer color initMove, fontSize := 20 ]
+  p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color vBoardState ]
 
   set p_status [ layout := row 10 [ margin 1 $ minsize (Size 18 18) $ widget p_color
                                   , widget st
@@ -46,13 +45,13 @@ createStatusPanel p color' vBoardState = do
 
   let handler = \case
 
-        GameMove _ move' -> when (gameId move' == gameId lastMove') $ do
-          let time' = remainingTime color' move'
-          _ <- atomically $ swapTVar t time'
-          set st [text := formatTime time']
-          set tx [enabled := isActive move' color']
+        GameMove _ move -> when (gameId move == gameId initMove) $ do
+          let remainingTime' = remainingTime color move
+          void $ atomically $ swapTVar timeVar remainingTime'
+          set st [text := formatTime remainingTime']
+          set tx [enabled := isActive move color]
 
-        GameResult result -> when (R.gameId result == gameId lastMove') $ set tx [enabled := False]
+        GameResult result -> when (R.gameId result == gameId initMove) $ set tx [enabled := False]
 
         _ -> return ()
 
@@ -65,10 +64,10 @@ paintPieceHolding color vBoardState dc _ = do
 
 
 assemblePiecesToShow :: PColor -> BoardState -> [(Piece, Int)]
-assemblePiecesToShow color' state
-  | isGameWithPH $ gameParams''' state = frequency $ getPieceHolding color' state
+assemblePiecesToShow color state
+  | isGameWithPH $ gameParams state = frequency $ getPieceHolding color state
   | not $ showCapturedPieces $ boardConfig state = []
-  | otherwise = frequency $ capturedPiecesWithColor (invert color') (position $ lastMove state)
+  | otherwise = frequency $ capturedPiecesWithColor (invert color) (position $ lastMove state)
 
   where
     frequency :: Ord a => [a] -> [(a, Int)]
@@ -90,13 +89,13 @@ drawPiece runtimeEnv dc col (Piece ptype color, freq) = do
 
 
 updateTime :: TVar Int -> StaticText () -> IO ()
-updateTime vTime st = do
-  time <- atomically $ modifyTVar vTime (\t -> t - 1) >> readTVar vTime
+updateTime timeVar st = do
+  time <- atomically $ modifyTVar timeVar pred >> readTVar timeVar
   set st [text := formatTime time]
 
 
 isActive :: Move -> PColor -> Bool
-isActive move' color' =
+isActive move' color =
   (moveNumber move' /= 1) &&
-  (turn move' == color') &&
+  (turn move' == color) &&
   (relation move' `elem` [OponentsMove, MyMove, Observing])
