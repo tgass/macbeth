@@ -51,17 +51,17 @@ windowInitMargin = 125
 
 
 wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan Message -> IO ()
-wxGame env gameId gameParams' chan = do
+wxGame env gameId gameParams chan = do
   let h = E.handle env
-  username' <- E.username env
+  username <- E.username env
   boardConfig <- readTVarIO $ E.rtBoardConfig env
 
-  f <- frame [ text := G.toTitle gameId gameParams']
+  f <- frame [ text := G.toTitle gameId gameParams]
   p_back <- panel f []
 
 
   -- board
-  let boardState = Api.initBoardState gameId gameParams' username' boardConfig env
+  let boardState = Api.initBoardState gameId gameParams username boardConfig env
   vBoardState <- newTVarIO boardState
 
   -- player panels
@@ -80,12 +80,17 @@ wxGame env gameId gameParams' chan = do
   -- context menu
   ctxMenu <- menuPane []
 
-  void $ menuItem ctxMenu [ text := "Turn board", on command := Api.invertPerspective vBoardState >> updateBoardLayoutIO >> void (windowLayout f)]
+  void $ menuItem ctxMenu [ text := "Turn board"
+                          , on command := Api.invertPerspective vBoardState >> updateBoardLayoutIO >> void (windowLayout f)
+                          ]
 
-  void $ menuItem ctxMenu [ text := "Show captured pieces", checkable:= True, checked := showCapturedPieces boardConfig,  on command :=
-    atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back]
+  void $ menuItem ctxMenu [ text := "Show captured pieces"
+                          , checkable:= True
+                          , checked := showCapturedPieces boardConfig
+                          , on command := atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back
+                          ]
 
-  when (G.isGameUser' gameParams') $ do
+  when (G.isGameUser' gameParams) $ do
      menuLine ctxMenu
      void $ menuItem ctxMenu [ text := "Request takeback 1", on command := Cmds.takeback h 1 ]
      void $ menuItem ctxMenu [ text := "Request takeback 2", on command := Cmds.takeback h 2 ]
@@ -93,7 +98,7 @@ wxGame env gameId gameParams' chan = do
      void $ menuItem ctxMenu [ text := "Offer draw", on command := Cmds.draw h ]
      void $ menuItem ctxMenu [ text := "Resign", on command := Cmds.resign h ]
      menuLine ctxMenu
-     void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username' gameParams') (Just gameId)]
+     void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams) (Just gameId)]
 
      windowOnMouse p_board True (\point -> Board.onMouseEvent h vBoardState point >> repaint p_board)
   menuLine ctxMenu
@@ -110,7 +115,7 @@ wxGame env gameId gameParams' chan = do
     | Utl.onlyKey evt 'K' -> Api.pickUpPieceFromHolding vBoardState Knight >> repaint p_board
     | Utl.onlyKey evt 'R' -> Api.pickUpPieceFromHolding vBoardState Rook >> repaint p_board
     | Utl.onlyKey evt 'P' -> Api.pickUpPieceFromHolding vBoardState Pawn >> repaint p_board
-    | Utl.onlyKey evt 'T' && G.isGameUser' gameParams' -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username' gameParams') (Just gameId)
+    | Utl.onlyKey evt 'T' && G.isGameUser' gameParams -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams) (Just gameId)
     | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> Api.discardDraggedPiece vBoardState >> repaint p_board
 
     | Utl.onlyKey evt 'N' -> Cmds.decline h
@@ -149,14 +154,14 @@ wxGame env gameId gameParams' chan = do
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
-    DrawRequest user' -> set status [text := user' ++ " offered a draw. Accept? (y/n)"]
+    DrawRequest user -> set status [text := user ++ " offered a draw. Accept? (y/n)"]
 
-    AbortRequest user' -> set status [text := user' ++ " would like to abort the game. Accept? (y/n)"]
+    AbortRequest user -> set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
 
-    TakebackRequest user' numTakeback -> set status [text := user' ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
+    TakebackRequest user numTakeback -> set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
 
-    OponentDecline user' sub
-      | sub `elem` [DrawReq, TakebackReq, AbortReq] -> set status [text := user' ++ " declines the " ++ show sub ++ " request."]
+    OponentDecline user sub
+      | sub `elem` [DrawReq, TakebackReq, AbortReq] -> set status [text := user ++ " declines the " ++ show sub ++ " request."]
       | otherwise -> return ()
 
     PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]
@@ -170,21 +175,21 @@ wxGame env gameId gameParams' chan = do
 
   windowOnDestroy f $ do
     sequence_ $ fmap (handle (\(_ :: IOException) -> return ()) . killThread) [threadId, tiClose]
-    boardState' <- readTVarIO vBoardState
+    state <- readTVarIO vBoardState
 
     config <- UserConfig.loadConfig
     let boardConfigFormat = UserConfig.boardConfig config
-    let updated = config { 
-      UserConfig.boardConfig = (\s -> s { 
-        boardSize = Just $ boardSize $ Api.boardConfig boardState'
-      , showCapturedPieces = showCapturedPieces $ Api.boardConfig boardState'
-      , pieceSet = Just $ pieceSet $ Api.boardConfig boardState'
-      }) <$> boardConfigFormat}
+        updated = config { 
+          UserConfig.boardConfig = (\s -> s { 
+            boardSize = Just $ boardSize $ Api.boardConfig state
+          , showCapturedPieces = showCapturedPieces $ Api.boardConfig state
+          , pieceSet = Just $ pieceSet $ Api.boardConfig state
+          }) <$> boardConfigFormat}
     UserConfig.saveConfig updated
     u <- convert (fromMaybe defaultBoardConfig $ UserConfig.boardConfig updated) (UserConfig.directory config)
     E.setBoardConfig env u
 
-    when (isNothing (Api.gameResult boardState') && not (Api.isGameUser boardState)) $ Cmds.unobserve h gameId
+    when (isNothing (Api.gameResult state) && not (Api.isGameUser boardState)) $ Cmds.unobserve h gameId
 
 
 resizeFrame :: Frame () -> TVar Api.BoardState -> IO ()
