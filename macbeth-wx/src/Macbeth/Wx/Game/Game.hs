@@ -136,8 +136,7 @@ wxGame env gameId gameParams chan = do
   -- necessary: after GameResult no more events are handled
   tiClose <- dupChan chan >>= Utl.registerWxCloseEventListenerWithThreadId f
 
-  (vCmd, threadId) <- Utl.eventLoop f eventId chan
-  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
+  threadId <- Utl.eventLoopWithThreadId f eventId chan $ \(threadId, cmd) ->
     updateClockW cmd >> updateClockB cmd >> gameSounds env boardState cmd >> case cmd of
 
     GameMove ctx move' -> when (M.gameId move' == gameId) $ do

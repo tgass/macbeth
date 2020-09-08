@@ -111,15 +111,12 @@ wxToolBox env chan = do
     -- preselect first tab
     _ <- notebookSetSelection nb 0
 
-    (vCmd, threadId) <- eventLoop f eventId chan
-    windowOnDestroy f $ writeChan chan WxClose >> killThread threadId
-
-    evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd ->
-      gamesListHandler cmd >>
-      soughtListHandler cmd >>
-      pendingHandler cmd >>
-      playersHandler cmd >>
-      chatRegistryHandler cmd >>
+    threadId <- eventLoop f eventId chan $ \cmd -> do
+      gamesListHandler cmd
+      soughtListHandler cmd
+      pendingHandler cmd
+      playersHandler cmd
+      chatRegistryHandler cmd
       case cmd of
 
         NoSuchGame -> do
@@ -190,6 +187,8 @@ wxToolBox env chan = do
         TextMessage text' -> appendText ct text'
 
         _ -> return ()
+
+    windowOnDestroy f $ writeChan chan WxClose >> killThread threadId
 
 
 emitCommand :: TextCtrl () -> Handle -> IO ()

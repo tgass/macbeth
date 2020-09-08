@@ -1,27 +1,11 @@
-module Macbeth.Wx.Utils (
-  FrameConfig(..),
-  FrameActions(..),
-  basicFrame,
-  eventLoop,
-  registerWxCloseEventListener,
-  registerWxCloseEventListenerWithThreadId,
-  listItemRightClickEvent,
-  toWxColor,
-  getDisplaySelection,
-  getMayDisplaySelection,
-  onlyKey,
-  keyWithMod,
-  getUserOrAppFile,
-  setStatus
-) where
-
-import Macbeth.Fics.Message
-import Macbeth.Fics.Api.Api
+module Macbeth.Wx.Utils where
 
 import Control.Monad.Cont
 import Control.Concurrent
 import Graphics.UI.WX hiding (when)
 import Graphics.UI.WXCore hiding (when)
+import Macbeth.Fics.Message
+import Macbeth.Fics.Api.Api
 import System.Directory
 import System.FilePath
 import Paths
@@ -58,37 +42,35 @@ basicFrame config chan = cont $ \callback -> do
   when (hasStatusField config) $ set f [ statusBar := [status] ]
   set f [ layout := fill $ widget p ]
 
+eventLoop :: Frame () -> Int -> Chan Message -> (Message -> IO ()) -> IO ThreadId
+eventLoop f eventId chan handler = eventLoopWithThreadId f eventId chan $ \(_, message) -> handler message
 
-eventLoop :: Frame () -> Int -> Chan Message -> IO (MVar Message, ThreadId)
-eventLoop f eventId chan = do
+eventLoopWithThreadId :: Frame () -> Int -> Chan Message -> ((ThreadId, Message) -> IO ()) -> IO ThreadId
+eventLoopWithThreadId f eventId chan handler = do
   vCmd <- newEmptyMVar
   threadId <- forkIO $ forever $ do
     msg <- readChan chan 
     putMVar vCmd msg
     evt <- commandEventCreate wxEVT_COMMAND_MENU_SELECTED eventId 
     evtHandlerAddPendingEvent f evt
-  return (vCmd, threadId)
+
+  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \cmd -> handler (threadId, cmd)
+  return threadId
 
 
 registerWxCloseEventListener :: Frame () -> Chan Message -> IO ()
 registerWxCloseEventListener f chan = do
-  (vCmd, threadId) <- eventLoop f (wxID_HIGHEST + 13) chan
-  windowOnDestroy f $ killThread threadId
-
-  evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \case
+  threadId <- eventLoop f (wxID_HIGHEST + 13) chan $ \case
     WxClose -> close f
     _ -> return ()
+  windowOnDestroy f $ killThread threadId
 
 
 registerWxCloseEventListenerWithThreadId :: Frame () -> Chan Message -> IO ThreadId
-registerWxCloseEventListenerWithThreadId f chan = do
-  (vCmd, threadId) <- eventLoop f (wxID_HIGHEST + 13) chan
-
-  evtHandlerOnMenuCommand f (wxID_HIGHEST + 13) $ takeMVar vCmd >>= \case
+registerWxCloseEventListenerWithThreadId f chan =
+  eventLoop f (wxID_HIGHEST + 13) chan $ \case
     WxClose -> close f
     _ -> return ()
-
-  return threadId
 
 
 listItemRightClickEvent :: ListCtrl a -> (Graphics.UI.WXCore.ListEvent () -> IO ()) -> IO ()

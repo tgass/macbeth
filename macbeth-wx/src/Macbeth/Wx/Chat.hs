@@ -39,8 +39,7 @@ wxChat env chatPartner _ chatMsgs chan = do
     | keyWithMod evt 'W' justControl -> close f
     | otherwise -> return ())
 
-  (vCmd, threadId) <- eventLoop f eventId chan
-  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case
+  threadId <- eventLoop f eventId chan $ \case
 
     Chat msg -> when (msg `belongsTo` chatPartner) $ showMsg ct msg
 

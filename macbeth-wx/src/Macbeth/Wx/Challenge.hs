@@ -33,14 +33,10 @@ wxChallenge h c chan = do
             , floatBottomRight $ row 5 [widget b_accept, widget b_decline]]
         ]
 
-  (vCmd, threadId) <- eventLoop f eventId chan
-  evtHandlerOnMenuCommand f eventId $ takeMVar vCmd >>= \case
-
-      MatchRequested c' -> when (isUpdate c c') $ close f
-
-      WxClose -> close f
-
-      _ -> return ()
+  threadId <- eventLoop f eventId chan $ \case
+    MatchRequested c' -> when (isUpdate c c') $ close f
+    WxClose -> close f
+    _ -> return ()
 
   windowOnDestroy f $ killThread threadId
 
