@@ -8,10 +8,6 @@ import           Control.Concurrent.STM.TVar
 import           Control.Lens hiding (set)
 import           Control.Monad
 import           Control.Monad.STM
-import           Foreign.Marshal.Alloc
-import           Foreign.Storable
-import           Foreign.Ptr
-import           Foreign.C.Types
 import           Graphics.UI.WX hiding (when, play)
 import           Graphics.UI.WX.Dialogs (errorDialog)
 import           Graphics.UI.WXCore hiding (when)
@@ -37,7 +33,6 @@ import qualified Macbeth.Wx.Config.UserConfig as C
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.RuntimeEnv (reIsAutoLogin)
 import           System.IO
-import           System.IO.Unsafe
 
 
 eventId :: Int
@@ -206,14 +201,6 @@ clickHandler h nb idx
       "Players" -> Cmds.who h
       _ -> return ()
 
-
-{-# NOINLINE flag #-}
-flag :: Ptr CInt
-flag  =  unsafePerformIO flag'
-  where flag' = do
-             work <- malloc :: IO (Ptr CInt)
-             poke work (fromIntegral wxBK_HITTEST_ONPAGE)
-             return work
 
 abusiveBehaviorMessage :: String
 abusiveBehaviorMessage = "To be able to log in, please email: abuse@freechess.org\nWe are sorry about this and apologize for the inconvenience." 

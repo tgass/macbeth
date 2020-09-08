@@ -1,14 +1,19 @@
 module Macbeth.Wx.Utils where
 
-import Control.Monad.Cont
-import Control.Concurrent
-import Graphics.UI.WX hiding (when)
-import Graphics.UI.WXCore hiding (when)
-import Macbeth.Fics.Message
-import Macbeth.Fics.Api.Api
-import System.Directory
-import System.FilePath
-import Paths
+import           Control.Monad.Cont
+import           Control.Concurrent
+import           Foreign.C.Types
+import           Foreign.Marshal.Alloc
+import           Foreign.Ptr
+import           Foreign.Storable
+import           Graphics.UI.WX hiding (when)
+import           Graphics.UI.WXCore hiding (when)
+import           Macbeth.Fics.Message
+import           Macbeth.Fics.Api.Api
+import           System.Directory
+import           System.FilePath
+import           System.IO.Unsafe
+import           Paths
 
 
 data FrameConfig = FrameConfig {
@@ -118,3 +123,12 @@ getUserOrAppFile userDir' file' = do
   if exists'
     then return fullPath'
     else getDataFileName file'
+
+{-# NOINLINE flag #-}
+flag :: Ptr CInt
+flag  =  unsafePerformIO flag'
+  where flag' = do
+             work <- malloc :: IO (Ptr CInt)
+             poke work (fromIntegral wxBK_HITTEST_ONPAGE)
+             return work
+
