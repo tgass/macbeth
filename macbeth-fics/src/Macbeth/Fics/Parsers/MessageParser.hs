@@ -18,6 +18,7 @@ import qualified Macbeth.Fics.Parsers.Chatting as Chatting
 import qualified Macbeth.Fics.Parsers.GamesParser as GP
 import qualified Macbeth.Fics.Parsers.Players as P
 import qualified Macbeth.Fics.Parsers.SeekMsgParsers as SP
+import qualified Macbeth.Fics.Parsers.Stored as Stored
 
 parseMessage :: BS.ByteString -> Either String Message
 parseMessage = parseOnly $ choice [
@@ -63,6 +64,8 @@ parseMessage = parseOnly $ choice [
 
   , pending
   , pendingRemoved
+
+  , Stored.parser
 
   , promotionPiece
 

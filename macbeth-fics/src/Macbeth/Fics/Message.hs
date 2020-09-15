@@ -5,11 +5,12 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Game
+import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Offer
 import Macbeth.Fics.Api.OngoingGame
-import Macbeth.Fics.Api.Move
 import Macbeth.Fics.Api.Result
 import Macbeth.Fics.Api.Seek
+import Macbeth.Fics.Api.Stored
 
 data Message =
     GameMove { context :: !MoveModifier, move :: !Move }
@@ -47,6 +48,7 @@ data Message =
 
   | Games [OngoingGame]
   | Players [Player]
+  | StoredGames [Stored]
   | Finger UserHandle String
   | History UserHandle String
   | Ping {lagMin :: Int, lagAvg :: Int, lagMax :: Int}

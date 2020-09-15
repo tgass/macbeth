@@ -56,30 +56,32 @@ library
     TypeSynonymInstances
     ViewPatterns
   exposed-modules: 
-    Macbeth.Fics.Api.Api,
-    Macbeth.Fics.Api.Chat,
-    Macbeth.Fics.Api.Game,
-    Macbeth.Fics.Api.GameType,
-    Macbeth.Fics.Api.Move,
-    Macbeth.Fics.Api.Rating,
-    Macbeth.Fics.Api.Seek,
-    Macbeth.Fics.Api.Offer,
-    Macbeth.Fics.Api.OngoingGame,
-    Macbeth.Fics.Api.Player,
-    Macbeth.Fics.Api.Result,
+    Macbeth.Fics.Api.Api
+    Macbeth.Fics.Api.Chat
+    Macbeth.Fics.Api.Game
+    Macbeth.Fics.Api.GameType
+    Macbeth.Fics.Api.Move
+    Macbeth.Fics.Api.Offer
+    Macbeth.Fics.Api.OngoingGame
+    Macbeth.Fics.Api.Player
+    Macbeth.Fics.Api.Rating
+    Macbeth.Fics.Api.Result
+    Macbeth.Fics.Api.Seek
+    Macbeth.Fics.Api.Stored
     Macbeth.Fics.Connection
     Macbeth.Fics.Commands
     Macbeth.Fics.Commands.Seek
-    Macbeth.Fics.Message,
-    Macbeth.Fics.Parsers.Api,
-    Macbeth.Fics.Parsers.Chatting,
-    Macbeth.Fics.Parsers.MessageParser,
-    Macbeth.Fics.Parsers.GamesParser,
-    Macbeth.Fics.Parsers.MoveParser,
-    Macbeth.Fics.Parsers.Players,
-    Macbeth.Fics.Parsers.PositionParser,
-    Macbeth.Fics.Parsers.RatingParser,
-    Macbeth.Fics.Parsers.SeekMsgParsers,
+    Macbeth.Fics.Message
+    Macbeth.Fics.Parsers.Api
+    Macbeth.Fics.Parsers.Chatting
+    Macbeth.Fics.Parsers.GamesParser
+    Macbeth.Fics.Parsers.MessageParser
+    Macbeth.Fics.Parsers.MoveParser
+    Macbeth.Fics.Parsers.Players
+    Macbeth.Fics.Parsers.PositionParser
+    Macbeth.Fics.Parsers.RatingParser
+    Macbeth.Fics.Parsers.SeekMsgParsers
+    Macbeth.Fics.Parsers.Stored
     Macbeth.Fics.Timeseal
     Macbeth.Fics.Utils.Bitmask
 
