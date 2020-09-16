@@ -70,37 +70,38 @@ library
     TypeSynonymInstances
     ViewPatterns
   exposed-modules: 
-    Paths,
-    Macbeth.Utils.BoardUtils,
-    Macbeth.Utils.PGN,
-    Macbeth.Utils.FEN,
-    Macbeth.Utils.Utils,
-    Macbeth.Utils.Salt,
-    Macbeth.Wx.Challenge,
-    Macbeth.Wx.Chat,
-    Macbeth.Wx.ChatRegistry,
-    Macbeth.Wx.Commands,
-    Macbeth.Wx.Configuration,
-    Macbeth.Wx.Finger,
-    Macbeth.Wx.GamesList,
-    Macbeth.Wx.Login,
-    Macbeth.Wx.Match,
-    Macbeth.Wx.Pending,
-    Macbeth.Wx.PartnerOffer,
-    Macbeth.Wx.PlayersList,
-    Macbeth.Wx.RuntimeEnv,
-    Macbeth.Wx.Seek,
-    Macbeth.Wx.SoughtList,
-    Macbeth.Wx.ToolBox,
-    Macbeth.Wx.Utils,
-    Macbeth.Wx.Game.BoardState,
-    Macbeth.Wx.Game.Board,
-    Macbeth.Wx.Game.Game,
-    Macbeth.Wx.Game.PieceSet,
-    Macbeth.Wx.Game.StatusPanel,
-    Macbeth.Wx.Game.GameSounds,
-    Macbeth.Wx.Config.UserConfig,
-    Macbeth.Wx.Config.Sounds,
+    Paths
+    Macbeth.Utils.BoardUtils
+    Macbeth.Utils.PGN
+    Macbeth.Utils.FEN
+    Macbeth.Utils.Utils
+    Macbeth.Utils.Salt
+    Macbeth.Wx.Challenge
+    Macbeth.Wx.Chat
+    Macbeth.Wx.ChatRegistry
+    Macbeth.Wx.Commands
+    Macbeth.Wx.Configuration
+    Macbeth.Wx.Finger
+    Macbeth.Wx.GamesList
+    Macbeth.Wx.Login
+    Macbeth.Wx.Match
+    Macbeth.Wx.Pending
+    Macbeth.Wx.PartnerOffer
+    Macbeth.Wx.PlayersList
+    Macbeth.Wx.RuntimeEnv
+    Macbeth.Wx.Seek
+    Macbeth.Wx.Stored
+    Macbeth.Wx.SoughtList
+    Macbeth.Wx.ToolBox
+    Macbeth.Wx.Utils
+    Macbeth.Wx.Game.BoardState
+    Macbeth.Wx.Game.Board
+    Macbeth.Wx.Game.Game
+    Macbeth.Wx.Game.PieceSet
+    Macbeth.Wx.Game.StatusPanel
+    Macbeth.Wx.Game.GameSounds
+    Macbeth.Wx.Config.UserConfig
+    Macbeth.Wx.Config.Sounds
     Macbeth.Wx.Config.BoardConfig
     Macbeth.Wx.Config.SeekConfig
 

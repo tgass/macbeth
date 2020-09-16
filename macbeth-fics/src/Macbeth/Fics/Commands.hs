@@ -29,6 +29,7 @@ data Command =
   | Match Username
   | Match2 String Bool Int Int SeekColor Category (Maybe WildBoard)
   | Seek SeekConfig
+  | Stored
   | Ping
   | Promote PType
   | Who 
@@ -57,6 +58,7 @@ instance Show Command where
   show (Match user)          = "match " <> user
   show (Match2 user rated time inc color cat mWild) = mkMatch user rated time inc color cat mWild
   show (Seek config)         = mkSeekString config
+  show Stored                = "stored"
   show Ping                  = "ping"
   show (Promote ptype)       = "promote " <> show ptype
   show Who                   = "who"

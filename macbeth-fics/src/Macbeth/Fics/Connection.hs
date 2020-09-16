@@ -153,6 +153,7 @@ unblockC = awaitForever $ \block -> case ord $ BS.head block of
         , 51 -- BLK_HISTORY
         , 84 -- BLK_PARTNER
         , 107 -- BLK_SAY
+        , 127 -- BLK_STORED
         , 132 -- BLK_TELL
         , 146 -- BLK_WHO
         ]

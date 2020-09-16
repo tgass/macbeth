@@ -37,6 +37,7 @@ parseMessage = parseOnly $ choice [
   , challenge
   , newGameParamsUser
   , newGameIdUser
+  , resumeGameIdUser
 
   , observing
   , noSuchGame
@@ -102,6 +103,13 @@ newGameIdUser = NewGameIdUser
   <$> ("{Game " *> Api.gameId)
   <* " (" <* username
   <* (" vs. " <* username <* ") Creating ")
+
+
+resumeGameIdUser :: Parser Message
+resumeGameIdUser = NewGameIdUser
+  <$> ("{Game " *> Api.gameId)
+  <* " (" <* username
+  <* (" vs. " <* username <* ") Continuing ")
 
 
 observing :: Parser Message

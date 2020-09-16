@@ -22,6 +22,7 @@ import           Macbeth.Wx.GamesList
 import           Macbeth.Wx.Login
 import           Macbeth.Wx.Match
 import           Macbeth.Wx.Seek
+import qualified Macbeth.Wx.Stored as Stored
 import           Macbeth.Wx.Utils
 import           Macbeth.Wx.PlayersList
 import           Macbeth.Wx.SoughtList
@@ -79,6 +80,10 @@ wxToolBox env chan = do
     pending <- panel nb []
     (pendingWidget, pendingHandler) <- wxPending h pending
 
+    -- Stored / Adjourned
+    stored <- panel nb []
+    (storedWidget, storedHandler) <- Stored.widget h stored
+
     -- Players
     players <- panel nb []
     (playersWidget, playersHandler) <- wxPlayersList players h chan
@@ -97,6 +102,7 @@ wxToolBox env chan = do
                         [ tab "Sought" $ container slp $ fill $ widget sl
                         , tab "Games" $ container glp $ fill $ widget gl
                         , tab "Pending" $ container pending $ fill $ widget pendingWidget
+                        , tab "Stored" $ container stored $ fill $ widget storedWidget
                         , tab "Players" $ container players $ fill $ widget playersWidget
                         , tab "Console" $ container cp ( column 5  [ fill $ widget ct
                                                                    , hfill $ widget ce])
@@ -110,6 +116,7 @@ wxToolBox env chan = do
       gamesListHandler cmd
       soughtListHandler cmd
       pendingHandler cmd
+      storedHandler cmd
       playersHandler cmd
       chatRegistryHandler cmd
       case cmd of

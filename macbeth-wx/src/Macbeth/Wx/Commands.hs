@@ -69,6 +69,9 @@ match2 h user rated time inc color cat mWild = command h $ Match2 user rated tim
 seek :: Handle -> SeekConfig -> IO ()
 seek h config = command h $ Seek config
 
+stored :: Handle -> IO ()
+stored h = command h Stored
+
 ping :: Handle -> IO ()
 ping h = command h Ping
 

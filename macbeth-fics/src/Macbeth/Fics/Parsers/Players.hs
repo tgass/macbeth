@@ -11,29 +11,33 @@ module Macbeth.Fics.Parsers.Players (
   player'
 ) where
 
-import Macbeth.Fics.Message
-import Macbeth.Fics.Api.Player
-import Macbeth.Fics.Parsers.Api
+import           Control.Applicative
+import           Data.Attoparsec.ByteString.Char8
+import           Macbeth.Fics.Message
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Fics.Parsers.Api
 import qualified Macbeth.Fics.Parsers.RatingParser as RP
-
-import Control.Applicative
-import Data.Attoparsec.ByteString.Char8
 
 
 players :: Parser Message
 players = Players <$> (commandHead 146 *> players')
 
+
 partnerNotOpen :: Parser Message
 partnerNotOpen = PartnerNotOpen <$> (commandHead 84 *> userHandle <* " is not open for bughouse.")
+
 
 partnerOffer :: Parser Message
 partnerOffer = PartnerOffer <$> (userHandle <* " offers to be your bughouse partner")
 
+
 partnerDeclined :: Parser Message
 partnerDeclined = PartnerDeclined <$> (userHandle <* " declines the partnership request.")
 
+
 partnerAccepted :: Parser Message
 partnerAccepted = PartnerAccepted <$> (userHandle <* " agrees to be your partner.")
+
 
 finger :: Parser Message
 finger = Finger
