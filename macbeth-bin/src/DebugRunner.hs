@@ -13,13 +13,15 @@ import           Macbeth.Wx.Game.Game
 import           Sound.ALUT hiding (Square)
 import           System.IO
 
+
 main :: IO ()
 main = withProgNameAndArgs runALUTUsingCurrentContext $ \_ _ -> do
-  env <- initRuntime stdout
-  setUsername env $ UserHandle "foo" []
   chan <- newChan
   writeChan chan message
-  start $ wxGame env (GameId 1) defaultGameParams chan
+  start $ do
+    env <- initRuntime stdout
+    setUsername env $ UserHandle "foo" []
+    wxGame env (GameId 1) defaultGameParams chan
   
 defaultGameParams :: G.GameParams
 defaultGameParams = G.GameParams True "foo" Unrated "bar" Unrated True "hmm" 60 1
