@@ -158,10 +158,9 @@ paintDraggedPiece state dc (DraggedPiece piece _) =
   drawBitmap dc (pieceToBitmap (runtimeEnv state) (pieceSet $ boardConfig state) piece size) scalePoint True []
     where
       pt = mousePt state
-      scale' = pieceScale state
       size = pieceImgSize state
       scalePoint = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
-      scaleValue x = x - round (fromIntegral size / 2.0 * scale' )
+      scaleValue x = x - round ((fromIntegral size) * pieceScale state / 2.0)
 
 
 paintSquare :: DC a -> BoardState -> Square -> IO ()
