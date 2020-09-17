@@ -28,29 +28,28 @@ flag console_log
 library
   build-depends: 
       base >=4.2 && <5
-    , wxcore
-    , wx
-    , macbeth-fics
-    , text
-    , transformers
-    , bytestring
-    , attoparsec
-    , filepath
-    , containers
-    , mtl
-    , stm
-    , directory
-    , filepath
-    , time
-    , MissingH
-    , safe
-    , yaml
-    , cryptocipher
-    , hslogger
     , aeson
     , ALUT
-    , lens
+    , attoparsec
+    , bytestring
+    , cryptocipher
+    , directory
+    , filepath
     , gitrev
+    , hslogger
+    , lens
+    , containers
+    , macbeth-fics
+    , MissingH
+    , mtl
+    , stm
+    , safe
+    , time
+    , text
+    , transformers
+    , wxcore
+    , wx
+    , yaml
   hs-source-dirs: src
   other-modules: Paths_macbeth_wx
   ghc-options: -Wall

@@ -147,7 +147,7 @@ wxGame env gameId gameParams chan = do
 
     GameResult result -> when (R.gameId result == gameId) $ do
       set status [text := R.toString result]
-      Api.setResult vBoardState (R.result result)
+      Api.setResult vBoardState $ R.result result
       repaint p_board
       when (Api.isGameUser boardState) $ readTVarIO vBoardState >>= saveAsPGN
       hPutStrLn h "4 iset seekinfo 1"

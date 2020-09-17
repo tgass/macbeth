@@ -1,8 +1,6 @@
 Login Screen: Position quit button left
 Accept/ Decline: Position accept button right (und Farbe für ok button?)
 
-Nachdem Spiel endet, kann weiterhin figur gezogen werden.
-
 Macbeth schließen mit Apfel-Q, Apfel-W
 
 

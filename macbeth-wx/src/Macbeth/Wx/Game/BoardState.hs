@@ -90,9 +90,10 @@ dropDraggedPiece vState h click_pt = do
 pickUpPieceFromBoard :: TVar BoardState -> Point -> IO ()
 pickUpPieceFromBoard vState pt =
   atomically $ modifyTVar vState (\state -> fromMaybe state $ do
+    guard $ isNothing $ gameResult state
     sq <- pointToSquare state pt
-    pColor <- userColor_ state
-    piece <- mfilter (hasColor pColor) (getPiece (virtualPosition state) sq)
+    mUserColor <- userColor_ state
+    piece <- mfilter (hasColor mUserColor) $ getPiece (virtualPosition state) sq
     return state { virtualPosition = removePiece (virtualPosition state) sq
                  , draggedPiece = Just $ DraggedPiece piece $ FromBoard sq})
 
