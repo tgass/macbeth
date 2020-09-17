@@ -36,14 +36,14 @@ frameConfig = FrameConfig {
 
 
 setupFrame :: Handle -> Bool -> (Panel (), StatusField, FrameActions) -> IO ()
-setupFrame h isGuest (p, _, frame') = do
+setupFrame h isGuest (p, _, f) = do
   match <- matchInputs p isGuest
   set (category match) [on select ::= onSelectGameTypeCategory (board match)]
 
-  b_ok  <- button p [text := "Match", on command := startMatch h match >> closeFrame frame' ]
-  b_can <- button p [text := "Cancel", on command := closeFrame frame']
+  b_ok  <- button p [text := "Match", on command := startMatch h match >> closeFrame f ]
+  b_can <- button p [text := "Cancel", on command := closeFrame f]
 
-  frame' `setDefaultButton` b_ok
+  setDefaultButton f b_ok
   set p [ layout := margin 10 $ column 10 [
                boxed "Game Type" (grid 15 15 [
                    [label "Category: ", hfill $ widget $ category match]
@@ -71,11 +71,10 @@ matchInputs p isGuest = WxMatch
                , items := fmap show $ enumFrom (minBound :: SeekColor)]
 
 
--- 4 match GuestXYZZ rated 5 0 white
 startMatch :: Handle -> WxMatch -> IO ()
 startMatch  h m = join $ Cmds.match2 h
      <$> get (name m) text
-     <*> get (rated m) enabled
+     <*> get (rated m) checked
      <*> read `fmap` get (time m) text
      <*> read `fmap` get (inc m) text
      <*> read `fmap` getDisplaySelection (color m)

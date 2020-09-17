@@ -1,8 +1,6 @@
 Login Screen: Position quit button left
 Accept/ Decline: Position accept button right (und Farbe für ok button?)
 
-Match Screen: Unrated -> Rated wrong!
-
 Nachdem Spiel endet, kann weiterhin figur gezogen werden.
 
 Macbeth schließen mit Apfel-Q, Apfel-W
@@ -85,8 +83,6 @@ PendingRemoved 7
 TextMessage "{Game 124 (FlixxG vs. Schoon) Continuing rated blitz match.}\n"
 
 
-
 TextMessage "FlixxG would like to adjourn the game; type \"adjourn\" to accept.\n"
 Pending (PendingOffer {origin = From, offerId = 13, playerName = UserHandle {name = "FlixxG", handleType = []}, offerType = "adjourn", offerDetails = "#\n"})
 
-TextMessage "\NAK6\SYN127\SYNSchoon has no adjourned games.\n\ETB\n"
