@@ -9,7 +9,16 @@ import           Macbeth.Fics.Api.Stored
 import           Macbeth.Fics.Parsers.Api
 
 parser :: Parser Message
-parser = fail "not implemented yet" 
+parser = StoredGames <$> (commandHead 127 *> stored)
+
+stored :: Parser [Stored]
+stored = emptyStored <|> manyStored
+
+emptyStored :: Parser [Stored]
+emptyStored = "Schoon has no adjourned games." *> pure []
+
+manyStored :: Parser [Stored]
+manyStored = "\nStored games for Schoon:\n    C Opponent       On Type          Str  M    ECO Date\n" *> sepBy single (char '\n') 
 
 single :: Parser Stored 
 single = do

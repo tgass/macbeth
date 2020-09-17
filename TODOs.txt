@@ -1,3 +1,21 @@
+Login Screen: Position quit button left
+Accept/ Decline: Position accept button right (und Farbe für ok button?)
+
+Match Screen: Unrated -> Rated wrong!
+
+Nachdem Spiel endet, kann weiterhin figur gezogen werden.
+
+Macbeth schließen mit Apfel-Q, Apfel-W
+
+
+Pending (PendingOffer {origin = From, offerId = 5, playerName = UserHandle {name = "FlixxG", handleType = []}, offerType = "adjourn", offerDetails = "#\n"})
+TextMessage "\NAK6\SYN127\SYN\nStored games for Schoon:\n    C Opponent       On Type          Str  M    ECO Date\n 1: W FlixxG          Y [ bu  5   0] 39-39 W2   C20 Thu Sep 17, 10:35 EDT 2020\n\ETB\n"
+
+
+
+
+
+
 WxConfiguration: Make button to switch to Default-Solid/Default-Hatched Highlight style
 performance analyse: ALUT Device open anschauen
 
