@@ -45,7 +45,7 @@ data BoardState = BoardState {
   }
 
 
-data DraggedPiece = DraggedPiece Point Piece PieceSource deriving (Show)
+data DraggedPiece = DraggedPiece Piece PieceSource deriving (Show)
 
 data PieceSource = FromHolding | FromBoard Square deriving (Show)
 
@@ -56,11 +56,7 @@ instance Show PieceMove where
   show (DropMove (Piece p _) s) = show p ++ "@" ++ show s
 
 updateMousePosition :: TVar BoardState -> Point -> IO ()
-updateMousePosition vState pt' = atomically $ modifyTVar vState
-  (\s -> s{ mousePt = pt', draggedPiece = setNewPoint <$> draggedPiece s})
-  where
-    setNewPoint :: DraggedPiece -> DraggedPiece
-    setNewPoint (DraggedPiece _ p o) = DraggedPiece pt' p o
+updateMousePosition vState pt = atomically $ modifyTVar vState (\s -> s{ mousePt = pt})
 
 
 dropDraggedPiece :: TVar BoardState -> Handle -> Point -> IO ()
@@ -82,8 +78,8 @@ dropDraggedPiece vState h click_pt = do
 
   where
     toPieceMove :: DraggedPiece -> Square -> Maybe PieceMove
-    toPieceMove (DraggedPiece _ piece' FromHolding) toSq = Just $ DropMove piece' toSq
-    toPieceMove (DraggedPiece _ piece' (FromBoard fromSq)) toSq 
+    toPieceMove (DraggedPiece piece' FromHolding) toSq = Just $ DropMove piece' toSq
+    toPieceMove (DraggedPiece piece' (FromBoard fromSq)) toSq 
       | fromSq /= toSq = Just $ PieceMove piece' fromSq toSq
       | otherwise = Nothing
 
@@ -92,13 +88,13 @@ dropDraggedPiece vState h click_pt = do
 
 
 pickUpPieceFromBoard :: TVar BoardState -> Point -> IO ()
-pickUpPieceFromBoard vState pt' =
-  atomically $ modifyTVar vState (\state' -> fromMaybe state' $ do
-    sq' <- pointToSquare state' pt'
-    color' <- userColor_ state'
-    piece' <- mfilter (hasColor color') (getPiece (virtualPosition state') sq')
-    return state' { virtualPosition = removePiece (virtualPosition state') sq'
-                  , draggedPiece = Just $ DraggedPiece pt' piece' $ FromBoard sq'})
+pickUpPieceFromBoard vState pt =
+  atomically $ modifyTVar vState (\state -> fromMaybe state $ do
+    sq <- pointToSquare state pt
+    pColor <- userColor_ state
+    piece <- mfilter (hasColor pColor) (getPiece (virtualPosition state) sq)
+    return state { virtualPosition = removePiece (virtualPosition state) sq
+                 , draggedPiece = Just $ DraggedPiece piece $ FromBoard sq})
 
 
 pickUpPieceFromHolding :: TVar BoardState -> PType -> IO ()
@@ -107,7 +103,7 @@ pickUpPieceFromHolding vState p = atomically $ modifyTVar vState
   where
     pickUpPieceFromHolding' :: BoardState -> PColor -> BoardState
     pickUpPieceFromHolding' state color'
-      | Piece p color'  `elem` getPieceHolding color' state = state { draggedPiece = Just $ DraggedPiece (mousePt state) (Piece p color') FromHolding }
+      | Piece p color'  `elem` getPieceHolding color' state = state { draggedPiece = Just $ DraggedPiece (Piece p color') FromHolding }
       | otherwise = state
 
 
@@ -116,7 +112,7 @@ discardDraggedPiece vState = atomically $ modifyTVar vState (
   \state -> maybe state (discardDraggedPiece' state) (draggedPiece state))
   where
     discardDraggedPiece' :: BoardState -> DraggedPiece -> BoardState
-    discardDraggedPiece' s (DraggedPiece _ piece' (FromBoard sq')) = s { draggedPiece = Nothing, virtualPosition = (sq', piece') : virtualPosition s}
+    discardDraggedPiece' s (DraggedPiece piece' (FromBoard sq')) = s { draggedPiece = Nothing, virtualPosition = (sq', piece') : virtualPosition s}
     discardDraggedPiece' s _ = s { draggedPiece = Nothing }
 
 
@@ -185,8 +181,8 @@ performPreMoves vBoardState h = do
 
 
 removeDraggedPiece :: Position -> DraggedPiece -> Position
-removeDraggedPiece position' (DraggedPiece _ _ (FromBoard sq')) = removePiece position' sq'
-removeDraggedPiece position' _ = position'
+removeDraggedPiece position (DraggedPiece _ (FromBoard sq)) = removePiece position sq
+removeDraggedPiece position _ = position
 
 
 diffPosition :: Position -> Position -> [PieceMove]
@@ -245,7 +241,7 @@ showHighlightCheck state = ((isCheck $ lastMove state) || (isCheckmate $ lastMov
 
 
 isDraggedKing :: DraggedPiece -> Bool
-isDraggedKing (DraggedPiece _ (Piece King _) _) = True
+isDraggedKing (DraggedPiece (Piece King _) _) = True
 isDraggedKing _ = False
 
 

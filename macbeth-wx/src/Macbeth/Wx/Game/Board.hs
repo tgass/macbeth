@@ -80,9 +80,9 @@ drawDraggedPiece :: BoardT a
 drawDraggedPiece = do
   (dc, state) <- ask
   case draggedPiece state of
-    Just dp@(DraggedPiece pt _ source) -> liftIO $ do
+    Just dp@(DraggedPiece _ source) -> liftIO $ do
       when (isSolidStyle $ highlightConfig $ boardConfig state) $ 
-        mapM_ (paintHighlightSolid dc state $ if isWaiting state then moveColor else preMoveColor) $ fromMaybe [] $ sequence [pointToSquare state pt, sourceSquare source]
+        mapM_ (paintHighlightSolid dc state $ if isWaiting state then moveColor else preMoveColor) $ fromMaybe [] $ sequence [pointToSquare state $ mousePt state, sourceSquare source]
       paintDraggedPiece state dc dp
     _ -> return ()
 
@@ -154,12 +154,14 @@ paintHighlightCheckHatched dc state square = do
 
 
 paintDraggedPiece :: BoardState -> DC a -> DraggedPiece -> IO ()
-paintDraggedPiece state dc (DraggedPiece pt piece _) = drawBitmap dc (pieceToBitmap (runtimeEnv state) (pieceSet $ boardConfig state) piece size) scalePoint True []
-  where
-    scale' = pieceScale state
-    size = pieceImgSize state
-    scalePoint = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
-    scaleValue value = round $ (fromIntegral value - fromIntegral size / 2 * scale') / scale'
+paintDraggedPiece state dc (DraggedPiece piece _) = 
+  drawBitmap dc (pieceToBitmap (runtimeEnv state) (pieceSet $ boardConfig state) piece size) scalePoint True []
+    where
+      pt = mousePt state
+      scale' = pieceScale state
+      size = pieceImgSize state
+      scalePoint = point (scaleValue $ pointX pt) (scaleValue $ pointY pt)
+      scaleValue x = x - round (fromIntegral size / 2.0 * scale' )
 
 
 paintSquare :: DC a -> BoardState -> Square -> IO ()
