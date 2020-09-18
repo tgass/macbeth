@@ -12,14 +12,14 @@ import qualified Macbeth.Wx.Commands as Cmds
 import           System.IO
 
 
-wxChallenge :: Handle -> Challenge -> Chan Message  -> IO ()
-wxChallenge h c chan = do
+wxChallenge :: Handle -> GameParams -> Chan Message  -> IO ()
+wxChallenge h gameParams chan = do
   f <- frame []
   p <- panel f []
 
   b_accept  <- button p [text := "Accept", on command := Cmds.accept h >> close f]
   b_decline <- button p [text := "Decline", on command := Cmds.decline h >> close f]
-  st_params <- staticText p [ text := showChallenge c
+  st_params <- staticText p [ text := showGameParams gameParams
                             , fontFace := "Avenir Next Medium"
                             , fontSize := 16
                             , fontWeight := WeightBold]
@@ -34,7 +34,7 @@ wxChallenge h c chan = do
         ]
 
   threadId <- eventLoop f eventId chan $ \case
-    MatchRequested c' -> when (isUpdate c c') $ close f
+    Challenge newGameParams -> when (isUpdate gameParams newGameParams) $ close f
     WxClose -> close f
     _ -> return ()
 

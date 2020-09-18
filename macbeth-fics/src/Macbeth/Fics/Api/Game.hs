@@ -4,10 +4,6 @@ import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Rating
 
-
-data Challenge = Challenge GameParams deriving (Show, Eq)
-
-
 data GameParams = GameParams {
     isGameUser' :: Bool
   , nameW :: String
@@ -32,14 +28,13 @@ showShortGameParams p = rated'' ++ " " ++ gameType'' p ++ " " ++ show (initialTi
   where rated'' = if rated p then "rated" else "unrated"
 
 
-showChallenge :: Challenge -> String
-showChallenge (Challenge p) =
-  nameW p ++ " (" ++ show (ratingW p) ++ ") vs. " ++ nameB p ++ " (" ++ show (ratingB p) ++ ") "
-  ++ showShortGameParams p
+showGameParams :: GameParams -> String
+showGameParams p@GameParams{..} =
+  nameW ++ " (" ++ show ratingW ++ ") vs. " ++ nameB ++ " (" ++ show ratingB ++ ") " ++ showShortGameParams p
 
 
-isUpdate :: Challenge -> Challenge -> Bool
-isUpdate (Challenge p) (Challenge p') = (nameW p == nameW p') && (nameB p == nameB p')
+isUpdate :: GameParams -> GameParams -> Bool
+isUpdate p p' = (nameW p == nameW p') && (nameB p == nameB p')
 
 
 toTitle :: GameId -> GameParams -> String

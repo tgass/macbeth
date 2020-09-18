@@ -25,7 +25,7 @@ data Message =
   | NoSuchGame -- | If id in 'observe id' does not exist
   | UserNotLoggedIn Username
 
-  | MatchRequested !Challenge
+  | Challenge GameParams
   | Pending PendingOffer
   | PendingRemoved Int
 

@@ -170,9 +170,9 @@ wxToolBox env chan = do
 
         msg@History {} -> dupChan chan >>= wxInfo msg
 
-        MatchRequested c -> do
+        Challenge gameParams -> do
           E.playSound env (C.challenge . C.request)
-          dupChan chan >>= wxChallenge h c
+          dupChan chan >>= wxChallenge h gameParams
 
         WxOpenBoard gameId gameParams chan -> do
            E.playSound env (C.newGame . C.game)

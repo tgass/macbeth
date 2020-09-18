@@ -125,7 +125,7 @@ userNotLoggedIn = UserNotLoggedIn <$> username <* " is not logged in."
 
 
 challenge :: Parser Message
-challenge = MatchRequested <$> (Challenge <$> ("Challenge: " *> gameParams' True))
+challenge = Challenge <$> ("Challenge: " *> gameParams' True)
 
 
 drawRequest :: Parser Message
