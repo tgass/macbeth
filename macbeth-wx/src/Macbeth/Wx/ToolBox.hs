@@ -110,7 +110,7 @@ wxToolBox env chan = do
           ]
 
     -- preselect first tab
-    _ <- notebookSetSelection nb 0
+    void $ notebookSetSelection nb 0
 
     threadId <- eventLoop f eventId chan $ \cmd -> do
       gamesListHandler cmd
@@ -174,9 +174,9 @@ wxToolBox env chan = do
           E.playSound env (C.challenge . C.request)
           dupChan chan >>= wxChallenge h c
 
-        WxOpenBoard gameId' gameParams' chain' -> do
+        WxOpenBoard gameId gameParams chan -> do
            E.playSound env (C.newGame . C.game)
-           wxGame env gameId' gameParams' chain'
+           wxGame env gameId gameParams chan
 
         OponentDecline user MatchReq -> set statusMsg [text := user ++ " declines the match offer."]
 
@@ -186,7 +186,7 @@ wxToolBox env chan = do
 
         AbusiveBehavior -> errorDialog f "Abusive Behavior" abusiveBehaviorMessage
 
-        TextMessage text' -> appendText ct text'
+        TextMessage msg -> appendText ct msg
 
         _ -> return ()
 
@@ -206,6 +206,7 @@ clickHandler h nb idx
   | otherwise = notebookGetPageText nb idx >>= \case
       "Games" -> Cmds.games h
       "Players" -> Cmds.who h
+      "Stored" -> Cmds.stored h
       _ -> return ()
 
 
