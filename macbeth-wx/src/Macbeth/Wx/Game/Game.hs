@@ -50,8 +50,8 @@ windowInitMargin = 125
 #endif
 
 
-wxGame :: E.RuntimeEnv -> GameId -> G.GameParams  -> Chan Message -> IO ()
-wxGame env gameId gameParams chan = do
+wxGame :: E.RuntimeEnv -> GameId -> G.GameParams -> Bool -> Chan Message -> IO ()
+wxGame env gameId gameParams isGameUser chan = do
   let h = E.handle env
   username <- E.username env
   boardConfig <- readTVarIO $ E.rtBoardConfig env
@@ -61,7 +61,7 @@ wxGame env gameId gameParams chan = do
 
 
   -- board
-  let boardState = Api.initBoardState gameId gameParams username boardConfig env
+  let boardState = Api.initBoardState gameId gameParams username isGameUser boardConfig env
   vBoardState <- newTVarIO boardState
 
   -- player panels
@@ -90,7 +90,7 @@ wxGame env gameId gameParams chan = do
                           , on command := atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back
                           ]
 
-  when (G.isGameUser' gameParams) $ do
+  when isGameUser $ do
      menuLine ctxMenu
      void $ menuItem ctxMenu [ text := "Request takeback 1", on command := Cmds.takeback h 1 ]
      void $ menuItem ctxMenu [ text := "Request takeback 2", on command := Cmds.takeback h 2 ]
@@ -115,7 +115,7 @@ wxGame env gameId gameParams chan = do
     | Utl.onlyKey evt 'K' -> Api.pickUpPieceFromHolding vBoardState Knight >> repaint p_board
     | Utl.onlyKey evt 'R' -> Api.pickUpPieceFromHolding vBoardState Rook >> repaint p_board
     | Utl.onlyKey evt 'P' -> Api.pickUpPieceFromHolding vBoardState Pawn >> repaint p_board
-    | Utl.onlyKey evt 'T' && G.isGameUser' gameParams -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams) (Just gameId)
+    | (Utl.onlyKey evt 'T') && isGameUser -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams) (Just gameId)
     | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> Api.discardDraggedPiece vBoardState >> repaint p_board
 
     | Utl.onlyKey evt 'N' -> Cmds.decline h
@@ -128,7 +128,7 @@ wxGame env gameId gameParams chan = do
   windowOnKeyUp p_board $ onKeyUpHandler vBoardState h promotion
 
   --set layout
-  set f [ statusBar := [status] ++ [promotion | Api.isGameUser boardState]
+  set f [ statusBar := [status] ++ [promotion | isGameUser]
         , layout := fill $ widget p_back
         , size := Size (boardSize boardConfig) (boardSize boardConfig + windowInitMargin)
         , on resize := resizeFrame f vBoardState ]
@@ -149,7 +149,7 @@ wxGame env gameId gameParams chan = do
       set status [text := R.toString result]
       Api.setResult vBoardState $ R.result result
       repaint p_board
-      when (Api.isGameUser boardState) $ readTVarIO vBoardState >>= saveAsPGN
+      when isGameUser $ readTVarIO vBoardState >>= saveAsPGN
       hPutStrLn h "4 iset seekinfo 1"
       killThread threadId
 
@@ -188,7 +188,7 @@ wxGame env gameId gameParams chan = do
     u <- convert (fromMaybe defaultBoardConfig $ UserConfig.boardConfig updated) (UserConfig.directory config)
     E.setBoardConfig env u
 
-    when (isNothing (Api.gameResult state) && not (Api.isGameUser boardState)) $ Cmds.unobserve h gameId
+    when (isNothing (Api.gameResult state) && (not isGameUser)) $ Cmds.unobserve h gameId
 
 
 resizeFrame :: Frame () -> TVar Api.BoardState -> IO ()

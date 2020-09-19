@@ -251,11 +251,11 @@ sourceSquare FromHolding = Nothing
 sourceSquare (FromBoard sq) = Just sq
 
 
-initBoardState :: GameId -> GameParams -> Username -> BoardConfig -> RuntimeEnv -> BoardState
-initBoardState gameId' gameParams' username' boardConfig' runtimeEnv' = BoardState {
+initBoardState :: GameId -> GameParams -> Username -> Bool -> BoardConfig -> RuntimeEnv -> BoardState
+initBoardState gameId' gameParams' username' isGameUser' boardConfig' runtimeEnv' = BoardState {
     gameParams = gameParams'
   , lastMove = initMove gameId' gameParams'
-  , isGameUser = isGameUser' gameParams'
+  , isGameUser = isGameUser'
   , userColor_ = userColor gameParams' username'
   , gameResult = Nothing
   , pieceMove = []

@@ -95,25 +95,25 @@ illegalMove = IllegalMove <$> ("Illegal move (" *> fmap BS.unpack (takeTill (== 
 
 
 newGameParamsUser :: Parser Message
-newGameParamsUser = NewGameParamsUser <$> ("Creating: " *> gameParams' True)
+newGameParamsUser = NewGameParams <$> ("Creating: " *> gameParams)
 
 
 newGameIdUser :: Parser Message
-newGameIdUser = NewGameIdUser
+newGameIdUser = NewGameId
   <$> ("{Game " *> Api.gameId)
   <* " (" <* username
   <* (" vs. " <* username <* ") Creating ")
 
 
 resumeGameIdUser :: Parser Message
-resumeGameIdUser = NewGameIdUser
+resumeGameIdUser = NewGameId
   <$> ("{Game " *> Api.gameId)
   <* " (" <* username
   <* (" vs. " <* username <* ") Continuing ")
 
 
 observing :: Parser Message
-observing = Observing <$> ("Game " *> Api.gameId <* ": ") <*> gameParams' False
+observing = Observing <$> ("Game " *> Api.gameId <* ": ") <*> gameParams
 
 
 noSuchGame :: Parser Message
@@ -125,7 +125,7 @@ userNotLoggedIn = UserNotLoggedIn <$> username <* " is not logged in."
 
 
 challenge :: Parser Message
-challenge = Challenge <$> ("Challenge: " *> gameParams' True)
+challenge = Challenge <$> ("Challenge: " *> gameParams)
 
 
 drawRequest :: Parser Message
@@ -177,10 +177,9 @@ pending = Pending <$> (PendingOffer
   <*> ("p=" *> many1 anyChar))
 
 
-gameParams' :: Bool -> Parser GameParams
-gameParams' isGameUser = GameParams
-  <$> pure isGameUser
-  <*> username
+gameParams :: Parser GameParams
+gameParams = GameParams
+  <$> username
   <*> (" (" *> skipSpace *> R.rating)
   <*> (") " *> username)
   <*> (" (" *> skipSpace *> R.rating <* ") ")

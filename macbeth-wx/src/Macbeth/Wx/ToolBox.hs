@@ -174,9 +174,13 @@ wxToolBox env chan = do
           E.playSound env (C.challenge . C.request)
           dupChan chan >>= wxChallenge h gameParams
 
-        WxOpenBoard gameId gameParams chan -> do
+        WxObserving gameId gameParams chan -> do
            E.playSound env (C.newGame . C.game)
-           wxGame env gameId gameParams chan
+           wxGame env gameId gameParams False chan
+
+        WxGame gameId gameParams chan -> do
+           E.playSound env (C.newGame . C.game)
+           wxGame env gameId gameParams True chan
 
         OponentDecline user MatchReq -> set statusMsg [text := user ++ " declines the match offer."]
 

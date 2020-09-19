@@ -5,8 +5,7 @@ import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Rating
 
 data GameParams = GameParams {
-    isGameUser' :: Bool
-  , nameW :: String
+    nameW :: String
   , ratingW :: Rating
   , nameB :: String
   , ratingB :: Rating

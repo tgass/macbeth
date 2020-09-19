@@ -100,12 +100,12 @@ logMessageC = awaitForever $ \cmd -> case cmd of
 
 copyC :: MonadIO m => Chan Message -> Conduit Message m Message
 copyC chan = awaitForever $ \case
-  m@(NewGameUser gameId' gameParams') -> do
-    chan' <- liftIO $ dupChan chan
-    sourceList [m, WxOpenBoard gameId' gameParams' chan']
-  m@(Observing gameId' gameParams') -> do
-    chan' <- liftIO $ dupChan chan
-    sourceList [m, WxOpenBoard gameId' gameParams' chan']
+  m@(Game gameId gameParams) -> do
+    chan <- liftIO $ dupChan chan
+    sourceList [m, WxGame gameId gameParams chan]
+  m@(Observing gameId gameParams) -> do
+    chan <- liftIO $ dupChan chan
+    sourceList [m, WxObserving gameId gameParams chan]
   cmd -> yield cmd
 
 
@@ -114,12 +114,12 @@ stateC = awaitForever $ \cmd -> do
   state' <- get
   case cmd of
 
-    NewGameParamsUser params -> put (state' {newGameUserParams = Just params}) >> sourceNull
+    NewGameParams params -> put (state' {newGameUserParams = Just params}) >> sourceNull
 
-    NewGameIdUser gameId'
+    NewGameId gameId'
       | isJust $ newGameUserParams state' -> do
           put $ state' {newGameUserParams = Nothing}
-          sourceList [ NewGameUser gameId' $ fromJust $ newGameUserParams state']
+          sourceList [ Game gameId' $ fromJust $ newGameUserParams state']
       | otherwise -> sourceList [ TextMessage "*** Macbeth ***: Could not find gameParams." ]
 
     TakebackAccepted username -> put (state' {takebackAccptedBy = Just username}) >> sourceNull

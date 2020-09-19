@@ -17,17 +17,17 @@ data Message =
   | PieceHolding { gameId :: !GameId, phWhite :: ![Piece], phBlack :: ![Piece] }
   | GameResult !Result
 
-  | Observing GameId !GameParams
-  | NewGameParamsUser !GameParams
-  | NewGameIdUser !GameId
-  | NewGameUser !GameId !GameParams -- | Merged
-
-  | NoSuchGame -- | If id in 'observe id' does not exist
-  | UserNotLoggedIn Username
+  | Observing !GameId !GameParams
+  | Game !GameId !GameParams -- | Merged
+  | NewGameParams !GameParams -- | interim
+  | NewGameId !GameId -- | interim
 
   | Challenge GameParams
   | Pending PendingOffer
   | PendingRemoved Int
+
+  | NoSuchGame -- | If id in 'observe id' does not exist
+  | UserNotLoggedIn Username
 
   | DrawRequest Username
   | AbortRequest Username
@@ -71,7 +71,8 @@ data Message =
   | IllegalMove String
   | ConnectionClosed String
   | WxClose
-  | WxOpenBoard GameId GameParams (Chan Message) deriving (Show, Eq)
+  | WxGame GameId GameParams (Chan Message)
+  | WxObserving GameId GameParams (Chan Message) deriving (Show, Eq)
 
 
 instance Show (Chan Message) where
