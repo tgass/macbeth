@@ -9,43 +9,43 @@ import           Macbeth.Fics.Api.Result
 import           Macbeth.Fics.Message
 import           Macbeth.Wx.RuntimeEnv
 import           Macbeth.Wx.Game.BoardState
-import qualified Macbeth.Wx.Config.UserConfig as C
+import qualified Macbeth.Wx.Config.Sounds as S
 
 
 gameSounds :: RuntimeEnv -> BoardState -> Message -> IO ()
 gameSounds env boardState msg
-  | not (isGameUser boardState) && not (env `getSoundConfig` C.enabledObservedGames) = return ()
+  | not (isGameUser boardState) && not (env `getSoundConfig` S.enabledObservedGames) = return ()
   | otherwise = playSound env $ findSound boardState msg
 
 
-findSound :: BoardState -> Message -> (C.Sounds -> Maybe String)
+findSound :: BoardState -> Message -> (S.Sounds -> Maybe String)
 findSound boardState = \case
-  GameMove Illegal {} _ -> C.illegal . C.move . C.game
+  GameMove Illegal {} _ -> S.illegal . S.move . S.game
 
-  GameMove Takeback {} _ -> C.takeback . C.move . C.game
+  GameMove Takeback {} _ -> S.takeback . S.move . S.game
 
   GameMove _ move -> (\c ->
-         isCheck move `withSound` C.check (C.move $ C.game c) 
-    <|> isCapture move `withSound` C.capture (C.move $ C.game c)
-    <|> isCastling move `withSound` C.castling (C.move $ C.game c)
-    <|> isDrop move `withSound` C.pieceDrop (C.move $ C.game c) 
-    <|> C.normal (C.move $ C.game c))
+         isCheck move `withSound` S.check (S.move $ S.game c) 
+    <|> isCapture move `withSound` S.capture (S.move $ S.game c)
+    <|> isCastling move `withSound` S.castling (S.move $ S.game c)
+    <|> isDrop move `withSound` S.pieceDrop (S.move $ S.game c) 
+    <|> S.normal (S.move $ S.game c))
 
   GameResult (Result _ _ _ _ result)
-    | userWins (userColor_ boardState) result -> C.youWin . C.endOfGame . C.game
-    | userLoses (userColor_ boardState) result -> C.youLose . C.endOfGame . C.game
-    | userDraws (userColor_ boardState) result  -> C.youDraw . C.endOfGame . C.game
-    | result == WhiteWins -> C.whiteWins . C.endOfGame . C.game
-    | result == BlackWins -> C.blackWins . C.endOfGame . C.game
-    | result == Draw -> C.draw . C.endOfGame . C.game
-    | result == Aborted -> C.abort . C.endOfGame . C.game
+    | userWins (userColor_ boardState) result -> S.youWin . S.endOfGame . S.game
+    | userLoses (userColor_ boardState) result -> S.youLose . S.endOfGame . S.game
+    | userDraws (userColor_ boardState) result  -> S.youDraw . S.endOfGame . S.game
+    | result == WhiteWins -> S.whiteWins . S.endOfGame . S.game
+    | result == BlackWins -> S.blackWins . S.endOfGame . S.game
+    | result == Draw -> S.draw . S.endOfGame . S.game
+    | result == Aborted -> S.abort . S.endOfGame . S.game
     | otherwise -> const Nothing
 
-  DrawRequest {} -> C.drawReq . C.request
+  DrawRequest {} -> S.drawReq . S.request
 
-  AbortRequest {} -> C.abortReq . C.request
+  AbortRequest {} -> S.abortReq . S.request
 
-  TakebackRequest {} -> C.takebackReq . C.request
+  TakebackRequest {} -> S.takebackReq . S.request
 
   _ -> const Nothing
 

@@ -61,7 +61,7 @@ timesealConnection timesealEnv = do
   zsealExec <- getTimesealExec timesealEnv
   chan <- newChan
   handleVar <- newEmptyMVar
-  void $ flip forkFinally (\e -> writeChan chan (ConnectionClosed $ show e) >> infoM logger "Exiting zseal process ...") $ 
+  void $ flip forkFinally (\e -> writeChan chan (ConnectionClosed $ show e) >> debugM logger "Exiting zseal process ...") $ 
     withCheckedProcessCleanup (proc zsealExec []) $ \hsock fromProcess ClosedStream -> do
       hSetBuffering hsock LineBuffering
       putMVar handleVar hsock
@@ -195,7 +195,7 @@ dropPrompt line
 
 logStreamC :: MonadIO m => Conduit BS.ByteString m BS.ByteString
 logStreamC = awaitForever $ \block -> do
-  liftIO $ debugM logger $ showLitString (BS.unpack block) ""
+  liftIO $ infoM logger $ showLitString (BS.unpack block) ""
   yield block
 
 

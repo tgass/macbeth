@@ -37,6 +37,8 @@ import           Macbeth.Wx.Config.UserConfig (Config (..), uUsername, uPassword
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import           Macbeth.Wx.Config.BoardConfig (BoardConfig)
 import qualified Macbeth.Wx.Config.BoardConfig as BC
+import           Macbeth.Wx.Config.Sounds (Sounds)
+import qualified Macbeth.Wx.Config.Sounds as Sounds
 import           Macbeth.Wx.Game.PieceSet
 import           Paths
 import           Sound.ALUT
@@ -109,15 +111,15 @@ pieceToBitmap :: RuntimeEnv -> PieceSet -> Piece -> Int -> Bitmap ()
 pieceToBitmap env pieceSet piece size = pieceBitmapMap env Map.! (pieceSet, piece, size)
 
 
-getSoundConfig :: RuntimeEnv -> (UserConfig.Sounds -> a) -> a
+getSoundConfig :: RuntimeEnv -> (Sounds -> a) -> a
 getSoundConfig env f = f $ UserConfig.soundsOrDef $ env ^. reConfig
 
 
 -- Please remember, this is why I use ALUT. Switching to wx controlled sounds didn't work
 -- https://forums.wxwidgets.org/viewtopic.php?t=43049
-playSound :: RuntimeEnv -> (UserConfig.Sounds -> Maybe String) -> IO ()
+playSound :: RuntimeEnv -> (Sounds -> Maybe String) -> IO ()
 playSound env f
-  | UserConfig.enabled soundConfig = play' (sources env) mBuffer
+  | Sounds.enabled soundConfig = play' (sources env) mBuffer
   | otherwise = return ()
   where soundConfig = UserConfig.soundsOrDef $ env ^. reConfig
         mBuffer = f soundConfig >>= (`Map.lookup` bufferMap env)

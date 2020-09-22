@@ -31,6 +31,7 @@ import           Macbeth.Wx.Challenge
 import           Macbeth.Wx.PartnerOffer
 import           Macbeth.Wx.Pending
 import qualified Macbeth.Wx.Config.UserConfig as C
+import qualified Macbeth.Wx.Config.Sounds as S
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.RuntimeEnv (reIsAutoLogin)
 import           System.IO
@@ -156,7 +157,7 @@ wxToolBox env chan = do
           False -> return ()
 
         LoggedIn userHandle -> do
-          E.playSound env (C.logonToServer . C.other)
+          E.playSound env (S.logonToServer . S.other)
           E.setUsername env userHandle
           unless (isGuest userHandle) $ Cmds.ping h >> set pingTimer [enabled := True]
           set nb [on click := (onMouse nb >=> clickHandler h nb)]
@@ -171,15 +172,15 @@ wxToolBox env chan = do
         msg@History {} -> dupChan chan >>= wxInfo msg
 
         Challenge gameParams -> do
-          E.playSound env (C.challenge . C.request)
+          E.playSound env (S.challenge . S.request)
           dupChan chan >>= wxChallenge h gameParams
 
         WxObserving gameId gameParams chan -> do
-           E.playSound env (C.newGame . C.game)
+           E.playSound env (S.newGame . S.game)
            wxGame env gameId gameParams False chan
 
         WxGame gameId gameParams chan -> do
-           E.playSound env (C.newGame . C.game)
+           E.playSound env (S.newGame . S.game)
            wxGame env gameId gameParams True chan
 
         OponentDecline user MatchReq -> set statusMsg [text := user ++ " declines the match offer."]

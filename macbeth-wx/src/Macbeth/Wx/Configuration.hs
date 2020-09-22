@@ -38,25 +38,29 @@ setupFrame env (p, status, _) = do
   showConfig ct
 
   b_current <- button p [text := "Reset", on command := showConfig ct]
-  b_resetSounds <- button p [text := "Reset Sounds", on command := resetSounds ct]
+  b_resetSounds <- button p [text := "Reset Sounds", on command := reset ct status (\c -> c{C.sounds = Just defaultSounds})]
+  b_resetHighlights <- button p [text := "Reset Highlights (solid)", on command := reset ct status C.setDefaultHighlightSolid]
+  b_resetHighlightsHatched <- button p [text := "Reset Highlights (hatched)", on command := reset ct status C.setDefaultHighlightHatched]
   b_save <- button p [ text := "Save", on command := save env ct status]
 
   set p [ layout :=  margin 10 $ column 10 [
                        boxed "Configuration" $ fill $ minsize (Size 530 480) $ widget ct
-                     , hfloatRight $ row 5 [widget b_current, widget b_resetSounds, widget b_save]]
+                     , hfloatRight $ row 5 [widget b_current, widget b_resetHighlights, widget b_resetHighlightsHatched, widget b_resetSounds, widget b_save]]
         ]
 
 
 showConfig :: TextCtrl() -> IO ()
 showConfig ct = do
   config <- C.loadConfig
-  set ct [text := comments ++ BS.unpack (Y.encode $ removeUser config)]
+  set ct [text := comments ++ BS.unpack (Y.encode $ C.removeUser config)]
 
 
-resetSounds :: TextCtrl() -> IO ()
-resetSounds ct = do
-  c <- C.loadConfig
-  set ct [text := comments ++ BS.unpack (Y.encode $ removeUser c{C.sounds = Just defaultSounds})]
+reset :: TextCtrl() -> StatusField -> (C.Config -> C.Config) -> IO ()
+reset ct status f = do
+  mConfig <- Y.decode . BS.pack <$> get ct text
+  case mConfig of 
+    Just config -> set ct [text := comments ++ BS.unpack (Y.encode $ C.removeUser $ f config)]
+    Nothing -> setStatus status "Could not reset. Illegal format."
 
 
 save :: RuntimeEnv -> TextCtrl () -> StatusField -> IO ()
@@ -73,10 +77,6 @@ parseAndSave env ct status = do
     boardConfig <- BC.convert (fromMaybe BC.defaultBoardConfig $ C.boardConfig newConf) (C.directory newConf)
     setBoardConfig env boardConfig
     setSeekConfig env $ C.getSeekConfig newConf
-
-
-removeUser :: C.Config -> C.Config
-removeUser c = c & cUser .~ Nothing
 
 
 comments :: String

@@ -1,23 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Macbeth.Wx.Config.UserConfig (
-  Config(..),
-  cAutologin, cUser,
-  chatOrDef,
-  soundsOrDef,
-  User(..), uUsername, uPassword,
-  Sounds(..),
-  GameS(..),
-  MoveS(..),
-  EndOfGameS(..),
-  RequestS(..),
-  OtherS(..),
-  initConfig,
-  loadConfig,
-  saveConfig,
-  saveCredentials,
-  getSeekConfig
-) where
+module Macbeth.Wx.Config.UserConfig where
 
 import           Control.Lens
 import           Control.Applicative
@@ -129,6 +112,21 @@ saveCredentials :: String -> String -> IO ()
 saveCredentials username password = do
   config <- loadConfig
   saveConfig $ config {_cUser = Just $ User username (encrypt password), _cAutologin = True}
+
+setDefaultHighlightSolid :: Config -> Config
+setDefaultHighlightSolid config = 
+  let bc = boardConfig config >>= \c -> return c{highlightConfig = Just defaultHighlightConfig}
+  in config{boardConfig = bc}
+
+
+setDefaultHighlightHatched :: Config -> Config
+setDefaultHighlightHatched config = 
+  let bc = boardConfig config >>= \c -> return c{highlightConfig = Just defaultHighlightHatched}
+  in config{boardConfig = bc}
+
+
+removeUser :: Config -> Config
+removeUser c = c & cUser .~ Nothing
 
 
 defaultConfig :: String -> Config

@@ -95,7 +95,23 @@ defaultPieceSet :: PieceSet
 defaultPieceSet = Alpha1
 
 defaultHighlightConfig :: HighlightConfig
-defaultHighlightConfig = HighlightConfig Hatched (ColorRGB 0 0 255) (ColorRGB 0 255 0) (ColorRGB 255 0 0) (Just $ ColorRGB 255 0 0)
+defaultHighlightConfig = HighlightConfig {
+    style = Solid
+  , moveColor = ColorRGB 204 206 132
+  , preMoveColor = ColorRGB 128 125 133
+  , checkColor = ColorRGB 229 108 97
+  , mouseColor = Nothing
+  }
+
+defaultHighlightHatched :: HighlightConfig
+defaultHighlightHatched = HighlightConfig {
+    style = Hatched
+  , moveColor = ColorRGB 0 0 255
+  , preMoveColor = ColorRGB 0 255 0
+  , checkColor = ColorRGB 255 0 0
+  , mouseColor = Just $ ColorRGB 255 0 0
+  }
+
 
 defaultShowLabels :: Bool
 defaultShowLabels = False
