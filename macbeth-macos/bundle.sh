@@ -20,20 +20,20 @@ function cleanup {
 trap cleanup EXIT
 
 
-BUNDLE_DIR="macbeth-macos"/`stack path --dist-dir`"/build/Macbeth.app"
+BUNDLE_DIR=`stack path --dist-dir`/build/Macbeth.app
 
-stack build --stack-yaml=stack-bundle-macos.yaml
+stack build
 
 # prepare dmg contents
 cp -r $BUNDLE_DIR $WORK_DIR
 
 # copy LICENSE
 # cp LICENSE $WORK_DIR
-cp macbeth-macos/resources/README.txt $WORK_DIR
+cp resources/README.txt $WORK_DIR
 
 xattr -cr $WORK_DIR
 
 # cleanup
 find $WORK_DIR -iname .DS_Store -delete
 
--hdiutil create -volname Macbeth -srcfolder $WORK_DIR -ov -format UDZO Macbeth.dmg
+hdiutil create -volname Macbeth -srcfolder $WORK_DIR -ov -format UDZO Macbeth.dmg

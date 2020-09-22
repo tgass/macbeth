@@ -56,11 +56,9 @@ brew install git haskell-stack wxmac freealut
 
 git clone https://github.com/tgass/macbeth.git
 cd macbeth
+cd macbeth-macos
 
-stack setup 
-stack build --stack-yaml=stack-bundle-macos.yaml
-
-./bundle-macos.sh
+./bundle.sh
 open Macbeth.dmg
 
 ```
