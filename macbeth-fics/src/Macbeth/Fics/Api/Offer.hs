@@ -13,7 +13,7 @@ data PendingOffer = PendingOffer {
 data Origin = From | To deriving (Show, Eq)
 
 
-data OfferSubject = DrawReq | TakebackReq | AbortReq | MatchReq deriving Eq
+data OfferSubject = DrawReq | TakebackReq | AbortReq | MatchReq | AdjournReq deriving Eq
 
 
 instance Show OfferSubject where
@@ -21,6 +21,7 @@ instance Show OfferSubject where
   show TakebackReq = "takeback"
   show AbortReq = "abort"
   show MatchReq = "match"
+  show AdjournReq = "adjourn"
 
 
 isFrom :: PendingOffer -> Bool

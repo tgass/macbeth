@@ -18,6 +18,9 @@ accept h = command h Accept
 acceptId :: Handle -> Int -> IO ()
 acceptId h offerId = command h $ AcceptId offerId
 
+adjourn :: Handle -> IO ()
+adjourn h = command h Adjourn
+
 decline :: Handle -> IO ()
 decline h = command h Decline
 

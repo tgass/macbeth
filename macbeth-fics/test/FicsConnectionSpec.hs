@@ -29,8 +29,8 @@ spec =
      `shouldBe` [
         RemoveSeeks [97],
         RemoveSeeks [88],
-        NewGameParamsUser (GameParams True "chesspickle" (R.Rating 1963 R.None) "Schoon" (R.Rating 1007 R.None) True "blitz" 5 0),
-        NewGameIdUser (GameId 70),
+        NewGameParams (GameParams "chesspickle" (R.Rating 1963 R.None) "Schoon" (R.Rating 1007 R.None) True "blitz" 5 0),
+        NewGameId (GameId 70),
         GameMove {Macbeth.Fics.Message.context = Macbeth.Fics.Api.Move.None,
                   move = Move {positionRaw = "-------- -------- -------- -------- -------- -------- -------- --------",
                   position = [],

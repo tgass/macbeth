@@ -151,7 +151,11 @@ takebackAccepted' = TakebackAccepted <$> pure Nothing <* "You accept the takebac
 oponentDecline :: Parser Message
 oponentDecline = OponentDecline
   <$> (username <* " declines the ")
-  <*> ("draw" *> pure DrawReq <|> "takeback" *> pure TakebackReq <|> "abort" *> pure AbortReq <|> "match" *> pure MatchReq)
+  <*> (   "draw" *> pure DrawReq 
+      <|> "takeback" *> pure TakebackReq 
+      <|> "abort" *> pure AbortReq 
+      <|> "match" *> pure MatchReq 
+      <|> "adjourn" *> pure AdjournReq)
 
 
 gameResult' :: Parser Message

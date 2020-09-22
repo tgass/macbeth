@@ -4,15 +4,6 @@ Accept/ Decline: Position accept button right (und Farbe für ok button?)
 Macbeth schließen mit Apfel-Q, Apfel-W
 
 
-Pending (PendingOffer {origin = From, offerId = 5, playerName = UserHandle {name = "FlixxG", handleType = []}, offerType = "adjourn", offerDetails = "#\n"})
-TextMessage "\NAK6\SYN127\SYN\nStored games for Schoon:\n    C Opponent       On Type          Str  M    ECO Date\n 1: W FlixxG          Y [ bu  5   0] 39-39 W2   C20 Thu Sep 17, 10:35 EDT 2020\n\ETB\n"
-
-
-
-
-
-
-WxConfiguration: Make button to switch to Default-Solid/Default-Hatched Highlight style
 performance analyse: ALUT Device open anschauen
 
 use Bye/Quit command to logout properly
@@ -60,27 +51,4 @@ TextMessage "Ambiguous move (nd2).\n"
 -- use wx ListView
 -- use Lens, especially for Sounds/Config
 -- make BoardChanges not depend on tvar?
-
-
-
-
-
---
--- ADJOURNMENTS
-
-TextMessage "\ETB"
-TextMessage "Stored games for Schoon:"
-TextMessage "    C Opponent       On Type          Str  M    ECO Date"
-TextMessage " 1: B FlixxG          Y [ br  5   0] 39-39 B2   A00 Wed Sep 16, 09:16 EDT 2020"
-TextMessage "\ETB"
-
-
-
-TextMessage "FlixxG accepts the match offer.\n"
-PendingRemoved 7
-TextMessage "{Game 124 (FlixxG vs. Schoon) Continuing rated blitz match.}\n"
-
-
-TextMessage "FlixxG would like to adjourn the game; type \"adjourn\" to accept.\n"
-Pending (PendingOffer {origin = From, offerId = 13, playerName = UserHandle {name = "FlixxG", handleType = []}, offerType = "adjourn", offerDetails = "#\n"})
 

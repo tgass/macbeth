@@ -12,6 +12,7 @@ data Command =
     Abort 
   | Accept
   | AcceptId Int
+  | Adjourn
   | Decline
   | DeclineId Int
   | Draw
@@ -39,6 +40,7 @@ instance Show Command where
   show Abort                 = "abort"
   show Accept                = "accept"
   show (AcceptId reqid)      = "accept " <> show reqid
+  show Adjourn                = "adjourn"
   show Decline               = "decline"
   show (DeclineId reqid)     = "decline " <> show reqid
   show Draw                  = "draw"

@@ -95,6 +95,7 @@ wxGame env gameId gameParams isGameUser chan = do
      void $ menuItem ctxMenu [ text := "Request takeback 1", on command := Cmds.takeback h 1 ]
      void $ menuItem ctxMenu [ text := "Request takeback 2", on command := Cmds.takeback h 2 ]
      void $ menuItem ctxMenu [ text := "Request abort", on command := Cmds.abort h ]
+     void $ menuItem ctxMenu [ text := "Request ajourn", on command := Cmds.adjourn h ]
      void $ menuItem ctxMenu [ text := "Offer draw", on command := Cmds.draw h ]
      void $ menuItem ctxMenu [ text := "Resign", on command := Cmds.resign h ]
      menuLine ctxMenu
@@ -160,7 +161,7 @@ wxGame env gameId gameParams isGameUser chan = do
     TakebackRequest user numTakeback -> set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
 
     OponentDecline user sub
-      | sub `elem` [DrawReq, TakebackReq, AbortReq] -> set status [text := user ++ " declines the " ++ show sub ++ " request."]
+      | sub `elem` [DrawReq, TakebackReq, AbortReq, AdjournReq] -> set status [text := user ++ " declines the " ++ show sub ++ " request."]
       | otherwise -> return ()
 
     PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]

@@ -1,5 +1,6 @@
 module Macbeth.Fics.Parsers.StoredSpec (spec) where
 
+import           Data.Attoparsec.ByteString (parseOnly)
 import           Data.ByteString.Char8 hiding (length)
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Api
