@@ -7,6 +7,7 @@ import           Macbeth.Fics.Api.Player
 import qualified Macbeth.Fics.Api.Game as G
 import qualified Macbeth.Fics.Api.Move as M
 import           Macbeth.Wx.RuntimeEnv
+import           Macbeth.Wx.ToolBox
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Rating
 import           Macbeth.Wx.Game.Game
@@ -21,10 +22,11 @@ main = withProgNameAndArgs runALUTUsingCurrentContext $ \_ _ -> do
   start $ do
     env <- initRuntime stdout
     setUsername env $ UserHandle "foo" []
-    wxGame env (GameId 1) defaultGameParams chan
+    wxToolBox env chan
+--    wxGame env (GameId 1) defaultGameParams chan
   
 defaultGameParams :: G.GameParams
-defaultGameParams = G.GameParams True "foo" Unrated "bar" Unrated True "hmm" 60 1
+defaultGameParams = G.GameParams "foo" Unrated "bar" Unrated True "hmm" 60 1
 
 message :: Message
 message = GameMove M.None $ initMove' (GameId 1) defaultGameParams
