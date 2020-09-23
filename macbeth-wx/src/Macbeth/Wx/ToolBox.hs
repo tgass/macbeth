@@ -17,6 +17,7 @@ import           Macbeth.Fics.Api.Player
 import           Macbeth.Wx.Configuration
 import           Macbeth.Wx.ChatRegistry
 import qualified Macbeth.Wx.Commands as Cmds
+import qualified Macbeth.Wx.Dialog as Dialog
 import           Macbeth.Wx.Finger
 import           Macbeth.Wx.GamesList
 import           Macbeth.Wx.Login
@@ -195,7 +196,19 @@ wxToolBox env chan = do
 
         _ -> return ()
 
-    windowOnDestroy f $ writeChan chan WxClose >> killThread threadId
+
+
+    windowOnClose f $ do
+      result <- Dialog.quit f
+      case result of 
+        Just _ -> void $ windowDestroy f
+        Nothing -> return ()
+    
+
+    windowOnDestroy f $ do
+      --windowDestroyChildren
+      writeChan chan WxClose 
+      killThread threadId
 
 
 emitCommand :: TextCtrl () -> Handle -> IO ()
