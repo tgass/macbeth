@@ -79,7 +79,6 @@ library
     Macbeth.Wx.Chat
     Macbeth.Wx.ChatRegistry
     Macbeth.Wx.Commands
-    Macbeth.Wx.Dialog
     Macbeth.Wx.Configuration
     Macbeth.Wx.Finger
     Macbeth.Wx.GamesList

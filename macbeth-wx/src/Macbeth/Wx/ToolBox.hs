@@ -199,14 +199,11 @@ wxToolBox env chan = do
 
 
     windowOnClose f $ do
-      result <- Dialog.quit f
-      case result of 
-        Just _ -> void $ windowDestroy f
-        Nothing -> return ()
+      result <- confirmDialog f "Macbeth" "Do you really want to quit Macbeth?" True
+      when result $ void $ windowDestroy f
     
 
     windowOnDestroy f $ do
-      --windowDestroyChildren
       writeChan chan WxClose 
       killThread threadId
 
