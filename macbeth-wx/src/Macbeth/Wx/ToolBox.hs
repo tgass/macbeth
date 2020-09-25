@@ -9,7 +9,6 @@ import           Control.Lens hiding (set)
 import           Control.Monad
 import           Control.Monad.STM
 import           Graphics.UI.WX hiding (when, play)
-import           Graphics.UI.WX.Dialogs (errorDialog)
 import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Offer
@@ -17,7 +16,6 @@ import           Macbeth.Fics.Api.Player
 import           Macbeth.Wx.Configuration
 import           Macbeth.Wx.ChatRegistry
 import qualified Macbeth.Wx.Commands as Cmds
-import qualified Macbeth.Wx.Dialog as Dialog
 import           Macbeth.Wx.Finger
 import           Macbeth.Wx.GamesList
 import           Macbeth.Wx.Login

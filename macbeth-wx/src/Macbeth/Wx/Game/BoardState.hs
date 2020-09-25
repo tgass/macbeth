@@ -5,6 +5,8 @@ import           Control.Monad
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Maybe
 import           Data.Maybe
+import           Data.MultiSet (MultiSet)
+import qualified Data.MultiSet as MultiSet
 import           Data.List
 import           Graphics.UI.WX hiding (position, update, resize, when)
 import           Macbeth.Fics.Api.Api
@@ -38,8 +40,8 @@ data BoardState = BoardState {
   , squareSizePx :: Int
   , pieceImgSize :: Int
   , pieceScale :: Double
-  , phW :: [Piece]
-  , phB :: [Piece]
+  , capturedPieces :: MultiSet Piece
+  , pieceHoldings :: MultiSet Piece
   , boardConfig :: BoardConfig
   , runtimeEnv :: RuntimeEnv
   }
@@ -99,12 +101,12 @@ pickUpPieceFromBoard vState pt =
 
 
 pickUpPieceFromHolding :: TVar BoardState -> PType -> IO ()
-pickUpPieceFromHolding vState p = atomically $ modifyTVar vState
+pickUpPieceFromHolding vState ptype = atomically $ modifyTVar vState
   (\state -> maybe state (pickUpPieceFromHolding' state) (userColor_ state))
   where
     pickUpPieceFromHolding' :: BoardState -> PColor -> BoardState
-    pickUpPieceFromHolding' state color'
-      | Piece p color'  `elem` getPieceHolding color' state = state { draggedPiece = Just $ DraggedPiece (Piece p color') FromHolding }
+    pickUpPieceFromHolding' state color
+      | Piece ptype (invert color)  `MultiSet.member` capturedPieces state = state { draggedPiece = Just $ DraggedPiece (Piece ptype color) FromHolding }
       | otherwise = state
 
 
@@ -151,10 +153,18 @@ update vBoardState move ctx = atomically $ modifyTVar vBoardState (\s ->
     , history = addtoHistory move ctx (history s)
     , lastMove = move
     , preMoves = preMoves'
+    , capturedPieces = allPieces MultiSet.\\ MultiSet.fromList (snd <$> (position move)) 
     , virtualPosition = let preMovePos' = foldl (flip movePiece) (position move) preMoves'
                         in maybe preMovePos' (removeDraggedPiece preMovePos') (draggedPiece s)})
 
+allPieces :: MultiSet Piece
+allPieces =
+  MultiSet.fromList (fmap (`Piece` White) allPieces') `MultiSet.union` MultiSet.fromList (fmap (`Piece` Black) allPieces')
+  where
+    allPieces' :: [PType]
+    allPieces' = replicate 8 Pawn ++ replicate 2 Rook ++ replicate 2 Knight ++ replicate 2 Bishop ++ [Queen, King]
 
+ 
 resize :: TVar BoardState -> Int -> IO ()
 resize vState boardSize' = do
   let (psize', scale') = PieceSet.findSize boardSize'
@@ -207,9 +217,15 @@ setPieceSet vState ps = atomically (modifyTVar vState (\s ->
   let bc = boardConfig s in s { boardConfig = bc { pieceSet = ps }}))
 
 
-getPieceHolding :: PColor -> BoardState -> [Piece]
-getPieceHolding White = phW
-getPieceHolding Black = phB
+getCapturedPiecesDiff :: PColor -> BoardState -> [(Piece, Int)]
+getCapturedPiecesDiff color state = 
+  let one = MultiSet.map getPieceType $ MultiSet.filter ((==) (invert color) . pColor) $ capturedPieces state
+      two = MultiSet.map getPieceType $ MultiSet.filter ((==) color . pColor) $ capturedPieces state
+  in MultiSet.toOccurList $ MultiSet.map (`Piece` (invert color)) $ one MultiSet.\\ two
+
+
+getPieceHolding :: PColor -> BoardState -> [(Piece, Int)]
+getPieceHolding color state = MultiSet.toOccurList $ MultiSet.filter ((==) (invert color) . pColor) $ pieceHoldings state
 
 
 pointToSquare :: BoardState -> Point -> Maybe Square
@@ -270,8 +286,8 @@ initBoardState gameId' gameParams' username' isGameUser' boardConfig' runtimeEnv
   , squareSizePx = squareSizePx'
   , pieceImgSize = pieceImgSize'
   , pieceScale = pieceScale'
-  , phW = []
-  , phB = []
+  , capturedPieces = MultiSet.empty
+  , pieceHoldings = MultiSet.empty
   , boardConfig = boardConfig'
   , runtimeEnv = runtimeEnv'
   }

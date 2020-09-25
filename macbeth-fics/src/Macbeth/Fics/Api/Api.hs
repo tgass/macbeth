@@ -32,6 +32,9 @@ squareColor (Square col row)
 
 data Piece = Piece PType PColor deriving (Show, Eq, Ord)
 
+getPieceType :: Piece -> PType
+getPieceType (Piece ptype _) = ptype
+
 type Position = [(Square, Piece)]
 
 data MoveDetailed = Simple Square Square | Drop Square | CastleLong | CastleShort deriving (Show, Eq)
@@ -63,15 +66,6 @@ getPiece p sq = sq `lookup` p
 
 getSquare :: Position -> Piece -> Maybe Square
 getSquare pos p = fst <$> find ((== p) . snd) pos
-
-
-capturedPiecesWithColor :: PColor -> Position -> [Piece]
-capturedPiecesWithColor color' pos =
-  fmap (`Piece` color') allPieces' \\ filter (hasColor color') (fmap snd pos)
-  where
-    allPieces' :: [PType]
-    allPieces' = replicate 8 Pawn ++ replicate 2 Rook ++ replicate 2 Knight ++
-                 replicate 2 Bishop ++ [Queen, King]
 
 
 invert :: PColor -> PColor

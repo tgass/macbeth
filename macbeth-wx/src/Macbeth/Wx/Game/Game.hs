@@ -9,6 +9,7 @@ import           Control.Concurrent.STM
 import           Control.Exception
 import           Control.Monad
 import           Data.Maybe
+import qualified Data.MultiSet as MultiSet
 import           Graphics.UI.WX hiding (when, position, play, point, white, black)
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import           Macbeth.Fics.Message hiding (gameId)
@@ -166,8 +167,8 @@ wxGame env gameId gameParams isGameUser chan = do
 
     PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]
 
-    PieceHolding id' phW' phB' -> when (id' == gameId) $ do
-      atomically $ modifyTVar vBoardState (\s -> s{ Api.phW = phW', Api.phB = phB' })
+    PieceHolding gid phW phB -> when (gid == gameId) $ do
+      atomically $ modifyTVar vBoardState (\s -> s{ Api.pieceHoldings = MultiSet.fromList $ phW ++ phB })
       repaint p_white
       repaint p_black
 

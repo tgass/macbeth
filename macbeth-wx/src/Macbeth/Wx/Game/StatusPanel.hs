@@ -4,18 +4,16 @@ module Macbeth.Wx.Game.StatusPanel (
   wxStatusPanel
 ) where
 
-import           Control.Arrow
 import           Control.Concurrent.STM
 import           Control.Monad
-import           Data.List
-import           Graphics.UI.WX hiding (when, position, color)
+import           Graphics.UI.WX hiding (when, position, color, pt)
 import           Macbeth.Fics.Message hiding (gameId, Observing)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Move
 import           Macbeth.Fics.Api.Game
 import qualified Macbeth.Fics.Api.Result as R
 import           Macbeth.Utils.Utils
-import           Macbeth.Utils.BoardUtils hiding (toWxColor)
+import           Macbeth.Utils.BoardUtils
 import           Macbeth.Wx.Config.BoardConfig
 import           Macbeth.Wx.Game.BoardState
 import           Macbeth.Wx.Game.PieceSet
@@ -59,33 +57,47 @@ wxStatusPanel p color vBoardState = do
 
 paintPieceHolding :: PColor -> TVar BoardState -> DC a -> t -> IO ()
 paintPieceHolding color vBoardState dc _ = do
-  boardState <- readTVarIO vBoardState
-  zipWithM_ (drawPiece (runtimeEnv boardState) dc) [A .. H] (assemblePiecesToShow color boardState)
+  state <- readTVarIO vBoardState
+  let pieces = assemblePieces color state
+  drawPlus dc pieces state
+  zipWithM_ (drawPiece state dc) [A .. H] pieces
 
 
-assemblePiecesToShow :: PColor -> BoardState -> [(Piece, Int)]
-assemblePiecesToShow color state
-  | isGameWithPH $ gameParams state = frequency $ getPieceHolding color state
+assemblePieces :: PColor -> BoardState -> [(Piece, Int)]
+assemblePieces color state
+  | isGameWithPH $ gameParams state = getPieceHolding color state
   | not $ showCapturedPieces $ boardConfig state = []
-  | otherwise = frequency $ capturedPiecesWithColor (invert color) (position $ lastMove state)
+  | otherwise = getCapturedPiecesDiff color state 
 
-  where
-    frequency :: Ord a => [a] -> [(a, Int)]
-    frequency = map (head &&& length) . group . sort
+drawPlus :: DC a -> [(Piece, Int)] -> BoardState -> IO ()
+drawPlus dc pieces state 
+  | (not $ isGameWithPH $ gameParams state) && (showCapturedPieces $ boardConfig state) && (not $ null pieces) = do
+      set dc [pen := penColored black 2]
+      drawText dc "+" (Point 4 4)
+        [ fontFace := "Avenir Next Medium"
+        , fontSize := 12
+        , fontWeight := WeightBold
+        ]
+  | otherwise = return ()
 
-
-drawPiece :: RuntimeEnv -> DC a -> Column -> (Piece, Int) -> IO ()
-drawPiece runtimeEnv dc col (Piece ptype color, freq) = do
-  drawBitmap dc (pieceToBitmap runtimeEnv Alpha1 (Piece ptype color) pieceSize)
-                (toPos' fieldSize (Square col Eight) White) True []
+drawPiece :: BoardState -> DC a -> Column -> (Piece, Int) -> IO ()
+drawPiece state dc col (Piece ptype color, freq) = do
+  drawBitmap dc (pieceToBitmap (runtimeEnv state) Alpha1 (Piece ptype color) pieceSize)
+                (setOffset state $ toPos' fieldSize (Square col Eight) White) True []
   set dc [pen := penColored black 2]
-  drawText dc (show freq) (Point (22 + fromEnum col * fieldSize) 15)
+  drawText dc (show freq) (setOffset state $ Point (21 + fromEnum col * fieldSize) 15)
     [ fontFace := "Avenir Next Medium"
     , fontSize := 10
     , fontWeight := WeightBold
     ]
   where fieldSize = 35
         pieceSize = 24
+
+setOffset :: BoardState -> Point -> Point
+setOffset state pt@(Point x y)
+  | isGameWithPH $ gameParams state = pt
+  | not $ showCapturedPieces $ boardConfig state = pt
+  | otherwise = Point (x + 13) y
 
 
 updateTime :: TVar Int -> StaticText () -> IO ()
