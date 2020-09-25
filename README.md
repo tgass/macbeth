@@ -50,20 +50,28 @@ see: http://www.freechess.org/Help/HelpFiles/category.html
 
 ### Building and Running Macbeth
 
-* macos
-```
-brew install git haskell-stack wxmac freealut
+#### macos
 
-git clone https://github.com/tgass/macbeth.git
-cd macbeth
-cd macbeth-macos
-
-./bundle.sh
-open Macbeth.dmg
+You'll need to run several commands in a terminal window. Copy and paste each command separately and press `Enter` (The commands start after `>`). Now let's get started, and open a terminal window.
 
 ```
+> brew --version
+```
 
-* Linux (Ubuntu)
+If it says "command not found", goto https://brew.sh/ and follow the instructions there. When homebrew is installed run these commands:
+
+```
+> brew install git haskell-stack wxmac freealut
+
+> git clone https://github.com/tgass/macbeth.git
+> cd macbeth
+> cd macbeth-macos
+
+> ./bundle.sh
+> open Macbeth.dmg
+```
+
+#### Linux (Ubuntu)
 ```
 sudo apt-get install git haskell-stack libalut-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libwxgtk3.0-dev lib32z1-dev libwxgtk-media3.0-dev
 
