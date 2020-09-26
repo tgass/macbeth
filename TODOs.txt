@@ -52,3 +52,25 @@ TextMessage "Ambiguous move (nd2).\n"
 -- use Lens, especially for Sounds/Config
 -- make BoardChanges not depend on tvar?
 
+
+
+-- CHANNELS --
+\NAK5\SYN132\SYNSchoon(3): Just want to  say hi, I'm the author of Macbeth..\n(told 8 players in channel 3 \"FICS_programmers\")\n\ETB\n
+TextMessage "\NAK5\SYN132\SYNSchoon(3): Just want to  say hi, I'm the author of Macbeth..\n(told 8 players in channel 3 \"FICS_programmers\")\n\ETB\n"
+
+
+simonv(3): Unfortunately Schoon, there is not yet any Klingon channel on FICS.  But chan 81 (Turkish) should be close enought.  :o)\n
+TextMessage "simonv(3): Unfortunately Schoon, there is not yet any Klingon channel on FICS.  But chan 81 (Turkish) should be close enought.  :o)\n"
+
+\NAK5\SYN132\SYNSchoon(3): @simonv Wait what? :)\n(told 9 players in channel 3 \"FICS_programmers\")\n\ETB\n
+TextMessage "\NAK5\SYN132\SYNSchoon(3): @simonv Wait what? :)\n(told 9 players in channel 3 \"FICS_programmers\")\n\ETB\n"
+
+
+TextMessage "tennischess says: i was fooled by your rating rematch\n"
+
+"tennischess says: i was fooled by your rating rematch\n
+
+
+-- See today's games..
+tell openlib winloss 
+

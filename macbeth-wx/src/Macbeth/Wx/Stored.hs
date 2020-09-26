@@ -5,7 +5,6 @@ module Macbeth.Wx.Stored (
 import           Control.Concurrent.STM
 import           Graphics.UI.WX hiding (refresh, widget)
 import           Graphics.UI.WXCore hiding (widget)
-import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Stored
 import           Macbeth.Fics.Message hiding (gameId)
 import qualified Macbeth.Wx.Commands as Cmds

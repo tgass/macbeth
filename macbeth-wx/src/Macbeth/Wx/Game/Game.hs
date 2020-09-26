@@ -81,19 +81,7 @@ wxGame env gameId gameParams isGameUser chan = do
 
   -- context menu
   ctxMenu <- menuPane []
-
-  void $ menuItem ctxMenu [ text := "Turn board"
-                          , on command := Api.invertPerspective vBoardState >> updateBoardLayoutIO >> void (windowLayout f)
-                          ]
-
-  void $ menuItem ctxMenu [ text := "Show captured pieces"
-                          , checkable:= True
-                          , checked := showCapturedPieces boardConfig
-                          , on command := atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back
-                          ]
-
   when isGameUser $ do
-     menuLine ctxMenu
      void $ menuItem ctxMenu [ text := "Request takeback 1", on command := Cmds.takeback h 1 ]
      void $ menuItem ctxMenu [ text := "Request takeback 2", on command := Cmds.takeback h 2 ]
      void $ menuItem ctxMenu [ text := "Request abort", on command := Cmds.abort h ]
@@ -101,11 +89,21 @@ wxGame env gameId gameParams isGameUser chan = do
      void $ menuItem ctxMenu [ text := "Offer draw", on command := Cmds.draw h ]
      void $ menuItem ctxMenu [ text := "Resign", on command := Cmds.resign h ]
      menuLine ctxMenu
-     void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams) (Just gameId)]
-
      windowOnMouse p_board True (\point -> Board.onMouseEvent h vBoardState point >> repaint p_board)
+
+
+  void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ OpenChat $ GameChat gameId ]
   menuLine ctxMenu
-  wxPieceSetsMenu ctxMenu vBoardState p_board
+  void $ menuItem ctxMenu [ text := "Turn board"
+                          , on command := Api.invertPerspective vBoardState >> updateBoardLayoutIO >> void (windowLayout f)
+                          ]
+  void $ menuItem ctxMenu [ text := "Show captured pieces"
+                          , checkable:= True
+                          , checked := showCapturedPieces boardConfig
+                          , on command := atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back
+                          ]
+  void $ wxPieceSetsMenu ctxMenu vBoardState p_board
+
 
   set p_board [ on clickRight := (\point -> menuPopup ctxMenu point p_board) ]
 
@@ -118,7 +116,7 @@ wxGame env gameId gameParams isGameUser chan = do
     | Utl.onlyKey evt 'K' -> Api.pickUpPieceFromHolding vBoardState Knight >> repaint p_board
     | Utl.onlyKey evt 'R' -> Api.pickUpPieceFromHolding vBoardState Rook >> repaint p_board
     | Utl.onlyKey evt 'P' -> Api.pickUpPieceFromHolding vBoardState Pawn >> repaint p_board
-    | (Utl.onlyKey evt 'T') && isGameUser -> writeChan chan $ Chat $ OpenChat (fromMaybe "" $ G.nameOponent username gameParams) (Just gameId)
+    | Utl.onlyKey evt 'T' -> writeChan chan $ OpenChat $ GameChat gameId
     | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> Api.discardDraggedPiece vBoardState >> repaint p_board
 
     | Utl.onlyKey evt 'N' -> Cmds.decline h

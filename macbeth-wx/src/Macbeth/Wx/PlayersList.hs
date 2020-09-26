@@ -63,7 +63,7 @@ wxPlayersList slp h chan = do
       set (history ctxMenu') [on command := Cmds.history h $ Just $ head player]
       set (observe ctxMenu') [on command := Cmds.observe h $ head player]
       set (partner ctxMenu') [on command := Cmds.partner h $ head player]
-      set (chat ctxMenu') [on command := writeChan chan $ Chat $ OpenChat (head player) Nothing ]
+      set (chat ctxMenu') [on command := writeChan chan $ OpenChat (UserChat $ head player) ]
       listEventGetPoint evt >>= flip (menuPopup ctxMenuPane) sl)
 
     set slp [ on (menu $ sortByName ctxSortMenu') := sortPlayers sl ctxSortMenu' players ]

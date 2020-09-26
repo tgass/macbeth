@@ -1,6 +1,5 @@
 module Macbeth.Fics.Parsers.MessageParserSpec (spec) where
 
-import           Data.Attoparsec.ByteString.Char8
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Message

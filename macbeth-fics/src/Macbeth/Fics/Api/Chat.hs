@@ -1,22 +1,18 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Macbeth.Fics.Api.Chat where
 
-import qualified Macbeth.Fics.Api.Player as P
+import Control.Lens
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Player
 
-data ChatMsg =
-    Say UserHandle GameId String
-  | Tell UserHandle String
-  | UserMessage Username String
-  | Told P.UserHandle (Maybe Status')
-  | OpenChat Username (Maybe GameId)
-  | CloseChat Username deriving (Show, Eq)
+data ChatState = Open | Closed deriving (Eq, Show)
 
-data Status' = Playing | Busy String deriving (Show, Eq)
+data ChatId = UserChat String | GameChat GameId | ChannelChat ChannelId deriving (Show, Eq, Ord)
 
-belongsTo :: ChatMsg -> Username -> Bool
-belongsTo = \case
-  Say (UserHandle u _) _ _ -> (u ==)
-  Tell (UserHandle u _) _ -> (u ==)
-  UserMessage u _ -> (u ==)
-  _ -> const False
+newtype ChannelId = ChannelId Int deriving (Eq, Ord, Show)
+
+data ChatMessage = From String String | Self String deriving (Show)
+
+data Chat = Chat { _state :: ChatState, _messages :: [ChatMessage] }
+makeLenses ''Chat
+

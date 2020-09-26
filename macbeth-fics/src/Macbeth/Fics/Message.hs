@@ -1,16 +1,16 @@
 module Macbeth.Fics.Message where
 
-import Control.Concurrent.Chan
-import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Player
-import Macbeth.Fics.Api.Chat
-import Macbeth.Fics.Api.Game
-import Macbeth.Fics.Api.Move
-import Macbeth.Fics.Api.Offer
-import Macbeth.Fics.Api.OngoingGame
-import Macbeth.Fics.Api.Result
-import Macbeth.Fics.Api.Seek
-import Macbeth.Fics.Api.Stored
+import           Control.Concurrent.Chan
+import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Fics.Api.Chat 
+import           Macbeth.Fics.Api.Game
+import           Macbeth.Fics.Api.Move
+import           Macbeth.Fics.Api.Offer
+import           Macbeth.Fics.Api.OngoingGame
+import           Macbeth.Fics.Api.Result
+import           Macbeth.Fics.Api.Seek
+import           Macbeth.Fics.Api.Stored
 
 data Message =
     GameMove { context :: !MoveModifier, move :: !Move }
@@ -53,7 +53,9 @@ data Message =
   | History UserHandle String
   | Ping {lagMin :: Int, lagAvg :: Int, lagMax :: Int}
 
-  | Chat ChatMsg
+  | Says UserHandle (Maybe GameId) String
+  | Tells UserHandle (Maybe ChannelId) String
+  | Told UserHandle (Maybe ChatStatus)
 
   | LoginPrompt
   | LoginTimeout
@@ -70,10 +72,16 @@ data Message =
   | TakebackAccepted (Maybe Username)
   | IllegalMove String
   | ConnectionClosed String
+
+  | UserMessage ChatId String
+  | OpenChat ChatId 
+  | CloseChat ChatId 
+
   | WxClose
   | WxGame GameId GameParams (Chan Message)
   | WxObserving GameId GameParams (Chan Message) deriving (Show, Eq)
 
+data ChatStatus = Playing | Busy String deriving (Show, Eq)
 
 instance Show (Chan Message) where
   show _ = "Chan"

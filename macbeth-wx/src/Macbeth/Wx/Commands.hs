@@ -3,6 +3,7 @@ module Macbeth.Wx.Commands where
 import           Control.Exception
 import           Data.Monoid
 import           Macbeth.Fics.Api.Api
+import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.Api.GameType
 import           Macbeth.Fics.Commands
@@ -59,6 +60,12 @@ takeback h halfmoves = command h $ Takeback halfmoves
 
 tell :: Handle -> String -> String -> IO ()
 tell h user msg = command h $ Tell user msg
+
+tellChannel :: Handle -> ChannelId -> String -> IO ()
+tellChannel h cid msg = command h $ TellChannel cid msg
+
+say :: Handle -> String -> IO ()
+say h msg = command h $ Say msg
 
 unobserve :: Handle -> GameId -> IO ()
 unobserve h gameId = command h $ Unobserve gameId

@@ -1,66 +1,72 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Macbeth.Wx.ChatRegistry (
   wxChatRegistry
 ) where
 
-import qualified Macbeth.Fics.Message as F
-import Macbeth.Fics.Api.Chat
-import Macbeth.Fics.Api.Player
-import Macbeth.Wx.Chat
-import Macbeth.Wx.Config.Sounds
-import Macbeth.Wx.Config.UserConfig (chatOrDef)
-import Macbeth.Wx.RuntimeEnv (RuntimeEnv(), playSound)
+import           Control.Concurrent.Chan
+import           Control.Concurrent.STM
+import           Control.Lens
+import           Control.Monad
+import           Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import           Macbeth.Fics.Message
+import           Macbeth.Fics.Api.Chat
+import           Macbeth.Fics.Api.Player
+import           Macbeth.Wx.Chat
+import           Macbeth.Wx.Config.Sounds
+import           Macbeth.Wx.Config.UserConfig (chatOrDef)
+import           Macbeth.Wx.RuntimeEnv (RuntimeEnv(), playSound)
 
-import Control.Concurrent.Chan
-import Control.Concurrent.STM
-import Control.Lens
-import Control.Monad
-import Data.Map.Strict
-
-data ChatState = Open | Closed deriving (Eq, Show)
-
-data Chat = Chat { _state :: ChatState, _messages :: [ChatMsg] }
-makeLenses ''Chat
-
-wxChatRegistry :: RuntimeEnv -> Chan F.Message -> IO (F.Message -> IO ())
+wxChatRegistry :: RuntimeEnv -> Chan Message -> IO (Message -> IO ())
 wxChatRegistry env chan = do
-  chatMap <- newTVarIO $ fromList [("ROBOadmin", Chat Open [])]
+  chatMap <- newTVarIO $ Map.fromList [(UserChat "ROBOadmin", Chat Open [])]
 
   return $ \case
 
-       F.Chat msg -> let updateAndOpenChat username mGameId = do
-                         (Chat state' msgs) <- updateChatMap chatMap username msg
-                         unless (state' == Open) $ do
-                           setChatState chatMap username Open
-                           dupChan chan >>= wxChat env username mGameId msgs
+    Says (UserHandle username _) Nothing msg -> 
+      updateAndOpen chatMap env chan (UserChat username) (From username msg)
 
-                   in case msg of
-                        Say (UserHandle username _) gameId _ -> do
-                          updateAndOpenChat username (Just gameId)
-                          playSound env (say . chatOrDef)
+    Says (UserHandle username _) (Just gameId) msg -> 
+      updateAndOpen chatMap env chan (GameChat gameId) (From username msg)
 
-                        Tell (UserHandle username _) _ ->
-                          updateAndOpenChat username Nothing
+    Tells (UserHandle username _) Nothing msg -> 
+      updateAndOpen chatMap env chan (UserChat username) (From username msg)
 
-                        UserMessage username _ ->
-                          updateAndOpenChat username Nothing
+    Tells (UserHandle username _) (Just channelId) msg -> 
+      updateAndOpen chatMap env chan (ChannelChat channelId) (From username msg)
 
-                        OpenChat username mGameId ->
-                          updateAndOpenChat username mGameId
+    UserMessage chatId msg ->
+      updateAndOpen chatMap env chan chatId (Self msg)
 
-                        CloseChat username ->
-                          setChatState chatMap username Closed
+    OpenChat chatId -> do
+      mChat <- Map.lookup chatId <$> readTVarIO chatMap
+      case mChat of 
+        Just (Chat state msgs) ->
+          unless (state == Open) $ do
+            setChatState chatMap chatId Open
+            dupChan chan >>= wxChat env chatId msgs
+        Nothing -> do
+          initChat chatMap chatId
+          dupChan chan >>= wxChat env chatId []
 
-                        _ -> return ()
-       _ -> return ()
+    CloseChat chatid -> setChatState chatMap chatid Closed
+
+    _ -> return ()
 
 
+updateAndOpen :: TVar (Map ChatId Chat) -> RuntimeEnv -> Chan Message -> ChatId -> ChatMessage -> IO ()
+updateAndOpen chatMap env chan chatId msg = do
+  Chat state msgs <- updateChatMap chatMap chatId msg
+  unless (state == Open) $ do
+    setChatState chatMap chatId Open
+    dupChan chan >>= wxChat env chatId msgs
 
-updateChatMap :: TVar (Map Username Chat) -> Username -> ChatMsg -> IO Chat
-updateChatMap chatMap  username msg = atomically $ do
-  modifyTVar chatMap $ insertWith appendMessage username $ Chat Closed [msg]
-  (! username) <$> readTVar chatMap
+
+updateChatMap :: TVar (Map ChatId Chat) -> ChatId -> ChatMessage -> IO Chat
+updateChatMap chatMapVar chatId msg = atomically $ do
+  chatMap <- readTVar chatMapVar
+  let newMap = Map.insertWith appendMessage chatId (Chat Closed [msg]) chatMap
+  writeTVar chatMapVar newMap
+  return $ newMap Map.! chatId
 
 
 -- appendMessage newValue oldValue
@@ -68,7 +74,9 @@ appendMessage :: Chat -> Chat -> Chat
 appendMessage (Chat _ new_mx) (Chat status' old_mx) = Chat status' (old_mx ++ new_mx)
 
 
-setChatState :: TVar (Map Username Chat) -> Username -> ChatState -> IO ()
-setChatState chatMap username state' = atomically $
-  modifyTVar chatMap $ adjust (state .~ state') username
+setChatState :: TVar (Map ChatId Chat) -> ChatId -> ChatState -> IO ()
+setChatState chatMapVar chatId state' = atomically $
+  modifyTVar chatMapVar $ Map.adjust (state .~ state') chatId
 
+initChat :: TVar (Map ChatId Chat) -> ChatId -> IO ()
+initChat chatMapVar chatId = atomically $ modifyTVar chatMapVar $ Map.insert chatId (Chat Open [])
