@@ -76,6 +76,7 @@ wxGame env gameId gameParams isGameUser chan = do
   updateBoardLayoutIO
 
   status <- statusField []
+  statusLastMove <- statusField [ statusWidth := 60 ]
   promotion <- statusField [ statusWidth := 30, text := "=Q"]
 
   -- context menu
@@ -130,7 +131,7 @@ wxGame env gameId gameParams isGameUser chan = do
   windowOnKeyUp p_board $ onKeyUpHandler vBoardState h promotion
 
   --set layout
-  set f [ statusBar := [status] ++ [promotion | isGameUser]
+  set f [ statusBar := [status, statusLastMove] ++ [promotion | isGameUser]
         , layout := fill $ widget p_back
         , size := Size (boardSize boardConfig) (boardSize boardConfig + windowInitMargin)
         , on resize := resizeFrame f vBoardState ]
@@ -141,10 +142,11 @@ wxGame env gameId gameParams isGameUser chan = do
   threadId <- Utl.eventLoopWithThreadId f eventId chan $ \(threadId, cmd) ->
     updateClockW cmd >> updateClockB cmd >> gameSounds env boardState cmd >> case cmd of
 
-    GameMove ctx move' -> when (M.gameId move' == gameId) $ do
-      set status [text := show ctx]
-      Api.update vBoardState move' ctx
-      when (M.isNextMoveUser move') $ Api.performPreMoves vBoardState h
+    GameMove ctx move -> when (M.gameId move == gameId) $ do
+      set status [ text := show ctx]
+      set statusLastMove [ text := fromMaybe "" $ M.movePretty move ] 
+      Api.update vBoardState move ctx
+      when (M.isNextMoveUser move) $ Api.performPreMoves vBoardState h
       repaint p_back
 
     GameResult result -> when (R.gameId result == gameId) $ do

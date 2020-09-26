@@ -62,8 +62,8 @@ wxToolBox env chan = do
 
     statusMsg <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
-    pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := Cmds.ping h, enabled := False]
     statusLoggedIn <- statusField [ statusWidth := 100]
+    pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := Cmds.ping h, enabled := False]
 
 
     nb <- notebook f []
