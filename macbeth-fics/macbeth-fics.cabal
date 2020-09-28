@@ -25,7 +25,7 @@ library
       aeson
     , async
     , attoparsec
-    , base >=4.2 && <5
+    , base
     , bytestring
     , conduit
     , conduit-extra

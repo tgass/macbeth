@@ -27,7 +27,7 @@ flag console_log
 
 library
   build-depends: 
-      base >=4.2 && <5
+      base 
     , aeson
     , ALUT
     , attoparsec
