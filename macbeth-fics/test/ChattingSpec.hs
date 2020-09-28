@@ -4,6 +4,7 @@ import Macbeth.Fics.Message
 import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Player
+import Macbeth.Fics.Api.Rating
 import Macbeth.Fics.Parsers.MessageParser
 import Test.Hspec
 
@@ -12,13 +13,19 @@ spec =
   describe "Chatting" $ do
 
     it "parse says" $ parseMessage "GuestYYPT(U)[386] says: hello\n"
-      `shouldBe` Right (Says (UserHandle "GuestYYPT" [Unregistered]) (GameId 386) "hello")
+      `shouldBe` Right (Says (UserHandle "GuestYYPT" [Unregistered]) (Just $ GameId 386) "hello")
 
     it "parse tell" $ parseMessage "GuestQRDR(U) tells you: foobar\n"
-      `shouldBe` Right (Tells Nothing (UserHandle "GuestQRDR" [Unregistered]) "foobar")
+      `shouldBe` Right (Tells (UserHandle "GuestQRDR" [Unregistered]) Nothing "foobar")
 
     it "parse channel tell" $ parseMessage "simonv(3): Unfortunately Schoon, there is not yet any Klingon channel on FICS. :o)\n"
-      `shouldBe` Right (Tells (Just $ ChannelId 3) (UserHandle "simonv" []) "Unfortunately Schoon, there is not yet any Klingon channel on FICS. :o)")
+      `shouldBe` Right (Tells (UserHandle "simonv" []) (Just $ ChannelId 3) "Unfortunately Schoon, there is not yet any Klingon channel on FICS. :o)")
+
+    it "parse kibitzes" $ parseMessage "FlixxG(----)[5] kibitzes: Hi Matt- great game!\n"
+      `shouldBe` Right (Kibitzes (UserHandle "FlixxG" []) Unrated (GameId 5) "Hi Matt- great game!")
+
+    it "parse whispers" $ parseMessage "FlixxG(----)[5] whispers: good move!\n"
+      `shouldBe` Right (Whispers (UserHandle "FlixxG" []) Unrated (GameId 5) "good move!")
 
     it "parse told" $ parseMessage "\NAK5\SYN107\SYN(told GuestQRDR, who is playing)\n\ETB\n"
       `shouldBe` Right (Told (UserHandle "GuestQRDR" []) (Just Playing))

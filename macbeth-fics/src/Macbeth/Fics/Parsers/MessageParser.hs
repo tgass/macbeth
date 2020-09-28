@@ -62,6 +62,8 @@ parseMessage = parseOnly $ choice [
   , Chatting.says
   , Chatting.tell
   , Chatting.channelTell
+  , Chatting.kibitzes
+  , Chatting.whispers
   , Chatting.told
 
   , pending

@@ -2,6 +2,8 @@ module Macbeth.Fics.Parsers.Chatting (
     says
   , tell
   , channelTell
+  , kibitzes
+  , whispers
   , told
 ) where
 
@@ -11,6 +13,7 @@ import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Chat
 import qualified Macbeth.Fics.Parsers.Api as Api
 import qualified Macbeth.Fics.Parsers.Players as P
+import           Macbeth.Fics.Parsers.RatingParser
 
 
 says :: Parser Message
@@ -34,6 +37,25 @@ channelTell = do
   cid <- ChannelId <$> (decimal <* "): ")
   msg <- manyTill anyChar "\n"
   return $ Tells user (Just cid) msg
+
+
+kibitzes :: Parser Message
+kibitzes = do
+  user <- P.userHandle <* "("
+  r <- rating <* ")"
+  gameId <- "[" *> Api.gameId <* "]"
+  msg <- " kibitzes: " *> manyTill anyChar "\n"
+  return $ Kibitzes user r gameId msg
+
+
+whispers :: Parser Message
+whispers = do
+  user <- P.userHandle <* "("
+  r <- rating <* ")"
+  gameId <- "[" *> Api.gameId <* "]"
+  msg <- " whispers: " *> manyTill anyChar "\n"
+  return $ Whispers user r gameId msg
+
 
 
 told :: Parser Message

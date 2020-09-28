@@ -34,6 +34,12 @@ wxChatRegistry env chan = do
     Tells (UserHandle username _) (Just channelId) msg -> 
       updateAndOpen chatMap env chan (ChannelChat channelId) (From username msg)
 
+    Whispers (UserHandle username _) rating gameId msg -> 
+      updateAndOpen chatMap env chan (GameChat gameId) (From username msg)
+
+    Kibitzes (UserHandle username _) rating gameId msg -> 
+      updateAndOpen chatMap env chan (GameChat gameId) (From username msg)
+
     UserMessage chatId msg ->
       updateAndOpen chatMap env chan chatId (Self msg)
 

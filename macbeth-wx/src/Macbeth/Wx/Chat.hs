@@ -51,6 +51,10 @@ wxChat env chatId msgs chan = do
 
     Says (UserHandle username _) (Just gameId) msg -> when (GameChat gameId == chatId) $ showMsg ct $ From username msg
 
+    Whispers (UserHandle username _) rating gameId msg -> when (GameChat gameId == chatId) $ showMsg ct $ From username msg
+
+    Kibitzes (UserHandle username _) rating gameId msg -> when (GameChat gameId == chatId) $ showMsg ct $ From username msg
+
     WxClose -> close f
 
     _ -> return ()

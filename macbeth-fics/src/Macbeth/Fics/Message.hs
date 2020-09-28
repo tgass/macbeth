@@ -9,6 +9,7 @@ import           Macbeth.Fics.Api.Move
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Api.OngoingGame
 import           Macbeth.Fics.Api.Result
+import           Macbeth.Fics.Api.Rating
 import           Macbeth.Fics.Api.Seek
 import           Macbeth.Fics.Api.Stored
 
@@ -55,6 +56,8 @@ data Message =
 
   | Says UserHandle (Maybe GameId) String
   | Tells UserHandle (Maybe ChannelId) String
+  | Whispers UserHandle Rating GameId String
+  | Kibitzes UserHandle Rating GameId String
   | Told UserHandle (Maybe ChatStatus)
 
   | LoginPrompt
