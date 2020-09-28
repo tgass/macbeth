@@ -8,6 +8,8 @@ packages:
 explicit-setup-deps:
     "*": true
 
+allow-newer: true
+
 extra-deps: 
 - wx-0.92.2.0
 - wxcore-0.92.2.0
