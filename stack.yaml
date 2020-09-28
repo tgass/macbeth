@@ -8,13 +8,11 @@ packages:
 explicit-setup-deps:
     "*": true
 
-allow-newer: true
-
 extra-deps: 
-- wx-0.92.2.0
-- wxcore-0.92.2.0
-- wxc-0.92.2.0
-- wxdirect-0.92.2.0
+- wx-0.92.3.0
+- wxcore-0.92.3.0
+- wxc-0.92.3.0
+- wxdirect-0.92.3.0
 - ALUT-2.4.0.2
 - OpenAL-1.7.0.4
 - hspec-2.5.1
