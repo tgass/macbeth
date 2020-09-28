@@ -20,6 +20,7 @@ data Command =
   | Finger (Maybe String)
   | Games
   | History (Maybe String)
+  | Kibitz GameId String
   | Observe Username
   | ObserveGame Int
   | Partner Username
@@ -38,6 +39,7 @@ data Command =
   | Promote PType
   | Who 
   | Withdraw Int 
+  | Whisper GameId String
 
 instance Show Command where
   show Abort                             = "abort"
@@ -52,6 +54,7 @@ instance Show Command where
   show Games                             = "games"
   show (History (Just user))             = "history " <> user
   show (History Nothing)                 = "history"
+  show (Kibitz (GameId gid) msg)         = "xkibitz " <> show gid <> " " <> msg
   show (Observe user)                    = "observe " <> user
   show (ObserveGame gameId)              = "observe " <> show gameId
   show (Partner user)                    = "partner " <> user
@@ -71,6 +74,7 @@ instance Show Command where
   show (Promote ptype)                   = "promote " <> show ptype
   show Who                               = "who"
   show (Withdraw reqid)                  =" withdraw " <> show reqid
+  show (Whisper (GameId gid) msg)        = "xwhisper " <> show gid <> " " <> msg
 
 mkMatch :: String -> Bool -> Int -> Int -> SeekColor -> Category -> Maybe WildBoard -> String
 mkMatch user rated time inc color cat mWild = ("match " <>) $ unwords $ filter (/="") [

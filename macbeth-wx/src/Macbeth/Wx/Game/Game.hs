@@ -89,11 +89,15 @@ wxGame env gameId gameParams isGameUser chan = do
      void $ menuItem ctxMenu [ text := "Offer draw", on command := Cmds.draw h ]
      void $ menuItem ctxMenu [ text := "Resign", on command := Cmds.resign h ]
      menuLine ctxMenu
+     void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ OpenChat $ GameChat gameId ]
+     menuLine ctxMenu
      windowOnMouse p_board True (\point -> Board.onMouseEvent h vBoardState point >> repaint p_board)
 
 
-  void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ OpenChat $ GameChat gameId ]
-  menuLine ctxMenu
+  unless isGameUser $ do
+    void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ OpenChat $ ObservingChat gameId ]
+    menuLine ctxMenu
+
   void $ menuItem ctxMenu [ text := "Turn board"
                           , on command := Api.invertPerspective vBoardState >> updateBoardLayoutIO >> void (windowLayout f)
                           ]

@@ -1,7 +1,6 @@
 module Macbeth.Wx.Commands where
 
 import           Control.Exception
-import           Data.Monoid
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Seek (SeekColor)
@@ -39,6 +38,9 @@ games h = command h Games
 
 history :: Handle -> Maybe String -> IO ()
 history h mUser = command h $ History mUser
+
+kibitz :: Handle -> GameId -> String -> IO ()
+kibitz h gameId msg = command h $ Kibitz gameId msg
 
 observe :: Handle -> String -> IO ()
 observe h user = command h $ Observe user
@@ -93,6 +95,9 @@ who h = command h Who
 
 withdrawId :: Handle -> Int -> IO ()
 withdrawId h offerId = command h $ Withdraw offerId
+
+whisper :: Handle -> GameId -> String -> IO ()
+whisper h gameId msg = command h $ Whisper gameId msg
 
 
 command :: Handle -> Command -> IO ()

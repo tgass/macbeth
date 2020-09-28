@@ -1,6 +1,7 @@
 module Macbeth.Wx.Chat where
 
 import           Control.Concurrent
+import           Control.Concurrent.STM
 import           Control.Monad
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
@@ -22,18 +23,24 @@ wxChat env chatId msgs chan = do
   f <- frame [ text := show chatId ]
   windowSetFocus f
   p <- panel f []
+ 
+  modeVar <- newTVarIO $ initSpeakMode chatId
 
   ct <- textCtrlEx p (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = env `E.getConfig` C.fontSize}]
   prefill ct msgs
 
   ce <- entry p []
-  set ce [on enterKey := tell ce chatId (E.handle env) chan]
+  set ce [on enterKey := chat ce modeVar chatId (E.handle env) chan]
 
-  set f [layout := minsize (Size 400 200) $ container p $ margin 10 $
-                     column 5 [ fill $ widget ct, hfill $ widget ce]]
+  status <- statusField [ text := show $ initSpeakMode chatId ]
+
+  set f [ statusBar := [status]
+        , layout := minsize (Size 400 200) $ container p $ margin 10 $
+                      column 5 [ fill $ widget ct, hfill $ widget ce]]
 
   windowOnKeyDown p (\evt -> if
     | keyWithMod evt 'W' justControl -> close f
+    | keyWithMod evt 'M' justControl -> toggleSpeakMode status chatId modeVar
     | otherwise -> return ())
 
   threadId <- eventLoop f eventId chan $ \case
@@ -57,17 +64,23 @@ prefill :: TextCtrl () -> [ChatMessage] -> IO ()
 prefill _ [] = return ()
 prefill ct (msg:mx) = showMsg ct msg >> prefill ct mx
 
-tell :: TextCtrl () -> ChatId -> Handle -> Chan Message -> IO ()
-tell ce chatId h chan = do
+chat :: TextCtrl () -> TVar SpeakMode -> ChatId -> Handle -> Chan Message -> IO ()
+chat ce modeVar chatId h chan = do
+  mode <- readTVarIO modeVar
   msg <- get ce text
-  runCommand h chatId msg
+  runCommand chatId mode h msg
   set ce [text := ""]
   writeChan chan $ UserMessage chatId msg
 
-runCommand :: Handle -> ChatId -> String -> IO ()
-runCommand h (ChannelChat cid) msg = Cmds.tellChannel h cid msg
-runCommand h (UserChat username) msg = Cmds.tell h username msg
-runCommand h (GameChat _) msg = Cmds.say h msg
+runCommand :: ChatId -> SpeakMode -> Handle -> String -> IO ()
+runCommand (ChannelChat cid) _ h msg = Cmds.tellChannel h cid msg
+runCommand (UserChat username) _ h msg = Cmds.tell h username msg
+runCommand (GameChat _) SayMode h msg = Cmds.say h msg
+runCommand (GameChat gameId) WhisperMode h msg = Cmds.whisper h gameId msg
+runCommand (GameChat gameId) KibitzMode h msg = Cmds.kibitz h gameId msg
+runCommand (ObservingChat gameId) WhisperMode h msg = Cmds.whisper h gameId msg
+runCommand (ObservingChat gameId) KibitzMode h msg = Cmds.kibitz h gameId msg
+
 
 showMsg :: TextCtrl () -> ChatMessage -> IO ()
 showMsg ct (From username msg) = formatMsg ct blue username msg
@@ -85,4 +98,30 @@ setTextAttr ct fsize color' = do
   (font', _) <- fontCreateFromStyle fontFixed {_fontSize = fsize}
   attr <- textAttrCreate color' white font'
   void $ textCtrlSetDefaultStyle ct attr
+
+
+toggleSpeakMode :: StatusField -> ChatId -> TVar SpeakMode -> IO ()
+toggleSpeakMode st chatId modeVar = do
+  next <- atomically $ do
+    modifyTVar modeVar $ toggle chatId
+    readTVar modeVar
+  set st [text := show next ]
+
+
+toggle :: ChatId -> SpeakMode -> SpeakMode
+toggle (ChannelChat _) _ = TellMode
+toggle (UserChat _) _ = TellMode
+toggle (ObservingChat _) WhisperMode = KibitzMode
+toggle (ObservingChat _) KibitzMode = WhisperMode
+toggle (GameChat _) SayMode = WhisperMode
+toggle (GameChat _) WhisperMode = KibitzMode
+toggle (GameChat _) KibitzMode = SayMode
+
+
+
+initSpeakMode :: ChatId -> SpeakMode
+initSpeakMode (ChannelChat _) = TellMode
+initSpeakMode (UserChat _) = TellMode
+initSpeakMode (ObservingChat _) = WhisperMode
+initSpeakMode (GameChat _) = SayMode
 
