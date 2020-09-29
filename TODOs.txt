@@ -54,23 +54,6 @@ TextMessage "Ambiguous move (nd2).\n"
 
 
 
--- CHANNELS --
-\NAK5\SYN132\SYNSchoon(3): Just want to  say hi, I'm the author of Macbeth..\n(told 8 players in channel 3 \"FICS_programmers\")\n\ETB\n
-TextMessage "\NAK5\SYN132\SYNSchoon(3): Just want to  say hi, I'm the author of Macbeth..\n(told 8 players in channel 3 \"FICS_programmers\")\n\ETB\n"
-
-
-simonv(3): Unfortunately Schoon, there is not yet any Klingon channel on FICS.  But chan 81 (Turkish) should be close enought.  :o)\n
-TextMessage "simonv(3): Unfortunately Schoon, there is not yet any Klingon channel on FICS.  But chan 81 (Turkish) should be close enought.  :o)\n"
-
-\NAK5\SYN132\SYNSchoon(3): @simonv Wait what? :)\n(told 9 players in channel 3 \"FICS_programmers\")\n\ETB\n
-TextMessage "\NAK5\SYN132\SYNSchoon(3): @simonv Wait what? :)\n(told 9 players in channel 3 \"FICS_programmers\")\n\ETB\n"
-
-
-TextMessage "tennischess says: i was fooled by your rating rematch\n"
-
-"tennischess says: i was fooled by your rating rematch\n
-
-
 -- See today's games..
 tell openlib winloss 
 msgs
@@ -81,3 +64,17 @@ TextMessage " 10 ++++ GuestFDQD   ++++ GuestPSRB  [ bu 10   0]   8:18 -  8:29 (3
 TextMessage " 29 ++++ GuestTXTY   ++++ GuestTSZK  [ bu  5   0]   3:04 -  0:16 (11-13) W: 37"
 TextMessage "\ETB"
 
+
+
+--
+integrate chessIO library?
+
+
+Chatting
+- Umlaute encoding
+- whispers macht gamechat auf, obwohl observing?
+- chat entfernen nach game ende?
+- game schließt sich, chat schlietß sich.
+
+whisper after game has ended
+TextMessage "You are not playing or observing a game."

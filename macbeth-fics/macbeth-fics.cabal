@@ -57,7 +57,6 @@ library
     ViewPatterns
   exposed-modules: 
     Macbeth.Fics.Api.Api
-    Macbeth.Fics.Api.Chat
     Macbeth.Fics.Api.Game
     Macbeth.Fics.Api.GameType
     Macbeth.Fics.Api.Move

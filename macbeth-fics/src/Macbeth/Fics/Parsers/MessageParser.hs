@@ -40,6 +40,7 @@ parseMessage = parseOnly $ choice [
   , resumeGameIdUser
 
   , observing
+  , unobserving
   , noSuchGame
   , userNotLoggedIn
 
@@ -117,6 +118,10 @@ resumeGameIdUser = NewGameId
 
 observing :: Parser Message
 observing = Observing <$> ("Game " *> Api.gameId <* ": ") <*> gameParams
+
+
+unobserving :: Parser Message
+unobserving = Unobserving <$> ("Removing game " *> Api.gameId <* " from observation list.")
 
 
 noSuchGame :: Parser Message

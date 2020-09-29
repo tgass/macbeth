@@ -12,9 +12,10 @@ import           Data.Maybe
 import           Data.Ord
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
+import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
-import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Message
+import           Macbeth.Wx.Chat
 import qualified Macbeth.Wx.Commands as Cmds
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.Utils
@@ -63,7 +64,7 @@ wxPlayersList slp h chan = do
       set (history ctxMenu') [on command := Cmds.history h $ Just $ head player]
       set (observe ctxMenu') [on command := Cmds.observe h $ head player]
       set (partner ctxMenu') [on command := Cmds.partner h $ head player]
-      set (chat ctxMenu') [on command := writeChan chan $ OpenChat (UserChat $ head player) ]
+      set (chat ctxMenu') [on command := writeChan chan $ WxChat (UserChat $ head player) ]
       listEventGetPoint evt >>= flip (menuPopup ctxMenuPane) sl)
 
     set slp [ on (menu $ sortByName ctxSortMenu') := sortPlayers sl ctxSortMenu' players ]

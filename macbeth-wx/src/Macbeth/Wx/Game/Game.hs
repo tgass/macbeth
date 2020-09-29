@@ -14,7 +14,6 @@ import           Graphics.UI.WX hiding (when, position, play, point, white, blac
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Fics.Api.Api
-import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Offer
 import qualified Macbeth.Fics.Api.Move as M
 import qualified Macbeth.Fics.Api.Game as G
@@ -89,14 +88,11 @@ wxGame env gameId gameParams isGameUser chan = do
      void $ menuItem ctxMenu [ text := "Offer draw", on command := Cmds.draw h ]
      void $ menuItem ctxMenu [ text := "Resign", on command := Cmds.resign h ]
      menuLine ctxMenu
-     void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ OpenChat $ GameChat gameId ]
-     menuLine ctxMenu
      windowOnMouse p_board True (\point -> Board.onMouseEvent h vBoardState point >> repaint p_board)
 
 
-  unless isGameUser $ do
-    void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ OpenChat $ ObservingChat gameId ]
-    menuLine ctxMenu
+  void $ menuItem ctxMenu [ text := "Chat", on command := writeChan chan $ WxChat (GameChat gameId) ]
+  menuLine ctxMenu
 
   void $ menuItem ctxMenu [ text := "Turn board"
                           , on command := Api.invertPerspective vBoardState >> updateBoardLayoutIO >> void (windowLayout f)
@@ -120,7 +116,7 @@ wxGame env gameId gameParams isGameUser chan = do
     | Utl.onlyKey evt 'K' -> Api.pickUpPieceFromHolding vBoardState Knight >> repaint p_board
     | Utl.onlyKey evt 'R' -> Api.pickUpPieceFromHolding vBoardState Rook >> repaint p_board
     | Utl.onlyKey evt 'P' -> Api.pickUpPieceFromHolding vBoardState Pawn >> repaint p_board
-    | Utl.onlyKey evt 'T' -> writeChan chan $ OpenChat $ GameChat gameId
+    | Utl.onlyKey evt 'T' -> writeChan chan $ WxChat (GameChat gameId) 
     | (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt) -> Api.discardDraggedPiece vBoardState >> repaint p_board
 
     | Utl.onlyKey evt 'N' -> Cmds.decline h

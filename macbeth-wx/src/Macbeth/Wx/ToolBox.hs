@@ -13,7 +13,9 @@ import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Api.Player
+import qualified Macbeth.Fics.Api.Result as R
 import           Macbeth.Wx.Configuration
+import           Macbeth.Wx.Chat
 import           Macbeth.Wx.ChatRegistry
 import qualified Macbeth.Wx.Commands as Cmds
 import           Macbeth.Wx.Finger
@@ -174,13 +176,25 @@ wxToolBox env chan = do
           E.playSound env (S.challenge . S.request)
           dupChan chan >>= wxChallenge h gameParams
 
-        WxObserving gameId gameParams chan -> do
+        WxObserving gameId gameParams msgChan -> do
            E.playSound env (S.newGame . S.game)
-           wxGame env gameId gameParams False chan
+           E.trackObservingGame env gameId
+           wxGame env gameId gameParams False msgChan
 
-        WxGame gameId gameParams chan -> do
+        WxGame gameId gameParams msgChan -> do
            E.playSound env (S.newGame . S.game)
-           wxGame env gameId gameParams True chan
+           E.trackOngoingGame env gameId
+           wxGame env gameId gameParams True msgChan
+ 
+        WxChat chatId -> do
+          isTracked <- env `E.isTrackedChat` chatId
+          unless isTracked $ do
+            env `E.trackChat` chatId
+            dupChan chan >>= wxChat env chatId Nothing
+
+        Unobserving gameId -> E.untrackGame env gameId
+
+        GameResult result -> E.untrackGame env $ R.gameId result
 
         OponentDecline user MatchReq -> set statusMsg [text := user ++ " declines the match offer."]
 
@@ -193,8 +207,6 @@ wxToolBox env chan = do
         TextMessage msg -> appendText ct msg
 
         _ -> return ()
-
-
 
     windowOnClose f $ do
       result <- confirmDialog f "Macbeth" "Do you really want to quit Macbeth?" True

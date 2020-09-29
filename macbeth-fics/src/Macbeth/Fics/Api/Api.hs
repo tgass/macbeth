@@ -71,3 +71,8 @@ getSquare pos p = fst <$> find ((== p) . snd) pos
 invert :: PColor -> PColor
 invert White = Black
 invert Black = White
+
+newtype ChannelId = ChannelId Int deriving (Eq, Ord, Show)
+
+data ChatId = UserChat String | GameChat GameId | ChannelChat ChannelId deriving (Show, Eq, Ord)
+

@@ -2,7 +2,6 @@ module Macbeth.Fics.Commands where
 
 import           Data.Monoid
 import           Macbeth.Fics.Api.Api
-import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.Api.GameType
 import           Macbeth.Fics.Commands.Seek

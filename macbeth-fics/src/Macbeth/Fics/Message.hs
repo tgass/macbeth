@@ -3,7 +3,6 @@ module Macbeth.Fics.Message where
 import           Control.Concurrent.Chan
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
-import           Macbeth.Fics.Api.Chat 
 import           Macbeth.Fics.Api.Game
 import           Macbeth.Fics.Api.Move
 import           Macbeth.Fics.Api.Offer
@@ -19,6 +18,7 @@ data Message =
   | GameResult !Result
 
   | Observing !GameId !GameParams
+  | Unobserving !GameId
   | Game !GameId !GameParams -- | Merged
   | NewGameParams !GameParams -- | interim
   | NewGameId !GameId -- | interim
@@ -76,13 +76,13 @@ data Message =
   | IllegalMove String
   | ConnectionClosed String
 
-  | UserMessage ChatId String
-  | OpenChat ChatId 
-  | CloseChat ChatId 
 
-  | WxClose
+  | WxChat ChatId 
+  | UserMessage ChatId String
   | WxGame GameId GameParams (Chan Message)
-  | WxObserving GameId GameParams (Chan Message) deriving (Show, Eq)
+  | WxObserving GameId GameParams (Chan Message) 
+  | WxClose
+  deriving (Show, Eq)
 
 data ChatStatus = Playing | Busy String deriving (Show, Eq)
 

@@ -2,7 +2,6 @@ module Macbeth.Wx.Commands where
 
 import           Control.Exception
 import           Macbeth.Fics.Api.Api
-import           Macbeth.Fics.Api.Chat
 import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.Api.GameType
 import           Macbeth.Fics.Commands

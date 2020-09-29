@@ -4,7 +4,8 @@
 
 module Macbeth.Wx.RuntimeEnv (
   RuntimeEnv(handle, rtBoardConfig, rtSeekConfig),
-  reConfig, reIsAutoLogin,
+  Tracking(..), untrackChat, trackChat, isTrackedChat, trackOngoingGame, trackObservingGame, untrackGame, isPlaying,
+  reConfig, reIsAutoLogin, tOngoingGame, tObservingGames,
   username,
   setUsername,
   setBoardConfig,
@@ -21,12 +22,15 @@ module Macbeth.Wx.RuntimeEnv (
 ) where
 
 
-import           Control.Lens
 import           Control.Concurrent.STM
+import           Control.Lens
+import           Control.Monad
 import           Data.Char
 import           Data.Maybe
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import           Data.Set (Set)
+import qualified Data.Set as Set
 import           Development.GitRev
 import           Graphics.UI.WX hiding (play, get, when, size)
 import           Macbeth.Fics.Api.Api
@@ -63,9 +67,17 @@ data RuntimeEnv = RuntimeEnv {
   , rtBoardConfig :: TVar BoardConfig
   , rtSeekConfig :: TVar SeekConfig
   , _reIsAutoLogin :: TVar Bool
+  , _reTracking :: TVar Tracking
+}
+
+data Tracking = Tracking {
+    _tOngoingGame :: Maybe GameId
+  , _tObservingGames :: Set GameId
+  , _tChats :: Set ChatId
 }
 
 makeLenses ''RuntimeEnv
+makeLenses ''Tracking
 
 initRuntime :: Handle -> IO RuntimeEnv
 initRuntime h = do
@@ -81,6 +93,7 @@ initRuntime h = do
     <*> (BC.convert (fromMaybe BC.defaultBoardConfig $ UserConfig.boardConfig config) (UserConfig.directory config) >>= newTVarIO)
     <*> (newTVarIO $ UserConfig.getSeekConfig config)
     <*> newTVarIO (config ^. cAutologin)
+    <*> newTVarIO (Tracking Nothing Set.empty Set.empty)
 
 
 username :: RuntimeEnv -> IO Username
@@ -189,6 +202,7 @@ initLogger = do
 getLoginUsername :: RuntimeEnv -> String
 getLoginUsername env = fromMaybe "guest" $ env ^. reConfig ^? cUser . _Just . uUsername
 
+
 getLoginPassword :: RuntimeEnv -> String
 getLoginPassword env = 
   let mPassword = decrypt <$> env ^. reConfig ^? cUser . _Just . uPassword
@@ -198,4 +212,41 @@ getLoginPassword env =
       | any isPrint pw -> pw
       | otherwise -> ""
     Nothing -> ""
+
+
+untrackGame :: RuntimeEnv -> GameId -> IO ()
+untrackGame env gameId = atomically $ do
+  tracking <- readTVar $ env ^. reTracking
+  case tracking ^. tOngoingGame of
+    Just gameId' -> when (gameId' == gameId) $ writeTVar (env ^. reTracking) $ tracking & tOngoingGame .~ Nothing
+    Nothing -> return ()
+  modifyTVar (env ^. reTracking) $ \t -> t & tObservingGames %~ Set.delete gameId
+
+
+trackChat :: RuntimeEnv -> ChatId -> IO ()
+trackChat env chatId = atomically $ modifyTVar (env ^. reTracking) $ \t -> t & tChats %~ Set.insert chatId
+
+
+untrackChat :: RuntimeEnv -> ChatId -> IO ()
+untrackChat env chatId = atomically $ modifyTVar (env ^. reTracking) $ \t -> t & tChats %~ Set.delete chatId
+
+
+isTrackedChat :: RuntimeEnv -> ChatId -> IO Bool
+isTrackedChat env chatId = do
+  tracking <- readTVarIO (env ^. reTracking)
+  return $ Set.member chatId $ tracking ^. tChats
+
+
+trackOngoingGame :: RuntimeEnv -> GameId -> IO ()
+trackOngoingGame env gameId = atomically $ modifyTVar (env ^. reTracking) $ \t -> t & tOngoingGame .~ Just gameId
+
+
+trackObservingGame :: RuntimeEnv -> GameId -> IO ()
+trackObservingGame env gameId = atomically $ modifyTVar (env ^. reTracking) $ \t -> t & tObservingGames %~ Set.insert gameId
+
+
+isPlaying :: RuntimeEnv -> GameId -> IO Bool
+isPlaying env gameId = do
+  tracking <- readTVarIO $ env ^. reTracking
+  return $ maybe False ((==) gameId) $ tracking ^. tOngoingGame
 

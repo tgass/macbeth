@@ -10,7 +10,7 @@ module Macbeth.Fics.Parsers.Chatting (
 import           Control.Applicative
 import           Data.Attoparsec.ByteString.Char8
 import           Macbeth.Fics.Message
-import           Macbeth.Fics.Api.Chat
+import           Macbeth.Fics.Api.Api
 import qualified Macbeth.Fics.Parsers.Api as Api
 import qualified Macbeth.Fics.Parsers.Players as P
 import           Macbeth.Fics.Parsers.RatingParser

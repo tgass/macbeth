@@ -17,7 +17,6 @@ data Result = Result {
 toString :: Result -> String
 toString r = show (result r) ++ " " ++ reason r
 
-
 data GameResult = WhiteWins | BlackWins | Draw | Aborted deriving (Eq)
 
 instance Show GameResult where
