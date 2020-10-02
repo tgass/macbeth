@@ -2,6 +2,8 @@
 -- wenn game chat fertig , dann switch to user chat
 -- board labels wenn schwarz sitzt falsch
 -- board verschwindet wenn ganz klein
+   -- garantee minimum board size
+   -- garantee windows is completely filled with the board
 -- flixxG : name wird nicht korrekt angezeigt, abschnitten
 -- uhr blinkt! 
 

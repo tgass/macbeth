@@ -196,7 +196,7 @@ wxGame env gameId gameParams isGameUser chan = do
 resizeFrame :: Frame () -> TVar Api.BoardState -> IO ()
 resizeFrame f vBoardState = do
   (Size w h) <- windowGetClientSize f
-  let newBoardSize = min w (h - windowResizeMargin)
+  let newBoardSize = max UserConfig.minBoardSize $ min w (h - windowResizeMargin)
   Api.resize vBoardState newBoardSize
 #ifdef darwin_HOST_OS
   windowSetClientSize f $ Size newBoardSize (newBoardSize+windowResizeMargin)

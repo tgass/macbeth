@@ -22,8 +22,8 @@ main = withProgNameAndArgs runALUTUsingCurrentContext $ \_ _ -> do
   start $ do
     env <- initRuntime stdout
     setUsername env $ UserHandle "foo" []
-    wxToolBox env chan
---    wxGame env (GameId 1) defaultGameParams chan
+--    wxToolBox env chan
+    wxGame env (GameId 1) defaultGameParams True chan
   
 defaultGameParams :: G.GameParams
 defaultGameParams = G.GameParams "foo" Unrated "bar" Unrated True "hmm" 60 1

@@ -98,8 +98,8 @@ setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardCon
     -- second: set tiles in case only they are missing
     boardConfig'' = (\b -> b{ whiteTile = whiteTile b <|> Just defaultWhiteTile
                             , blackTile = blackTile b <|> Just defaultBlackTile 
-                            , boardSize = boardSize b <|> Just defaultBoardSize
                             , pieceSet = pieceSet b <|> Just defaultPieceSet
+                            , boardSize = (max minBoardSize <$> boardSize b) <|> Just defaultBoardSize
                             }) <$> boardConfig'
 
     seekConfig' = fmap SeekConfig.setDefault (seekConfig c) <|> Just SeekConfig.defaultFormat
@@ -143,3 +143,6 @@ defaultConfig dir = Config {
 getSeekConfig :: Config -> SeekConfig
 getSeekConfig config = SeekConfig.convert $ fromMaybe SeekConfig.defaultFormat $ seekConfig config
 
+
+minBoardSize :: Int
+minBoardSize = 220
