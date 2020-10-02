@@ -25,7 +25,7 @@ custom-setup
    , directory
 
 executable Macbeth
-  main-is: src/DebugRunner.hs
+  main-is: src/Macbeth.hs
   other-modules: Paths_macbeth_bin
   build-depends: ALUT, base, macbeth-fics, macbeth-wx, filepath, wx
   ghc-options: -O2 -threaded -W

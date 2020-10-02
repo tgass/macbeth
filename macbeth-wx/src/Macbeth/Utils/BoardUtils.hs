@@ -26,12 +26,12 @@ toPos' size' (Square c r) color' = point (colToInt color' c * size') (rowToInt c
 toPosLabelRow :: Int -> Square -> PColor -> Point
 toPosLabelRow size (Square col row) color = point x y
   where x = (colToInt color col * size) + size - 8
-        y = (rowToInt color row * size) + 2
+        y = (rowToInt color row * size)
 
 toPosLabelCol :: Int -> Square -> PColor -> Point
 toPosLabelCol size (Square col row) color = point x y
   where x = (colToInt color col * size) + 2
-        y = (rowToInt color row * size) + size - 8 - 3
+        y = (rowToInt color row * size) + size - 8 - 5
 
 squareToPoint :: Int -> Square -> PColor -> Point
 squareToPoint size sq color = rectCentralPoint $ squareToRect' size sq color

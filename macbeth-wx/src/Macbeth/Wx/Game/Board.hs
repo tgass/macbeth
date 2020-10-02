@@ -173,20 +173,21 @@ paintCircle dc state sq scale = circle dc pt (floor $ scale * fromIntegral (squa
 
 
 paintLabelsRow :: DC a -> BoardState -> Row -> IO ()
-paintLabelsRow dc state row = 
-  dcWithFontStyle dc fontSmall $ do
-    let square = Square H row
+paintLabelsRow dc state row =
+  dcWithFontStyle dc fs $ do
+    let square = if perspective state == White then Square H row else Square A row
         color = toSolidColorReverse square $ moveColor $ highlightConfig $ boardConfig state
         pt = toPosLabelRow (squareSizePx state) square (perspective state)
         text = show $ succ $ fromEnum row
     dcSetTextForeground dc color
     drawText dc text pt []
 
+fs = fontDefault{ _fontSize = 10, _fontWeight = WeightBold }
 
 paintLabelsCol :: DC a -> BoardState -> Column -> IO ()
-paintLabelsCol dc state col = 
-  dcWithFontStyle dc fontSmall $ do
-    let square = Square col One
+paintLabelsCol dc state col =
+  dcWithFontStyle dc fs $ do
+    let square = if perspective state == White then Square col One else Square col Eight
         color = toSolidColorReverse square $ moveColor $ highlightConfig $ boardConfig state
         pt = toPosLabelCol (squareSizePx state) square (perspective state)
         text = show col
