@@ -3,7 +3,6 @@ Accept/ Decline: Position accept button right (und Farbe für ok button?)
 
 Macbeth schließen mit Apfel-Q, Apfel-W
 
-
 performance analyse: ALUT Device open anschauen
 
 use Bye/Quit command to logout properly
@@ -56,13 +55,6 @@ TextMessage "Ambiguous move (nd2).\n"
 
 -- See today's games..
 tell openlib winloss 
-msgs
-
--- primary
-\NAK5\SYN91\SYN 10 ++++ GuestFDQD   ++++ GuestPSRB  [ bu 10   0]   8:18 -  8:29 (31-31) W: 15\n 29 ++++ GuestTXTY   ++++ GuestTSZK  [ bu  5   0]   3:04 -  0:16 (11-13) W: 37\n\ETB\n
-TextMessage " 10 ++++ GuestFDQD   ++++ GuestPSRB  [ bu 10   0]   8:18 -  8:29 (31-31) W: 15"
-TextMessage " 29 ++++ GuestTXTY   ++++ GuestTSZK  [ bu  5   0]   3:04 -  0:16 (11-13) W: 37"
-TextMessage "\ETB"
 
 
 
@@ -71,10 +63,7 @@ integrate chessIO library?
 
 
 Chatting
-- Umlaute encoding
-- whispers macht gamechat auf, obwohl observing?
 - chat entfernen nach game ende?
 - game schließt sich, chat schlietß sich.
 
 whisper after game has ended
-TextMessage "You are not playing or observing a game."

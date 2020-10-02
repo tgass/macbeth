@@ -1,5 +1,6 @@
 module MessageSpec (spec) where
 
+import Macbeth.Fics.Api.Api
 import Macbeth.Fics.Message
 import Macbeth.Fics.Parsers.MessageParser
 import Test.Hspec

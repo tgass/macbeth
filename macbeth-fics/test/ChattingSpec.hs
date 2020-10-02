@@ -2,7 +2,6 @@ module ChattingSpec where
 
 import Macbeth.Fics.Message
 import Macbeth.Fics.Api.Api
-import Macbeth.Fics.Api.Chat
 import Macbeth.Fics.Api.Player
 import Macbeth.Fics.Api.Rating
 import Macbeth.Fics.Parsers.MessageParser
