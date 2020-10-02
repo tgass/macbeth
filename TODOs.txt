@@ -1,3 +1,17 @@
+-- chat title more beautiful
+-- wenn game chat fertig , dann switch to user chat
+-- board labels wenn schwarz sitzt falsch
+-- board verschwindet wenn ganz klein
+-- flixxG : name wird nicht korrekt angezeigt, abschnitten
+-- uhr blinkt! 
+
+
+Ignoring (formula): FlixxG (----) Schoon (----) unrated atomic 5 0.\n
+TextMessage "Ignoring (formula): FlixxG (----) Schoon (----) unrated atomic 5 0.\n"
+
+
+
+
 Login Screen: Position quit button left
 Accept/ Decline: Position accept button right (und Farbe für ok button?)
 

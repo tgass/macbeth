@@ -18,7 +18,7 @@ emptyStored :: Parser [Stored]
 emptyStored = "Schoon has no adjourned games." *> pure []
 
 manyStored :: Parser [Stored]
-manyStored = "\nStored games for Schoon:\n    C Opponent       On Type          Str  M    ECO Date\n" *> sepBy single (char '\n') 
+manyStored = "\nStored games for " *> many1 letter_ascii *> ":\n    C Opponent       On Type          Str  M    ECO Date\n" *> sepBy single (char '\n') 
 
 single :: Parser Stored 
 single = do

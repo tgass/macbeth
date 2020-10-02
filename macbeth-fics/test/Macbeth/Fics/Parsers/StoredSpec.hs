@@ -12,6 +12,7 @@ spec :: Spec
 spec =
   describe "Parsing stored games" $ do
     it "Parsing a single stored game" $ parseOnly Stored.single stored `shouldBe` Right (Stored 1 White "TheDane" False "br  2  12" "0-0" "B2" "???" "Sun Nov 23,  6:14 CST 1997")
+    it "Parsing a empty list of stored games" $ parseOnly Stored.stored flixxG `shouldBe` Right [Stored {sId = 1, sColor = White, sOponent = "Schoon", sOn = True, sType = "su 15   0", sStrength = "39-39", sNext = "B5", sECO = "D00", sDate = "Fri Oct  2, 09:49 EDT 2020"}]
     it "Parsing a list of stored games" $ parseOnly Stored.parser storedList `shouldBe` parsedList
     it "Parsing a empty list of stored games" $ parseOnly Stored.parser emptyList `shouldBe` Right (StoredGames [])
 
@@ -32,3 +33,9 @@ parsedList = Right $ StoredGames
 
 emptyList :: ByteString
 emptyList = "\NAK6\SYN127\SYNSchoon has no adjourned games.\n\ETB\n"
+
+
+
+flixxG :: ByteString
+flixxG = "\nStored games for FlixxG:\n    C Opponent       On Type          Str  M    ECO Date\n 1: W Schoon          Y [ su 15   0] 39-39 B5   D00 Fri Oct  2, 09:49 EDT 2020\n"
+
