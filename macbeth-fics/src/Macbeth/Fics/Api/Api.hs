@@ -72,7 +72,19 @@ invert :: PColor -> PColor
 invert White = Black
 invert Black = White
 
-newtype ChannelId = ChannelId Int deriving (Eq, Ord, Show)
 
-data ChatId = UserChat String | GameChat GameId | ChannelChat ChannelId deriving (Show, Eq, Ord)
+newtype ChannelId = ChannelId Int deriving (Eq, Ord)
+
+
+data ChatId = UserChat String | GameChat GameId | ChannelChat ChannelId deriving (Eq, Ord)
+
+
+instance Show ChatId where
+  show (UserChat username) = username
+  show (GameChat gameId) = "Game " <> show gameId
+  show (ChannelChat channelId) = "Channel " <> show channelId
+
+
+instance Show ChannelId where
+  show (ChannelId cid) = show cid
 

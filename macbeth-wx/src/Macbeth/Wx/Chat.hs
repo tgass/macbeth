@@ -5,13 +5,14 @@ module Macbeth.Wx.Chat (
 
 import           Control.Concurrent
 import           Control.Concurrent.STM
-import           Control.Lens hiding (set)
 import           Control.Monad
+import           Data.Monoid
 import           Graphics.UI.WX hiding (when, next)
 import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Message hiding (gameId)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player hiding (handle)
+import qualified Macbeth.Fics.Api.Result as R
 import qualified Macbeth.Wx.Commands as Cmds
 import qualified Macbeth.Wx.Config.UserConfig as C
 import           Macbeth.Wx.Utils
@@ -74,6 +75,8 @@ wxChat env chatId mMsg chan = do
 
     Kibitzes (UserHandle username _) rating gameId msg -> when (GameChat gameId == chatId) $ showReceiving ct $ Receiving username msg
 
+    GameResult result -> when (GameChat (R.gameId result) == chatId) $ showSystemMsg ct $ "--- Game " <> show (R.gameId result) <> " has ended. ---"
+
     WxClose -> close f
 
     _ -> return ()
@@ -89,7 +92,7 @@ message ce ct modeVar chatId h chan = do
   msg <- get ce text
   runCommand chatId mode h msg
   set ce [text := ""]
-  showMessage ct black "Me" msg
+  showMessage ct black (Just "Me") msg
 
 
 runCommand :: ChatId -> SpeakMode -> Handle -> String -> IO ()
@@ -101,16 +104,20 @@ runCommand (GameChat gameId) KibitzMode h msg = Cmds.kibitz h gameId msg
 runCommand _ _ _ _= return ()
 
 
-showMessage :: TextCtrl () -> Color -> String -> String -> IO ()
-showMessage ct color speaker msg = do
+showReceiving :: TextCtrl () -> Receiving -> IO ()
+showReceiving ct (Receiving username msg) = showMessage ct blue (Just username) msg
+
+
+showSystemMsg :: TextCtrl () -> String -> IO ()
+showSystemMsg ct msg = showMessage ct red Nothing msg
+
+
+showMessage :: TextCtrl () -> Color -> Maybe String -> String -> IO ()
+showMessage ct color mSpeaker msg = do
   (font', _) <- fontCreateFromStyle fontFixed {_fontSize = 12}
   attr <- textAttrCreate color white font'
   void $ textCtrlSetDefaultStyle ct attr
-  appendText ct $ speaker ++ ": " ++ msg ++ "\n"
-
-
-showReceiving :: TextCtrl () -> Receiving -> IO ()
-showReceiving ct (Receiving username msg) = showMessage ct blue username msg
+  appendText ct $ (maybe "" (++ ": ") mSpeaker) ++ msg ++ "\n"
 
 
 toggleSpeakMode :: StatusField -> TVar [SpeakMode] -> IO ()
