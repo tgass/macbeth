@@ -60,12 +60,7 @@ parseMessage = parseOnly $ choice [
   , P.partnerAccepted
   , P.partnerDeclined
 
-  , Chatting.says
-  , Chatting.tell
-  , Chatting.channelTell
-  , Chatting.kibitzes
-  , Chatting.whispers
-  , Chatting.told
+  , Chatting.parser
 
   , pending
   , pendingRemoved

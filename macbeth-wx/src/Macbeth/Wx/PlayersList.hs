@@ -15,7 +15,6 @@ import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Message
-import           Macbeth.Wx.Chat
 import qualified Macbeth.Wx.Commands as Cmds
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.Utils

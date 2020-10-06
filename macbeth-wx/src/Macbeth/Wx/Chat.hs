@@ -77,6 +77,11 @@ wxChat env chatId mMsg chan = do
 
     GameResult result -> when (GameChat (R.gameId result) == chatId) $ showSystemMsg ct $ "--- Game " <> show (R.gameId result) <> " has ended. ---"
 
+
+    IllegalWhisper Nothing -> showSystemMsg ct $ "You are not playing or observing a game."
+
+    IllegalWhisper (Just gameId) -> when (GameChat gameId == chatId) $ showSystemMsg ct $ "You are not observing game " <> show gameId <> "."
+
     WxClose -> close f
 
     _ -> return ()

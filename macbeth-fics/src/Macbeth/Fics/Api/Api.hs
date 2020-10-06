@@ -2,6 +2,7 @@ module Macbeth.Fics.Api.Api where
 
 import Data.Char
 import Data.List
+import Data.Monoid
 
 data Column = A | B | C | D | E | F | G | H deriving (Show, Enum, Bounded, Eq)
 

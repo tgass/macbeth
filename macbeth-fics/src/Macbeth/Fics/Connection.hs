@@ -25,7 +25,7 @@ import           Data.Conduit.List hiding (filter)
 import           Data.Conduit.Process
 import           Data.Maybe
 import           GHC.Show (showLitString)
-import           Macbeth.Fics.Message hiding (gameId)
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Game
 import           Macbeth.Fics.Parsers.MessageParser

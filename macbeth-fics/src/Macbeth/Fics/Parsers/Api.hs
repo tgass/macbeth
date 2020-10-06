@@ -3,24 +3,24 @@ module Macbeth.Fics.Parsers.Api (
   gameId
 ) where
 
-import qualified Macbeth.Fics.Api.Api as Api
-
-import Data.Attoparsec.ByteString.Char8
-import Data.Char
+import           Control.Monad
+import           Data.Attoparsec.ByteString.Char8
+import           Data.Char
 import qualified Data.ByteString.Char8 as BS
+import           Macbeth.Fics.Api.Api
 
-gameId :: Parser Api.GameId
-gameId = Api.GameId <$> decimal
+gameId :: Parser GameId
+gameId = GameId <$> decimal
 
 data CommandHead = CommandHead Int deriving (Show)
 
 commandHead :: Int -> Parser CommandHead
 commandHead code = do
-  _ <- char $ chr 21
-  id' <- decimal
-  _ <- char $ chr 22
-  _ <- string $ BS.pack $ show code
-  _ <- char $ chr 22
-  return $ CommandHead id'
+  void $ char $ chr 21
+  commandId <- decimal
+  void $ char $ chr 22
+  void $ string $ BS.pack $ show code
+  void $ char $ chr 22
+  return $ CommandHead commandId
 
 

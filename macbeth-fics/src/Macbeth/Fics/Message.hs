@@ -14,7 +14,7 @@ import           Macbeth.Fics.Api.Stored
 
 data Message =
     GameMove { context :: !MoveModifier, move :: !Move }
-  | PieceHolding { gameId :: !GameId, phWhite :: ![Piece], phBlack :: ![Piece] }
+  | PieceHolding { phGameId :: !GameId, phWhite :: ![Piece], phBlack :: ![Piece] }
   | GameResult !Result
 
   | Observing !GameId !GameParams
@@ -59,6 +59,8 @@ data Message =
   | Whispers UserHandle Rating GameId String
   | Kibitzes UserHandle Rating GameId String
   | Told UserHandle (Maybe ChatStatus)
+  | IllegalWhisper (Maybe GameId)
+  | IllegalSay
 
   | LoginPrompt
   | LoginTimeout

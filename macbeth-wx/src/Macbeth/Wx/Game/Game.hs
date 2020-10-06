@@ -12,7 +12,7 @@ import           Data.Maybe
 import qualified Data.MultiSet as MultiSet
 import           Graphics.UI.WX hiding (when, position, play, point, white, black)
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
-import           Macbeth.Fics.Message hiding (gameId)
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Offer
 import qualified Macbeth.Fics.Api.Move as M

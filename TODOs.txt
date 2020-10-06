@@ -1,12 +1,9 @@
--- wenn game chat fertig , dann switch to user chat
 -- flixxG : name wird nicht korrekt angezeigt, abschnitten
 -- uhr blinkt! 
 
 
 Ignoring (formula): FlixxG (----) Schoon (----) unrated atomic 5 0.\n
 TextMessage "Ignoring (formula): FlixxG (----) Schoon (----) unrated atomic 5 0.\n"
-
-
 
 
 Login Screen: Position quit button left
@@ -73,8 +70,21 @@ tell openlib winloss
 integrate chessIO library?
 
 
-Chatting
+--CHAT
 - chat entfernen nach game ende?
-- game schließt sich, chat schlietß sich.
+- game schließt sich, chat schlietß sich?
+-- wenn game chat fertig , dann switch to user chat
 
-whisper after game has ended
+-- Solved: whisper after game has ended: "you are not playing or obserivng ..." -> IllegalGameMsg
+
+\NAK6\SYN151\SYNYou are not observing game 5.\n\ETB\n
+TextMessage "You are not observing game 5."
+
+\NAK6\SYN107\SYN(told Ubuntero, who is playing)\n\ETB\n
+Told (UserHandle {name = "Ubuntero", handleType = []}) (Just Playing)
+
+
+\NAK6\SYN107\SYNI don't know who to say that to.\n\ETB\n
+TextMessage "\NAK6\SYN107\SYNI don't know who to say that to.\n\ETB\n"
+
+
