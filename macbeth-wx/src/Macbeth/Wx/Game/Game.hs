@@ -65,8 +65,8 @@ wxGame env gameId gameParams isGameUser chan = do
   vBoardState <- newTVarIO boardState
 
   -- player panels
-  (p_white, updateClockW) <- wxStatusPanel p_back White vBoardState
-  (p_black, updateClockB) <- wxStatusPanel p_back Black vBoardState
+  (p_white, updateClockW) <- wxStatusPanel p_back White gameParams vBoardState
+  (p_black, updateClockB) <- wxStatusPanel p_back Black gameParams vBoardState
 
   p_board <- panel p_back [ on paint := Board.draw vBoardState ]
 

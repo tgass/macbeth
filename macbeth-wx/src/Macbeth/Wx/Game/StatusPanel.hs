@@ -7,7 +7,7 @@ module Macbeth.Wx.Game.StatusPanel (
 import           Control.Concurrent.STM
 import           Control.Monad
 import           Graphics.UI.WX hiding (when, position, color, pt)
-import           Macbeth.Fics.Message hiding (gameId, Observing)
+import           Macbeth.Fics.Message hiding (Observing)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Move
 import           Macbeth.Fics.Api.Game
@@ -21,8 +21,8 @@ import           Macbeth.Wx.Utils
 import           Macbeth.Wx.RuntimeEnv
 
 
-wxStatusPanel :: Panel () -> PColor -> TVar BoardState ->  IO (Panel (), Message -> IO ())
-wxStatusPanel p color vBoardState = do
+wxStatusPanel :: Panel () -> PColor -> GameParams -> TVar BoardState ->  IO (Panel (), Message -> IO ())
+wxStatusPanel p color gameParams vBoardState = do
   initMove <- lastMove <$> readTVarIO vBoardState
   p_status <- panel p []
   timeVar <- newTVarIO $ remainingTime color initMove
@@ -33,7 +33,11 @@ wxStatusPanel p color vBoardState = do
                        , enabled := isActive initMove color]
 
   p_color <- panel p_status [bgcolor := toWxColor color]
-  st_playerName <- staticText p_status [ text := namePlayer color initMove, fontSize := 20 ]
+  st_playerName <- staticText p_status [ 
+      text := namePlayer color initMove
+    , fontSize := 20
+    , tooltip := if color == White then show (ratingW gameParams) else show (ratingB gameParams)
+    ]
   p_pieceHoldings <- panel p_status [on paint := paintPieceHolding color vBoardState ]
 
   set p_status [ layout := row 10 [ margin 1 $ minsize (Size 18 18) $ widget p_color
