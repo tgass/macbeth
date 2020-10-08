@@ -4,11 +4,6 @@ packages:
 - './macbeth-fics'
 - './macbeth-wx'
 - './macbeth-bin'
-  # - location:
-  #     commit: 823cc98df6cad86ed06db678370e647b71c04504 
-  #     subdirs: 
-  #       - wxcore
-  #   extra-dep: true
 
 explicit-setup-deps:
     "*": true
