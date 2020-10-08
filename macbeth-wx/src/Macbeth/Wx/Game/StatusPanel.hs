@@ -24,13 +24,15 @@ import           Macbeth.Wx.RuntimeEnv
 wxStatusPanel :: Panel () -> PColor -> GameParams -> TVar BoardState ->  IO (Panel (), Message -> IO ())
 wxStatusPanel p color gameParams vBoardState = do
   initMove <- lastMove <$> readTVarIO vBoardState
-  p_status <- panel p []
-  timeVar <- newTVarIO $ remainingTime color initMove
+  let initTime = remainingTime color initMove
 
-  st <- staticText  p_status [ text := formatTime $ remainingTime color initMove, fontSize := 20 ]
+  p_status <- panel p []
+  timeVar <- newTVarIO initTime
+
+  st <- staticText  p_status [ text := formatTime initTime, fontSize := 20 ]
   tx <- timer p_status [ interval := 1000
-                       , on command := updateTime timeVar st
-                       , enabled := isActive initMove color]
+                       , on command := clock timeVar >> updateTime st timeVar
+                       , enabled := isActive initMove color ]
 
   p_color <- panel p_status [bgcolor := toWxColor color]
   st_playerName <- staticText p_status [ 
@@ -44,14 +46,16 @@ wxStatusPanel p color gameParams vBoardState = do
                                   , widget st
                                   , widget st_playerName
                                   , minsize (Size 30 30) $ fill $ widget p_pieceHoldings] ]
+  refit st_playerName
 
   let handler = \case
 
         GameMove _ move -> when (gameId move == gameId initMove) $ do
-          let remainingTime' = remainingTime color move
-          void $ atomically $ swapTVar timeVar remainingTime'
-          set st [text := formatTime remainingTime']
-          set tx [enabled := isActive move color]
+          let rt = remainingTime color move
+          void $ atomically $ swapTVar timeVar rt
+          updateTime st timeVar
+          set tx [ enabled := isActive move color]
+          refit st
 
         GameResult result -> when (R.gameId result == gameId initMove) $ set tx [enabled := False]
 
@@ -104,10 +108,14 @@ setOffset state pt@(Point x y)
   | otherwise = Point (x + 13) y
 
 
-updateTime :: TVar Int -> StaticText () -> IO ()
-updateTime timeVar st = do
-  time <- atomically $ modifyTVar timeVar pred >> readTVar timeVar
+updateTime :: StaticText () -> TVar Int -> IO ()
+updateTime st timeVar = do
+  time <- readTVarIO timeVar
   set st [text := formatTime time]
+
+
+clock :: TVar Int -> IO ()
+clock timeVar = atomically $ modifyTVar timeVar pred 
 
 
 isActive :: Move -> PColor -> Bool
