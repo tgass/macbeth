@@ -5,12 +5,12 @@ module Macbeth.Wx.Pending (
 import           Control.Concurrent.STM
 import           Graphics.UI.WX
 import           Graphics.UI.WXCore
-import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Offer
 import           Macbeth.Fics.Api.Player
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Fics.Message
 import           Macbeth.Wx.Utils
-import qualified Macbeth.Wx.Commands as Cmds
-import           System.IO
+import           Macbeth.Wx.RuntimeEnv
 
 
 data PendingActions =
@@ -18,9 +18,9 @@ data PendingActions =
   | PendingFrom { _withdraw :: MenuItem () }
 
 
-wxPending :: Handle -> Panel () -> IO (Panel (), Message -> IO ())
-wxPending h p' = do
-  p <- panel p' []
+wxPending :: RuntimeEnv -> Panel () -> IO (Panel (), Message -> IO ())
+wxPending env parentPanel = do
+  p <- panel parentPanel []
   stFrom <- staticText p [ text := "Offers from other players:", fontSize := 12]
   lcFrom  <- listCtrl p [ columns := [
         ("#", AlignLeft, -1)
@@ -46,8 +46,8 @@ wxPending h p' = do
                              , hfill $ widget stTo
                              , fill $ widget lcTo]]
 
-  listItemRightClickEvent lcFrom (ctxMenuHandler h lcFrom From)
-  listItemRightClickEvent lcTo (ctxMenuHandler h lcTo To)
+  listItemRightClickEvent lcFrom (ctxMenuHandler env lcFrom From)
+  listItemRightClickEvent lcTo (ctxMenuHandler env lcTo To)
 
   let handler cmd = case cmd of
 
@@ -72,22 +72,22 @@ toList :: PendingOffer -> [String]
 toList (PendingOffer _ id' userHandle offerType' details') = [show id', name userHandle, offerType', show details']
 
 
-ctxMenuHandler :: Handle -> ListCtrl () -> Origin -> Graphics.UI.WXCore.ListEvent () -> IO ()
-ctxMenuHandler h listCtrl' origin' evt = do
+ctxMenuHandler :: RuntimeEnv -> ListCtrl () -> Origin -> Graphics.UI.WXCore.ListEvent () -> IO ()
+ctxMenuHandler env listCtrl' origin' evt = do
   ctxMenu <- menuPane []
   idx <- listEventGetIndex evt
   offerid <- (read . head . (!! idx)) <$> get listCtrl' items
-  _ <- (if origin' == To then menuPendingTo else menuPendingFrom) ctxMenu h offerid
+  _ <- (if origin' == To then menuPendingTo else menuPendingFrom) ctxMenu env offerid
   when (idx >= 0) $ listEventGetPoint evt >>= flip (menuPopup ctxMenu) listCtrl'
 
 
-menuPendingFrom :: Menu () -> Handle -> Int -> IO PendingActions
-menuPendingFrom ctxMenu h offerid = PendingTo
-  <$> menuItem ctxMenu [ text := "Accept", on command := Cmds.acceptId h offerid]
-  <*> menuItem ctxMenu [ text := "Decline", on command := Cmds.declineId h offerid]
+menuPendingFrom :: Menu () -> RuntimeEnv -> Int -> IO PendingActions
+menuPendingFrom ctxMenu env offerid = PendingTo
+  <$> menuItem ctxMenu [ text := "Accept", on command := Cmds.acceptId env offerid]
+  <*> menuItem ctxMenu [ text := "Decline", on command := Cmds.declineId env offerid]
 
 
-menuPendingTo :: Menu () -> Handle -> Int -> IO PendingActions
-menuPendingTo ctxMenu h offerid = PendingFrom
-  <$> menuItem ctxMenu [ text := "Withdraw", on command := Cmds.withdrawId h offerid]
+menuPendingTo :: Menu () -> RuntimeEnv -> Int -> IO PendingActions
+menuPendingTo ctxMenu env offerid = PendingFrom
+  <$> menuItem ctxMenu [ text := "Withdraw", on command := Cmds.withdrawId env offerid]
 

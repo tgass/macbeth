@@ -16,7 +16,6 @@ import           Macbeth.Utils.BoardUtils
 import           Macbeth.Wx.Config.BoardConfig
 import           Macbeth.Wx.Game.BoardState
 import           Macbeth.Wx.RuntimeEnv
-import           System.IO
 
 type BoardT a = ReaderT (DC a, BoardState) IO ()
 
@@ -195,18 +194,18 @@ paintLabelsCol dc state col =
     drawText dc text pt []
 
 
-onMouseEvent :: Handle -> Var BoardState -> EventMouse -> IO ()
-onMouseEvent h vState = \case
+onMouseEvent :: Var BoardState -> EventMouse -> IO ()
+onMouseEvent vState = \case
 
     MouseMotion pt _ -> updateMousePosition vState pt
 
     MouseLeftDown pt _ -> do
       dp <- draggedPiece <$> readTVarIO vState
       case dp of
-        (Just _) -> dropDraggedPiece vState h pt -- if draggedPiece is from holding
+        (Just _) -> dropDraggedPiece vState pt -- if draggedPiece is from holding
         Nothing -> pickUpPieceFromBoard vState pt
 
-    MouseLeftUp click_pt _ -> dropDraggedPiece vState h click_pt
+    MouseLeftUp click_pt _ -> dropDraggedPiece vState click_pt
 
     MouseLeftDrag pt _ -> updateMousePosition vState pt
 

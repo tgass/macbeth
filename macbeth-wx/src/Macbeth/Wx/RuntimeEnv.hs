@@ -34,7 +34,8 @@ import qualified Data.Set as Set
 import           Development.GitRev
 import           Graphics.UI.WX hiding (play, get, when, size)
 import           Macbeth.Fics.Api.Api
-import           Macbeth.Fics.Api.Player
+import           Macbeth.Fics.Api.Player hiding (handle)
+import           Macbeth.Fics.Commands (HasHandle(..))
 import           Macbeth.Fics.Commands.Seek (SeekConfig)
 import           Macbeth.Utils.Utils
 import           Macbeth.Wx.Config.UserConfig (Config (..), uUsername, uPassword, cUser, cAutologin)
@@ -59,6 +60,7 @@ import           System.Log.Handler.Syslog
 
 data RuntimeEnv = RuntimeEnv {
     handle :: Handle
+  , nxtCommandId :: TVar Int
   , _reConfig :: Config
   , sources :: [Source]
   , pieceBitmapMap :: !(Map (PieceSet, Piece, Int) (Bitmap ()))
@@ -69,6 +71,15 @@ data RuntimeEnv = RuntimeEnv {
   , _reIsAutoLogin :: TVar Bool
   , _reTracking :: TVar Tracking
 }
+
+instance HasHandle RuntimeEnv where
+  getHandle = handle
+  getCommandId env = do
+    nxt <- readTVarIO $ nxtCommandId env
+    atomically $ modifyTVar (nxtCommandId env) $ \i -> 
+      if i == 10 then 1 else succ i
+    return nxt
+
 
 data Tracking = Tracking {
     _tOngoingGame :: Maybe GameId
@@ -85,6 +96,7 @@ initRuntime h = do
   config <- UserConfig.initConfig
   RuntimeEnv 
     <$> pure h 
+    <*> newTVarIO 1
     <*> pure config
     <*> initSources 
     <*> initPieceBitmaps

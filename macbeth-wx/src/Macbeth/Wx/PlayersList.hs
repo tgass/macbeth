@@ -15,10 +15,9 @@ import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Message
-import qualified Macbeth.Wx.Commands as Cmds
+import qualified Macbeth.Fics.Commands as Cmds
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.Utils
-import           System.IO
 
 
 data CtxMenu = CtxMenu {
@@ -38,8 +37,8 @@ data CtxSortMenu = CtxSortMenu {
 }
 
 
-wxPlayersList :: Panel () -> Handle -> Chan Message -> IO (ListCtrl (), Message -> IO ())
-wxPlayersList slp h chan = do
+wxPlayersList :: Panel () -> E.RuntimeEnv -> Chan Message -> IO (ListCtrl (), Message -> IO ())
+wxPlayersList slp env chan = do
     players <-newTVarIO ([] :: [Player])
     sl <- listCtrl slp [columns := [
         ("Handle", AlignLeft, -1)
@@ -58,11 +57,11 @@ wxPlayersList slp h chan = do
 
     listItemRightClickEvent sl (\evt -> do
       player <- listEventGetIndex evt >>= get sl . item
-      set (match ctxMenu') [on command := Cmds.match h $ head player]
-      set (finger ctxMenu') [on command := Cmds.finger h $ Just $ head player]
-      set (history ctxMenu') [on command := Cmds.history h $ Just $ head player]
-      set (observe ctxMenu') [on command := Cmds.observe h $ head player]
-      set (partner ctxMenu') [on command := Cmds.partner h $ head player]
+      set (match ctxMenu') [on command := Cmds.match env $ head player]
+      set (finger ctxMenu') [on command := Cmds.finger env $ Just $ head player]
+      set (history ctxMenu') [on command := Cmds.history env $ Just $ head player]
+      set (observe ctxMenu') [on command := Cmds.observe env $ head player]
+      set (partner ctxMenu') [on command := Cmds.partner env $ head player]
       set (chat ctxMenu') [on command := writeChan chan $ WxChat (UserChat $ head player) ]
       listEventGetPoint evt >>= flip (menuPopup ctxMenuPane) sl)
 

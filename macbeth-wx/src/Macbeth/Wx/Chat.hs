@@ -9,11 +9,11 @@ import           Control.Monad
 import           Data.Monoid
 import           Graphics.UI.WX hiding (when, next)
 import           Graphics.UI.WXCore hiding (when)
-import           Macbeth.Fics.Message hiding (gameId)
+import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player hiding (handle)
 import qualified Macbeth.Fics.Api.Result as R
-import qualified Macbeth.Wx.Commands as Cmds
+import qualified Macbeth.Fics.Commands as Cmds
 import qualified Macbeth.Wx.Config.UserConfig as C
 import           Macbeth.Wx.Utils
 import           Macbeth.Wx.RuntimeEnv (RuntimeEnv)
@@ -40,7 +40,7 @@ wxChat env chatId mMsg chan = do
   maybe (return ()) (showReceiving ct) mMsg
 
   ce <- entry p []
-  set ce [on enterKey := message ce ct modeVar chatId (E.handle env) chan ]
+  set ce [on enterKey := message ce ct modeVar chatId env chan ]
 
   status <- statusField [ text := show $ head $ speakModes ]
 
@@ -77,10 +77,9 @@ wxChat env chatId mMsg chan = do
 
     GameResult result -> when (GameChat (R.gameId result) == chatId) $ showSystemMsg ct $ "--- Game " <> show (R.gameId result) <> " has ended. ---"
 
+    IllegalWhisper commanndId Nothing -> showSystemMsg ct $ "You are not playing or observing a game."
 
-    IllegalWhisper Nothing -> showSystemMsg ct $ "You are not playing or observing a game."
-
-    IllegalWhisper (Just gameId) -> when (GameChat gameId == chatId) $ showSystemMsg ct $ "You are not observing game " <> show gameId <> "."
+    IllegalWhisper commandId (Just gameId) -> when (GameChat gameId == chatId) $ showSystemMsg ct $ "You are not observing game " <> show gameId <> "."
 
     WxClose -> close f
 
@@ -91,21 +90,21 @@ wxChat env chatId mMsg chan = do
     killThread threadId
 
 
-message :: TextCtrl () -> TextCtrl () -> TVar [SpeakMode] -> ChatId -> Handle -> Chan Message -> IO ()
-message ce ct modeVar chatId h chan = do
+message :: TextCtrl () -> TextCtrl () -> TVar [SpeakMode] -> ChatId -> RuntimeEnv -> Chan Message -> IO ()
+message ce ct modeVar chatId env chan = do
   mode <- head <$> readTVarIO modeVar
   msg <- get ce text
-  runCommand chatId mode h msg
+  runCommand chatId mode env msg
   set ce [text := ""]
   showMessage ct black (Just "Me") msg
 
 
-runCommand :: ChatId -> SpeakMode -> Handle -> String -> IO ()
-runCommand (ChannelChat cid) _ h msg = Cmds.tellChannel h cid msg
-runCommand (UserChat username) _ h msg = Cmds.tell h username msg
-runCommand (GameChat _) SayMode h msg = Cmds.say h msg
-runCommand (GameChat gameId) WhisperMode h msg = Cmds.whisper h gameId msg
-runCommand (GameChat gameId) KibitzMode h msg = Cmds.kibitz h gameId msg
+runCommand :: ChatId -> SpeakMode -> RuntimeEnv -> String -> IO ()
+runCommand (ChannelChat cid) _ env msg = Cmds.tellChannel env cid msg
+runCommand (UserChat username) _ env msg = Cmds.tell env username msg
+runCommand (GameChat _) SayMode env msg = Cmds.say env msg
+runCommand (GameChat gameId) WhisperMode env msg = Cmds.whisper env gameId msg
+runCommand (GameChat gameId) KibitzMode env msg = Cmds.kibitz env gameId msg
 runCommand _ _ _ _= return ()
 
 

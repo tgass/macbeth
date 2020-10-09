@@ -6,9 +6,10 @@ import           Control.Concurrent.STM
 import           Graphics.UI.WX hiding (refresh, widget)
 import           Graphics.UI.WXCore hiding (widget)
 import           Macbeth.Fics.Api.Stored
-import           Macbeth.Fics.Message hiding (gameId)
-import qualified Macbeth.Wx.Commands as Cmds
+import           Macbeth.Fics.Message
+import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Wx.Utils
+import qualified Macbeth.Wx.RuntimeEnv as E
 import           Safe
 import           System.IO
 
@@ -17,8 +18,8 @@ data CtxMenu = CtxMenu {
   , refresh :: MenuItem ()
 }
 
-widget :: Handle -> Panel () -> IO (ListCtrl (), Message -> IO ())
-widget h p = do
+widget :: E.RuntimeEnv -> Panel () -> IO (ListCtrl (), Message -> IO ())
+widget env p = do
   storedVar <- newTVarIO ([] :: [Stored])
   storedListCtrl  <- listCtrl p [ columns :=
       [ ("#", AlignLeft, -1)
@@ -31,18 +32,18 @@ widget h p = do
       ]]
 
   --listCtrlSetColumnWidths storedListCtrl 100
-  set storedListCtrl [on listEvent := onListEvent storedListCtrl h]
+--  set storedListCtrl [on listEvent := onListEvent storedListCtrl h]
 
   storedMenuPane <- menuPane []
   storedMenuPopup <- ctxMenu storedMenuPane
 
-  set (refresh storedMenuPopup) [on command := Cmds.stored h]
+  set (refresh storedMenuPopup) [on command := Cmds.stored env]
 
   listItemRightClickEvent storedListCtrl $ \evt -> do
     idx <- listEventGetIndex evt
     set (resume storedMenuPopup) [on command := do
       vals <- readTVarIO storedVar
-      maybe (return ()) (Cmds.match h . sOponent) $ vals `atMay` idx
+      maybe (return ()) (Cmds.match env . sOponent) $ vals `atMay` idx
      ]
     listEventGetPoint evt >>= flip (menuPopup storedMenuPane) storedListCtrl
 

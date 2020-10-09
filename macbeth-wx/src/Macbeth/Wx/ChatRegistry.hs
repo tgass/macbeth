@@ -3,17 +3,11 @@ module Macbeth.Wx.ChatRegistry (
 ) where
 
 import           Control.Concurrent.Chan
-import           Control.Concurrent.STM
-import           Control.Lens
 import           Control.Monad
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Wx.Chat
-import           Macbeth.Wx.Config.Sounds
-import           Macbeth.Wx.Config.UserConfig (chatOrDef)
 import           Macbeth.Wx.RuntimeEnv 
 
 wxChatRegistry :: RuntimeEnv -> Chan Message -> IO (Message -> IO ())

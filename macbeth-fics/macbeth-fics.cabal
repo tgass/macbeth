@@ -30,6 +30,7 @@ library
     , conduit
     , conduit-extra
     , containers
+    , exceptions
     , filepath
     , hslogger
     , lens

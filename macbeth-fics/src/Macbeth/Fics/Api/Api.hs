@@ -89,3 +89,5 @@ instance Show ChatId where
 instance Show ChannelId where
   show (ChannelId cid) = show cid
 
+newtype CommandId = CommandId Int deriving (Show, Eq)
+

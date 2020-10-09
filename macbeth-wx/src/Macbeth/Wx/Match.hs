@@ -6,12 +6,12 @@ import           Control.Concurrent.Chan
 import           Control.Monad.Cont
 import           Data.Map
 import           Graphics.UI.WX hiding (color)
-import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Seek (SeekColor)
 import           Macbeth.Fics.Api.GameType
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Fics.Message
 import           Macbeth.Wx.Utils
-import qualified Macbeth.Wx.Commands as Cmds
-import           System.IO
+import           Macbeth.Wx.RuntimeEnv
 
 data WxMatch = WxMatch {
   category :: Choice (),
@@ -23,8 +23,8 @@ data WxMatch = WxMatch {
   color :: Choice ()
 }
 
-wxMatch :: Handle -> Bool -> Chan Message -> IO ()
-wxMatch h isGuest chan = runCont (basicFrame frameConfig chan) $ setupFrame h isGuest
+wxMatch :: RuntimeEnv -> Bool -> Chan Message -> IO ()
+wxMatch env isGuest chan = runCont (basicFrame frameConfig chan) $ setupFrame env isGuest
 
 
 frameConfig :: FrameConfig
@@ -35,12 +35,12 @@ frameConfig = FrameConfig {
 }
 
 
-setupFrame :: Handle -> Bool -> (Panel (), StatusField, FrameActions) -> IO ()
-setupFrame h isGuest (p, _, f) = do
+setupFrame :: RuntimeEnv -> Bool -> (Panel (), StatusField, FrameActions) -> IO ()
+setupFrame env isGuest (p, _, f) = do
   match <- matchInputs p isGuest
   set (category match) [on select ::= onSelectGameTypeCategory (board match)]
 
-  b_ok  <- button p [text := "Match", on command := startMatch h match >> closeFrame f ]
+  b_ok  <- button p [text := "Match", on command := startMatch env match >> closeFrame f ]
   b_can <- button p [text := "Cancel", on command := closeFrame f]
 
   setDefaultButton f b_ok
@@ -71,8 +71,8 @@ matchInputs p isGuest = WxMatch
                , items := fmap show $ enumFrom (minBound :: SeekColor)]
 
 
-startMatch :: Handle -> WxMatch -> IO ()
-startMatch  h m = join $ Cmds.match2 h
+startMatch :: RuntimeEnv -> WxMatch -> IO ()
+startMatch  env m = join $ Cmds.match2 env
      <$> get (name m) text
      <*> get (rated m) checked
      <*> read `fmap` get (time m) text

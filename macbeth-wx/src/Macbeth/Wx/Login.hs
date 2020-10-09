@@ -8,9 +8,10 @@ import           Control.Monad.Reader
 import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Message
-import           Macbeth.Wx.Utils
+import qualified Macbeth.Fics.Commands as Cmds
 import qualified Macbeth.Wx.Config.UserConfig as Config
-import           System.IO
+import           Macbeth.Wx.Utils
+import           Macbeth.Wx.RuntimeEnv hiding (username)
 
 data Login' a b = Login {
     username :: a
@@ -23,14 +24,14 @@ type WxLogin = Login' (TextCtrl ()) (CheckBox ())
 type LoginData = Login' String Bool
 
 
-wxLogin :: Handle -> Chan Message -> IO ()
-wxLogin h chan = do
+wxLogin :: RuntimeEnv -> Chan Message -> IO ()
+wxLogin env chan = do
   f <- frameFixed [ text := "Macbeth" ]
   p <- panel f []
   wxInputs <- loginInputs p
   set (guestLogin wxInputs) [on command := toggleLoginFields wxInputs]
 
-  b_ok  <- button p [text := "Login", on command := okBtnHandler wxInputs f h chan]
+  b_ok  <- button p [text := "Login", on command := okBtnHandler wxInputs f env chan]
   b_can <- button p [text := "Quit", on command := close f]
 
   set f [ defaultButton := b_ok
@@ -45,8 +46,8 @@ wxLogin h chan = do
   dupChan chan >>= registerWxCloseEventListener f
 
 
-okBtnHandler :: WxLogin -> Frame () -> Handle -> Chan Message -> IO ()
-okBtnHandler wxInputs f h chan = do
+okBtnHandler :: WxLogin -> Frame () -> RuntimeEnv -> Chan Message -> IO ()
+okBtnHandler wxInputs f env chan = do
   loginData <- extract wxInputs
   flip runReaderT loginData $ do
     putUsername 
@@ -54,14 +55,14 @@ okBtnHandler wxInputs f h chan = do
     lift $ close f
   where
     putUsername :: ReaderT LoginData IO ()
-    putUsername = asks usernameOrGuest >>= liftIO . hPutStrLn h
+    putUsername = asks usernameOrGuest >>= liftIO . Cmds.message env
 
     -- TODO: do this with `fix`
     putPassword :: ReaderT LoginData IO ()
     putPassword = lift (readChan chan) >>= \case
       AbusiveBehavior -> return ()
-      Password -> asks password >>= lift . hPutStrLn h >> putPassword
-      GuestLogin {} -> lift (hPutStrLn h "") >> putPassword
+      Password -> asks password >>= lift . Cmds.message env >> putPassword
+      GuestLogin {} -> lift (Cmds.message env "") >> putPassword
       LoginPrompt -> return () -- close this frame, new one is opened in Toolbox
       LoggedIn {} -> ask >>= \login -> lift $
         when (saveCredentials login) $ Config.saveCredentials (usernameOrGuest login) (password login)

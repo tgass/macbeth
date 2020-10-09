@@ -58,9 +58,9 @@ data Message =
   | Tells UserHandle (Maybe ChannelId) String
   | Whispers UserHandle Rating GameId String
   | Kibitzes UserHandle Rating GameId String
-  | Told UserHandle (Maybe ChatStatus)
-  | IllegalWhisper (Maybe GameId)
-  | IllegalSay
+  | Told CommandId UserHandle (Maybe ChatStatus)
+  | IllegalWhisper CommandId (Maybe GameId)
+  | IllegalSay CommandId
 
   | LoginPrompt
   | LoginTimeout

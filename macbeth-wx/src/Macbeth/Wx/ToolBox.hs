@@ -17,7 +17,7 @@ import qualified Macbeth.Fics.Api.Result as R
 import           Macbeth.Wx.Configuration
 import           Macbeth.Wx.Chat
 import           Macbeth.Wx.ChatRegistry
-import qualified Macbeth.Wx.Commands as Cmds
+import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Wx.Finger
 import           Macbeth.Wx.GamesList
 import           Macbeth.Wx.Login
@@ -35,7 +35,6 @@ import qualified Macbeth.Wx.Config.UserConfig as C
 import qualified Macbeth.Wx.Config.Sounds as S
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.RuntimeEnv (reIsAutoLogin)
-import           System.IO
 
 
 eventId :: Int
@@ -43,7 +42,6 @@ eventId = wxID_HIGHEST + 1
 
 wxToolBox :: E.RuntimeEnv -> Chan Message -> IO ()
 wxToolBox env chan = do
-    let h = E.handle env
     f  <- frame [ text := "Macbeth"]
 
     tbar   <- toolBarEx f True False []
@@ -51,13 +49,13 @@ wxToolBox env chan = do
       [ on command := dupChan chan >>= seekFrame env False, enabled := False, tooltip := "Seek" ]
 
     tbarItem_match <- toolItem tbar "Match" False (E.getIconFilePath "match")
-      [ on command := dupChan chan >>= wxMatch h False, enabled := False, tooltip := "Match" ]
+      [ on command := dupChan chan >>= wxMatch env False, enabled := False, tooltip := "Match" ]
 
     tbarItem_finger <- toolItem tbar "Finger" False (E.getIconFilePath "fa-question")
-      [ on command := Cmds.finger h Nothing, enabled := False, tooltip := "Finger"]
+      [ on command := Cmds.finger env Nothing, enabled := False, tooltip := "Finger"]
 
     tbarItem_history <- toolItem tbar "History" False (E.getIconFilePath "history")
-      [ on command := Cmds.history h Nothing, enabled := False, tooltip := "History"]
+      [ on command := Cmds.history env Nothing, enabled := False, tooltip := "History"]
 
     tbarItem_settings <- toolItem tbar "Settings" False (E.getIconFilePath "settings")
       [ on command := dupChan chan >>= wxConfiguration env, enabled := False, tooltip := "Settings"]
@@ -65,30 +63,30 @@ wxToolBox env chan = do
     statusMsg <- statusField []
     statusLag <- statusField [ statusWidth := 100 ]
     statusLoggedIn <- statusField [ statusWidth := 100]
-    pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := Cmds.ping h, enabled := False]
+    pingTimer <- timer f [ interval := 5 * 60 * 1000, on command := Cmds.ping env, enabled := False]
 
 
     nb <- notebook f []
 
     -- Sought list
     slp <- panel nb []
-    (sl, soughtListHandler) <- wxSoughtList slp h
+    (sl, soughtListHandler) <- wxSoughtList slp env
 
     -- Games list
     glp <- panel nb []
-    (gl, gamesListHandler)  <- wxGamesList glp h
+    (gl, gamesListHandler)  <- wxGamesList glp env
 
     -- Pending
     pending <- panel nb []
-    (pendingWidget, pendingHandler) <- wxPending h pending
+    (pendingWidget, pendingHandler) <- wxPending env pending
 
     -- Stored / Adjourned
     stored <- panel nb []
-    (storedWidget, storedHandler) <- Stored.widget h stored
+    (storedWidget, storedHandler) <- Stored.widget env stored
 
     -- Players
     players <- panel nb []
-    (playersWidget, playersHandler) <- wxPlayersList players h chan
+    (playersWidget, playersHandler) <- wxPlayersList players env chan
 
     -- ChatRegistry
     chatRegistryHandler <- dupChan chan >>= wxChatRegistry env
@@ -96,8 +94,8 @@ wxToolBox env chan = do
     -- Console
     cp <- panel nb []
     ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = env `E.getConfig` C.fontSize}]
-    ce <- entry cp []
-    set ce [on enterKey := emitCommand ce h]
+    commandEntry <- entry cp []
+    set commandEntry [on enterKey := get commandEntry text >>= Cmds.message env >> set commandEntry [text := ""] ]
 
     set f [ statusBar := [statusMsg, statusLoggedIn, statusLag],
             layout := tabs nb
@@ -107,7 +105,7 @@ wxToolBox env chan = do
                         , tab "Stored" $ container stored $ fill $ widget storedWidget
                         , tab "Players" $ container players $ fill $ widget playersWidget
                         , tab "Console" $ container cp ( column 5  [ fill $ widget ct
-                                                                   , hfill $ widget ce])
+                                                                   , hfill $ widget commandEntry])
                         ]
           ]
 
@@ -125,13 +123,13 @@ wxToolBox env chan = do
 
         NoSuchGame -> do
           set statusMsg [text := "No such game. Updating games..."]
-          Cmds.games h 
+          Cmds.games env 
 
         UserNotLoggedIn username -> set statusMsg [text := username ++ " is not logged in."]
 
         PartnerNotOpen userHandle -> set statusMsg [text := name userHandle ++ " is not open for bughouse."]
 
-        PartnerOffer userHandle -> dupChan chan >>= wxPartnerOffer h userHandle
+        PartnerOffer userHandle -> dupChan chan >>= wxPartnerOffer env userHandle
 
         PartnerAccepted userHandle -> set statusMsg [text := name userHandle ++ " agrees to be your partner."]
 
@@ -142,27 +140,27 @@ wxToolBox env chan = do
         InvalidPassword -> readTVarIO (env ^. reIsAutoLogin) >>= \case
           True -> do
              atomically $ writeTVar (env ^. reIsAutoLogin) False
-             dupChan chan >>= wxLogin h
+             dupChan chan >>= wxLogin env
           False -> void $ set statusMsg [text := "Invalid password."]
 
         LoginPrompt -> readTVarIO (env ^. reIsAutoLogin) >>= \case 
-          True -> hPutStrLn h $ E.getLoginUsername env
-          False -> dupChan chan >>= wxLogin h
+          True -> Cmds.message env $ E.getLoginUsername env
+          False -> dupChan chan >>= wxLogin env
 
         Password -> readTVarIO (env ^. reIsAutoLogin) >>= \case 
-          True -> hPutStrLn h $ E.getLoginPassword env
+          True -> Cmds.message env $ E.getLoginPassword env
           False -> return ()
 
         GuestLogin _ -> readTVarIO (env ^. reIsAutoLogin) >>= \case 
-          True -> hPutStrLn h ""
+          True -> Cmds.message env ""
           False -> return ()
 
         LoggedIn userHandle -> do
           E.playSound env (S.logonToServer . S.other)
           E.setUsername env userHandle
-          unless (isGuest userHandle) $ Cmds.ping h >> set pingTimer [enabled := True]
-          set nb [on click := (onMouse nb >=> clickHandler h nb)]
-          hPutStrLn h `mapM_` [ "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
+          unless (isGuest userHandle) $ Cmds.ping env >> set pingTimer [enabled := True]
+          set nb [on click := (onMouse nb >=> clickHandler env nb)]
+          Cmds.message env `mapM_` [ "set seek 0", "set style 12", "iset pendinfo 1", "iset seekinfo 1", "iset nowrap 1", "iset defprompt 1", "iset block 1", "2 iset lock 1"]
           set statusLoggedIn [ text := name userHandle]
           mapM_ (`set` [ enabled := True ]) [tbarItem_seek, tbarItem_match, tbarItem_finger, tbarItem_history, tbarItem_settings]
 
@@ -174,7 +172,7 @@ wxToolBox env chan = do
 
         Challenge gameParams -> do
           E.playSound env (S.challenge . S.request)
-          dupChan chan >>= wxChallenge h gameParams
+          dupChan chan >>= wxChallenge env gameParams
 
         WxObserving gameId gameParams msgChan -> do
            E.playSound env (S.newGame . S.game)
@@ -218,20 +216,16 @@ wxToolBox env chan = do
       killThread threadId
 
 
-emitCommand :: TextCtrl () -> Handle -> IO ()
-emitCommand tc h = get tc text >>= hPutStrLn h . ("5 " ++) >> set tc [text := ""]
-
-
 onMouse :: Notebook() -> Point -> IO Int
 onMouse nb p = propagateEvent >> notebookHitTest nb p flag
 
-clickHandler :: Handle -> Notebook () -> Int -> IO ()
-clickHandler h nb idx 
+clickHandler :: E.RuntimeEnv -> Notebook () -> Int -> IO ()
+clickHandler env nb idx 
   | idx == -1 = return () -- click didn't happen on a notebook tab
   | otherwise = notebookGetPageText nb idx >>= \case
-      "Games" -> Cmds.games h
-      "Players" -> Cmds.who h
-      "Stored" -> Cmds.stored h
+      "Games" -> Cmds.games env
+      "Players" -> Cmds.who env
+      "Stored" -> Cmds.stored env
       _ -> return ()
 
 

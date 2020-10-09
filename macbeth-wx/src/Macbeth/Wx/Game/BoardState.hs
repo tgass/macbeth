@@ -10,16 +10,16 @@ import qualified Data.MultiSet as MultiSet
 import           Data.List
 import           Graphics.UI.WX hiding (position, update, resize, when)
 import           Macbeth.Fics.Api.Api
-import           Macbeth.Fics.Api.Game
 import           Macbeth.Fics.Api.Move
+import           Macbeth.Fics.Api.Game
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Api.Result
+import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Wx.Game.PieceSet (PieceSet(..))
 import qualified Macbeth.Wx.Game.PieceSet as PieceSet
 import           Macbeth.Wx.Config.BoardConfig
 import           Macbeth.Wx.RuntimeEnv
 import           Safe
-import           System.IO
 
 
 data BoardState = BoardState {
@@ -61,8 +61,8 @@ updateMousePosition :: TVar BoardState -> Point -> IO ()
 updateMousePosition vState pt = atomically $ modifyTVar vState (\s -> s{ mousePt = pt})
 
 
-dropDraggedPiece :: TVar BoardState -> Handle -> Point -> IO ()
-dropDraggedPiece vState h click_pt = do
+dropDraggedPiece :: TVar BoardState -> Point -> IO ()
+dropDraggedPiece vState click_pt = do
   state <- readTVarIO vState
   void $ runMaybeT $ do
       dp <- MaybeT $ return $ draggedPiece state
@@ -74,7 +74,7 @@ dropDraggedPiece vState h click_pt = do
               if isWaiting state
                 then do
                    atomically $ modifyTVar vState $ \s -> s { isWaiting = False }
-                   hPutStrLn h $ "6 " ++ show pieceMove'
+                   Cmds.messageWithCommandId (runtimeEnv state) $ show pieceMove'
                 else addPreMove pieceMove'
         Nothing -> liftIO $ discardDraggedPiece vState
 
@@ -181,14 +181,15 @@ cancelLastPreMove vBoardState = atomically $ modifyTVar vBoardState (\s ->
        , virtualPosition = foldl (flip movePiece) (position $ lastMove s) preMoves'})
 
 
-performPreMoves :: TVar BoardState -> Handle -> IO ()
-performPreMoves vBoardState h = do
+performPreMoves :: TVar BoardState -> IO ()
+performPreMoves vBoardState = do
   preMoves' <- preMoves <$> readTVarIO vBoardState
+  env <- runtimeEnv <$> readTVarIO vBoardState
   unless (null preMoves') $ do
     atomically $ modifyTVar vBoardState (\s ->
       s { isWaiting = False
         , preMoves = tail preMoves'})
-    hPutStrLn h $ "6 " ++ show (head preMoves' )
+    Cmds.messageWithCommandId env $ show (head preMoves' )
 
 
 removeDraggedPiece :: Position -> DraggedPiece -> Position

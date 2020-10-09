@@ -19,7 +19,8 @@ parser = choice [
   , kibitzes
   , whispers
   , told 
-  , illegalWhisper
+  , illegalWhisper1
+  , illegalWhisper2
   , illegalSay
   ]
 
@@ -67,9 +68,11 @@ whispers = do
 
 
 told :: Parser Message
-told = Told
-  <$> ((commandHead 107 <|> commandHead 132) *> "(told " *> P.userHandle)
-  <*> ((", " *> (Just <$> status)) <|> pure Nothing)
+told = do
+  cid <- commandHead 107 <|> commandHead 132
+  user <- "(told " *> P.userHandle
+  mStatus <- (", " *> (Just <$> status)) <|> pure Nothing
+  return $ Told cid user mStatus
 
 
 status :: Parser ChatStatus
@@ -78,13 +81,22 @@ status =
   (Busy <$> manyTill anyChar " (")
 
 
-illegalWhisper :: Parser Message
-illegalWhisper = 
-      "You are not playing or observing a game." *> pure (IllegalWhisper Nothing)
-  <|> ("You are not observing game " *> (IllegalWhisper . Just <$> gameId))
+illegalWhisper1 :: Parser Message
+illegalWhisper1 = do
+  cid <- commandHead 149 <|> commandHead 151
+  "You are not playing or observing a game." *> return (IllegalWhisper cid Nothing)
+
+
+illegalWhisper2 :: Parser Message
+illegalWhisper2 = do
+  cid <- commandHead 149 <|> commandHead 151
+  gid <- "You are not observing game " *> gameId
+  return $ IllegalWhisper cid (Just gid)
 
 
 illegalSay :: Parser Message
-illegalSay = "I don't know who to say that to." *> pure IllegalSay
+illegalSay = do
+  cid <- commandHead 107
+  "I don't know who to say that to." *> pure (IllegalSay cid)
 
 

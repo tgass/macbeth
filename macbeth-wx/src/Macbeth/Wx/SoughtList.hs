@@ -11,18 +11,17 @@ import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Api.Seek
 import           Macbeth.Fics.Api.OngoingGame hiding (gameType, isRated)
 import           Macbeth.Fics.Message
-import qualified Macbeth.Wx.Commands as Cmds
+import qualified Macbeth.Fics.Commands as Cmds
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.Utils
-import           System.IO
 
 data SoughtOpts = SoughtOpts { computerOffers :: MenuItem ()
                              , unregisteredPlayers :: MenuItem ()
                              , unratedOffers :: MenuItem ()
                              , ratedOffers :: MenuItem () }
 
-wxSoughtList :: Panel () -> Handle -> IO (ListCtrl (), Message -> IO ())
-wxSoughtList slp h = do
+wxSoughtList :: Panel () -> E.RuntimeEnv -> IO (ListCtrl (), Message -> IO ())
+wxSoughtList slp env = do
     sl  <- listCtrlEx slp (wxLC_REPORT .+. wxLC_SORT_ASCENDING)
                                     [columns := [ ("#", AlignLeft, 100)
                                     , ("Handle", AlignLeft, 100)
@@ -30,7 +29,7 @@ wxSoughtList slp h = do
                                     , ("Time (start inc.)", AlignRight, 100)
                                     , ("Type", AlignRight, 100)]
                                     ]
-    set sl [on listEvent := onSeekListEvent sl h]
+    set sl [on listEvent := onSeekListEvent sl env]
 
     ctxMenu <- menuPane []
     soughtOpts <- getSoughtOpts ctxMenu
@@ -104,9 +103,9 @@ filterSoughtList sl opts vSoughtList = do
   mapM_ (\s -> when (showSeek' s) $ addSeek sl s) soughts
 
 
-onSeekListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
-onSeekListEvent sl h evt = case evt of
-  ListItemActivated idx -> listCtrlGetItemText sl idx >>= Cmds.play h
+onSeekListEvent :: ListCtrl() -> E.RuntimeEnv -> EventList -> IO ()
+onSeekListEvent sl env evt = case evt of
+  ListItemActivated idx -> listCtrlGetItemText sl idx >>= Cmds.play env
   _ -> return ()
 
 

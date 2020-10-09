@@ -24,6 +24,8 @@ import           Data.Conduit.Binary
 import           Data.Conduit.List hiding (filter)
 import           Data.Conduit.Process
 import           Data.Maybe
+import           Data.Set (Set)
+import qualified Data.Set as Set
 import           GHC.Show (showLitString)
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Api
@@ -147,7 +149,7 @@ parseC = awaitForever $ \str -> case parseMessage str of
 
 unblockC :: Monad m => Conduit BS.ByteString m BS.ByteString
 unblockC = awaitForever $ \block -> case ord $ BS.head block of
-  21 -> if readId block `elem` [
+  21 -> if readId block `Set.member` Set.fromList [
           37 -- BLK_FINGER
         , 43 -- BLK_GAMES
         , 51 -- BLK_HISTORY
@@ -156,6 +158,8 @@ unblockC = awaitForever $ \block -> case ord $ BS.head block of
         , 127 -- BLK_STORED
         , 132 -- BLK_TELL
         , 146 -- BLK_WHO
+        , 149 -- BLK_XKIBITZ
+        , 151 -- BLK_XWHISPER
         ]
         then yield block else sourceList (lines' $ crop block)
   _ -> yield block

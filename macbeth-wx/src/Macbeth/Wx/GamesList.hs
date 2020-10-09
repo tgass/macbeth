@@ -12,10 +12,10 @@ import           Data.Ord
 import           Graphics.UI.WX hiding (refresh)
 import           Graphics.UI.WXCore
 import           Macbeth.Fics.Api.OngoingGame
-import           Macbeth.Fics.Message hiding (gameId)
-import qualified Macbeth.Wx.Commands as Cmds
+import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Fics.Message
+import           Macbeth.Wx.RuntimeEnv
 import           Macbeth.Wx.Utils
-import           System.IO
 
 data CtxMenu = CtxMenu {
     refresh :: MenuItem ()
@@ -34,8 +34,8 @@ data CtxSortMenu = CtxSortMenu {
 }
 
 
-wxGamesList :: Panel () -> Handle -> IO (ListCtrl (), Message -> IO ())
-wxGamesList glp h = do
+wxGamesList :: Panel () -> RuntimeEnv -> IO (ListCtrl (), Message -> IO ())
+wxGamesList glp env = do
   games <- newTVarIO ([] :: [OngoingGame])
   gl  <- listCtrl glp [ columns :=
       [ ("#", AlignLeft, -1)
@@ -46,7 +46,7 @@ wxGamesList glp h = do
       , ("Game type", AlignLeft, -1)
       ]]
   listCtrlSetColumnWidths gl 100
-  set gl [on listEvent := onGamesListEvent gl h]
+  set gl [on listEvent := onGamesListEvent gl env]
 
   glCtxMenu <- menuPane []
   glCtxSub <- menuPane []
@@ -58,7 +58,7 @@ wxGamesList glp h = do
     pt' <- listEventGetPoint evt
     menuPopup glCtxMenu pt' gl
 
-  set (refresh ctxMenuPopup) [on command := Cmds.games h]
+  set (refresh ctxMenuPopup) [on command := Cmds.games env]
 
 
   set (showRated ctxMenuPopup) [on command := displayGames gl ctxMenuPopup ctxSortMenu' games]
@@ -83,9 +83,9 @@ handler gl ctx sub games cmd = case cmd of
   _ -> return ()
 
 
-onGamesListEvent :: ListCtrl() -> Handle -> EventList -> IO ()
-onGamesListEvent gl h evt = case evt of
-  ListItemActivated idx -> listCtrlGetItemText gl idx >>= Cmds.observeGame h . read
+onGamesListEvent :: ListCtrl() -> RuntimeEnv -> EventList -> IO ()
+onGamesListEvent gl env evt = case evt of
+  ListItemActivated idx -> listCtrlGetItemText gl idx >>= Cmds.observeGame env . read
   _ -> return ()
 
 
