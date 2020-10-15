@@ -100,6 +100,11 @@ wxGame env gameId gameParams isGameUser chan = do
                           , checked := showCapturedPieces boardConfig
                           , on command := atomically (modifyTVar vBoardState flipShowCapturedPieces) >> repaint p_back
                           ]
+  void $ menuItem ctxMenu [ text := "Show labels"
+                          , checkable:= True
+                          , checked := showLabels boardConfig
+                          , on command := atomically (modifyTVar vBoardState flipShowLabels) >> repaint p_back
+                          ]
   void $ wxPieceSetsMenu ctxMenu vBoardState p_board
 
 
@@ -182,6 +187,7 @@ wxGame env gameId gameParams isGameUser chan = do
           UserConfig.boardConfig = (\s -> s { 
             boardSize = Just $ boardSize $ Api.boardConfig state
           , showCapturedPieces = showCapturedPieces $ Api.boardConfig state
+          , showLabels = Just $ showLabels $ Api.boardConfig state
           , pieceSet = Just $ pieceSet $ Api.boardConfig state
           }) <$> boardConfigFormat}
     UserConfig.saveConfig updated
@@ -225,8 +231,16 @@ onKeyUpHandler vBoardState env sf evt
         set sf [text := "=" ]
   | otherwise = return ()
 
+
 flipShowCapturedPieces :: Api.BoardState -> Api.BoardState
 flipShowCapturedPieces boardState = 
   let boardConfig' = Api.boardConfig boardState
       flipped = boardConfig' { showCapturedPieces = not $ showCapturedPieces boardConfig' }
+  in boardState { Api.boardConfig = flipped }
+
+
+flipShowLabels :: Api.BoardState -> Api.BoardState
+flipShowLabels boardState = 
+  let boardConfig' = Api.boardConfig boardState
+      flipped = boardConfig' { showLabels = not $ showLabels boardConfig' }
   in boardState { Api.boardConfig = flipped }
