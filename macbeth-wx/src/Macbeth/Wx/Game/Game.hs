@@ -10,7 +10,7 @@ import           Control.Exception
 import           Control.Monad
 import           Data.Maybe
 import qualified Data.MultiSet as MultiSet
-import           Graphics.UI.WX hiding (when, position, play, point, white, black)
+import           Graphics.UI.WX hiding (when, position, play, point, white, black, style)
 import           Graphics.UI.WXCore hiding (when, Timer, black, white, point)
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Api
@@ -105,6 +105,11 @@ wxGame env gameId gameParams isGameUser chan = do
                           , checked := showLabels boardConfig
                           , on command := atomically (modifyTVar vBoardState flipShowLabels) >> repaint p_back
                           ]
+  void $ menuItem ctxMenu [ text := "Solid highlights"
+                          , checkable:= True
+                          , checked := Solid == style (highlightConfig boardConfig)
+                          , on command := atomically (modifyTVar vBoardState flipHighlightStyle) >> repaint p_back
+                          ]
   void $ wxPieceSetsMenu ctxMenu vBoardState p_board
 
 
@@ -189,6 +194,7 @@ wxGame env gameId gameParams isGameUser chan = do
           , showCapturedPieces = showCapturedPieces $ Api.boardConfig state
           , showLabels = Just $ showLabels $ Api.boardConfig state
           , pieceSet = Just $ pieceSet $ Api.boardConfig state
+          , highlightConfig = Just $ highlightConfig $ Api.boardConfig state
           }) <$> boardConfigFormat}
     UserConfig.saveConfig updated
     u <- convert (fromMaybe defaultBoardConfig $ UserConfig.boardConfig updated) (UserConfig.directory config)
@@ -244,3 +250,11 @@ flipShowLabels boardState =
   let boardConfig' = Api.boardConfig boardState
       flipped = boardConfig' { showLabels = not $ showLabels boardConfig' }
   in boardState { Api.boardConfig = flipped }
+
+flipHighlightStyle :: Api.BoardState -> Api.BoardState
+flipHighlightStyle boardState = 
+  let boardConfig' = Api.boardConfig boardState
+      highlightConfig' = highlightConfig boardConfig'
+      flipped = highlightConfig' { style = if style highlightConfig' == Solid then Hatched else Solid }
+  in boardState { Api.boardConfig = boardConfig'{ highlightConfig = flipped } }
+
