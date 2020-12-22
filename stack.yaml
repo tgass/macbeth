@@ -1,4 +1,4 @@
-resolver: lts-11.22
+resolver: lts-9.21
 
 packages:
 - './macbeth-fics'
@@ -9,12 +9,16 @@ explicit-setup-deps:
     "*": true
 
 extra-deps: 
-- wx-0.92.3.0
-- wxc-0.92.3.0
-- wxdirect-0.92.3.0
-- Cabal-1.24.2.0@sha256:b2adb58476f49a514c4cd4542d55857f25733c440cd6528185e451d14fcdcc96,14791
-- process-1.4.3.0@sha256:cf30533f073721fd059790f0b963fb9b57e3507cffef5141e9377449570b07ca,2021
-- git: https://github.com/tgass/wxHaskell.git
-  commit: b7ac21d1dba48076dc7538d1967a14d59cfeb615
-  subdirs:
-  - wxcore
+- wx-0.92.2.0
+- wxcore-0.92.2.0
+- wxc-0.92.2.0
+- wxdirect-0.92.2.0
+- ALUT-2.4.0.2
+- OpenAL-1.7.0.4
+- hspec-2.5.1
+- HUnit-1.6.0.0
+- QuickCheck-2.11.3
+- hspec-core-2.5.1
+- hspec-discover-2.5.1
+- hspec-expectations-0.8.2
+- quickcheck-io-0.2.0
