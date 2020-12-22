@@ -94,8 +94,9 @@ wxToolBox env chan = do
     -- Console
     cp <- panel nb []
     ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = env `E.getConfig` C.fontSize}]
+
     commandEntry <- entry cp []
-    set commandEntry [on enterKey := get commandEntry text >>= Cmds.message env >> set commandEntry [text := ""] ]
+    set commandEntry [on enterKey := get commandEntry text >>= Cmds.messageWithCommandId env >> set commandEntry [text := ""] ]
 
     set f [ statusBar := [statusMsg, statusLoggedIn, statusLag],
             layout := tabs nb
