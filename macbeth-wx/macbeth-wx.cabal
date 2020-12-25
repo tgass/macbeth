@@ -78,6 +78,7 @@ library
     Macbeth.Wx.Challenge
     Macbeth.Wx.Chat
     Macbeth.Wx.ChatRegistry
+    Macbeth.Wx.CommandHistory
     Macbeth.Wx.Configuration
     Macbeth.Wx.Config.UserConfig
     Macbeth.Wx.Config.Sounds

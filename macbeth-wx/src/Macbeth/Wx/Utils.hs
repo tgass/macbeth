@@ -2,6 +2,7 @@ module Macbeth.Wx.Utils where
 
 import           Control.Monad.Cont
 import           Control.Concurrent
+import           Control.Concurrent.STM
 import           Foreign.C.Types
 import           Foreign.Marshal.Alloc
 import           Foreign.Ptr
@@ -91,6 +92,18 @@ onlyEsc :: EventKey -> Bool
 onlyEsc evt = (keyKey evt == KeyEscape) && isNoneDown (keyModifiers evt)
 
 
+onlyEnter :: EventKey -> Bool
+onlyEnter evt = (keyKey evt == KeyReturn) && isNoneDown (keyModifiers evt)
+
+
+onlyUp :: EventKey -> Bool
+onlyUp evt = (keyKey evt == KeyUp) && isNoneDown (keyModifiers evt)
+
+
+onlyDown :: EventKey -> Bool
+onlyDown evt = (keyKey evt == KeyDown) && isNoneDown (keyModifiers evt)
+
+
 keyWithMod :: EventKey -> Char -> Modifiers -> Bool
 keyWithMod evt c modifier = (keyKey evt == KeyChar c) && (keyModifiers evt == modifier)
 
@@ -120,4 +133,12 @@ flag  =  unsafePerformIO flag'
              work <- malloc :: IO (Ptr CInt)
              poke work (fromIntegral wxBK_HITTEST_ONPAGE)
              return work
+
+-- from: https://hackage.haskell.org/package/stm-2.5.0.0/docs/src/Control.Concurrent.STM.TVar.html#stateTVar
+stateTVar :: TVar s -> (s -> (a, s)) -> STM a
+stateTVar var f = do
+   s <- readTVar var
+   let (a, s') = f s -- since we destructure this, we are strict in f
+   writeTVar var s'
+   return a
 

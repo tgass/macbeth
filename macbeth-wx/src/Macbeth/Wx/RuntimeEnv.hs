@@ -5,7 +5,7 @@
 module Macbeth.Wx.RuntimeEnv (
   RuntimeEnv(handle, rtBoardConfig, rtSeekConfig),
   Tracking(..), untrackChat, trackChat, isTrackedChat, trackOngoingGame, trackObservingGame, untrackGame, isPlaying,
-  reConfig, reIsAutoLogin, tOngoingGame, tObservingGames,
+  reConfig, reIsAutoLogin, tOngoingGame, tObservingGames, reCommandHistory,
   username,
   setUsername,
   setBoardConfig,
@@ -37,6 +37,8 @@ import           Macbeth.Fics.Api.Player hiding (handle)
 import           Macbeth.Fics.Commands (HasHandle(..))
 import           Macbeth.Fics.Commands.Seek (SeekConfig)
 import           Macbeth.Utils.Utils
+import           Macbeth.Wx.CommandHistory (CommandHistory)
+import qualified Macbeth.Wx.CommandHistory as History
 import           Macbeth.Wx.Config.UserConfig (Config (..), uUsername, uPassword, cUser, cAutologin)
 import qualified Macbeth.Wx.Config.UserConfig as UserConfig
 import           Macbeth.Wx.Config.BoardConfig (BoardConfig)
@@ -68,6 +70,7 @@ data RuntimeEnv = RuntimeEnv {
   , rtSeekConfig :: TVar SeekConfig
   , _reIsAutoLogin :: TVar Bool
   , _reTracking :: TVar Tracking
+  , _reCommandHistory :: TVar CommandHistory
 }
 
 instance HasHandle RuntimeEnv where
@@ -104,6 +107,7 @@ initRuntime h = do
     <*> (newTVarIO $ UserConfig.getSeekConfig config)
     <*> newTVarIO (config ^. cAutologin)
     <*> newTVarIO (Tracking Nothing Set.empty Set.empty)
+    <*> newTVarIO History.empty
 
 
 username :: RuntimeEnv -> IO Username

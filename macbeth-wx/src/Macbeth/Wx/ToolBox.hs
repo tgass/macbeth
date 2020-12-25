@@ -8,6 +8,7 @@ import           Control.Concurrent.STM.TVar
 import           Control.Lens hiding (set)
 import           Control.Monad
 import           Control.Monad.STM
+import           Data.Maybe
 import           Graphics.UI.WX hiding (when, play)
 import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Message
@@ -19,6 +20,7 @@ import           Macbeth.Wx.Chat
 import           Macbeth.Wx.ChatRegistry
 import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Wx.Finger
+import qualified Macbeth.Wx.CommandHistory as History
 import           Macbeth.Wx.GamesList
 import           Macbeth.Wx.Icons (Icon(..))
 import qualified Macbeth.Wx.Icons as Icons
@@ -36,7 +38,7 @@ import           Macbeth.Wx.Pending
 import qualified Macbeth.Wx.Config.UserConfig as C
 import qualified Macbeth.Wx.Config.Sounds as S
 import qualified Macbeth.Wx.RuntimeEnv as E
-import           Macbeth.Wx.RuntimeEnv (reIsAutoLogin)
+import           Macbeth.Wx.RuntimeEnv (reIsAutoLogin, reCommandHistory)
 
 
 eventId :: Int
@@ -98,7 +100,23 @@ wxToolBox env chan = do
     ct <- textCtrlEx cp (wxTE_MULTILINE .+. wxTE_RICH .+. wxTE_READONLY) [font := fontFixed {_fontSize = env `E.getConfig` C.fontSize}]
 
     commandEntry <- entry cp []
-    set commandEntry [on enterKey := get commandEntry text >>= Cmds.messageWithCommandId env >> set commandEntry [text := ""] ]
+    windowOnKeyDown commandEntry $ \evt -> if
+      | onlyEnter evt -> do
+          cmd <- get commandEntry text 
+          Cmds.messageWithCommandId env cmd 
+          atomically $ modifyTVar (env ^. reCommandHistory) $ History.push cmd
+          set commandEntry [text := ""] 
+
+      | onlyUp evt -> do
+          mCmd <- atomically $ stateTVar (env ^. reCommandHistory) History.up
+          set commandEntry [text := fromMaybe "" mCmd] 
+
+      | onlyDown evt -> do
+          mCmd <- atomically $ stateTVar (env ^. reCommandHistory) History.down
+          set commandEntry [text := fromMaybe "" mCmd] 
+
+      | otherwise -> propagateEvent
+    
 
     set f [ statusBar := [statusMsg, statusLoggedIn, statusLag],
             layout := tabs nb
