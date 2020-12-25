@@ -20,6 +20,8 @@ import           Macbeth.Wx.ChatRegistry
 import qualified Macbeth.Fics.Commands as Cmds
 import           Macbeth.Wx.Finger
 import           Macbeth.Wx.GamesList
+import           Macbeth.Wx.Icons (Icon(..))
+import qualified Macbeth.Wx.Icons as Icons
 import           Macbeth.Wx.Login
 import           Macbeth.Wx.Match
 import           Macbeth.Wx.Seek
@@ -45,19 +47,19 @@ wxToolBox env chan = do
     f  <- frame [ text := "Macbeth"]
 
     tbar   <- toolBarEx f True False []
-    tbarItem_seek <- toolItem tbar "Seek" False (E.getIconFilePath "bullhorn")
+    tbarItem_seek <- toolItem tbar "Seek" False (Icons.filepath BullhornIcon)
       [ on command := dupChan chan >>= seekFrame env False, enabled := False, tooltip := "Seek" ]
 
-    tbarItem_match <- toolItem tbar "Match" False (E.getIconFilePath "match")
+    tbarItem_match <- toolItem tbar "Match" False (Icons.filepath LightningIcon)
       [ on command := dupChan chan >>= wxMatch env False, enabled := False, tooltip := "Match" ]
 
-    tbarItem_finger <- toolItem tbar "Finger" False (E.getIconFilePath "fa-question")
+    tbarItem_finger <- toolItem tbar "Finger" False (Icons.filepath UserSaysIcon)
       [ on command := Cmds.finger env Nothing, enabled := False, tooltip := "Finger"]
 
-    tbarItem_history <- toolItem tbar "History" False (E.getIconFilePath "history")
+    tbarItem_history <- toolItem tbar "History" False (Icons.filepath ListIcon)
       [ on command := Cmds.history env Nothing, enabled := False, tooltip := "History"]
 
-    tbarItem_settings <- toolItem tbar "Settings" False (E.getIconFilePath "settings")
+    tbarItem_settings <- toolItem tbar "Settings" False (Icons.filepath WrenchIcon)
       [ on command := dupChan chan >>= wxConfiguration env, enabled := False, tooltip := "Settings"]
 
     statusMsg <- statusField []

@@ -3,7 +3,7 @@ module Paths where
 import qualified Paths_macbeth_wx as PM
 import           System.Directory
 import           System.FilePath
-
+import           System.IO.Unsafe
 
 getMacbethUserDataDir :: IO FilePath
 getMacbethUserDataDir = getAppUserDataDirectory "macbeth"
@@ -40,3 +40,6 @@ getSoundsDir = do
   dataDir <- PM.getDataDir
   return $ dataDir </> "sounds"
 
+
+getIconPath :: String -> FilePath
+getIconPath file = unsafePerformIO $ getDataFileName $ "icons" </> file

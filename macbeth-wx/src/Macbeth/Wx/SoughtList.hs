@@ -12,6 +12,8 @@ import           Macbeth.Fics.Api.Seek
 import           Macbeth.Fics.Api.OngoingGame hiding (gameType, isRated)
 import           Macbeth.Fics.Message
 import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Wx.Icons (Icon(..))
+import qualified Macbeth.Wx.Icons as Icons
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.Utils
 
@@ -44,7 +46,7 @@ wxSoughtList slp env = do
                 pt' <- listEventGetPoint evt
                 menuPopup ctxMenu pt' sl)
 
-    flip (listCtrlAssignImageList sl) wxIMAGE_LIST_SMALL =<< images
+    flip (listCtrlAssignImageList sl) wxIMAGE_LIST_SMALL =<< icons
 
     let handler cmd = case cmd of
             NewSeek seek -> do
@@ -61,8 +63,8 @@ wxSoughtList slp env = do
     return (sl, handler)
 
 
-images :: IO (ImageList ())
-images = imageListFromFiles (sz 16 16) $ fmap E.getIconFilePath ["fa-user", "fa-desktop"]
+icons :: IO (ImageList ())
+icons = imageListFromFiles (sz 16 16) $ fmap Icons.filepath [UserIcon, DesktopIcon]
 
 
 addSeek :: ListCtrl () -> Seek -> IO ()

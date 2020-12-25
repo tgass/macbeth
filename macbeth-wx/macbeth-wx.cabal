@@ -80,8 +80,19 @@ library
     Macbeth.Wx.Chat
     Macbeth.Wx.ChatRegistry
     Macbeth.Wx.Configuration
+    Macbeth.Wx.Config.UserConfig
+    Macbeth.Wx.Config.Sounds
+    Macbeth.Wx.Config.BoardConfig
+    Macbeth.Wx.Config.SeekConfig
     Macbeth.Wx.Finger
+    Macbeth.Wx.Game.BoardState
+    Macbeth.Wx.Game.Board
+    Macbeth.Wx.Game.Game
+    Macbeth.Wx.Game.PieceSet
+    Macbeth.Wx.Game.StatusPanel
+    Macbeth.Wx.Game.GameSounds
     Macbeth.Wx.GamesList
+    Macbeth.Wx.Icons
     Macbeth.Wx.Login
     Macbeth.Wx.Match
     Macbeth.Wx.Pending
@@ -93,16 +104,6 @@ library
     Macbeth.Wx.SoughtList
     Macbeth.Wx.ToolBox
     Macbeth.Wx.Utils
-    Macbeth.Wx.Game.BoardState
-    Macbeth.Wx.Game.Board
-    Macbeth.Wx.Game.Game
-    Macbeth.Wx.Game.PieceSet
-    Macbeth.Wx.Game.StatusPanel
-    Macbeth.Wx.Game.GameSounds
-    Macbeth.Wx.Config.UserConfig
-    Macbeth.Wx.Config.Sounds
-    Macbeth.Wx.Config.BoardConfig
-    Macbeth.Wx.Config.SeekConfig
 
 test-suite macbeth-wx-test
   type: exitcode-stdio-1.0

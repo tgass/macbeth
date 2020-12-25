@@ -16,6 +16,8 @@ import           Macbeth.Fics.Api.Api
 import           Macbeth.Fics.Api.Player
 import           Macbeth.Fics.Message
 import qualified Macbeth.Fics.Commands as Cmds
+import           Macbeth.Wx.Icons (Icon(..))
+import qualified Macbeth.Wx.Icons as Icons
 import qualified Macbeth.Wx.RuntimeEnv as E
 import           Macbeth.Wx.Utils
 
@@ -47,7 +49,7 @@ wxPlayersList slp env chan = do
       , ("Title", AlignRight, -1)]]
 
     listCtrlSetColumnWidths sl 120
-    flip (listCtrlAssignImageList sl) wxIMAGE_LIST_SMALL =<< images
+    flip (listCtrlAssignImageList sl) wxIMAGE_LIST_SMALL =<< icons
 
     ctxMenuPane <- menuPane []
     ctxSortMenuPane <- menuPane []
@@ -106,8 +108,8 @@ whenMaybe :: Bool -> a -> Maybe a
 whenMaybe x = (guard x >>) . Just
 
 
-images :: IO (ImageList ())
-images = imageListFromFiles (sz 16 16) $ fmap E.getIconFilePath ["fa-user", "fa-desktop"]
+icons :: IO (ImageList ())
+icons = imageListFromFiles (sz 16 16) $ fmap Icons.filepath [UserIcon, DesktopIcon]
 
 
 addPlayer :: ListCtrl () -> Player -> IO ()

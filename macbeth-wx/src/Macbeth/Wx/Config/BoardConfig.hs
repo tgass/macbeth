@@ -9,12 +9,11 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Text.Read (hexadecimal)
 import           Macbeth.Fics.Api.Api
-import           Macbeth.Wx.Utils (getUserOrAppFile)
 import           Macbeth.Wx.Game.PieceSet
 import           Numeric
 import           GHC.Generics
 import           Graphics.UI.WX hiding (style)
-import           System.FilePath ((</>))
+import qualified Paths 
 
 data BoardConfig' a b c d e = BoardConfig {
     showCapturedPieces :: Bool
@@ -77,7 +76,7 @@ convert c userDir = BoardConfig
 
 convertTile :: FilePath -> TileFormat -> IO Tile
 convertTile _ (TileRGB (ColorRGB r g b)) = return $ ColorTile $ rgb r g b
-convertTile userDir (TileFile filename') = (BitmapTile . bitmap) <$> getUserOrAppFile userDir ("tiles" </> filename')
+convertTile userDir (TileFile filename) = (BitmapTile . bitmap) <$> Paths.getTileFilePath userDir filename
 
 defaultBoardConfig :: BoardConfigFormat
 defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize) (Just defaultPieceSet) (Just defaultHighlightConfig) (Just defaultShowLabels)

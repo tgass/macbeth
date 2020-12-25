@@ -15,7 +15,6 @@ module Macbeth.Wx.RuntimeEnv (
   getConfig,
   getVersion,
   getSoundConfig,
-  getIconFilePath,
   pieceToBitmap,
   getLoginUsername,
   getLoginPassword
@@ -148,10 +147,6 @@ playSound env f
   | otherwise = return ()
   where soundConfig = UserConfig.soundsOrDef $ env ^. reConfig
         mBuffer = f soundConfig >>= (`Map.lookup` bufferMap env)
-
-
-getIconFilePath :: String -> FilePath
-getIconFilePath = unsafePerformIO . getDataFileName . ("icons" </>) . (++ ".gif")
 
 
 play' :: [Source] -> Maybe Buffer -> IO ()
