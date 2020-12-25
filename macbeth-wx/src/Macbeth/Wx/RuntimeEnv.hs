@@ -181,7 +181,7 @@ initSources = do
 
 initBufferMap :: Config -> IO (Map String Buffer)
 initBufferMap c = do
-  dir <- getDataFileName "sounds"
+  dir <- getSoundsDir
   appSounds <- loadSounds dir
   userSounds <- loadSounds $ UserConfig.directory c
   return $ userSounds `Map.union` appSounds
@@ -190,12 +190,9 @@ initBufferMap c = do
 loadSounds :: FilePath -> IO (Map String Buffer)
 loadSounds dir = do
   files <- filter ((== ".wav") . takeExtension) <$> getDirectoryContents dir
-  fmap Map.fromList $ sequence $ fmap mkPair files
-  where
-    mkPair :: FilePath -> IO (String, Buffer)
-    mkPair f = do
-      buf <- createBuffer (File $ dir </> f)
-      return (f, buf)
+  fmap Map.fromList $ sequence $ flip fmap files $ \file -> do 
+    buf <- createBuffer (File $ dir </> file)
+    return (file, buf)
 
 
 #ifdef CONSOLE_LOG

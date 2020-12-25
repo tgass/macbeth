@@ -64,8 +64,8 @@ soundsOrDef = fromMaybe defaultSounds . sounds
 
 initConfig :: IO Config
 initConfig = do
-  createDirectoryIfMissing False =<< getMacbethUserDataDir ""
-  configExists <- doesFileExist =<< getMacbethUserDataDir "macbeth.yaml"
+  createDirectoryIfMissing False =<< getMacbethUserDataDir
+  configExists <- doesFileExist =<< getMacbethUserConfigFile
   unless configExists $ do
     dir <- (</> "Macbeth") <$> getUserDocumentsDirectory
     createDirectoryIfMissing False dir
@@ -75,7 +75,7 @@ initConfig = do
 
 loadConfig :: IO Config
 loadConfig = do
-  file <- getMacbethUserDataDir "macbeth.yaml" 
+  file <- getMacbethUserConfigFile
   infoM logger $ "Loading user config from " ++ file
   decodeFileEither file >>= \case
     Left err -> do
@@ -105,8 +105,7 @@ setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardCon
     seekConfig' = fmap SeekConfig.setDefault (seekConfig c) <|> Just SeekConfig.defaultFormat
 
 saveConfig :: Config -> IO ()
-saveConfig config = getMacbethUserDataDir "macbeth.yaml" >>= flip encodeFile config
-
+saveConfig config = getMacbethUserConfigFile >>= flip encodeFile config
 
 saveCredentials :: String -> String -> IO ()
 saveCredentials username password = do

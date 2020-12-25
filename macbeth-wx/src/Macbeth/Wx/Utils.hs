@@ -10,10 +10,7 @@ import           Graphics.UI.WX hiding (when)
 import           Graphics.UI.WXCore hiding (when)
 import           Macbeth.Fics.Message
 import           Macbeth.Fics.Api.Api
-import           System.Directory
-import           System.FilePath
 import           System.IO.Unsafe
-import           Paths
 
 
 data FrameConfig = FrameConfig {
@@ -115,14 +112,6 @@ toWxColor Black = Graphics.UI.WXCore.black
 
 setStatus :: StatusField -> String -> IO ()
 setStatus status msg = set status [ text := msg ]
-
-getUserOrAppFile :: FilePath -> FilePath -> IO FilePath
-getUserOrAppFile userDir' file' = do
-  let fullPath' = userDir' </> file'
-  exists' <- doesFileExist fullPath'
-  if exists'
-    then return fullPath'
-    else getDataFileName file'
 
 {-# NOINLINE flag #-}
 flag :: Ptr CInt

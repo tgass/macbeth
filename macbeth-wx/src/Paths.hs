@@ -5,10 +5,24 @@ import           System.Directory
 import           System.FilePath
 
 
-getMacbethUserDataDir :: FilePath -> IO FilePath
-getMacbethUserDataDir file = do
-  dir <- getAppUserDataDirectory "macbeth"
-  return $ dir </> file
+getMacbethUserDataDir :: IO FilePath
+getMacbethUserDataDir = getAppUserDataDirectory "macbeth"
+
+
+getMacbethUserConfigFile :: IO FilePath
+getMacbethUserConfigFile = do
+  dir <- getMacbethUserDataDir 
+  return $ dir </> "macbeth.yaml"
+
+
+getTileFilePath :: FilePath -> FilePath -> IO FilePath
+getTileFilePath userDir filename = do
+  let relTilePath = "tiles" </> filename
+      fullPath = userDir </> relTilePath
+  exists <- doesFileExist fullPath
+  if exists
+    then return fullPath
+    else getDataFileName relTilePath
 
 
 getDataFileName :: FilePath -> IO FilePath
@@ -19,4 +33,10 @@ getPiecesDir :: IO FilePath
 getPiecesDir = do
   dataDir <- PM.getDataDir
   return $ dataDir </> "pieces"
+
+
+getSoundsDir :: IO FilePath
+getSoundsDir = do
+  dataDir <- PM.getDataDir
+  return $ dataDir </> "sounds"
 
