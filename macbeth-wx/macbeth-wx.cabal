@@ -70,7 +70,6 @@ library
     TypeSynonymInstances
     ViewPatterns
   exposed-modules: 
-    Paths
     Macbeth.Utils.BoardUtils
     Macbeth.Utils.PGN
     Macbeth.Utils.FEN
@@ -95,8 +94,9 @@ library
     Macbeth.Wx.Icons
     Macbeth.Wx.Login
     Macbeth.Wx.Match
-    Macbeth.Wx.Pending
+    Macbeth.Wx.Paths
     Macbeth.Wx.PartnerOffer
+    Macbeth.Wx.Pending
     Macbeth.Wx.PlayersList
     Macbeth.Wx.RuntimeEnv
     Macbeth.Wx.Seek

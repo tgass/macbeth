@@ -15,7 +15,7 @@ import           Macbeth.Wx.Config.Sounds
 import           Macbeth.Wx.Config.BoardConfig
 import           Macbeth.Wx.Config.SeekConfig (SeekConfigFormat)
 import qualified Macbeth.Wx.Config.SeekConfig as SeekConfig
-import           Paths
+import qualified Macbeth.Wx.Paths as Paths
 import           System.Directory
 import           System.FilePath
 import           System.Log.Logger
@@ -64,8 +64,8 @@ soundsOrDef = fromMaybe defaultSounds . sounds
 
 initConfig :: IO Config
 initConfig = do
-  createDirectoryIfMissing False =<< getMacbethUserDataDir
-  configExists <- doesFileExist =<< getMacbethUserConfigFile
+  createDirectoryIfMissing False =<< Paths.macbethUserDataDir
+  configExists <- doesFileExist =<< Paths.macbethUserConfigFile
   unless configExists $ do
     dir <- (</> "Macbeth") <$> getUserDocumentsDirectory
     createDirectoryIfMissing False dir
@@ -75,7 +75,7 @@ initConfig = do
 
 loadConfig :: IO Config
 loadConfig = do
-  file <- getMacbethUserConfigFile
+  file <- Paths.macbethUserConfigFile
   infoM logger $ "Loading user config from " ++ file
   decodeFileEither file >>= \case
     Left err -> do
@@ -105,7 +105,7 @@ setDefaults c = c{sounds = Just (soundsOrDef'{chat = Just chatOrDef'}), boardCon
     seekConfig' = fmap SeekConfig.setDefault (seekConfig c) <|> Just SeekConfig.defaultFormat
 
 saveConfig :: Config -> IO ()
-saveConfig config = getMacbethUserConfigFile >>= flip encodeFile config
+saveConfig config = Paths.macbethUserConfigFile >>= flip encodeFile config
 
 saveCredentials :: String -> String -> IO ()
 saveCredentials username password = do

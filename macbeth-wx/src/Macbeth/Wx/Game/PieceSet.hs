@@ -16,7 +16,7 @@ import           Data.Maybe
 import           GHC.Generics
 import           Graphics.UI.WX hiding (size)
 import           Macbeth.Fics.Api.Api
-import qualified Paths as Paths
+import qualified Macbeth.Wx.Paths as Paths
 import           Safe
 import           System.Directory
 import           System.FilePath
@@ -33,7 +33,7 @@ initPieceBitmaps = fmap Map.fromList $ runListT loadImages
 
 loadImages :: ListT IO ((PieceSet, Piece, Int), Bitmap ())
 loadImages = do
-  piecesDir <- ListT $ fmap pure $ Paths.getPiecesDir
+  piecesDir <- ListT $ fmap pure $ Paths.piecesDir
   file <- ListT $ listDirectory piecesDir
   case parseOnly filenameParser (pack file) of
     Left _ -> mzero

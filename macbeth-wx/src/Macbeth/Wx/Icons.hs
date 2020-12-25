@@ -4,14 +4,14 @@ module Macbeth.Wx.Icons (
 ) where
 
 
-import qualified Paths
+import qualified Macbeth.Wx.Paths as Paths
 
 
 data Icon = DesktopIcon | UserIcon | BullhornIcon | LightningIcon | UserSaysIcon | ListIcon | WrenchIcon
 
 
 filepath :: Icon -> FilePath
-filepath = Paths.getIconPath . toFilename 
+filepath = Paths.iconFilepath . toFilename 
 
 
 toFilename :: Icon -> String
@@ -22,5 +22,4 @@ toFilename LightningIcon = "match.gif"
 toFilename UserSaysIcon = "fa-question.gif"
 toFilename ListIcon = "history.gif"
 toFilename WrenchIcon = "settings.gif"
-
 

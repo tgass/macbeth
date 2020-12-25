@@ -44,12 +44,11 @@ import qualified Macbeth.Wx.Config.BoardConfig as BC
 import           Macbeth.Wx.Config.Sounds (Sounds)
 import qualified Macbeth.Wx.Config.Sounds as Sounds
 import           Macbeth.Wx.Game.PieceSet
-import           Paths
+import qualified Macbeth.Wx.Paths as Paths
 import           Sound.ALUT
 import           System.FilePath
 import           System.Directory
 import           System.IO
-import           System.IO.Unsafe
 import           System.Log.Logger
 import           System.Log.Handler.Simple hiding (priority)
 import           System.Log.Handler (setFormatter)
@@ -176,7 +175,7 @@ initSources = do
 
 initBufferMap :: Config -> IO (Map String Buffer)
 initBufferMap c = do
-  dir <- getSoundsDir
+  dir <- Paths.soundsDir
   appSounds <- loadSounds dir
   userSounds <- loadSounds $ UserConfig.directory c
   return $ userSounds `Map.union` appSounds

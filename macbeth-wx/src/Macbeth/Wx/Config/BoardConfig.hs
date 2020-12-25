@@ -13,7 +13,7 @@ import           Macbeth.Wx.Game.PieceSet
 import           Numeric
 import           GHC.Generics
 import           Graphics.UI.WX hiding (style)
-import qualified Paths 
+import qualified Macbeth.Wx.Paths as Paths
 
 data BoardConfig' a b c d e = BoardConfig {
     showCapturedPieces :: Bool
@@ -76,7 +76,7 @@ convert c userDir = BoardConfig
 
 convertTile :: FilePath -> TileFormat -> IO Tile
 convertTile _ (TileRGB (ColorRGB r g b)) = return $ ColorTile $ rgb r g b
-convertTile userDir (TileFile filename) = (BitmapTile . bitmap) <$> Paths.getTileFilePath userDir filename
+convertTile userDir (TileFile filename) = (BitmapTile . bitmap) <$> Paths.tileFilepath userDir filename
 
 defaultBoardConfig :: BoardConfigFormat
 defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize) (Just defaultPieceSet) (Just defaultHighlightConfig) (Just defaultShowLabels)
