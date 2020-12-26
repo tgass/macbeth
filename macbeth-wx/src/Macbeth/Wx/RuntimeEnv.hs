@@ -95,6 +95,7 @@ initRuntime :: Handle -> IO RuntimeEnv
 initRuntime h = do
   initLogger
   config <- UserConfig.initConfig
+  cmdHistory <- History.load
   RuntimeEnv 
     <$> pure h 
     <*> newTVarIO 1
@@ -107,7 +108,7 @@ initRuntime h = do
     <*> (newTVarIO $ UserConfig.getSeekConfig config)
     <*> newTVarIO (config ^. cAutologin)
     <*> newTVarIO (Tracking Nothing Set.empty Set.empty)
-    <*> newTVarIO History.empty
+    <*> newTVarIO cmdHistory
 
 
 username :: RuntimeEnv -> IO Username

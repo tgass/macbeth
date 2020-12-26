@@ -233,6 +233,7 @@ wxToolBox env chan = do
     
 
     windowOnDestroy f $ do
+      History.save =<< readTVarIO (env ^. reCommandHistory)
       writeChan chan WxClose 
       killThread threadId
 

@@ -15,6 +15,12 @@ macbethUserConfigFile = do
   return $ dir </> "macbeth.yaml"
 
 
+macbethUserCommandHistoryFile :: IO FilePath
+macbethUserCommandHistoryFile = do
+  dir <- macbethUserDataDir 
+  return $ dir </> "history.txt"
+
+
 tileFilepath :: FilePath -> FilePath -> IO FilePath
 tileFilepath userDir filename = do
   let relTilePath = "tiles" </> filename

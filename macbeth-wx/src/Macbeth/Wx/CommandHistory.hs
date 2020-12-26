@@ -3,6 +3,8 @@
 module Macbeth.Wx.CommandHistory where
 
 import           Control.Lens
+import qualified Macbeth.Wx.Paths as Paths
+import           System.Directory
 import           Safe
 
 
@@ -16,15 +18,23 @@ makeLenses ''CommandHistory
 
 
 maxSize :: Int
-maxSize = 30
+maxSize = 150
 
 
-load :: CommandHistory -> IO ()
-load = undefined
+load :: IO CommandHistory
+load = do
+  file <- Paths.macbethUserCommandHistoryFile
+  exists <- doesFileExist file
+  cmds <- if exists 
+    then lines <$> readFile file
+    else return []
+  return $ CommandHistory 0 cmds
 
 
 save :: CommandHistory -> IO ()
-save = undefined
+save history = do
+  file <- Paths.macbethUserCommandHistoryFile
+  writeFile file $ unlines $ take maxSize $ history ^. chCommands
 
 
 empty :: CommandHistory
