@@ -242,13 +242,12 @@ onMouse :: Notebook() -> Point -> IO Int
 onMouse nb p = propagateEvent >> notebookHitTest nb p flag
 
 clickHandler :: E.RuntimeEnv -> Notebook () -> Int -> IO ()
-clickHandler env nb idx 
-  | idx == -1 = return () -- click didn't happen on a notebook tab
-  | otherwise = notebookGetPageText nb idx >>= \case
-      "Games" -> Cmds.games env
-      "Players" -> Cmds.who env
-      "Stored" -> Cmds.stored env
-      _ -> return ()
+clickHandler _ _ (-1) = return ()  -- click didn't happen on a notebook tab
+clickHandler env nb idx = notebookGetPageText nb idx >>= \case
+  "Games" -> Cmds.games env
+  "Players" -> Cmds.who env
+  "Stored" -> Cmds.stored env
+  _ -> return ()
 
 
 abusiveBehaviorMessage :: String
