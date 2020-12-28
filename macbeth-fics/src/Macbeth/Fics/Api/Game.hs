@@ -47,5 +47,10 @@ userColor gameParams' username'
   | otherwise = Nothing
 
 
+playerRating :: PColor -> GameParams -> Rating
+playerRating White = ratingW
+playerRating Black = ratingB
+
+
 isGameWithPH :: GameParams -> Bool
 isGameWithPH gp = gameType'' gp `elem` ["bughouse", "crazyhouse"]

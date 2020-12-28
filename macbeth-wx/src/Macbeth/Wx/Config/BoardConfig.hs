@@ -23,6 +23,7 @@ data BoardConfig' a b c d e = BoardConfig {
   , pieceSet :: c
   , highlightConfig :: d
   , showLabels :: e
+  , showRatings :: e
 } deriving (Show, Eq, Generic)
 
 type BoardConfig = BoardConfig' Tile Int PieceSet HighlightConfig Bool
@@ -73,13 +74,15 @@ convert c userDir = BoardConfig
   <*> pure (fromMaybe defaultPieceSet $ pieceSet c)
   <*> pure (fromMaybe defaultHighlightConfig $ highlightConfig c)
   <*> pure (fromMaybe defaultShowLabels $ showLabels c)
+  <*> pure (fromMaybe defaultShowRatings $ showRatings c)
 
 convertTile :: FilePath -> TileFormat -> IO Tile
 convertTile _ (TileRGB (ColorRGB r g b)) = return $ ColorTile $ rgb r g b
 convertTile userDir (TileFile filename) = (BitmapTile . bitmap) <$> Paths.tileFilepath userDir filename
 
 defaultBoardConfig :: BoardConfigFormat
-defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) (Just defaultBoardSize) (Just defaultPieceSet) (Just defaultHighlightConfig) (Just defaultShowLabels)
+defaultBoardConfig = BoardConfig False (Just defaultWhiteTile) (Just defaultBlackTile) 
+  (Just defaultBoardSize) (Just defaultPieceSet) (Just defaultHighlightConfig) (Just defaultShowLabels) (Just defaultShowRatings)
 
 defaultWhiteTile :: TileFormat
 defaultWhiteTile = TileRGB $ ColorRGB 255 255 255
@@ -114,6 +117,11 @@ defaultHighlightHatched = HighlightConfig {
 
 defaultShowLabels :: Bool
 defaultShowLabels = False
+
+
+defaultShowRatings :: Bool
+defaultShowRatings = False
+
 
 parseRGB :: Text -> Either String ColorRGB
 parseRGB (T.stripPrefix "hex" -> Just t) = ColorRGB

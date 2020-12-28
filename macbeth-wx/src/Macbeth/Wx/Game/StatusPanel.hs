@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Macbeth.Wx.Game.StatusPanel (
   wxStatusPanel
 ) where
@@ -36,7 +34,7 @@ wxStatusPanel p color gameParams vBoardState = do
 
   p_color <- panel p_status [bgcolor := toWxColor color]
   st_playerName <- staticText p_status [ 
-      text := namePlayer color initMove
+      text := namePlayer color initMove ++ " (" ++ show (playerRating color gameParams) ++ ")"
     , fontSize := 20
     , tooltip := if color == White then show (ratingW gameParams) else show (ratingB gameParams)
     ]

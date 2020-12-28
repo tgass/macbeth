@@ -72,7 +72,8 @@ wxGame env gameId gameParams isGameUser chan = do
   let updateBoardLayoutIO = updateBoardLayout p_back p_board p_white p_black vBoardState
   updateBoardLayoutIO
 
-  status <- statusField []
+  statusMsgs <- statusField []
+  statusGameParams <- statusField [ statusWidth := 120, text := G.showShortGameParams gameParams ]
   statusLastMove <- statusField [ statusWidth := 60 ]
   promotion <- statusField [ statusWidth := 30, text := "=Q"]
 
@@ -104,6 +105,11 @@ wxGame env gameId gameParams isGameUser chan = do
                           , checkable:= True
                           , checked := showLabels boardConfig
                           , on command := atomically (modifyTVar vBoardState flipShowLabels) >> repaint p_back
+                          ]
+  void $ menuItem ctxMenu [ text := "Show Player Ratings"
+                          , checkable:= True
+                          , checked := showRatings boardConfig
+                          , on command := atomically (modifyTVar vBoardState flipShowRatings) >> repaint p_back
                           ]
   void $ menuItem ctxMenu [ text := "Solid highlights"
                           , checkable:= True
@@ -137,7 +143,7 @@ wxGame env gameId gameParams isGameUser chan = do
   windowOnKeyUp p_board $ onKeyUpHandler vBoardState env promotion
 
   --set layout
-  set f [ statusBar := [status, statusLastMove] ++ [promotion | isGameUser]
+  set f [ statusBar := [statusGameParams, statusMsgs, statusLastMove] ++ [promotion | isGameUser]
         , layout := fill $ widget p_back
         , size := Size (boardSize boardConfig) (boardSize boardConfig + windowInitMargin)
         , on resize := resizeFrame f vBoardState ]
@@ -149,28 +155,28 @@ wxGame env gameId gameParams isGameUser chan = do
     updateClockW cmd >> updateClockB cmd >> gameSounds env boardState cmd >> case cmd of
 
     GameMove ctx move -> when (M.gameId move == gameId) $ do
-      set status [ text := show ctx]
+      set statusMsgs [ text := show ctx]
       set statusLastMove [ text := fromMaybe "" $ M.movePretty move ] 
       Api.update vBoardState move ctx
       when (M.isNextMoveUser move) $ Api.performPreMoves vBoardState
       repaint p_back
 
     GameResult result -> when (R.gameId result == gameId) $ do
-      set status [text := R.toString result]
+      set statusMsgs [text := R.toString result]
       Api.setResult vBoardState $ R.result result
       repaint p_board
       when isGameUser $ readTVarIO vBoardState >>= saveAsPGN
       Cmds.messageWithCommandId env "iset seekinfo 1"
       killThread threadId
 
-    DrawRequest user -> set status [text := user ++ " offered a draw. Accept? (y/n)"]
+    DrawRequest user -> set statusMsgs [text := user ++ " offered a draw. Accept? (y/n)"]
 
-    AbortRequest user -> set status [text := user ++ " would like to abort the game. Accept? (y/n)"]
+    AbortRequest user -> set statusMsgs [text := user ++ " would like to abort the game. Accept? (y/n)"]
 
-    TakebackRequest user numTakeback -> set status [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
+    TakebackRequest user numTakeback -> set statusMsgs [text := user ++ " would like to take back " ++ show numTakeback ++ " half move(s). Accept? (y/n)"]
 
     OponentDecline user sub
-      | sub `elem` [DrawReq, TakebackReq, AbortReq, AdjournReq] -> set status [text := user ++ " declines the " ++ show sub ++ " request."]
+      | sub `elem` [DrawReq, TakebackReq, AbortReq, AdjournReq] -> set statusMsgs [text := user ++ " declines the " ++ show sub ++ " request."]
       | otherwise -> return ()
 
     PromotionPiece p -> Api.setPromotion p vBoardState >> set promotion [text := "=" ++ show p]
@@ -250,6 +256,14 @@ flipShowLabels boardState =
   let boardConfig' = Api.boardConfig boardState
       flipped = boardConfig' { showLabels = not $ showLabels boardConfig' }
   in boardState { Api.boardConfig = flipped }
+
+
+flipShowRatings :: Api.BoardState -> Api.BoardState
+flipShowRatings boardState = 
+  let boardConfig' = Api.boardConfig boardState
+      flipped = boardConfig' { showRatings = not $ showRatings boardConfig' }
+  in boardState { Api.boardConfig = flipped }
+
 
 flipHighlightStyle :: Api.BoardState -> Api.BoardState
 flipHighlightStyle boardState = 
