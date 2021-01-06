@@ -5,6 +5,7 @@ module Macbeth.Wx.CommandHistory where
 import           Control.Lens
 import qualified Macbeth.Wx.Paths as Paths
 import           System.Directory
+import qualified System.IO.Strict as Strict
 import           Safe
 
 
@@ -26,7 +27,7 @@ load = do
   file <- Paths.macbethUserCommandHistoryFile
   exists <- doesFileExist file
   cmds <- if exists 
-    then lines <$> readFile file
+    then lines <$> Strict.readFile file
     else return []
   return $ CommandHistory 0 cmds
 

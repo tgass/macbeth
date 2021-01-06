@@ -43,8 +43,9 @@ library
     , multiset
     , MissingH
     , mtl
-    , stm
     , safe
+    , strict
+    , stm
     , time
     , text
     , transformers
